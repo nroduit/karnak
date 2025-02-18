@@ -126,7 +126,7 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 			}
 		}
 		catch (UIDetachedException e) {
-			log.trace(String.format("UIDetachedException:%s", e.getMessage()));
+			log.trace("UIDetachedException:{}", e.getMessage());
 		}
 	}
 
