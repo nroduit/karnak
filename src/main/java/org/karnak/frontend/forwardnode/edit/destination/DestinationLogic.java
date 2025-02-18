@@ -135,24 +135,30 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 	 * @param activatedDestinationEntities Destinations to check
 	 */
 	private void checkActivityLoadingSpinner(List<DestinationEntity> activatedDestinationEntities) {
-		activatedDestinationEntities.forEach(d -> {
-			// Retrieve the loading image of the corresponding destination
-			Image loadingImage = retrieveLoadingImageOfGridDestination(destinationView.getGridDestination(),
-					forwardNodeEntity.getFwdAeTitle(), d.getId());
+		try {
+			activatedDestinationEntities.forEach(d -> {
+				// Retrieve the loading image of the corresponding destination
+				Image loadingImage = retrieveLoadingImageOfGridDestination(destinationView.getGridDestination(),
+						forwardNodeEntity.getFwdAeTitle(), d.getId());
 
-			if (loadingImage != null && destinationView.getUi() != null) {
-				// Check there is some activity on the destination: if yes set the loading
-				// spinner visible otherwise set it invisible
-				if (d.isTransferInProgress() && !loadingImage.isVisible()) {
-					// Loading spinner visible
-					destinationView.getUi().access(() -> loadingImage.setVisible(true));
+				if (loadingImage != null && destinationView.getUi() != null) {
+					// Check there is some activity on the destination: if yes set the
+					// loading
+					// spinner visible otherwise set it invisible
+					if (d.isTransferInProgress() && !loadingImage.isVisible()) {
+						// Loading spinner visible
+						destinationView.getUi().access(() -> loadingImage.setVisible(true));
+					}
+					else if (!d.isTransferInProgress() && loadingImage.isVisible()) {
+						// Loading spinner invisible
+						destinationView.getUi().access(() -> loadingImage.setVisible(false));
+					}
 				}
-				else if (!d.isTransferInProgress() && loadingImage.isVisible()) {
-					// Loading spinner invisible
-					destinationView.getUi().access(() -> loadingImage.setVisible(false));
-				}
-			}
-		});
+			});
+		}
+		catch (UIDetachedException e) {
+			log.trace("UIDetachedException:{}", e.getMessage());
+		}
 	}
 
 	/**
