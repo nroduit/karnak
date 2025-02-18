@@ -53,7 +53,8 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 	 */
 	private String filterText;
 
-	private ForwardNodeEntity forwardNodeEntity; // Current forward node
+	// Current forward node
+	private ForwardNodeEntity forwardNodeEntity;
 
 	/**
 	 * Autowired constructor
