@@ -9,8 +9,6 @@
  */
 package org.karnak.backend.model.standard;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.enums.ProfileItemType;
@@ -22,6 +20,9 @@ import org.karnak.backend.model.profiles.AbstractProfileItem;
 import org.karnak.backend.model.profiles.PrivateTags;
 import org.karnak.backend.model.profiles.ProfileItem;
 import org.karnak.backend.util.PrivateTagPattern;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class ConfidentialityProfiles {

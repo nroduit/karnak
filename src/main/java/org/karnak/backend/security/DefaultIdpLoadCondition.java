@@ -9,12 +9,13 @@
  */
 package org.karnak.backend.security;
 
-import java.util.Objects;
 import org.karnak.backend.enums.ApplicationProfile;
 import org.karnak.backend.enums.EnvironmentVariable;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+
+import java.util.Objects;
 
 /**
  * Default behaviour to load the IDP If property IDP is missing or different from oidc:

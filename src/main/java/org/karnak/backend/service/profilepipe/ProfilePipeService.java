@@ -9,9 +9,6 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -24,6 +21,10 @@ import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ProfilePipeService {

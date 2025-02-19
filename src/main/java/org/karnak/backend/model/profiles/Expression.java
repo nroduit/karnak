@@ -9,7 +9,6 @@
  */
 package org.karnak.backend.model.profiles;
 
-import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
 import org.karnak.backend.data.entity.ArgumentEntity;
@@ -23,6 +22,8 @@ import org.karnak.backend.model.expression.ExpressionError;
 import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
+
+import java.util.List;
 
 public class Expression extends AbstractProfileItem {
 

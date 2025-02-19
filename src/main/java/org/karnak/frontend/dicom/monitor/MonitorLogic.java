@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.dicom.monitor;
 
-import java.util.concurrent.ExecutionException;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.model.dicom.DicomNodeList;
@@ -17,6 +16,8 @@ import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.WadoNodeList;
 import org.karnak.backend.service.dicom.DicomEchoService;
 import org.karnak.backend.service.dicom.WadoService;
+
+import java.util.concurrent.ExecutionException;
 
 public class MonitorLogic {
 

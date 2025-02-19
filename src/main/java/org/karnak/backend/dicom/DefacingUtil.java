@@ -9,13 +9,14 @@
  */
 package org.karnak.backend.dicom;
 
-import java.security.SecureRandom;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.opencv.core.Core.MinMaxLocResult;
 import org.weasis.opencv.data.ImageCV;
 import org.weasis.opencv.data.PlanarImage;
 import org.weasis.opencv.op.ImageProcessor;
+
+import java.security.SecureRandom;
 
 public class DefacingUtil {
 

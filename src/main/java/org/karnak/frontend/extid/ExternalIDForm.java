@@ -91,7 +91,7 @@ public class ExternalIDForm extends Div {
 		addedPatientLabelDiv.getStyle().set("font-size", "large").set("font-weight", "bolder");
 
 		externalIdField = new TextField("External Pseudonym");
-		externalIdField.setWidth("20");
+		externalIdField.setWidth("20%");
 		patientIdField = new TextField("Patient ID");
 		patientIdField.setWidth("20%");
 		patientFirstNameField = new TextField("Patient first name");

@@ -39,16 +39,16 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 	}
 
 	private void setButtonSave() {
-		save.setWidth("33%");
+		save.getStyle().set("flex-grow", "1");
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 	}
 
 	private void setButtonCancel() {
-		cancel.setWidth("33%");
+		cancel.getStyle().set("flex-grow", "1");
 	}
 
 	private void setButtonDelete() {
-		delete.setWidth("33%");
+		delete.getStyle().set("flex-grow", "1");
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
 	}
 

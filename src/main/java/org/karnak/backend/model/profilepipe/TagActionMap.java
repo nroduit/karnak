@@ -9,11 +9,12 @@
  */
 package org.karnak.backend.model.profilepipe;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.dcm4che3.util.TagUtils;
 import org.karnak.backend.model.action.ActionItem;
 import org.weasis.core.util.StringUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TagActionMap {
 

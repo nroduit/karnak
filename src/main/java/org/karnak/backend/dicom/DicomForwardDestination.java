@@ -9,8 +9,6 @@
  */
 package org.karnak.backend.dicom;
 
-import java.io.IOException;
-import java.util.List;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DeviceOpService;
@@ -18,6 +16,9 @@ import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomProgress;
 import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.util.StoreFromStreamSCU;
+
+import java.io.IOException;
+import java.util.List;
 
 public class DicomForwardDestination extends ForwardDestination {
 

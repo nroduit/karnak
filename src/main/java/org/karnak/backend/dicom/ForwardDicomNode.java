@@ -9,9 +9,10 @@
  */
 package org.karnak.backend.dicom;
 
+import org.weasis.dicom.param.DicomNode;
+
 import java.util.HashSet;
 import java.util.Set;
-import org.weasis.dicom.param.DicomNode;
 
 public class ForwardDicomNode extends DicomNode {
 

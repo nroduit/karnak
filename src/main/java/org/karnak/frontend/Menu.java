@@ -20,9 +20,15 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
 import org.karnak.backend.util.SecurityUtil;
 import org.karnak.frontend.util.ToggleButtonTheme;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("serial")
 public class Menu extends FlexLayout {
@@ -31,7 +37,7 @@ public class Menu extends FlexLayout {
 
 	private final ToggleButtonTheme toggleButtonTheme;
 
-	private Tabs tabs;
+	private RouteTabs tabs;
 
 	private RadioButtonGroup<String> radioGroup;
 
@@ -53,7 +59,7 @@ public class Menu extends FlexLayout {
 		add(showMenu);
 
 		// container for the navigation buttons, which are added by addView()
-		tabs = new Tabs();
+		tabs = new RouteTabs();
 		tabs.setOrientation(Tabs.Orientation.VERTICAL);
 		setFlexGrow(1, tabs);
 		add(tabs);
@@ -79,13 +85,35 @@ public class Menu extends FlexLayout {
 	 * @param icon view icon in the menu
 	 */
 	public void addView(Class<? extends Component> viewClass, String caption, Icon icon) {
-		Tab tab = new Tab();
 		RouterLink routerLink = new RouterLink(viewClass);
 		routerLink.setClassName("menu-link");
 		routerLink.add(icon);
 		routerLink.add(new Span(caption));
-		tab.add(routerLink);
-		tabs.add(tab);
+		tabs.add(routerLink);
+	}
+
+	// Encapsulate the Tabs object previously used in a RouteTabs that handles selection
+	// of the right Tab depending on the navigation
+	private static class RouteTabs extends Tabs implements BeforeEnterObserver {
+
+		private final Map<RouterLink, Tab> routerLinkTabMap = new HashMap<>();
+
+		public void add(RouterLink routerLink) {
+			routerLink.setHighlightCondition(HighlightConditions.locationPrefix());
+			routerLink.setHighlightAction((link, shouldHighlight) -> {
+				if (shouldHighlight)
+					setSelectedTab(routerLinkTabMap.get(routerLink));
+			});
+			routerLinkTabMap.put(routerLink, new Tab(routerLink));
+			add(routerLinkTabMap.get(routerLink));
+		}
+
+		@Override
+		public void beforeEnter(BeforeEnterEvent event) {
+			// In case no tabs will match
+			setSelectedTab(null);
+		}
+
 	}
 
 }

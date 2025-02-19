@@ -10,14 +10,15 @@
 package org.karnak.frontend.dicom.mwl;
 
 import com.vaadin.flow.component.grid.Grid;
-import java.io.Serial;
-import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Keyword;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.op.CFind;
 import org.weasis.dicom.param.DicomParam;
 import org.weasis.dicom.tool.ModalityWorklist;
+
+import java.io.Serial;
+import java.util.List;
 
 public class DicomWorkListGrid extends Grid<Attributes> {
 

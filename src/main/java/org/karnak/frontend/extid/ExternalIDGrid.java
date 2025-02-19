@@ -9,6 +9,7 @@
  */
 package org.karnak.frontend.extid;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -19,6 +20,15 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import org.apache.commons.lang3.StringUtils;
+import org.karnak.backend.cache.Patient;
+import org.karnak.backend.cache.PatientClient;
+import org.karnak.backend.config.AppConfig;
+import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.util.PatientClientUtil;
+import org.karnak.frontend.component.WarningConfirmDialog;
+import org.vaadin.klaudeta.PaginatedGrid;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,13 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.karnak.backend.cache.Patient;
-import org.karnak.backend.cache.PatientClient;
-import org.karnak.backend.config.AppConfig;
-import org.karnak.backend.data.entity.ProjectEntity;
-import org.karnak.backend.util.PatientClientUtil;
-import org.vaadin.klaudeta.PaginatedGrid;
 
 public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
@@ -53,6 +56,10 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 	private transient ProjectEntity projectEntity;
 
 	private Button deletePatientButton;
+
+	private Button deleteAllSelectedPatientsButton;
+
+	private List<Patient> selectedPatients;
 
 	private Button saveEditPatientButton;
 
@@ -106,6 +113,8 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		this.externalIDCache = AppConfig.getInstance().getExternalIDCache();
 		// TODO: to use instead of the current multiple filters..: cf TELIMA-257
 		this.patientFilter = new PatientFilter();
+
+		setSelectionMode(Grid.SelectionMode.MULTI);
 
 		setPageSize(10);
 		setPaginatorSize(2);
@@ -180,6 +189,29 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		patientLastNameColumn.setEditorComponent(patientLastNameField);
 		issuerOfPatientIDColumn.setEditorComponent(issuerOfPatientIdField);
 
+		deleteAllSelectedPatientsButton = new Button("Delete selected patients");
+		deleteAllSelectedPatientsButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteAllSelectedPatientsButton.addClickListener(e -> {
+			if (selectedPatients != null && !selectedPatients.isEmpty()) {
+				Div dialogContent = new Div();
+				dialogContent.add(new Text(
+						"Do you confirm the deletion of the " + selectedPatients.size() + " selected patients ?"));
+				WarningConfirmDialog dialog = new WarningConfirmDialog(dialogContent);
+				dialog.addConfirmationListener(componentEvent -> {
+					for (Patient p : selectedPatients) {
+						externalIDCache.remove(PatientClientUtil.generateKey(p, projectEntity.getId()));
+					}
+					readAllCacheValue();
+				});
+				dialog.open();
+			}
+		});
+
+		addSelectionListener(selection -> {
+			selectedPatients = new ArrayList<>();
+			selectedPatients = selection.getAllSelectedItems().stream().toList();
+		});
+
 		deleteColumn = addComponentColumn(patient -> {
 			deletePatientButton = new Button("Delete");
 			deletePatientButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
@@ -188,10 +220,11 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 				readAllCacheValue();
 			});
 			return deletePatientButton;
-		});
+		}).setHeader(deleteAllSelectedPatientsButton);
 
 		saveEditPatientButton = new Button(LABEL_SAVE);
 		cancelEditPatientButton = new Button(LABEL_CANCEL);
+		cancelEditPatientButton.getStyle().set("margin-left", "10px");
 
 		Div buttons = new Div(saveEditPatientButton, cancelEditPatientButton);
 		editorColumn.setEditorComponent(buttons);
@@ -347,6 +380,10 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		}
 
 		setItems(filterList);
+	}
+
+	public void setEnabledDeleteSelectedPatientsButton(Boolean value) {
+		deleteAllSelectedPatientsButton.setEnabled(value);
 	}
 
 	public Collection<Patient> getDuplicatePatientsList() {

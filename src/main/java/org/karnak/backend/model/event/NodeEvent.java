@@ -9,12 +9,13 @@
  */
 package org.karnak.backend.model.event;
 
-import java.util.Objects;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.enums.NodeEventType;
 import org.springframework.context.ApplicationEvent;
+
+import java.util.Objects;
 
 public class NodeEvent extends ApplicationEvent {
 

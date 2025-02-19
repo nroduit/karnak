@@ -9,12 +9,13 @@
  */
 package org.karnak.backend.cache;
 
-import java.util.Collection;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.data.redis.core.RedisTemplate;
+
+import java.util.Collection;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class PatientClient {
 

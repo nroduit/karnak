@@ -9,10 +9,6 @@
  */
 package org.karnak.backend.model.profiles;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -21,6 +17,11 @@ import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.expression.ExpressionError;
 import org.karnak.backend.model.expression.ExpressionResult;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public abstract class AbstractProfileItem implements ProfileItem {
 
