@@ -110,7 +110,10 @@ public class ExternalIDView extends HorizontalLayout {
 			dialogContent.add(new Text("You are about to delete all the patients below. Are you sure ?"));
 			WarningConfirmDialog dialog = new WarningConfirmDialog(dialogContent);
 			dialog.addConfirmationListener(componentEvent -> {
-				externalIDGrid.getExternalIDCache().removeAll();
+				Long projectId = projectDropDown.getValue().getId();
+				for (Patient p : externalIDGrid.getPatientsListInCache()) {
+					externalIDGrid.getExternalIDCache().remove(PatientClientUtil.generateKey(p, projectId));
+				}
 				externalIDGrid.readAllCacheValue();
 			});
 			dialog.open();

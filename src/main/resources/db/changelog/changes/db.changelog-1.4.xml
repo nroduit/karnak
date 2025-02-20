@@ -18,4 +18,18 @@
     </update>
   </changeSet>
 
+  <changeSet author="karnak" id="1.4-2">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="destination" columnName="url_credentials"/>
+    </preConditions>
+
+    <update tableName="destination">
+      <column name="url_credentials" value=""/>
+    </update>
+
+    <dropColumn tableName="destination">
+      <column name="url_credentials" />
+    </dropColumn>
+  </changeSet>
+
 </databaseChangeLog>
