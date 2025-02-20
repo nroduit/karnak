@@ -26,6 +26,7 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.karnak.backend.cache.Patient;
+import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.component.WarningConfirmDialog;
