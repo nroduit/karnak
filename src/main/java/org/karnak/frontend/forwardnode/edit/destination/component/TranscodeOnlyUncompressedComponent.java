@@ -31,6 +31,9 @@ public class TranscodeOnlyUncompressedComponent extends VerticalLayout {
 
 		// Add components
 		addComponents();
+
+		// Align this component to the bottom of the container (aesthetical purpose)
+		getStyle().set("align-self", "flex-end");
 	}
 
 	/**
@@ -46,7 +49,7 @@ public class TranscodeOnlyUncompressedComponent extends VerticalLayout {
 	private void buildComponents() {
 		transcodeOnlyUncompressedCheckBox = new Checkbox("Transcode only uncompressed");
 		transcodeOnlyUncompressedCheckBox.getElement().getStyle().set("margin-left", "66px");
-		transcodeOnlyUncompressedCheckBox.getElement().getStyle().set("margin-top", "47px");
+		transcodeOnlyUncompressedCheckBox.getElement().getStyle().set("line-height", "31.5px");
 	}
 
 	public void init(Binder<DestinationEntity> binder) {

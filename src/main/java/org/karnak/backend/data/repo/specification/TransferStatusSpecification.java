@@ -14,16 +14,17 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import java.io.Serial;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.backend.enums.TransferStatusType;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.springframework.data.jpa.domain.Specification;
+
+import java.io.Serial;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Transfer status specification: used to look for entries depending on criteria

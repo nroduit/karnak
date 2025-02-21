@@ -31,7 +31,7 @@
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
     <java.version>21</java.version>
 
-    <vaadin.version>24.2.3</vaadin.version>
+    <vaadin.version>24.6.2</vaadin.version>
     <org.json.version>20231013</org.json.version>
     <gson.version>2.10.1</gson.version>
     <liquibase.version>4.23.0</liquibase.version>

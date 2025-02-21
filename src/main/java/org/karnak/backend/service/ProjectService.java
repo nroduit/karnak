@@ -9,8 +9,6 @@
  */
 package org.karnak.backend.service;
 
-import java.util.List;
-import java.util.Optional;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.repo.ProjectRepo;
@@ -19,6 +17,9 @@ import org.karnak.backend.model.event.NodeEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Project service

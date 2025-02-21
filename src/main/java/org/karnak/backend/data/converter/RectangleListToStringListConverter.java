@@ -10,7 +10,8 @@
 package org.karnak.backend.data.converter;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
-import java.awt.Rectangle;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 

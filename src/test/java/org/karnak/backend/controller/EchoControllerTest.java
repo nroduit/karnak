@@ -9,8 +9,6 @@
  */
 package org.karnak.backend.controller;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.karnak.backend.model.echo.DestinationEcho;
 import org.karnak.backend.service.EchoService;
@@ -22,6 +20,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Unit test for the MVC controllers Tests for EchoController

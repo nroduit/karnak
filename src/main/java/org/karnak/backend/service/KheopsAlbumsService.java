@@ -9,14 +9,15 @@
  */
 package org.karnak.backend.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.KheopsAlbumsEntity;
 import org.karnak.backend.data.repo.KheopsAlbumsRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 
 @Service
 public class KheopsAlbumsService {

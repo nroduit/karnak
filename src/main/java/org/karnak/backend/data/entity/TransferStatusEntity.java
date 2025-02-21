@@ -20,15 +20,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Objects;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
 import org.karnak.backend.util.DateFormat;
 import org.weasis.dicom.util.DateUtil;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
 
 @Entity(name = "TransferStatus")
 @Table(name = "transfer_status")

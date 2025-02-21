@@ -9,15 +9,16 @@
  */
 package org.karnak.backend.dicom;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import org.weasis.core.util.FileUtil;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomProgress;
 import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.web.ContentType;
 import org.weasis.dicom.web.DicomStowRS;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class WebForwardDestination extends ForwardDestination {
 

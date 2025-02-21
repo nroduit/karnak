@@ -14,9 +14,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.provider.ListDataProvider;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
@@ -28,6 +25,10 @@ import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.function.Predicate;
 
 @Service
 @Slf4j
@@ -145,6 +146,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> {
 		var warningIssuer = new Dialog();
 		var content = new Div();
 		var divTitle = new Div();
+		var btn = new Div();
 		divTitle.setText("Warning");
 		divTitle.getStyle()
 			.set("font-size", "large")
@@ -158,8 +160,10 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> {
 		var txt = new Text(
 				"The Issuer of Patient ID is no longer linked to a profile. Please fill in this field in the destination in the de-identification menu.");
 
-		content.add(divTitle, txt, okBtn);
-		warningIssuer.add(content);
+		btn.getStyle().set("text-align", "right");
+		btn.add(okBtn);
+		content.add(divTitle, txt);
+		warningIssuer.add(content, btn);
 		warningIssuer.setMaxWidth("30%");
 		warningIssuer.open();
 	}

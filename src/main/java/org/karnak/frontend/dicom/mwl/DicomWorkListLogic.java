@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.dicom.mwl;
 
-import java.time.LocalDate;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.net.Status;
@@ -24,6 +23,8 @@ import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomParam;
 import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.tool.ModalityWorklist;
+
+import java.time.LocalDate;
 
 public class DicomWorkListLogic {
 

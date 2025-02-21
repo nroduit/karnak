@@ -26,10 +26,11 @@ import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.shared.Registration;
-import java.util.Comparator;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.frontend.component.AbstractDialog;
+
+import java.util.Comparator;
 
 public class DicomWorkListSelectionDialog extends AbstractDialog {
 

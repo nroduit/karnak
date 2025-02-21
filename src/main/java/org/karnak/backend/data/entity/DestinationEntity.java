@@ -141,9 +141,6 @@ public class DestinationEntity implements Serializable {
 	// mandatory[type=stow]
 	private String url;
 
-	// credentials of the STOW-RS service (format is "user:password").
-	private String urlCredentials;
-
 	// headers for HTTP request.
 	private String headers;
 
@@ -191,7 +188,6 @@ public class DestinationEntity implements Serializable {
 		this.port = 0;
 		this.useaetdest = Boolean.FALSE;
 		this.url = "";
-		this.urlCredentials = "";
 		this.headers = "";
 
 		this.transcodeOnlyUncompressed = false;
@@ -216,11 +212,10 @@ public class DestinationEntity implements Serializable {
 		return new DestinationEntity(DestinationType.stow);
 	}
 
-	public static DestinationEntity ofStow(String description, String url, String urlCredentials, String headers) {
+	public static DestinationEntity ofStow(String description, String url, String headers) {
 		DestinationEntity destinationEntity = new DestinationEntity(DestinationType.stow);
 		destinationEntity.setDescription(description);
 		destinationEntity.setUrl(url);
-		destinationEntity.setUrlCredentials(urlCredentials);
 		destinationEntity.setHeaders(headers);
 		return destinationEntity;
 	}
@@ -378,14 +373,6 @@ public class DestinationEntity implements Serializable {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public String getUrlCredentials() {
-		return urlCredentials;
-	}
-
-	public void setUrlCredentials(String urlCredentials) {
-		this.urlCredentials = urlCredentials;
 	}
 
 	@Size(max = 4096, message = "Headers has more than 4096 characters")
@@ -573,7 +560,6 @@ public class DestinationEntity implements Serializable {
 				|| contains(hostname, filterText) //
 				|| equals(port, filterText) //
 				|| contains(url, filterText) //
-				|| contains(urlCredentials, filterText) //
 				|| contains(headers, filterText);
 	}
 
@@ -599,8 +585,8 @@ public class DestinationEntity implements Serializable {
 					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
 							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
 							+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
-							+ notifyObjectValues + ", notifyInterval=" + notifyInterval + ", url=" + url
-							+ ", urlCredentials=" + urlCredentials + ", headers=" + headers + "]";
+							+ notifyObjectValues + ", notifyInterval=" + notifyInterval + ", url=" + url + ", headers="
+							+ headers + "]";
 			}
 		}
 		return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType + ", notify="

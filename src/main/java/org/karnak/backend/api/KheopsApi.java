@@ -9,6 +9,12 @@
  */
 package org.karnak.backend.api;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHeaders;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -16,11 +22,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHeaders;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 // Link used:
 // https://www.baeldung.com/httpclient-guide

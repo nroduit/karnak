@@ -9,7 +9,6 @@
  */
 package org.karnak.backend.model.profiles;
 
-import java.awt.Color;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
@@ -22,6 +21,8 @@ import org.karnak.backend.model.expression.ExpressionError;
 import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
+
+import java.awt.*;
 
 @Slf4j
 public class ActionTags extends AbstractProfileItem {

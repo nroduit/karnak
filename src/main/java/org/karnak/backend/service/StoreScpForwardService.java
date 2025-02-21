@@ -9,15 +9,6 @@
  */
 package org.karnak.backend.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.net.ApplicationEntity;
 import org.dcm4che3.net.Connection;
@@ -34,6 +25,16 @@ import org.springframework.stereotype.Service;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomNode;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 @Service
 @Slf4j

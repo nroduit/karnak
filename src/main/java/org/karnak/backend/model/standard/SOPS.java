@@ -9,13 +9,6 @@
  */
 package org.karnak.backend.model.standard;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import org.karnak.backend.exception.SOPNotFoundException;
 import org.karnak.backend.model.dicominnolitics.StandardCIODS;
 import org.karnak.backend.model.dicominnolitics.StandardCIODtoModules;
@@ -23,6 +16,14 @@ import org.karnak.backend.model.dicominnolitics.StandardSOPS;
 import org.karnak.backend.model.dicominnolitics.jsonCIOD;
 import org.karnak.backend.model.dicominnolitics.jsonCIODtoModule;
 import org.karnak.backend.model.dicominnolitics.jsonSOP;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SOPS {
 

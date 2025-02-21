@@ -9,15 +9,18 @@
  */
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.dom.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.BoxShadowComponent;
+import org.karnak.frontend.extid.WarningDialog;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 import org.karnak.frontend.kheops.SwitchingAlbumsView;
 import org.karnak.frontend.util.UIS;
@@ -34,7 +37,7 @@ public class FormSTOW extends VerticalLayout {
 
 	private TextField url;
 
-	private TextField urlCredentials;
+	private Button generateAuthorizationHeaderButton;
 
 	private TextArea headers;
 
@@ -69,20 +72,20 @@ public class FormSTOW extends VerticalLayout {
 		this.tagMorphingComponent.init(this.binder);
 		this.filterBySOPClassesForm.init(this.binder);
 		this.destinationCondition.init(binder);
-		notificationComponent.init(binder);
-		transferSyntaxComponent.init(this.binder);
-		transcodeOnlyUncompressedComponent.init(this.binder);
+		this.notificationComponent.init(binder);
+		this.transferSyntaxComponent.init(this.binder);
+		this.transcodeOnlyUncompressedComponent.init(this.binder);
 
 		this.description = new TextField("Description");
 		this.url = new TextField("URL");
-		this.urlCredentials = new TextField("URL credentials");
+		this.generateAuthorizationHeaderButton = new Button(AuthHeadersGenerationDialog.TITLE);
 		this.headers = new TextArea("Headers");
 		this.switchingAlbumsView = new SwitchingAlbumsView();
 		this.activate = new Checkbox("Enable destination");
 
 		// Define layout
 		VerticalLayout destinationLayout = new VerticalLayout(UIS.setWidthFull(new HorizontalLayout(description)),
-				destinationCondition, UIS.setWidthFull(new HorizontalLayout(url, urlCredentials)),
+				destinationCondition, UIS.setWidthFull(new HorizontalLayout(url, generateAuthorizationHeaderButton)),
 				UIS.setWidthFull(headers));
 		VerticalLayout transferLayout = new VerticalLayout(
 				new HorizontalLayout(transferSyntaxComponent, transcodeOnlyUncompressedComponent));
@@ -108,19 +111,36 @@ public class FormSTOW extends VerticalLayout {
 
 		setElements();
 		setBinder();
+		configureGenerateHeadersButton();
+	}
+
+	private void configureGenerateHeadersButton() {
+		this.generateAuthorizationHeaderButton.addClickListener(e -> {
+			if (this.headers.getValue().contains(AuthHeadersGenerationDialog.AUTHORIZATION_TAG)) {
+				WarningDialog wd = new WarningDialog("Cannot generate Authorization Header",
+						"The Headers already contain an Authorization tag. Please remove it if you want to generate it.",
+						"Ok");
+				wd.open();
+			}
+			else {
+				AuthHeadersGenerationDialog dialog = new AuthHeadersGenerationDialog(this);
+				dialog.open();
+			}
+		});
 	}
 
 	private void setElements() {
 		description.setWidth("100%");
 
-		url.setWidth("50%");
+		url.setWidth("70%");
 		UIS.setTooltip(url, "The destination STOW-RS URL");
 
-		urlCredentials.setWidth("50%");
-		UIS.setTooltip(urlCredentials, "Credentials of the STOW-RS service (format is \"user:password\")");
+		generateAuthorizationHeaderButton.setWidth("30%");
+		generateAuthorizationHeaderButton.getStyle().setAlignSelf(Style.AlignSelf.FLEX_END);
 
 		headers.setMinHeight("10em");
 		headers.setWidth("100%");
+		headers.getStyle().set("padding", "0px");
 		UIS.setTooltip(headers,
 				"Headers for HTTP request. Example of format:\n<key>Authorization</key>\n<value>Bearer 1v1pwxT4Ww4DCFzyaMt0NP</value>");
 	}
@@ -134,6 +154,14 @@ public class FormSTOW extends VerticalLayout {
 			.bind(DestinationEntity::getKheopsAlbumEntities, DestinationEntity::setKheopsAlbumEntities);
 
 		binder.bindInstanceFields(this);
+	}
+
+	public void appendToHeaders(String value) {
+		String existingHeaders = this.headers.getValue();
+		if (!existingHeaders.isEmpty()) {
+			existingHeaders += "\n";
+		}
+		this.headers.setValue(existingHeaders + value);
 	}
 
 	public DeIdentificationComponent getDeIdentificationComponent() {

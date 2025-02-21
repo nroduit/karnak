@@ -10,11 +10,13 @@
 package org.karnak.frontend.extid;
 
 import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -23,13 +25,16 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.io.InputStream;
-import java.util.ArrayList;
 import org.karnak.backend.cache.Patient;
+import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.ProjectDropDown;
+import org.karnak.frontend.component.WarningConfirmDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
+
+import java.io.InputStream;
+import java.util.ArrayList;
 
 @Route(value = ExternalIDView.ROUTE, layout = MainLayout.class)
 @PageTitle("KARNAK - External ID")
@@ -59,6 +64,8 @@ public class ExternalIDView extends HorizontalLayout {
 
 	private Upload uploadCsvButton;
 
+	private final Button deleteAllButton;
+
 	private Div uploadCsvLabelDiv;
 
 	private final transient ExternalIDLogic externalIDLogic;
@@ -71,7 +78,7 @@ public class ExternalIDView extends HorizontalLayout {
 		getStyle().set("overflow-y", "auto");
 		VerticalLayout verticalLayout = new VerticalLayout();
 
-		Label labelDisclaimer = new Label(LABEL_DISCLAIMER_EXTID);
+		NativeLabel labelDisclaimer = new NativeLabel(LABEL_DISCLAIMER_EXTID);
 		labelDisclaimer.getStyle().set("color", "red");
 		labelDisclaimer.setMinWidth("75%");
 		labelDisclaimer.getStyle().set("right", "0px");
@@ -86,14 +93,32 @@ public class ExternalIDView extends HorizontalLayout {
 		projectDropDown.setItems(externalIDLogic.retrieveProject());
 		externalIDGrid = new ExternalIDGrid();
 		externalIDForm = new ExternalIDForm();
+		deleteAllButton = new Button("Delete all patients");
 
 		projectDropDown.addValueChangeListener(event -> {
 			setEnableAddPatient(!projectDropDown.isEmpty());
+			setEnableDeleteButtons(!projectDropDown.isEmpty());
 			externalIDForm.setProjectEntity(event.getValue());
 			externalIDGrid.setProjectEntity(event.getValue());
 			externalIDGrid.readAllCacheValue();
 		});
 		setEnableAddPatient(!projectDropDown.isEmpty());
+		setEnableDeleteButtons(!projectDropDown.isEmpty());
+
+		deleteAllButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteAllButton.addClickListener(e -> {
+			Div dialogContent = new Div();
+			dialogContent.add(new Text("You are about to delete all the patients below. Are you sure ?"));
+			WarningConfirmDialog dialog = new WarningConfirmDialog(dialogContent);
+			dialog.addConfirmationListener(componentEvent -> {
+				Long projectId = projectDropDown.getValue().getId();
+				for (Patient p : externalIDGrid.getPatientsListInCache()) {
+					externalIDGrid.getExternalIDCache().remove(PatientClientUtil.generateKey(p, projectId));
+				}
+				externalIDGrid.readAllCacheValue();
+			});
+			dialog.open();
+		});
 
 		externalIDForm.getAddPatientButton().addClickListener(click -> {
 			final Patient newPatient = externalIDForm.getNewPatient();
@@ -117,7 +142,7 @@ public class ExternalIDView extends HorizontalLayout {
 		validationStatus = externalIDGrid.setBinder();
 
 		verticalLayout.add(new H2("External Pseudonym"), labelDisclaimer, labelProject, projectDropDown,
-				uploadCsvLabelDiv, uploadCsvButton, externalIDForm, validationStatus, externalIDGrid);
+				uploadCsvLabelDiv, uploadCsvButton, externalIDForm, deleteAllButton, validationStatus, externalIDGrid);
 
 		add(verticalLayout);
 	}
@@ -166,7 +191,7 @@ public class ExternalIDView extends HorizontalLayout {
 		if (!externalIDGrid.getDuplicatePatientsList().isEmpty()) {
 			DuplicateDialog duplicateDialog = new DuplicateDialog("WARNING Duplicate data",
 					"You are trying to insert two equivalent patients. Here is the list of duplicate patients.",
-					externalIDGrid.getDuplicatePatientsList(), "close");
+					externalIDGrid.getDuplicatePatientsList(), "Close");
 			duplicateDialog.setWidth("80%");
 			duplicateDialog.open();
 			externalIDGrid.setDuplicatePatientsList(new ArrayList<>());
@@ -181,6 +206,11 @@ public class ExternalIDView extends HorizontalLayout {
 		else {
 			uploadCsvButton.setMaxFiles(0);
 		}
+	}
+
+	public void setEnableDeleteButtons(boolean value) {
+		deleteAllButton.setEnabled(value);
+		externalIDGrid.setEnabledDeleteSelectedPatientsButton(value);
 	}
 
 }

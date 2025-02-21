@@ -9,8 +9,9 @@
  */
 package org.karnak.backend.model.dicom;
 
-import java.time.LocalDate;
 import org.karnak.backend.enums.Modality;
+
+import java.time.LocalDate;
 
 public class WorkListQueryData {
 

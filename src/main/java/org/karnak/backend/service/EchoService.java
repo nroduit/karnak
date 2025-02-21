@@ -9,8 +9,6 @@
  */
 package org.karnak.backend.service;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
@@ -24,6 +22,9 @@ import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.ConnectOptions;
 import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service managing echo

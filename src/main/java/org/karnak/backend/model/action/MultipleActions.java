@@ -9,8 +9,6 @@
  */
 package org.karnak.backend.model.action;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -21,6 +19,9 @@ import org.karnak.backend.model.standard.Module;
 import org.karnak.backend.model.standard.ModuleAttribute;
 import org.karnak.backend.model.standard.StandardDICOM;
 import org.karnak.backend.util.MetadataDICOMObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class MultipleActions extends AbstractAction {

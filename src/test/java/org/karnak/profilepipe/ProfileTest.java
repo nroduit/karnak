@@ -28,6 +28,8 @@ import org.karnak.backend.util.DicomObjectTools;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -562,6 +564,73 @@ class ProfileTest {
 		Profile profile = new Profile(profileEntity);
 		profile.applyAction(dataset1, dataset1, defaultHMAC, null, null, null);
 		assertTrue(DicomObjectTools.dicomObjectEquals(dataset2, dataset1));
+	}
+
+	@Test
+	void expressionProfileComputePatientAge() {
+		final Attributes dataset1 = new Attributes();
+
+		dataset1.setString(Tag.PatientName, VR.PN, "TEST-Expr-ComputePatientName");
+		dataset1.setString(Tag.StudyInstanceUID, VR.UI, "12345");
+		dataset1.setString(Tag.PatientBirthDate, VR.DA, "20080822");
+		dataset1.setString(Tag.PatientAge, VR.AS, "");
+		dataset1.setString(Tag.AcquisitionDate, VR.DA, "20250512");
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "expression.on.tags", null, null,
+				null, 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("expr", "ComputePatientAge()", profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0010,1010)", profileElementEntity));
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, dataset1, defaultHMAC, null, null, null);
+		assertEquals("016Y", dataset1.getString(Tag.PatientAge));
+	}
+
+	@Test
+	void expressionProfileComputePatientAge_missingAcquisitionDate() {
+		final Attributes dataset1 = new Attributes();
+
+		dataset1.setString(Tag.PatientName, VR.PN, "TEST-Expr-ComputePatientName");
+		dataset1.setString(Tag.StudyInstanceUID, VR.UI, "12345");
+		dataset1.setString(Tag.PatientBirthDate, VR.DA, "20080822");
+		dataset1.setString(Tag.PatientAge, VR.AS, "");
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "expression.on.tags", null, null,
+				null, 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("expr", "ComputePatientAge()", profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0010,1010)", profileElementEntity));
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, dataset1, defaultHMAC, null, null, null);
+		assertNull(dataset1.getString(Tag.PatientAge));
+	}
+
+	@Test
+	void expressionProfileComputePatientAge_overwriteExistingAge() {
+		final Attributes dataset1 = new Attributes();
+
+		dataset1.setString(Tag.PatientName, VR.PN, "TEST-Expr-ComputePatientName");
+		dataset1.setString(Tag.StudyInstanceUID, VR.UI, "12345");
+		dataset1.setString(Tag.PatientBirthDate, VR.DA, "20080822");
+		dataset1.setString(Tag.PatientAge, VR.AS, "027Y");
+		dataset1.setString(Tag.AcquisitionDate, VR.DA, "20250512");
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "expression.on.tags", null, null,
+				null, 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("expr", "ComputePatientAge()", profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0010,1010)", profileElementEntity));
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, dataset1, defaultHMAC, null, null, null);
+		// The patient age is voluntarily incorrect, should be replaced by the computed
+		// value i.e. 016Y
+		assertEquals("016Y", dataset1.getString(Tag.PatientAge));
 	}
 
 }

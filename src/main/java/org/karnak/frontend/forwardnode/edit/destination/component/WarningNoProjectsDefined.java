@@ -51,11 +51,13 @@ public class WarningNoProjectsDefined extends Dialog {
 				"No projects are defined. You can't use the tag morphing or de-identification until you have created a project.");
 		divIntro.getStyle().set("padding-bottom", "10px");
 		divContent.add(divIntro);
-		btnValidate.setWidthFull();
-		btnCancel.setWidthFull();
+		btnValidate.setWidth("150px");
+		btnCancel.setWidth("150px");
 
-		HorizontalLayout btnLayout = new HorizontalLayout(btnValidate, btnCancel);
-		btnLayout.getStyle().set("margin-left", "50%");
+		HorizontalLayout btnLayout = new HorizontalLayout();
+		btnLayout.setWidthFull();
+		btnLayout.add(btnValidate, btnCancel);
+		btnValidate.getElement().getStyle().set("margin-left", "auto"); // https://vaadin.com/forum/thread/17198105/button-alignment-in-horizontal-layout
 		add(divTitle, divContent, btnLayout);
 	}
 

@@ -9,12 +9,13 @@
  */
 package org.karnak.backend.model.standard;
 
+import org.karnak.backend.model.dicominnolitics.StandardAttributes;
+import org.karnak.backend.model.dicominnolitics.jsonAttributes;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.karnak.backend.model.dicominnolitics.StandardAttributes;
-import org.karnak.backend.model.dicominnolitics.jsonAttributes;
 
 public class AttributeDetails {
 

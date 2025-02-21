@@ -20,7 +20,7 @@ public class WarningRemoveProjectUsed extends Dialog {
 	public void setText(ProjectEntity projectEntity) {
 		removeAll();
 		Div divTitle = new Div();
-		divTitle.setText(String.format("The project %s can't be remove", projectEntity.getName()));
+		divTitle.setText(String.format("The project %s can't be removed", projectEntity.getName()));
 		divTitle.getStyle()
 			.set("font-size", "large")
 			.set("font-weight", "bolder")

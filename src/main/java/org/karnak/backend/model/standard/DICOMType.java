@@ -9,13 +9,14 @@
  */
 package org.karnak.backend.model.standard;
 
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.exception.StandardDICOMException;
 import org.karnak.backend.util.MetadataDICOMObject;
+
+import java.util.List;
 
 @Slf4j
 public class DICOMType {

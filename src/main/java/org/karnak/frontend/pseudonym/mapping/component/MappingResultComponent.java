@@ -11,7 +11,7 @@ package org.karnak.frontend.pseudonym.mapping.component;
 
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.details.Details;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
@@ -86,7 +86,7 @@ public class MappingResultComponent extends VerticalLayout {
 		getPatientFoundDetails().setOpened(true);
 
 		// Summary
-		Label summaryDetails = new Label(location);
+		NativeLabel summaryDetails = new NativeLabel(location);
 		summaryDetails.getStyle().set("font-size", "large").set("font-weight", "bolder");
 		getPatientFoundDetails().setSummary(summaryDetails);
 
@@ -103,7 +103,7 @@ public class MappingResultComponent extends VerticalLayout {
 		addDetailPatientFound(patientFoundDetailLayout, "Sex", patientFound.getPatientSex());
 
 		// Add layout
-		getPatientFoundDetails().addContent(patientFoundDetailLayout);
+		getPatientFoundDetails().add(patientFoundDetailLayout);
 	}
 
 	/**
@@ -125,7 +125,7 @@ public class MappingResultComponent extends VerticalLayout {
 	 */
 	private BoxShadowComponent buildBadgeTitle(final String title) {
 		// Title
-		Label label = new Label(title);
+		NativeLabel label = new NativeLabel(title);
 		label.getElement().getStyle().set("padding", "10px");
 
 		// Badge

@@ -67,8 +67,20 @@ public class ProfileMetadata extends VerticalLayout {
 	}
 
 	private void setElements() {
-		titleDiv.getStyle().set("font-weight", "bold").set("margin-top", "0px").set("padding-left", "5px");
-		valueDiv.getStyle().set("color", "grey").set("padding-left", "10px").set("margin-top", "5px");
+		titleDiv.getStyle()
+			.set("font-weight", "bold")
+			.set("margin-top", "0px")
+			.set("padding-left", "5px")
+			.set("line-height", "31.5px")
+			.setHeight("38.5px");
+		valueDiv.getStyle()
+			.set("color", "grey")
+			.set("padding-left", "10px")
+			.set("line-height", "31.5px")
+			.setHeight("38.5px");
+		editButton.getStyle().set("margin-left", "10px");
+		validateEditButton.getStyle().set("margin-left", "5px");
+		disabledEditButton.getStyle().set("margin-left", "5px");
 	}
 
 	private void setTitleText() {
@@ -95,19 +107,19 @@ public class ProfileMetadata extends VerticalLayout {
 	}
 
 	private void editOnClick() {
-		titleDiv.remove(editButton);
+		editButton.getStyle().set("visibility", "hidden");
 		valueDiv.removeAll();
 		setValueTextField();
 	}
 
 	private void disabledEditButton() {
-		titleDiv.add(editButton);
+		editButton.getStyle().set("visibility", "visible");
 		valueDiv.removeAll();
 		setValueText();
 	}
 
 	private void validateEditButton() {
-		titleDiv.add(editButton);
+		editButton.getStyle().set("visibility", "visible");
 		value = valueField.getValue();
 		valueDiv.removeAll();
 		setValueText();

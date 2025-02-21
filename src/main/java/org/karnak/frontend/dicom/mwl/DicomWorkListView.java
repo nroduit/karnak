@@ -30,10 +30,6 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
@@ -44,6 +40,11 @@ import org.karnak.backend.model.dicom.WorkListQueryData;
 import org.karnak.frontend.dicom.AbstractView;
 import org.karnak.frontend.dicom.PortField;
 import org.karnak.frontend.dicom.mwl.DicomWorkListSelectionDialog.WorkListSelectionEvent;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Calling Order 1) constructor 2) setParameter 3) beforeEnter

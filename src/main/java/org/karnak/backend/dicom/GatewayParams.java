@@ -9,13 +9,14 @@
  */
 package org.karnak.backend.dicom;
 
+import org.weasis.dicom.param.AbstractListenerParams;
+import org.weasis.dicom.param.AdvancedParams;
+import org.weasis.dicom.param.DicomNode;
+
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.weasis.dicom.param.AbstractListenerParams;
-import org.weasis.dicom.param.AdvancedParams;
-import org.weasis.dicom.param.DicomNode;
 
 public class GatewayParams extends AbstractListenerParams {
 
