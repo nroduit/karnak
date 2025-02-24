@@ -9,6 +9,12 @@
  */
 package org.karnak.backend.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -50,13 +56,6 @@ import org.weasis.dicom.util.StoreFromStreamSCU;
 import org.weasis.dicom.web.DicomStowRS;
 import org.weasis.dicom.web.HttpException;
 import org.weasis.opencv.data.PlanarImage;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @Service
 @Slf4j

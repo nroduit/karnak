@@ -18,15 +18,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.karnak.backend.model.profilepipe.HMAC;
-import org.karnak.backend.util.DateFormat;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.karnak.backend.model.profilepipe.HMAC;
+import org.karnak.backend.util.DateFormat;
 
 @Entity(name = "Project")
 @Table(name = "project")

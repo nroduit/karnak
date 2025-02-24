@@ -9,6 +9,12 @@
  */
 package org.karnak.backend.model.expression;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Objects;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
@@ -22,13 +28,6 @@ import org.karnak.backend.model.action.ReplaceNull;
 import org.karnak.backend.model.action.UID;
 import org.karnak.backend.util.DicomObjectTools;
 import org.weasis.core.util.StringUtil;
-
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.util.Objects;
 
 public class ExprAction implements ExpressionItem {
 

@@ -9,13 +9,12 @@
  */
 package org.karnak.backend.model.standard;
 
-import org.karnak.backend.exception.ModuleNotFoundException;
-import org.karnak.backend.model.dicominnolitics.StandardModuleToAttributes;
-import org.karnak.backend.model.dicominnolitics.jsonModuleToAttribute;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.karnak.backend.exception.ModuleNotFoundException;
+import org.karnak.backend.model.dicominnolitics.StandardModuleToAttributes;
+import org.karnak.backend.model.dicominnolitics.jsonModuleToAttribute;
 
 public class ModuleToAttributes {
 

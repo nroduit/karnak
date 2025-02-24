@@ -9,12 +9,11 @@
  */
 package org.karnak.backend.model.profiles;
 
+import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.profilepipe.HMAC;
-
-import java.util.List;
 
 public interface ProfileItem {
 

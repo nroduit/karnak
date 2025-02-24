@@ -9,13 +9,12 @@
  */
 package org.karnak.backend.data.validator;
 
-import org.hibernate.validator.spi.group.DefaultGroupSequenceProvider;
-import org.karnak.backend.data.entity.DestinationEntity;
-import org.karnak.backend.enums.DestinationType;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.hibernate.validator.spi.group.DefaultGroupSequenceProvider;
+import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.enums.DestinationType;
 
 /**
  * @see https://stackoverflow.com/questions/27173960/jsr303-apply-all-validation-groups-defined-in-sequence

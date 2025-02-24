@@ -9,10 +9,9 @@
  */
 package org.karnak.backend.service.thread;
 
+import java.util.concurrent.Callable;
 import org.karnak.backend.model.dicom.WadoNode;
 import org.karnak.frontend.dicom.Util;
-
-import java.util.concurrent.Callable;
 
 public class WadoResponse implements Callable<String> {
 

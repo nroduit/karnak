@@ -9,6 +9,10 @@
  */
 package org.karnak.backend.config;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.karnak.backend.constant.EndPoint;
 import org.karnak.backend.constant.Token;
 import org.karnak.backend.security.OpenIdConnectLogoutHandler;
@@ -36,11 +40,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @EnableWebSecurity
 @Configuration

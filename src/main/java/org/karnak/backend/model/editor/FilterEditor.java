@@ -9,15 +9,14 @@
  */
 package org.karnak.backend.model.editor;
 
+import java.util.Set;
+import java.util.function.Predicate;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
-
-import java.util.Set;
-import java.util.function.Predicate;
 
 public class FilterEditor implements AttributeEditor {
 

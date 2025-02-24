@@ -20,6 +20,13 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.cache.PatientClient;
@@ -28,14 +35,6 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.component.WarningConfirmDialog;
 import org.vaadin.klaudeta.PaginatedGrid;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.WeakHashMap;
-import java.util.stream.Collectors;
 
 public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 

@@ -20,8 +20,8 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.enums.PseudonymType;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.DicomNode;
 
@@ -31,10 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SpringBootTest
 class DeIdentifyEditorTest {
 
-	@MockBean
+	@Mock
 	private ExternalIDCache externalIDCache;
 
-	@MockBean
+	@Mock
 	private RedisConfiguration redisConfiguration;
 
 	@Test

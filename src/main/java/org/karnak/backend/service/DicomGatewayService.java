@@ -9,6 +9,11 @@
  */
 package org.karnak.backend.service;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import org.dcm4che3.net.Connection;
 import org.dcm4che3.net.TransferCapability;
 import org.karnak.backend.dicom.ForwardDestination;
@@ -20,12 +25,6 @@ import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DeviceListenerService;
 import org.weasis.dicom.param.DicomNode;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class DicomGatewayService {

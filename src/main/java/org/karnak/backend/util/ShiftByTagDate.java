@@ -9,14 +9,13 @@
  */
 package org.karnak.backend.util;
 
+import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class ShiftByTagDate {
 

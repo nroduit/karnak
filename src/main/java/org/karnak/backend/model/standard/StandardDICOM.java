@@ -9,14 +9,13 @@
  */
 package org.karnak.backend.model.standard;
 
-import org.dcm4che3.util.TagUtils;
-import org.karnak.backend.exception.ModuleNotFoundException;
-import org.karnak.backend.exception.SOPNotFoundException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.dcm4che3.util.TagUtils;
+import org.karnak.backend.exception.ModuleNotFoundException;
+import org.karnak.backend.exception.SOPNotFoundException;
 
 public class StandardDICOM {
 

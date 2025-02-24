@@ -9,12 +9,11 @@
  */
 package org.karnak.backend.model.action;
 
+import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.util.ShiftRangeDate;
-
-import java.util.List;
 
 public class DefaultDummy extends AbstractAction {
 

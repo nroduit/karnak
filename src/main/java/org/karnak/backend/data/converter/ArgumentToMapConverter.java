@@ -10,11 +10,10 @@
 package org.karnak.backend.data.converter;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
-import org.karnak.backend.data.entity.ArgumentEntity;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.karnak.backend.data.entity.ArgumentEntity;
 
 public class ArgumentToMapConverter extends StdConverter<List<ArgumentEntity>, Map<String, String>> {
 

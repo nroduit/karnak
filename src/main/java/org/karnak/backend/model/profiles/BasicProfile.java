@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.model.profiles;
 
+import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ProfileElementEntity;
@@ -16,8 +17,6 @@ import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.model.standard.ConfidentialityProfiles;
-
-import java.util.List;
 
 public class BasicProfile extends AbstractProfileItem {
 

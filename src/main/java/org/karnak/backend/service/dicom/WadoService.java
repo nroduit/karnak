@@ -9,17 +9,16 @@
  */
 package org.karnak.backend.service.dicom;
 
-import org.karnak.backend.model.dicom.WadoNode;
-import org.karnak.backend.service.thread.WadoResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.karnak.backend.model.dicom.WadoNode;
+import org.karnak.backend.service.thread.WadoResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class WadoService {

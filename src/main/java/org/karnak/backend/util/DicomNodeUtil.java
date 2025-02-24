@@ -9,11 +9,10 @@
  */
 package org.karnak.backend.util;
 
-import org.karnak.backend.model.dicom.DicomNodeList;
-import org.karnak.frontend.dicom.Util;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.karnak.backend.model.dicom.DicomNodeList;
+import org.karnak.frontend.dicom.Util;
 
 public class DicomNodeUtil {
 
