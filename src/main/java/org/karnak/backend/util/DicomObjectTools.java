@@ -9,16 +9,15 @@
  */
 package org.karnak.backend.util;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.ElementDictionary;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.StringUtils;
 import org.weasis.core.util.StringUtil;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 public class DicomObjectTools {
 

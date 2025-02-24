@@ -10,6 +10,8 @@
 package org.karnak.backend.config;
 
 import jakarta.annotation.PostConstruct;
+import java.util.HashSet;
+import java.util.Set;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.data.repo.SOPClassUIDRepo;
 import org.karnak.backend.model.dicominnolitics.StandardSOPS;
@@ -17,9 +19,6 @@ import org.karnak.backend.model.dicominnolitics.jsonSOP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Configuration
 @EnableJpaRepositories

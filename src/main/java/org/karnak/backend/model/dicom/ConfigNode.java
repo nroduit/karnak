@@ -9,10 +9,9 @@
  */
 package org.karnak.backend.model.dicom;
 
+import java.util.Objects;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.DicomNode;
-
-import java.util.Objects;
 
 public class ConfigNode {
 

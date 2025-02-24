@@ -9,9 +9,8 @@
  */
 package org.karnak.backend.exception;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.Serial;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExpressionActionException extends RuntimeException {

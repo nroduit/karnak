@@ -27,6 +27,8 @@ import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.shared.Registration;
+import java.util.ArrayList;
+import java.util.List;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.model.dicom.ConfigNode;
@@ -34,9 +36,6 @@ import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.util.DicomNodeUtil;
 import org.karnak.frontend.component.AbstractDialog;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DicomEchoSelectionDialog extends AbstractDialog {
 

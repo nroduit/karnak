@@ -14,6 +14,9 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
@@ -25,10 +28,6 @@ import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.function.Predicate;
 
 @Service
 @Slf4j

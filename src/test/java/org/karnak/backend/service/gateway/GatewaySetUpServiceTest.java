@@ -29,7 +29,7 @@ import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Mock;
 import org.weasis.dicom.param.DicomNode;
 
 import java.util.ArrayList;
@@ -45,10 +45,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class GatewaySetUpServiceTest {
 
-	@MockBean
+	@Mock
 	private ExternalIDCache externalIDCache;
 
-	@MockBean
+	@Mock
 	private RedisConfiguration redisConfiguration;
 
 	// Repositories

@@ -9,16 +9,15 @@
  */
 package org.karnak.backend.service;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Service managing destinations

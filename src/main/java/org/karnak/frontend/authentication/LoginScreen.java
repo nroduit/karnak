@@ -21,6 +21,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.Lumo;
+import java.util.Objects;
 import org.karnak.backend.cache.RequestCache;
 import org.karnak.backend.enums.SecurityRole;
 import org.karnak.frontend.image.LogoKarnak;
@@ -30,8 +31,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Objects;
 
 /**
  * UI content when the user is not logged in yet.

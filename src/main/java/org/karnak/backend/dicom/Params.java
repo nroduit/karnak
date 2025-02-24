@@ -9,9 +9,8 @@
  */
 package org.karnak.backend.dicom;
 
-import org.dcm4che3.net.Association;
-
 import java.io.InputStream;
+import org.dcm4che3.net.Association;
 
 public final class Params {
 

@@ -11,8 +11,6 @@ package org.karnak.backend.util;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +18,7 @@ import java.net.SocketException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ServletUtil {

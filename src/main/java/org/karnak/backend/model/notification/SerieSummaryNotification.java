@@ -9,11 +9,10 @@
  */
 package org.karnak.backend.model.notification;
 
-import org.karnak.backend.constant.Notification;
-
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
+import org.karnak.backend.constant.Notification;
 
 /**
  * Model used for serie summary notification

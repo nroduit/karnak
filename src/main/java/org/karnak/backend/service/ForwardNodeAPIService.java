@@ -9,15 +9,14 @@
  */
 package org.karnak.backend.service;
 
+import java.io.Serializable;
+import java.util.Optional;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-
-import java.io.Serializable;
-import java.util.Optional;
 
 /**
  * Forward Node API Service
