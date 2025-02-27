@@ -102,7 +102,8 @@ public class Profile {
 	}
 
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
-		final java.util.Set<org.karnak.backend.data.entity.ProfileElementEntity> listProfileElementEntity = profileEntity.getProfileElementEntities();
+		final java.util.Set<org.karnak.backend.data.entity.ProfileElementEntity> listProfileElementEntity = profileEntity
+			.getProfileElementEntities();
 		List<ProfileItem> profileItems = new ArrayList<>();
 
 		for (ProfileElementEntity profileElementEntity : listProfileElementEntity) {

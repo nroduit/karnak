@@ -13,61 +13,64 @@ import java.util.Objects;
 
 public class MaskStationCondition {
 
-    private String stationName;
+	private String stationName;
 
-    private Long imageWidth;
+	private Long imageWidth;
 
-    private Long imageHeight;
+	private Long imageHeight;
 
-    public MaskStationCondition(String stationName, Long imageWidth, Long imageHeight) {
-        this.stationName = stationName;
-        this.imageWidth = imageWidth;
-        this.imageHeight = imageHeight;
-    }
+	public MaskStationCondition(String stationName, Long imageWidth, Long imageHeight) {
+		this.stationName = stationName;
+		this.imageWidth = imageWidth;
+		this.imageHeight = imageHeight;
+	}
 
-    public MaskStationCondition(String stationName, String imageWidth, String imageHeight) {
-        this(stationName, imageWidth != null ? Long.valueOf(imageWidth) : null, imageHeight != null ? Long.valueOf(imageHeight) : null);
-    }
+	public MaskStationCondition(String stationName, String imageWidth, String imageHeight) {
+		this(stationName, imageWidth != null ? Long.valueOf(imageWidth) : null,
+				imageHeight != null ? Long.valueOf(imageHeight) : null);
+	}
 
-    public MaskStationCondition(String stationName) {
-        this(stationName, (Long) null, null);
-    }
+	public MaskStationCondition(String stationName) {
+		this(stationName, (Long) null, null);
+	}
 
-    public String getStationName() {
-        return stationName;
-    }
+	public String getStationName() {
+		return stationName;
+	}
 
-    public void setStationName(String stationName) {
-        this.stationName = stationName;
-    }
+	public void setStationName(String stationName) {
+		this.stationName = stationName;
+	}
 
-    public Long getImageWidth() {
-        return imageWidth;
-    }
+	public Long getImageWidth() {
+		return imageWidth;
+	}
 
-    public void setImageWidth(Long imageWidth) {
-        this.imageWidth = imageWidth;
-    }
+	public void setImageWidth(Long imageWidth) {
+		this.imageWidth = imageWidth;
+	}
 
-    public Long getImageHeight() {
-        return imageHeight;
-    }
+	public Long getImageHeight() {
+		return imageHeight;
+	}
 
-    public void setImageHeight(Long imageHeight) {
-        this.imageHeight = imageHeight;
-    }
+	public void setImageHeight(Long imageHeight) {
+		this.imageHeight = imageHeight;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        MaskStationCondition that = (MaskStationCondition) o;
-        return Objects.equals(stationName, that.stationName) && Objects.equals(imageWidth, that.imageWidth) && Objects.equals(imageHeight, that.imageHeight);
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		MaskStationCondition that = (MaskStationCondition) o;
+		return Objects.equals(stationName, that.stationName) && Objects.equals(imageWidth, that.imageWidth)
+				&& Objects.equals(imageHeight, that.imageHeight);
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(stationName, imageWidth, imageHeight);
-    }
+	@Override
+	public int hashCode() {
+		return Objects.hash(stationName, imageWidth, imageHeight);
+	}
+
 }
