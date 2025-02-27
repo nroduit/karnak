@@ -17,7 +17,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.dom.Style;
 
 import java.util.Base64;
 
@@ -87,9 +86,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		authTypeSelect.setErrorMessage("This field is mandatory");
 		authTypeSelect.setWidth(FIELD_WIDTH);
 		authTypeSelect.setEmptySelectionAllowed(false);
-		authTypeSelect.addValueChangeListener(value -> {
-			displayAuthTypeForm(value.getValue());
-		});
+		authTypeSelect.addValueChangeListener(value -> displayAuthTypeForm(value.getValue()));
 
 		divSelectBox.add(authTypeSelect);
 
