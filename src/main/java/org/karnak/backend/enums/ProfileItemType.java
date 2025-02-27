@@ -9,7 +9,16 @@
  */
 package org.karnak.backend.enums;
 
-import org.karnak.backend.model.profiles.*;
+import org.karnak.backend.model.profiles.ActionDates;
+import org.karnak.backend.model.profiles.ActionTags;
+import org.karnak.backend.model.profiles.AddTag;
+import org.karnak.backend.model.profiles.BasicProfile;
+import org.karnak.backend.model.profiles.CleanPixelData;
+import org.karnak.backend.model.profiles.Defacing;
+import org.karnak.backend.model.profiles.Expression;
+import org.karnak.backend.model.profiles.PrivateTags;
+import org.karnak.backend.model.profiles.ProfileItem;
+import org.karnak.backend.model.profiles.UpdateUIDsProfile;
 
 public enum ProfileItemType {
 

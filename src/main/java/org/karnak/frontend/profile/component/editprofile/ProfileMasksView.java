@@ -14,7 +14,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import org.karnak.backend.data.entity.MaskEntity;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.List;
 import java.util.Set;
 

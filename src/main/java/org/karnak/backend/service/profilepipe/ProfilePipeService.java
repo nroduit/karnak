@@ -9,7 +9,12 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import org.karnak.backend.data.entity.*;
+import org.karnak.backend.data.entity.ArgumentEntity;
+import org.karnak.backend.data.entity.ExcludedTagEntity;
+import org.karnak.backend.data.entity.IncludedTagEntity;
+import org.karnak.backend.data.entity.MaskEntity;
+import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;

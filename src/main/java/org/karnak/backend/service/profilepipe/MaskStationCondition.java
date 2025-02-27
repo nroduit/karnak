@@ -59,7 +59,9 @@ public class MaskStationCondition {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         MaskStationCondition that = (MaskStationCondition) o;
         return Objects.equals(stationName, that.stationName) && Objects.equals(imageWidth, that.imageWidth) && Objects.equals(imageHeight, that.imageHeight);
     }

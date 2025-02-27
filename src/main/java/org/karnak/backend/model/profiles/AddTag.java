@@ -82,7 +82,7 @@ public class AddTag extends AbstractProfileItem {
 	}
 
 	@Override
-	public void profileValidation() throws Exception {
+	public final void profileValidation() throws Exception {
 		if (argumentEntities == null || argumentEntities.isEmpty()) {
 			throw new Exception("Cannot build the profile " + codeName + ": Need to specify value argument");
 		}

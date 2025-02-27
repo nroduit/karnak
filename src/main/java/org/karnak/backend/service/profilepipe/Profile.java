@@ -10,10 +10,19 @@
 package org.karnak.backend.service.profilepipe;
 
 import lombok.extern.slf4j.Slf4j;
-import org.dcm4che3.data.*;
+import org.dcm4che3.data.Attributes;
+import org.dcm4che3.data.BulkData;
+import org.dcm4che3.data.Fragments;
+import org.dcm4che3.data.Sequence;
+import org.dcm4che3.data.Tag;
+import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
 import org.dcm4che3.util.TagUtils;
-import org.karnak.backend.data.entity.*;
+import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.dicom.Defacer;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.action.ActionItem;
@@ -34,10 +43,15 @@ import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Shape;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.karnak.backend.dicom.DefacingUtil.isAxial;
@@ -86,7 +100,7 @@ public class Profile {
 	}
 
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
-		final Set<ProfileElementEntity> listProfileElementEntity = profileEntity.getProfileElementEntities();
+		final java.util.Set<org.karnak.backend.data.entity.ProfileElementEntity> listProfileElementEntity = profileEntity.getProfileElementEntities();
 		List<ProfileItem> profileItems = new ArrayList<>();
 
 		for (ProfileElementEntity profileElementEntity : listProfileElementEntity) {
