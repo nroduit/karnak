@@ -12,10 +12,11 @@ package org.karnak.frontend.profile.component.editprofile;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import java.awt.Rectangle;
+import org.karnak.backend.data.entity.MaskEntity;
+
+import java.awt.*;
 import java.util.List;
 import java.util.Set;
-import org.karnak.backend.data.entity.MaskEntity;
 
 public class ProfileMasksView extends VerticalLayout {
 
@@ -34,6 +35,12 @@ public class ProfileMasksView extends VerticalLayout {
 			maskEntities.forEach(maskEntity -> {
 				if (maskEntity.getStationName() != null) {
 					add(setMasksValue("Station name : " + maskEntity.getStationName()));
+				}
+				if (maskEntity.getImageWidth() != null) {
+					add(setMasksValue("Image Width : " + maskEntity.getImageWidth()));
+				}
+				if (maskEntity.getImageHeight() != null) {
+					add(setMasksValue("Image Height : " + maskEntity.getImageHeight()));
 				}
 				if (maskEntity.getColor() != null) {
 					add(setMasksValue("Color : " + maskEntity.getColor()));

@@ -9,37 +9,15 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
-
-import java.awt.Color;
-import java.awt.Shape;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.dcm4che3.data.Attributes;
-import org.dcm4che3.data.BulkData;
-import org.dcm4che3.data.Fragments;
-import org.dcm4che3.data.Sequence;
-import org.dcm4che3.data.Tag;
-import org.dcm4che3.data.VR;
+import org.dcm4che3.data.*;
 import org.dcm4che3.img.op.MaskArea;
 import org.dcm4che3.util.TagUtils;
-import org.karnak.backend.data.entity.DestinationEntity;
-import org.karnak.backend.data.entity.ProfileElementEntity;
-import org.karnak.backend.data.entity.ProfileEntity;
-import org.karnak.backend.data.entity.ProjectEntity;
-import org.karnak.backend.data.entity.SecretEntity;
+import org.karnak.backend.data.entity.*;
 import org.karnak.backend.dicom.Defacer;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.action.ActionItem;
+import org.karnak.backend.model.action.Add;
 import org.karnak.backend.model.action.Remove;
 import org.karnak.backend.model.action.ReplaceNull;
 import org.karnak.backend.model.expression.ExprCondition;
@@ -56,6 +34,15 @@ import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
 
+import java.awt.*;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
+
 @Slf4j
 public class Profile {
 
@@ -63,7 +50,7 @@ public class Profile {
 
 	private final Pseudonym pseudonym;
 
-	private final Map<String, MaskArea> maskMap;
+	private final Map<MaskStationCondition, MaskArea> maskMap;
 
 	public Profile(ProfileEntity profileEntity) {
 		this.maskMap = new HashMap<>();
@@ -71,20 +58,31 @@ public class Profile {
 		this.profiles = createProfilesList(profileEntity);
 	}
 
-	public void addMaskMap(Map<? extends String, ? extends MaskArea> maskMap) {
+	/*public void addMaskMap(Map<? extends String, ? extends MaskArea> maskMap) {
 		this.maskMap.putAll(maskMap);
-	}
+	}*/
 
-	public MaskArea getMask(String key) {
+	public MaskArea getMask(MaskStationCondition key) {
 		MaskArea mask = maskMap.get(key);
 		if (mask == null) {
-			mask = maskMap.get("*");
+			// No exact match, remove image size information to match the station name only
+			key.setImageWidth(null);
+			key.setImageHeight(null);
+			mask = maskMap.get(key);
+		}
+		if (mask == null) {
+			// No match with the station name, get the universal mask
+			mask = maskMap.get(new MaskStationCondition("*"));
 		}
 		return mask;
 	}
 
 	public void addMask(String stationName, MaskArea maskArea) {
-		this.maskMap.put(stationName, maskArea);
+		this.maskMap.put(new MaskStationCondition(stationName), maskArea);
+	}
+
+	public void addMask(MaskStationCondition key, MaskArea maskArea) {
+		this.maskMap.put(key, maskArea);
 	}
 
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
@@ -122,7 +120,7 @@ public class Profile {
 					color = ActionTags.hexadecimal2Color(m.getColor());
 				}
 				List<Shape> shapeList = m.getRectangles().stream().map(Shape.class::cast).collect(Collectors.toList());
-				addMask(m.getStationName(), new MaskArea(shapeList, color));
+				addMask(new MaskStationCondition(m.getStationName(), m.getImageWidth(), m.getImageHeight()), new MaskArea(shapeList, color));
 			});
 			return profileItems;
 		}
@@ -156,7 +154,15 @@ public class Profile {
 				}
 
 				if (currentAction != null) {
-					break;
+					if (currentAction instanceof Add) {
+						// When adding a new tag, the variable tag is irrelevant and should not be flagged as modified
+						// Set the current action to null after execution and do not break out of the loop if other
+						// profile elements should be applied to the tag
+						execute(currentAction, dcm, tag, hmac);
+						currentAction = null;
+					} else {
+						break;
+					}
 				}
 
 				if (profileEntity.equals(profilePassedInSequence)) {
@@ -177,15 +183,20 @@ public class Profile {
 			}
 			else {
 				if (currentAction != null) {
-					try {
-						currentAction.execute(dcm, tag, hmac);
-					}
-					catch (final Exception e) {
-						log.error("Cannot execute the currentAction {} for tag: {}", currentAction,
-								TagUtils.toString(tag), e);
-					}
+					execute(currentAction, dcm, tag, hmac);
 				}
 			}
+		}
+	}
+
+	private void execute(ActionItem currentAction, Attributes dcm, int tag, HMAC hmac) {
+		if (currentAction == null) return;
+		try {
+			currentAction.execute(dcm, tag, hmac);
+		}
+		catch (final Exception e) {
+			log.error("Cannot execute the currentAction {} for tag: {}", currentAction,
+					TagUtils.toString(tag), e);
 		}
 	}
 
@@ -198,11 +209,11 @@ public class Profile {
 				throw new IllegalStateException("DICOM Object does not contain sopClassUID");
 			}
 			String scuPattern = sopClassUID + ".";
-			MaskArea mask = getMask(dcmCopy.getString(Tag.StationName));
+			MaskArea mask = getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName), dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
 			// A mask must be applied with all the US and Secondary Capture sopClassUID,
 			// and with
 			// BurnedInAnnotation
-			if (isCleanPixelAllowedDependingImageType(dcmCopy, sopClassUID, scuPattern)
+			if (isCleanPixelAllowedDependingImageType(dcmCopy, sopClassUID)
 					&& evaluateConditionCleanPixelData(dcmCopy)) {
 				context.setMaskArea(mask);
 				if (mask == null) {
@@ -219,16 +230,16 @@ public class Profile {
 	 * Determine if the clean pixel should be applied depending on the image type
 	 * @param dcmCopy Attributes
 	 * @param sopClassUID SopClassUID
-	 * @param scuPattern Pattern
 	 * @return true if the clean pixel could be applied
 	 */
-	private boolean isCleanPixelAllowedDependingImageType(Attributes dcmCopy, String sopClassUID, String scuPattern) {
+    boolean isCleanPixelAllowedDependingImageType(Attributes dcmCopy, String sopClassUID) {
 		// A mask must be applied with all the US and Secondary Capture sopClassUID, and
-		// with
-		// BurnedInAnnotation
-		return scuPattern.startsWith("1.2.840.10008.5.1.4.1.1.6.")
-				|| scuPattern.startsWith("1.2.840.10008.5.1.4.1.1.7.")
-				|| scuPattern.startsWith("1.2.840.10008.5.1.4.1.1.3.")
+		// with BurnedInAnnotation
+		String sopPattern = sopClassUID + ".";
+
+		return sopPattern.startsWith("1.2.840.10008.5.1.4.1.1.6.")
+				|| sopPattern.startsWith("1.2.840.10008.5.1.4.1.1.7.")
+				|| sopPattern.startsWith("1.2.840.10008.5.1.4.1.1.3.")
 				|| sopClassUID.equals("1.2.840.10008.5.1.4.1.1.77.1.1")
 				|| "YES".equalsIgnoreCase(dcmCopy.getString(Tag.BurnedInAnnotation));
 	}

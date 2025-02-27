@@ -9,21 +9,17 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.karnak.backend.data.entity.ArgumentEntity;
-import org.karnak.backend.data.entity.ExcludedTagEntity;
-import org.karnak.backend.data.entity.IncludedTagEntity;
-import org.karnak.backend.data.entity.MaskEntity;
-import org.karnak.backend.data.entity.ProfileElementEntity;
-import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.data.entity.*;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ProfilePipeService {
@@ -76,7 +72,7 @@ public class ProfilePipeService {
 				profilePipeYml.getMinimumKarnakVersion(), null, byDefault);
 		if (profilePipeYml.getMasks() != null) {
 			profilePipeYml.getMasks().forEach(m -> {
-				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getColor(), newProfileEntity);
+				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getImageWidth(), m.getImageHeight(), m.getColor(), newProfileEntity);
 				m.getRectangles().forEach(maskEntity::addRectangle);
 				newProfileEntity.addMask(maskEntity);
 			});

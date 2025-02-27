@@ -15,6 +15,10 @@ public class MaskBody {
 
 	private String stationName;
 
+	private Long imageWidth;
+
+	private Long imageHeight;
+
 	private String color;
 
 	private List<String> rectangles;
@@ -43,4 +47,19 @@ public class MaskBody {
 		this.rectangles = rectangles;
 	}
 
+	public Long getImageWidth() {
+		return imageWidth;
+	}
+
+	public void setImageWidth(Long imageWidth) {
+		this.imageWidth = imageWidth;
+	}
+
+	public Long getImageHeight() {
+		return imageHeight;
+	}
+
+	public void setImageHeight(Long imageHeight) {
+		this.imageHeight = imageHeight;
+	}
 }

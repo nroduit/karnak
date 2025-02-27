@@ -11,21 +11,15 @@ package org.karnak.backend.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import java.awt.Rectangle;
+import jakarta.persistence.*;
+import org.karnak.backend.data.converter.RectangleListConverter;
+import org.karnak.backend.data.converter.RectangleListToStringListConverter;
+
+import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.karnak.backend.data.converter.RectangleListConverter;
-import org.karnak.backend.data.converter.RectangleListToStringListConverter;
 
 @Entity(name = "Masks")
 @Table(name = "masks")
@@ -39,6 +33,10 @@ public class MaskEntity implements Serializable {
 
 	private String stationName;
 
+	private Long imageWidth;
+
+	private Long imageHeight;
+
 	private String color;
 
 	private List<Rectangle> rectangles = new ArrayList<>();
@@ -46,10 +44,16 @@ public class MaskEntity implements Serializable {
 	public MaskEntity() {
 	}
 
-	public MaskEntity(String stationName, String color, ProfileEntity profileEntity) {
+	public MaskEntity(String stationName, Long imageWidth, Long imageHeight, String color, ProfileEntity profileEntity) {
 		this.stationName = stationName;
 		this.color = color;
 		this.profileEntity = profileEntity;
+		this.imageHeight = imageHeight;
+		this.imageWidth = imageWidth;
+	}
+
+	public MaskEntity(String stationName, String color, ProfileEntity profileEntity) {
+		this(stationName, null, null, color, profileEntity);
 	}
 
 	public void addRectangle(String rectangle) {
@@ -103,6 +107,14 @@ public class MaskEntity implements Serializable {
 		this.stationName = stationName;
 	}
 
+	public Long getImageWidth() { return imageWidth; }
+
+	public void setImageWidth(Long imageWidth) { this.imageWidth = imageWidth; }
+
+	public Long getImageHeight() { return imageHeight; }
+
+	public void setImageHeight(Long imageHeight) { this.imageHeight = imageHeight; }
+
 	public String getColor() {
 		return color;
 	}
@@ -121,12 +133,13 @@ public class MaskEntity implements Serializable {
 		}
 		MaskEntity that = (MaskEntity) o;
 		return Objects.equals(id, that.id) && Objects.equals(stationName, that.stationName)
+				&& Objects.equals(imageWidth, that.imageWidth) && Objects.equals(imageHeight, that.imageHeight)
 				&& Objects.equals(color, that.color) && Objects.equals(rectangles, that.rectangles);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, stationName, color, rectangles);
+		return Objects.hash(id, stationName, imageWidth, imageHeight, color, rectangles);
 	}
 
 }
