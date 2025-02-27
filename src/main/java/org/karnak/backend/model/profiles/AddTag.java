@@ -68,7 +68,8 @@ public class AddTag extends AbstractProfileItem {
 			for (ArgumentEntity ae : argumentEntities) {
 				if ("value".equals(ae.getArgumentKey())) {
 					value = ae.getArgumentValue();
-				} else if ("vr".equals(ae.getArgumentKey())) {
+				}
+				else if ("vr".equals(ae.getArgumentKey())) {
 					vr = VR.valueOf(ae.getArgumentValue());
 				}
 			}
@@ -96,4 +97,5 @@ public class AddTag extends AbstractProfileItem {
 			throw new Exception(expressionError.getMsg());
 		}
 	}
+
 }

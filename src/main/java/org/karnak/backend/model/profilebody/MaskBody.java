@@ -62,4 +62,5 @@ public class MaskBody {
 	public void setImageHeight(Long imageHeight) {
 		this.imageHeight = imageHeight;
 	}
+
 }
