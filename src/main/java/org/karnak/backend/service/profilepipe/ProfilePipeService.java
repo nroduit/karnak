@@ -72,7 +72,8 @@ public class ProfilePipeService {
 				profilePipeYml.getMinimumKarnakVersion(), null, byDefault);
 		if (profilePipeYml.getMasks() != null) {
 			profilePipeYml.getMasks().forEach(m -> {
-				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getImageWidth(), m.getImageHeight(), m.getColor(), newProfileEntity);
+				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getImageWidth(), m.getImageHeight(),
+						m.getColor(), newProfileEntity);
 				m.getRectangles().forEach(maskEntity::addRectangle);
 				newProfileEntity.addMask(maskEntity);
 			});

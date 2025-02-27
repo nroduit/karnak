@@ -44,7 +44,8 @@ public class MaskEntity implements Serializable {
 	public MaskEntity() {
 	}
 
-	public MaskEntity(String stationName, Long imageWidth, Long imageHeight, String color, ProfileEntity profileEntity) {
+	public MaskEntity(String stationName, Long imageWidth, Long imageHeight, String color,
+			ProfileEntity profileEntity) {
 		this.stationName = stationName;
 		this.color = color;
 		this.profileEntity = profileEntity;
@@ -107,13 +108,21 @@ public class MaskEntity implements Serializable {
 		this.stationName = stationName;
 	}
 
-	public Long getImageWidth() { return imageWidth; }
+	public Long getImageWidth() {
+		return imageWidth;
+	}
 
-	public void setImageWidth(Long imageWidth) { this.imageWidth = imageWidth; }
+	public void setImageWidth(Long imageWidth) {
+		this.imageWidth = imageWidth;
+	}
 
-	public Long getImageHeight() { return imageHeight; }
+	public Long getImageHeight() {
+		return imageHeight;
+	}
 
-	public void setImageHeight(Long imageHeight) { this.imageHeight = imageHeight; }
+	public void setImageHeight(Long imageHeight) {
+		this.imageHeight = imageHeight;
+	}
 
 	public String getColor() {
 		return color;

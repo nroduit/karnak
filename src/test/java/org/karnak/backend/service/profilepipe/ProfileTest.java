@@ -205,15 +205,19 @@ class ProfileTest {
 		Profile profile = new Profile(profileEntity);
 
 		// Matches the maskEntityStation, stationName = ICT256
-		MaskArea ma = profile.getMask(new MaskStationCondition(attributes.getString(Tag.StationName), attributes.getString(Tag.Columns), attributes.getString(Tag.Rows)));
+		MaskArea ma = profile.getMask(new MaskStationCondition(attributes.getString(Tag.StationName),
+				attributes.getString(Tag.Columns), attributes.getString(Tag.Rows)));
 		assertEquals(new Rectangle(350, 15, 150, 50), ma.getShapeList().getFirst());
 
-		// Matches the maskEntityStationSize, stationName = ICT256 && width = 1024 && height = 1024
-		MaskArea ma2 = profile.getMask(new MaskStationCondition(attributes2.getString(Tag.StationName), attributes2.getString(Tag.Columns), attributes2.getString(Tag.Rows)));
+		// Matches the maskEntityStationSize, stationName = ICT256 && width = 1024 &&
+		// height = 1024
+		MaskArea ma2 = profile.getMask(new MaskStationCondition(attributes2.getString(Tag.StationName),
+				attributes2.getString(Tag.Columns), attributes2.getString(Tag.Rows)));
 		assertEquals(new Rectangle(250, 10, 150, 50), ma2.getShapeList().getFirst());
 
 		// Matches the maskEntity, stationName = *
-		MaskArea ma3 = profile.getMask(new MaskStationCondition(attributes3.getString(Tag.StationName), attributes3.getString(Tag.Columns), attributes3.getString(Tag.Rows)));
+		MaskArea ma3 = profile.getMask(new MaskStationCondition(attributes3.getString(Tag.StationName),
+				attributes3.getString(Tag.Columns), attributes3.getString(Tag.Rows)));
 		assertEquals(new Rectangle(25, 75, 150, 50), ma3.getShapeList().getFirst());
 	}
 
@@ -241,18 +245,24 @@ class ProfileTest {
 		ProfileElementEntity profileElementEntityAddBurnedAttr = new ProfileElementEntity();
 		profileElementEntityAddBurnedAttr.setCodename("action.add.tag");
 		profileElementEntityAddBurnedAttr.setName("Add tag BurnedInAnnotation if does not exist");
-		profileElementEntityAddBurnedAttr.setCondition("tagValueContains(#Tag.StationName,'ICT256') && !tagIsPresent(#Tag.BurnedInAnnotation)");
-		profileElementEntityAddBurnedAttr.addArgument(new ArgumentEntity("value", "YES", profileElementEntityAddBurnedAttr));
-		profileElementEntityAddBurnedAttr.addArgument(new ArgumentEntity("vr", "CS", profileElementEntityAddBurnedAttr));
-		profileElementEntityAddBurnedAttr.addIncludedTag(new IncludedTagEntity("(0028,0301)", profileElementEntityAddBurnedAttr));
+		profileElementEntityAddBurnedAttr
+			.setCondition("tagValueContains(#Tag.StationName,'ICT256') && !tagIsPresent(#Tag.BurnedInAnnotation)");
+		profileElementEntityAddBurnedAttr
+			.addArgument(new ArgumentEntity("value", "YES", profileElementEntityAddBurnedAttr));
+		profileElementEntityAddBurnedAttr
+			.addArgument(new ArgumentEntity("vr", "CS", profileElementEntityAddBurnedAttr));
+		profileElementEntityAddBurnedAttr
+			.addIncludedTag(new IncludedTagEntity("(0028,0301)", profileElementEntityAddBurnedAttr));
 		profileElementEntityAddBurnedAttr.setPosition(1);
 
 		ProfileElementEntity profileElementEntityCleanPixelPerMachine = new ProfileElementEntity();
 		profileElementEntityCleanPixelPerMachine.setCodename("expression.on.tags");
 		profileElementEntityCleanPixelPerMachine.setName("Set BurnedInAnnotation to YES");
 		profileElementEntityCleanPixelPerMachine.setCondition("tagValueContains(#Tag.StationName,'ICT256')");
-		profileElementEntityCleanPixelPerMachine.addArgument(new ArgumentEntity("expr", "Replace('YES')", profileElementEntityCleanPixelPerMachine));
-		profileElementEntityCleanPixelPerMachine.addIncludedTag(new IncludedTagEntity("(0028,0301)", profileElementEntityCleanPixelPerMachine));
+		profileElementEntityCleanPixelPerMachine
+			.addArgument(new ArgumentEntity("expr", "Replace('YES')", profileElementEntityCleanPixelPerMachine));
+		profileElementEntityCleanPixelPerMachine
+			.addIncludedTag(new IncludedTagEntity("(0028,0301)", profileElementEntityCleanPixelPerMachine));
 		profileElementEntityCleanPixelPerMachine.setPosition(2);
 
 		profileElementEntityCleanPixelData.setPosition(3);
@@ -295,4 +305,5 @@ class ProfileTest {
 		assertTrue(cleanPixelAllowed && evaluation);
 
 	}
+
 }
