@@ -102,8 +102,7 @@ public class Profile {
 	}
 
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
-		final Set<ProfileElementEntity> listProfileElementEntity = profileEntity
-			.getProfileElementEntities();
+		final Set<ProfileElementEntity> listProfileElementEntity = profileEntity.getProfileElementEntities();
 		List<ProfileItem> profileItems = new ArrayList<>();
 
 		for (ProfileElementEntity profileElementEntity : listProfileElementEntity) {
