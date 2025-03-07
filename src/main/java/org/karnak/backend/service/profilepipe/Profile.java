@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
@@ -101,7 +102,7 @@ public class Profile {
 	}
 
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
-		final java.util.Set<org.karnak.backend.data.entity.ProfileElementEntity> listProfileElementEntity = profileEntity
+		final Set<ProfileElementEntity> listProfileElementEntity = profileEntity
 			.getProfileElementEntities();
 		List<ProfileItem> profileItems = new ArrayList<>();
 
