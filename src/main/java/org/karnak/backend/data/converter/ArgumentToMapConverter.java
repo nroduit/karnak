@@ -20,9 +20,7 @@ public class ArgumentToMapConverter extends StdConverter<List<ArgumentEntity>, M
 	@Override
 	public Map<String, String> convert(List<ArgumentEntity> argumentEntities) {
 		Map<String, String> argumentMap = new HashMap<>();
-		argumentEntities.forEach(argument -> {
-			argumentMap.put(argument.getArgumentKey(), argument.getArgumentValue());
-		});
+		argumentEntities.forEach(argument -> argumentMap.put(argument.getArgumentKey(), argument.getArgumentValue()));
 		return argumentMap;
 	}
 

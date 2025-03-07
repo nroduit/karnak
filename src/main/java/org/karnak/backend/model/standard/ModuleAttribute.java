@@ -11,7 +11,6 @@ package org.karnak.backend.model.standard;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 public class ModuleAttribute {
@@ -45,7 +44,7 @@ public class ModuleAttribute {
 	private String generateTagPath(String tagPath, String moduleId) {
 		List<String> tagPathFiltered = Arrays.stream(tagPath.split(":"))
 			.filter(value -> !value.equals(moduleId))
-			.collect(Collectors.toList());
+			.toList();
 
 		return StringUtils.join(tagPathFiltered, ":");
 	}

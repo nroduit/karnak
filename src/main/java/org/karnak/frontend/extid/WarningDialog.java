@@ -28,9 +28,7 @@ public class WarningDialog extends Dialog {
 
 		divContent.add(divIntro);
 
-		Button cancelButton = new Button(buttonText, event -> {
-			close();
-		});
+		Button cancelButton = new Button(buttonText, event -> close());
 
 		cancelButton.getStyle().set("margin-left", "75%");
 		add(divTitle, divContent, cancelButton);

@@ -17,6 +17,7 @@ import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.Add;
 import org.karnak.backend.model.action.Keep;
@@ -30,15 +31,17 @@ import org.karnak.backend.model.standard.StandardDICOM;
 @Slf4j
 public class AddTag extends AbstractProfileItem {
 
+	private static final String TAG_PATTERN = "[(),]";
+
 	private final TagActionMap tagsAction;
 
 	private final ActionItem actionByDefault;
 
-	private boolean tagAdded = false;
+	private boolean tagAdded;
 
 	private final StandardDICOM standardDICOM;
 
-	public AddTag(ProfileElementEntity profileElementEntity) throws Exception {
+	public AddTag(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 		tagsAction = new TagActionMap();
 		actionByDefault = new Keep("K");
@@ -48,9 +51,9 @@ public class AddTag extends AbstractProfileItem {
 		standardDICOM = AppConfig.getInstance().getStandardDICOM();
 	}
 
-	private void setActionHashMap() throws Exception {
+	private void setActionHashMap() {
 
-		if (tagEntities != null && tagEntities.size() > 0) {
+		if (tagEntities != null && !tagEntities.isEmpty()) {
 			for (IncludedTagEntity tag : tagEntities) {
 				tagsAction.put(tag.getTagValue(), actionByDefault);
 			}
@@ -61,7 +64,7 @@ public class AddTag extends AbstractProfileItem {
 	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		if (!tagAdded) {
 			IncludedTagEntity t = tagEntities.getFirst();
-			String tagValue = t.getTagValue().replaceAll("[(),]", "");
+			String tagValue = t.getTagValue().replaceAll(TAG_PATTERN, "");
 
 			String value = "";
 			VR vr = null;
@@ -83,18 +86,18 @@ public class AddTag extends AbstractProfileItem {
 	}
 
 	@Override
-	public final void profileValidation() throws Exception {
+	public final void profileValidation() throws ProfileException {
 		if (argumentEntities == null || argumentEntities.isEmpty()) {
-			throw new Exception("Cannot build the profile " + codeName + ": Need to specify value argument");
+			throw new ProfileException("Cannot build the profile " + codeName + ": Need to specify value argument");
 		}
 		if (tagEntities != null && tagEntities.size() > 1) {
-			throw new Exception("Cannot build the profile " + codeName + ": Exactly one tag is required");
+			throw new ProfileException("Cannot build the profile " + codeName + ": Exactly one tag is required");
 		}
 
 		final ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(new Attributes()),
 				Boolean.class);
 		if (condition != null && !expressionError.isValid()) {
-			throw new Exception(expressionError.getMsg());
+			throw new ProfileException(expressionError.getMsg());
 		}
 	}
 

@@ -60,6 +60,7 @@ public class ForwardDicomNode extends DicomNode {
 		return forwardAETitle;
 	}
 
+	@Override
 	public Long getId() {
 		return id;
 	}

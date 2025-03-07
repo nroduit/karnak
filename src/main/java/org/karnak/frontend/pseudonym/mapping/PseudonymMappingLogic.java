@@ -9,17 +9,16 @@
  */
 package org.karnak.frontend.pseudonym.mapping;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import org.karnak.backend.cache.ExternalIDCache;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Mapping logic service use to make calls to backend and implement logic linked to the
@@ -67,9 +66,9 @@ public class PseudonymMappingLogic {
 
 		// Add mapping found
 		patientsFound.forEach(p -> {
-			Long projectID = ((Patient) p).getProjectID();
+			Long projectID = p.getProjectID();
 			ProjectEntity projectEntity = projectService.retrieveProject(projectID);
-			externalIDCacheMapping.put(projectEntity.getName(), (Patient) p);
+			externalIDCacheMapping.put(projectEntity.getName(), p);
 		});
 
 		return externalIDCacheMapping;

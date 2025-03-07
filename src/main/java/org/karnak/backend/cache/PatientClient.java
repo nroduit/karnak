@@ -11,7 +11,6 @@ package org.karnak.backend.cache;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -58,7 +57,7 @@ public abstract class PatientClient {
 				ValueWrapper keyValue = cache.get(k.substring(prefixKeySearchCache.length()));
 				return keyValue != null ? (Patient) keyValue.get() : null;
 			})
-			.collect(Collectors.toList());
+			.toList();
 	}
 
 	public void removeAll() {

@@ -9,7 +9,6 @@
  */
 package org.karnak.backend.dicom;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.weasis.core.util.FileUtil;
@@ -78,7 +77,7 @@ public class WebForwardDestination extends ForwardDestination {
 		return stowRS.getRequestURL();
 	}
 
-	public DicomStowRS getStowrsSingleFile() throws IOException {
+	public DicomStowRS getStowrsSingleFile() {
 		return stowRS;
 	}
 

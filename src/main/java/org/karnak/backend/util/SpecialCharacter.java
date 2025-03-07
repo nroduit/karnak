@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 
 public class SpecialCharacter {
 
+	private SpecialCharacter() {}
+
 	// Response Ferran Maylinch
 	// https://stackoverflow.com/questions/10664434/escaping-special-characters-in-java-regular-expressions
 	public static String escapeSpecialRegexChars(String str) {

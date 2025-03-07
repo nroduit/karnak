@@ -16,7 +16,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dcm4che3.data.Attributes;
@@ -118,7 +117,7 @@ public class ShiftDate {
 				|| argumentEntities.stream().noneMatch(argument -> argument.getArgumentKey().equals("days"))) {
 			List<String> args = argumentEntities.stream()
 				.map(ArgumentEntity::getArgumentKey)
-				.collect(Collectors.toList());
+				.toList();
 			IllegalArgumentException missingParameters = new IllegalArgumentException(
 					"Cannot build the option ShiftDate: Missing argument, the class need [seconds, days] as parameters. Parameters given "
 							+ args);

@@ -47,7 +47,7 @@ public class RectangleListConverter implements AttributeConverter<List<Rectangle
 		return Arrays.asList(string.split(SPLIT_CHAR))
 			.stream()
 			.map(RectangleListConverter::stringToRectangle)
-			.collect(Collectors.toList());
+			.toList();
 	}
 
 }

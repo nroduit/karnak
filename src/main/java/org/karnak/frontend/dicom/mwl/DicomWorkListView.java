@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.dicom.mwl;
 
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -21,8 +20,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.StatusChangeEvent;
-import com.vaadin.flow.data.binder.StatusChangeListener;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.validator.IntegerRangeValidator;
@@ -43,7 +40,6 @@ import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.WorkListQueryData;
 import org.karnak.frontend.dicom.AbstractView;
 import org.karnak.frontend.dicom.PortField;
-import org.karnak.frontend.dicom.mwl.DicomWorkListSelectionDialog.WorkListSelectionEvent;
 
 /**
  * Calling Order 1) constructor 2) setParameter 3) beforeEnter
@@ -129,7 +125,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private Binder<WorkListQueryData> binderForWorkListQuery;
 
-	private List<Attributes> attributes;
+	private List<Attributes> attributesList;
 
 	private ListDataProvider<Attributes> dataProviderForAttributes;
 
@@ -155,8 +151,8 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	public void loadAttributes(List<Attributes> attributes) {
-		this.attributes.clear();
-		this.attributes.addAll(attributes);
+		this.attributesList.clear();
+		this.attributesList.addAll(attributes);
 		dataProviderForAttributes.refreshAll();
 
 		queryResultLayout.setVisible(true);
@@ -179,10 +175,10 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private void init() {
 		workListQueryData = new WorkListQueryData();
-		binderForWorkListQuery = new Binder<WorkListQueryData>();
+		binderForWorkListQuery = new Binder<>();
 
-		attributes = new ArrayList<>();
-		dataProviderForAttributes = new ListDataProvider<>(attributes);
+		attributesList = new ArrayList<>();
+		dataProviderForAttributes = new ListDataProvider<>(attributesList);
 	}
 
 	private void createView() {
@@ -269,31 +265,20 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		selectWorkListBtn = new Button("Select Worklist");
 		selectWorkListBtn.getStyle().set("cursor", "pointer");
 
-		selectWorkListBtn.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
-
-			@Override
-			public void onComponentEvent(ClickEvent<Button> event) {
-				openDicomWorklistSelectionDialog();
-			}
-		});
+		selectWorkListBtn.addClickListener(e -> openDicomWorklistSelectionDialog());
 	}
 
 	@SuppressWarnings("serial")
 	private void openDicomWorklistSelectionDialog() {
 		dicomWorklistSelectionDialog = new DicomWorkListSelectionDialog();
 
-		dicomWorklistSelectionDialog.addWorkListSelectionListener(
-				new ComponentEventListener<DicomWorkListSelectionDialog.WorkListSelectionEvent>() {
+		dicomWorklistSelectionDialog.addWorkListSelectionListener(e -> {
+			ConfigNode selectedWorkList = e.getSelectedWorkList();
 
-					@Override
-					public void onComponentEvent(WorkListSelectionEvent event) {
-						ConfigNode selectedWorkList = event.getSelectedWorkList();
-
-						workListAetFld.setValue(selectedWorkList.getAet());
-						workListHostnameFld.setValue(selectedWorkList.getHostname());
-						workListPortFld.setValue(selectedWorkList.getPort());
-					}
-				});
+			workListAetFld.setValue(selectedWorkList.getAet());
+			workListHostnameFld.setValue(selectedWorkList.getHostname());
+			workListPortFld.setValue(selectedWorkList.getPort());
+		});
 
 		dicomWorklistSelectionDialog.open();
 	}
@@ -325,7 +310,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildScheduledModalitySelector() {
-		scheduledModalitySelector = new Select<Modality>();
+		scheduledModalitySelector = new Select<>();
 		scheduledModalitySelector.setLabel("Scheduled Modality");
 		scheduledModalitySelector.setItems(Modality.values());
 		scheduledModalitySelector.setValue(Modality.ALL);
@@ -372,13 +357,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		clearBtn = new Button("Clear");
 		clearBtn.getStyle().set("cursor", "pointer");
 
-		clearBtn.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
-
-			@Override
-			public void onComponentEvent(ClickEvent<Button> event) {
-				binderForWorkListQuery.readBean(workListQueryData);
-			}
-		});
+		clearBtn.addClickListener(e -> binderForWorkListQuery.readBean(workListQueryData));
 	}
 
 	@SuppressWarnings("serial")
@@ -388,13 +367,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		queryBtn.setEnabled(false);
 		queryBtn.addClassName("stroked-button");
 
-		queryBtn.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
-
-			@Override
-			public void onComponentEvent(ClickEvent<Button> event) {
-				executeQuery();
-			}
-		});
+		queryBtn.addClickListener(e -> executeQuery());
 	}
 
 	private void buildQueryResultLayout() {
@@ -468,22 +441,18 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 		binderForWorkListQuery.readBean(workListQueryData);
 
-		binderForWorkListQuery.addStatusChangeListener(new StatusChangeListener() {
-
-			@Override
-			public void statusChange(StatusChangeEvent event) {
-				if (callingAetFld.isEmpty() || workListAetFld.isEmpty() || workListHostnameFld.isEmpty()
-						|| workListPortFld.isEmpty()) {
-					queryBtn.setEnabled(false);
-				}
-				else {
-					queryBtn.setEnabled(!event.hasValidationErrors());
-				}
-
-				attributes.clear();
-				dataProviderForAttributes.refreshAll();
-				queryResultLayout.setVisible(false);
+		binderForWorkListQuery.addStatusChangeListener(e -> {
+			if (callingAetFld.isEmpty() || workListAetFld.isEmpty() || workListHostnameFld.isEmpty()
+					|| workListPortFld.isEmpty()) {
+				queryBtn.setEnabled(false);
 			}
+			else {
+				queryBtn.setEnabled(!e.hasValidationErrors());
+			}
+
+			attributesList.clear();
+			dataProviderForAttributes.refreshAll();
+			queryResultLayout.setVisible(false);
 		});
 	}
 

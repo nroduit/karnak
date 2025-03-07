@@ -39,18 +39,18 @@ public class ProfileElementView extends Div {
 			add(setProfileValue("Option : " + profileElementEntity.getOption()));
 		}
 		if (profileElementEntity.getArgumentEntities() != null
-				&& profileElementEntity.getArgumentEntities().size() > 0) {
+				&& !profileElementEntity.getArgumentEntities().isEmpty()) {
 			add(setProfileValue("Arguments"));
 			add(setProfileArguments(profileElementEntity.getArgumentEntities()));
 		}
 		if (profileElementEntity.getCondition() != null) {
 			add(setProfileValue("Condition : " + profileElementEntity.getCondition()));
 		}
-		if (profileElementEntity.getIncludedTagEntities().size() > 0) {
+		if (!profileElementEntity.getIncludedTagEntities().isEmpty()) {
 			add(setProfileValue("Tags"));
 			add(setProfileTags(profileElementEntity.getIncludedTagEntities()));
 		}
-		if (profileElementEntity.getExcludedTagEntities().size() > 0) {
+		if (!profileElementEntity.getExcludedTagEntities().isEmpty()) {
 			add(setProfileValue("Excluded tags"));
 			add(setProfileTags(profileElementEntity.getExcludedTagEntities()));
 		}

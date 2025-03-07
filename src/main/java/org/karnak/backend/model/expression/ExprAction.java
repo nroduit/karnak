@@ -154,14 +154,7 @@ public class ExprAction implements ExpressionItem {
 	}
 
 	public ActionItem ExcludeInstance() {
-		ActionItem exclude = new ExcludeInstance("E");
-		return exclude;
+		return new ExcludeInstance("E");
 	}
-
-	/*
-	 * public ActionItem Add(int newTag, VR newVr, String newValue){ Add add = new
-	 * Add("A", newTag, newVr, newValue); add.execute(dcm, newTag, null, null); return
-	 * null; }
-	 */
 
 }

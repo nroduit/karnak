@@ -16,6 +16,7 @@ import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.AbstractAction;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.expression.ExprAction;
@@ -32,7 +33,7 @@ public class Expression extends AbstractProfileItem {
 
 	private final ActionItem actionByDefault;
 
-	public Expression(ProfileElementEntity profileElementEntity) throws Exception {
+	public Expression(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 		tagsAction = new TagActionMap();
 		exceptedTagsAction = new TagActionMap();
@@ -41,7 +42,7 @@ public class Expression extends AbstractProfileItem {
 		setActionHashMap();
 	}
 
-	private void setActionHashMap() throws Exception {
+	private void setActionHashMap() {
 		if (tagEntities != null) {
 			for (IncludedTagEntity tag : tagEntities) {
 				tagsAction.put(tag.getTagValue(), actionByDefault);
@@ -65,7 +66,7 @@ public class Expression extends AbstractProfileItem {
 	}
 
 	@Override
-	public void profileValidation() throws Exception {
+	public void profileValidation() throws ProfileException {
 		if (argumentEntities.stream().noneMatch(argument -> argument.getArgumentKey().equals("expr"))) {
 			List<String> args = argumentEntities.stream().map(ArgumentEntity::getArgumentKey).toList();
 			throw new IllegalArgumentException(

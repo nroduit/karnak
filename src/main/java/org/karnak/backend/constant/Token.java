@@ -14,6 +14,8 @@ package org.karnak.backend.constant;
  */
 public class Token {
 
+	private Token() {}
+
 	// Name of the resource in the access token for retrieving roles
 	public static final String RESOURCE_NAME = "karnak";
 
