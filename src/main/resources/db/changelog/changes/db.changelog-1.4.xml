@@ -32,4 +32,21 @@
     </dropColumn>
   </changeSet>
 
+  <changeSet author="karnak" id="1.4-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="masks" columnName="image_height"/>
+        <columnExists tableName="masks" columnName="image_width"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="masks">
+      <column name="image_height" type="INTEGER">
+      </column>
+    </addColumn>
+    <addColumn tableName="masks">
+      <column name="image_width" type="INTEGER">
+      </column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

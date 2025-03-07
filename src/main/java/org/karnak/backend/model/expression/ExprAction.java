@@ -21,6 +21,7 @@ import org.dcm4che3.data.VR;
 import org.dcm4che3.img.util.DicomUtils;
 import org.karnak.backend.exception.ExpressionActionException;
 import org.karnak.backend.model.action.ActionItem;
+import org.karnak.backend.model.action.ExcludeInstance;
 import org.karnak.backend.model.action.Keep;
 import org.karnak.backend.model.action.Remove;
 import org.karnak.backend.model.action.Replace;
@@ -150,6 +151,11 @@ public class ExprAction implements ExpressionItem {
 		ActionItem replace = new Replace("D");
 		replace.setDummyValue(DicomUtils.getPatientAgeInPeriod(this.dcmCopy, Tag.PatientAge, false));
 		return replace;
+	}
+
+	public ActionItem ExcludeInstance() {
+		ActionItem exclude = new ExcludeInstance("E");
+		return exclude;
 	}
 
 	/*

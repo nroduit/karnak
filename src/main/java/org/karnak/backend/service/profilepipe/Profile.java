@@ -9,6 +9,16 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import java.awt.Color;
+import java.awt.Shape;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -24,9 +34,12 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.dicom.Defacer;
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.Add;
+import org.karnak.backend.model.action.ExcludeInstance;
 import org.karnak.backend.model.action.Remove;
 import org.karnak.backend.model.action.ReplaceNull;
 import org.karnak.backend.model.expression.ExprCondition;
@@ -42,20 +55,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
-
-import java.awt.Color;
-import java.awt.Shape;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 @Slf4j
 public class Profile {
@@ -180,8 +179,12 @@ public class Profile {
 						// profile elements should be applied to the tag
 						execute(currentAction, dcm, tag, hmac);
 						currentAction = null;
-					}
-					else {
+
+					} else if (currentAction instanceof ExcludeInstance) {
+						context.setAbort(AttributeEditorContext.Abort.FILE_EXCEPTION);
+						context.setAbortMessage(String.format("Instance excluded by profile: %s", profileEntity.getName()));
+						return;
+					} else {
 						break;
 					}
 				}
@@ -211,8 +214,9 @@ public class Profile {
 	}
 
 	private void execute(ActionItem currentAction, Attributes dcm, int tag, HMAC hmac) {
-		if (currentAction == null)
+		if (currentAction == null) {
 			return;
+        }
 		try {
 			currentAction.execute(dcm, tag, hmac);
 		}

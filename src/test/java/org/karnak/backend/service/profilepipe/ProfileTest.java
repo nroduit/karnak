@@ -9,23 +9,31 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import java.awt.Rectangle;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
-import org.karnak.backend.data.entity.*;
+import org.karnak.backend.data.entity.ArgumentEntity;
+import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.IncludedTagEntity;
+import org.karnak.backend.data.entity.MaskEntity;
+import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.PseudonymType;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.weasis.dicom.param.AttributeEditorContext;
-
-import java.awt.*;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class ProfileTest {
@@ -221,6 +229,7 @@ class ProfileTest {
 		assertEquals(new Rectangle(25, 75, 150, 50), ma3.getShapeList().getFirst());
 	}
 
+	@Test
 	void cleanPixelData_imageTypeIsXA_forceCleanPixelByStationNumber() {
 		// Use case : X Ray Angiography that contains identifying information
 		// but the BurnedInAnnotation attribute is not set
@@ -235,12 +244,6 @@ class ProfileTest {
 		attributes2.setString(Tag.Modality, VR.CS, "XA");
 		attributes2.setString(Tag.SOPClassUID, VR.UI, "1.2.840.10008.5.1.4.1.1.12.1");
 		attributes2.setString(Tag.StationName, VR.SH, "ICT258");
-
-		Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
-		ProfileElementEntity profileElementEntityCleanPixelData = new ProfileElementEntity();
-		profileElementEntityCleanPixelData.setCodename("clean.pixel.data");
-		profileElementEntityCleanPixelData.setName("nameCleanPixel");
-		profileElementEntityCleanPixelData.setAction("ReplaceNull");
 
 		ProfileElementEntity profileElementEntityAddBurnedAttr = new ProfileElementEntity();
 		profileElementEntityAddBurnedAttr.setCodename("action.add.tag");
@@ -265,6 +268,11 @@ class ProfileTest {
 			.addIncludedTag(new IncludedTagEntity("(0028,0301)", profileElementEntityCleanPixelPerMachine));
 		profileElementEntityCleanPixelPerMachine.setPosition(2);
 
+		Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
+		ProfileElementEntity profileElementEntityCleanPixelData = new ProfileElementEntity();
+		profileElementEntityCleanPixelData.setCodename("clean.pixel.data");
+		profileElementEntityCleanPixelData.setName("nameCleanPixel");
+		profileElementEntityCleanPixelData.setAction("ReplaceNull");
 		profileElementEntityCleanPixelData.setPosition(3);
 
 		profileElementEntities.add(profileElementEntityCleanPixelData);
