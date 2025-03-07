@@ -180,11 +180,14 @@ public class Profile {
 						execute(currentAction, dcm, tag, hmac);
 						currentAction = null;
 
-					} else if (currentAction instanceof ExcludeInstance) {
+					}
+					else if (currentAction instanceof ExcludeInstance) {
 						context.setAbort(AttributeEditorContext.Abort.FILE_EXCEPTION);
-						context.setAbortMessage(String.format("Instance excluded by profile: %s", profileEntity.getName()));
+						context.setAbortMessage(
+								String.format("Instance excluded by profile: %s", profileEntity.getName()));
 						return;
-					} else {
+					}
+					else {
 						break;
 					}
 				}
@@ -216,7 +219,7 @@ public class Profile {
 	private void execute(ActionItem currentAction, Attributes dcm, int tag, HMAC hmac) {
 		if (currentAction == null) {
 			return;
-        }
+		}
 		try {
 			currentAction.execute(dcm, tag, hmac);
 		}
