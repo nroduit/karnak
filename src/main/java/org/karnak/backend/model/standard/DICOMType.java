@@ -20,7 +20,8 @@ import org.karnak.backend.util.MetadataDICOMObject;
 @Slf4j
 public class DICOMType {
 
-	private DICOMType() {}
+	private DICOMType() {
+	}
 
 	public static String getBySOP(Attributes dcm, int tag) {
 		final StandardDICOM standardDICOM = AppConfig.getInstance().getStandardDICOM();

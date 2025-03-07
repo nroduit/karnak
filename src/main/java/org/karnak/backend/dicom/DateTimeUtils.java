@@ -41,7 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DateTimeUtils {
 
-	private DateTimeUtils() {}
+	private DateTimeUtils() {
+	}
 
 	private static final DateTimeFormatter DA_PARSER = new DateTimeFormatterBuilder().appendValue(YEAR, 4)
 		.optionalStart()

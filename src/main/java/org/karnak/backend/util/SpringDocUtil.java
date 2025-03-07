@@ -11,7 +11,8 @@ package org.karnak.backend.util;
 
 public class SpringDocUtil {
 
-	private SpringDocUtil() {}
+	private SpringDocUtil() {
+	}
 
 	/**
 	 * Echo

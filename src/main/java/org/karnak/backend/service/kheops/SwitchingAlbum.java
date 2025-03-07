@@ -84,9 +84,7 @@ public class SwitchingAlbum {
 				&& destinationEntity.getDeIdentificationProjectEntity().getProfileEntity() != null) {
 			List<ProfileItem> profileItems = Profile
 				.getProfileItems(destinationEntity.getDeIdentificationProjectEntity().getProfileEntity());
-			for (ProfileItem profileItem : profileItems.stream()
-				.filter(p -> !(p instanceof CleanPixelData))
-				.toList()) {
+			for (ProfileItem profileItem : profileItems.stream().filter(p -> !(p instanceof CleanPixelData)).toList()) {
 				try {
 					ActionItem action = profileItem.getAction(new Attributes(), new Attributes(), tag,
 							new HMAC(HMAC.generateRandomKey()));

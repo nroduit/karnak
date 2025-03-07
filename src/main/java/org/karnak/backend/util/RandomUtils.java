@@ -16,7 +16,8 @@ import java.util.Random;
 
 public class RandomUtils {
 
-	private RandomUtils() {}
+	private RandomUtils() {
+	}
 
 	public static String generateAlphanumeric(int targetStringLength, Random random) {
 		int leftLimit = 48; // numeral '0'

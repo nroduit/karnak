@@ -118,7 +118,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 			case OAUTH2:
 				divContent.add(oauthForm);
 				break;
-			default: break;
+			default:
+				break;
 		}
 	}
 
@@ -145,7 +146,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 			case OAUTH2:
 				oauthToken.setInvalid(oauthToken.isEmpty());
 				return !(oauthToken.isEmpty());
-			default: break;
+			default:
+				break;
 		}
 		return false;
 	}

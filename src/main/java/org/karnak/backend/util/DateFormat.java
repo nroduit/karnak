@@ -28,7 +28,8 @@ import org.karnak.backend.dicom.DateTimeUtils;
 @Slf4j
 public class DateFormat {
 
-	private DateFormat() {}
+	private DateFormat() {
+	}
 
 	// Date formats
 	public static final String FORMAT_DDMMYYYY_SLASH = "dd/MM/yyyy";

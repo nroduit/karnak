@@ -48,8 +48,7 @@ public class SourceNodeService {
 	 */
 	public DicomSourceNodeEntity save(ForwardNodeEntity forwardNodeEntity,
 			DicomSourceNodeEntity dicomSourceNodeEntity) {
-		return this.forwardNodeService.updateSourceNode(forwardNodeEntity,
-				dicomSourceNodeEntity);
+		return this.forwardNodeService.updateSourceNode(forwardNodeEntity, dicomSourceNodeEntity);
 	}
 
 	/**
