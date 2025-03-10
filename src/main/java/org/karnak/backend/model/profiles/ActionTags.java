@@ -86,7 +86,7 @@ public class ActionTags extends AbstractProfileItem {
 	@Override
 	public void profileValidation() throws ProfileException {
 		String errorMessage = "Cannot build the profile ";
-		if (action == null && (tagEntities == null || !tagEntities.isEmpty())) {
+		if (action == null && (tagEntities == null || tagEntities.isEmpty())) {
 			throw new ProfileException(errorMessage + codeName + ": Unknown Action and no tags defined");
 		}
 
@@ -94,7 +94,7 @@ public class ActionTags extends AbstractProfileItem {
 			throw new ProfileException(errorMessage + codeName + ": Unknown Action");
 		}
 
-		if (tagEntities == null || !tagEntities.isEmpty()) {
+		if (tagEntities == null || tagEntities.isEmpty()) {
 			throw new ProfileException(errorMessage + codeName + ": No tags defined");
 		}
 

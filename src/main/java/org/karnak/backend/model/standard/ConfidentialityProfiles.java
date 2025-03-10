@@ -31,6 +31,7 @@ public class ConfidentialityProfiles {
 	private final List<ProfileItem> listProfiles = new ArrayList<>();
 
 	public ConfidentialityProfiles() {
+		final StandardConfidentialityProfiles standardConfidentialityProfiles = new StandardConfidentialityProfiles();
 		jsonConfidentialityProfiles[] confidentialityProfiles = StandardConfidentialityProfiles
 			.getConfidentialityProfiles();
 
