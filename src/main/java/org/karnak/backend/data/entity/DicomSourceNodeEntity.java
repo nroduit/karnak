@@ -52,8 +52,7 @@ public class DicomSourceNodeEntity implements Serializable {
 	}
 
 	public static DicomSourceNodeEntity ofEmpty() {
-		DicomSourceNodeEntity instance = new DicomSourceNodeEntity();
-		return instance;
+		return new DicomSourceNodeEntity();
 	}
 
 	@Id

@@ -35,7 +35,7 @@ public class LayoutNewGridForwardNode extends VerticalLayout {
 
 		add(newForwardNode, gridForwardNode);
 
-		buttonNewForwardNode = newForwardNode.getNewForwardNode();
+		buttonNewForwardNode = newForwardNode.getNewForwardNodeBtn();
 		textFieldNewAETitleForwardNode = newForwardNode.getNewAETitleForwardNode();
 		buttonAddNewForwardNode = newForwardNode.getAddNewForwardNode();
 	}

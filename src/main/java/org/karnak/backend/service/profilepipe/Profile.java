@@ -72,11 +72,6 @@ public class Profile {
 		this.profiles = createProfilesList(profileEntity);
 	}
 
-	/*
-	 * public void addMaskMap(Map<? extends String, ? extends MaskArea> maskMap) {
-	 * this.maskMap.putAll(maskMap); }
-	 */
-
 	public MaskArea getMask(MaskStationCondition key) {
 		MaskArea mask = maskMap.get(key);
 		if (mask == null) {
@@ -152,9 +147,7 @@ public class Profile {
 
 			ActionItem currentAction = null;
 			ProfileItem currentProfile = null;
-			for (ProfileItem profileEntity : profiles.stream()
-				.filter(p -> !(p instanceof CleanPixelData))
-				.collect(Collectors.toList())) {
+			for (ProfileItem profileEntity : profiles.stream().filter(p -> !(p instanceof CleanPixelData)).toList()) {
 				currentProfile = profileEntity;
 
 				if (profileEntity.getCondition() == null
@@ -231,12 +224,11 @@ public class Profile {
 	public void applyCleanPixelData(Attributes dcmCopy, AttributeEditorContext context, ProfileEntity profileEntity) {
 		Object pix = dcmCopy.getValue(Tag.PixelData);
 		if ((pix instanceof BulkData || pix instanceof Fragments) && !profileEntity.getMaskEntities().isEmpty()
-				&& profiles.stream().anyMatch(p -> p instanceof CleanPixelData)) {
+				&& profiles.stream().anyMatch(CleanPixelData.class::isInstance)) {
 			String sopClassUID = dcmCopy.getString(Tag.SOPClassUID);
 			if (!StringUtil.hasText(sopClassUID)) {
 				throw new IllegalStateException("DICOM Object does not contain sopClassUID");
 			}
-			String scuPattern = sopClassUID + ".";
 			MaskArea mask = getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
 					dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
 			// A mask must be applied with all the US and Secondary Capture sopClassUID,
@@ -295,19 +287,17 @@ public class Profile {
 	}
 
 	public void applyDefacing(Attributes dcmCopy, AttributeEditorContext context) {
-		ProfileItem profileItemDefacing = profiles.stream().filter(p -> p instanceof Defacing).findFirst().orElse(null);
-		if (profileItemDefacing != null) {
-			if (isCT(dcmCopy) && isAxial(dcmCopy)) {
-				if (profileItemDefacing.getCondition() == null) {
+		ProfileItem profileItemDefacing = profiles.stream().filter(Defacing.class::isInstance).findFirst().orElse(null);
+		if (profileItemDefacing != null && isCT(dcmCopy) && isAxial(dcmCopy)) {
+			if (profileItemDefacing.getCondition() == null) {
+				context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
+			}
+			else {
+				ExprCondition exprCondition = new ExprCondition(dcmCopy);
+				boolean conditionIsOk = (Boolean) ExpressionResult.get(profileItemDefacing.getCondition(),
+						exprCondition, Boolean.class);
+				if (conditionIsOk) {
 					context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
-				}
-				else {
-					ExprCondition exprCondition = new ExprCondition(dcmCopy);
-					boolean conditionIsOk = (Boolean) ExpressionResult.get(profileItemDefacing.getCondition(),
-							exprCondition, Boolean.class);
-					if (conditionIsOk) {
-						context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
-					}
 				}
 			}
 		}

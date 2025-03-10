@@ -16,6 +16,9 @@ import org.karnak.frontend.dicom.Util;
 
 public class DicomNodeUtil {
 
+	private DicomNodeUtil() {
+	}
+
 	public static List<DicomNodeList> getAllDicomNodeTypesDefinedLocally() {
 		List<DicomNodeList> dicomNodeTypes = new ArrayList<>();
 

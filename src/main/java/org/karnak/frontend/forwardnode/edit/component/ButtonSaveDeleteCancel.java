@@ -21,11 +21,11 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private final Button cancel;
 
-	private final String LABEL_SAVE = "Save";
+	private static final String LABEL_SAVE = "Save";
 
-	private final String LABEL_CANCEL = "Cancel";
+	private static final String LABEL_CANCEL = "Cancel";
 
-	private final String LABEL_DELETE = "Delete";
+	private static final String LABEL_DELETE = "Delete";
 
 	public ButtonSaveDeleteCancel() {
 		save = new Button(LABEL_SAVE);
@@ -39,19 +39,20 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 	}
 
 	private void setButtonSave() {
-		save.getStyle().set("flex-grow", "1");
+		save.getStyle().setFlexGrow("1");
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 	}
 
 	private void setButtonCancel() {
-		cancel.getStyle().set("flex-grow", "1");
+		cancel.getStyle().setFlexGrow("1");
 	}
 
 	private void setButtonDelete() {
-		delete.getStyle().set("flex-grow", "1");
+		delete.getStyle().setFlexGrow("1");
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		save.setEnabled(enabled);
 		delete.setEnabled(enabled);

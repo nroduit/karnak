@@ -20,7 +20,7 @@ public class WadoNode {
 
 	private final URL url;
 
-	private final List<String> tagEntities = new ArrayList<String>(2);
+	private final List<String> tagEntities = new ArrayList<>(2);
 
 	public WadoNode(String name, URL url) {
 		this.name = Objects.requireNonNull(name);

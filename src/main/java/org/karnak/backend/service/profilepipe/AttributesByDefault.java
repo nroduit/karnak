@@ -15,7 +15,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
@@ -36,7 +35,7 @@ public class AttributesByDefault {
 		final List<ProfileElementEntity> profileElementEntities = profileEntity.getProfileElementEntities()
 			.stream()
 			.sorted(Comparator.comparing(ProfileElementEntity::getPosition))
-			.collect(Collectors.toList());
+			.toList();
 
 		Sequence deidentificationMethodSequence = dcm.newSequence(Tag.DeidentificationMethodCodeSequence,
 				profileElementEntities.size());

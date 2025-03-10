@@ -12,6 +12,7 @@ package org.karnak.backend.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.Duration;
 import org.karnak.backend.cache.Patient;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -22,8 +23,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import java.time.Duration;
 
 @Configuration
 public class RedisConfiguration {
@@ -54,7 +53,7 @@ public class RedisConfiguration {
 	public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
 		// TODO TELIMA-289: set cache for pseudo service 15 min + create cache class as
 		// ExternalIDCache
-		return (builder) -> builder.withCacheConfiguration("externalId.cache",
+		return builder -> builder.withCacheConfiguration("externalId.cache",
 				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(7)));
 	}
 

@@ -17,7 +17,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
-
 import java.util.Base64;
 
 public class AuthHeadersGenerationDialog extends Dialog {
@@ -59,6 +58,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 	private TextField oauthToken;
 
 	private final FormSTOW parentForm;
+
+	private static final String requiredMessage = "This field is required";
 
 	public AuthHeadersGenerationDialog(FormSTOW parentForm) {
 		this.parentForm = parentForm;
@@ -117,6 +118,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 			case OAUTH2:
 				divContent.add(oauthForm);
 				break;
+			default:
+				break;
 		}
 	}
 
@@ -143,6 +146,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 			case OAUTH2:
 				oauthToken.setInvalid(oauthToken.isEmpty());
 				return !(oauthToken.isEmpty());
+			default:
+				break;
 		}
 		return false;
 	}
@@ -163,14 +168,14 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		basicUsername = new TextField();
 		basicUsername.setWidth(FIELD_WIDTH);
 		basicUsername.setRequiredIndicatorVisible(true);
-		basicUsername.setErrorMessage("This field is required");
+		basicUsername.setErrorMessage(requiredMessage);
 		basicUsername.setRequired(true);
 		basicUsername.setLabel("Username");
 
 		basicPassword = new TextField();
 		basicPassword.setWidth(FIELD_WIDTH);
 		basicPassword.setRequiredIndicatorVisible(true);
-		basicPassword.setErrorMessage("This field is required");
+		basicPassword.setErrorMessage(requiredMessage);
 		basicPassword.setRequired(true);
 		basicPassword.setLabel("Password");
 
@@ -189,7 +194,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		oauthToken = new TextField();
 		oauthToken.setWidth(FIELD_WIDTH);
 		oauthToken.setRequiredIndicatorVisible(true);
-		oauthToken.setErrorMessage("This field is required");
+		oauthToken.setErrorMessage(requiredMessage);
 		oauthToken.setLabel("OAuth 2 Token");
 
 		oauthForm.add(oauthToken);
@@ -215,6 +220,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 			case OAUTH2:
 				sb.append("Bearer ");
 				sb.append(oauthToken.getValue());
+				break;
+			default:
 				break;
 		}
 		sb.append("</value>");

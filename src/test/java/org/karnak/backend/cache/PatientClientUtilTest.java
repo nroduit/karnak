@@ -9,13 +9,12 @@
  */
 package org.karnak.backend.cache;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.time.LocalDate;
 import java.util.stream.Stream;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,7 +28,7 @@ class PatientClientUtilTest {
 	static Attributes datasetWithIssuer;
 
 	@BeforeAll
-	protected static void setUpBeforeClass() throws Exception {
+	protected static void setUpBeforeClass() {
 		dataset = new Attributes();
 		dataset.setString(Tag.PatientID, VR.LO, "EREN");
 		dataset.setString(Tag.PatientName, VR.PN, "Patient^Name");

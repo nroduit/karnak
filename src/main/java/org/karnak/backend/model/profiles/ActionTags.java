@@ -15,6 +15,7 @@ import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.AbstractAction;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.expression.ExprCondition;
@@ -32,7 +33,7 @@ public class ActionTags extends AbstractProfileItem {
 
 	private final ActionItem actionByDefault;
 
-	public ActionTags(ProfileElementEntity profileElementEntity) throws Exception {
+	public ActionTags(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 		tagsAction = new TagActionMap();
 		exceptedTagsAction = new TagActionMap();
@@ -63,7 +64,7 @@ public class ActionTags extends AbstractProfileItem {
 		return new Color(intValue, true);
 	}
 
-	private void setActionHashMap() throws Exception {
+	private void setActionHashMap() {
 		for (IncludedTagEntity tag : tagEntities) {
 			tagsAction.put(tag.getTagValue(), actionByDefault);
 		}
@@ -83,23 +84,24 @@ public class ActionTags extends AbstractProfileItem {
 	}
 
 	@Override
-	public void profileValidation() throws Exception {
-		if (action == null && (tagEntities == null || tagEntities.size() <= 0)) {
-			throw new Exception("Cannot build the profile " + codeName + ": Unknown Action and no tags defined");
+	public void profileValidation() throws ProfileException {
+		String errorMessage = "Cannot build the profile ";
+		if (action == null && (tagEntities == null || tagEntities.isEmpty())) {
+			throw new ProfileException(errorMessage + codeName + ": Unknown Action and no tags defined");
 		}
 
 		if (action == null) {
-			throw new Exception("Cannot build the profile " + codeName + ": Unknown Action");
+			throw new ProfileException(errorMessage + codeName + ": Unknown Action");
 		}
 
-		if (tagEntities == null || tagEntities.size() <= 0) {
-			throw new Exception("Cannot build the profile " + codeName + ": No tags defined");
+		if (tagEntities == null || tagEntities.isEmpty()) {
+			throw new ProfileException(errorMessage + codeName + ": No tags defined");
 		}
 
 		final ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(new Attributes()),
 				Boolean.class);
 		if (condition != null && !expressionError.isValid()) {
-			throw new Exception(expressionError.getMsg());
+			throw new ProfileException(expressionError.getMsg());
 		}
 	}
 

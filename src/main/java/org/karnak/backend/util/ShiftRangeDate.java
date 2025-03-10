@@ -11,7 +11,6 @@ package org.karnak.backend.util;
 
 import java.time.DateTimeException;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
@@ -26,9 +25,7 @@ public class ShiftRangeDate {
 	public static void verifyShiftArguments(List<ArgumentEntity> argumentEntities) throws IllegalArgumentException {
 		if (argumentEntities.stream().noneMatch(argument -> argument.getArgumentKey().equals("max_seconds"))
 				|| argumentEntities.stream().noneMatch(argument -> argument.getArgumentKey().equals("max_days"))) {
-			List<String> args = argumentEntities.stream()
-				.map(ArgumentEntity::getArgumentKey)
-				.collect(Collectors.toList());
+			List<String> args = argumentEntities.stream().map(ArgumentEntity::getArgumentKey).toList();
 			String text = "Cannot build the option ShiftRangeDate: Missing argument, the class minimum need [max_seconds, max_days] as parameters. Parameters given "
 					+ args;
 

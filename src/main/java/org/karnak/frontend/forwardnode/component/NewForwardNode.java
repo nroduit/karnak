@@ -19,7 +19,7 @@ import com.vaadin.flow.component.textfield.TextField;
 
 public class NewForwardNode extends HorizontalLayout {
 
-	private final Button newForwardNode;
+	private final Button newForwardNodeBtn;
 
 	private final TextField newAETitleForwardNode;
 
@@ -31,7 +31,7 @@ public class NewForwardNode extends HorizontalLayout {
 		newAETitleForwardNode = new TextField();
 		addNewForwardNode = new Button("Add");
 		cancelNewForwardNode = new Button("Cancel");
-		newForwardNode = new Button("New forward node");
+		newForwardNodeBtn = new Button("New forward node");
 		initView();
 	}
 
@@ -40,14 +40,14 @@ public class NewForwardNode extends HorizontalLayout {
 		setAddNewForwardNode();
 		setCancelNewForwardNode();
 		setNewForwardNode();
-		add(newForwardNode);
+		add(newForwardNodeBtn);
 	}
 
 	private void setNewAETitleForwardNode() {
 		newAETitleForwardNode.setPlaceholder("Forward AETitle");
 		newAETitleForwardNode.addKeyDownListener(Key.ENTER, keyDownEvent -> {
 			removeAll();
-			add(newForwardNode);
+			add(newForwardNodeBtn);
 		});
 	}
 
@@ -56,31 +56,31 @@ public class NewForwardNode extends HorizontalLayout {
 		addNewForwardNode.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 		addNewForwardNode.addClickListener(click -> {
 			removeAll();
-			add(newForwardNode);
+			add(newForwardNodeBtn);
 		});
 	}
 
 	private void setCancelNewForwardNode() {
 		cancelNewForwardNode.addClickListener(click -> {
 			removeAll();
-			add(newForwardNode);
+			add(newForwardNodeBtn);
 		});
 	}
 
 	private void setNewForwardNode() {
-		newForwardNode.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		newForwardNode.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-		newForwardNode.addClickListener(click -> {
+		newForwardNodeBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newForwardNodeBtn.setIcon(VaadinIcon.PLUS_CIRCLE.create());
+		newForwardNodeBtn.addClickListener(click -> {
 			removeAll();
 			newAETitleForwardNode.setValue("");
 			add(newAETitleForwardNode, addNewForwardNode, cancelNewForwardNode);
 		});
 		// CTRL+N will create a new window which is unavoidable
-		newForwardNode.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+		newForwardNodeBtn.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
 	}
 
-	public Button getNewForwardNode() {
-		return newForwardNode;
+	public Button getNewForwardNodeBtn() {
+		return newForwardNodeBtn;
 	}
 
 	public TextField getNewAETitleForwardNode() {

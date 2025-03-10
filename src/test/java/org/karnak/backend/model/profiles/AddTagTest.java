@@ -9,9 +9,12 @@
  */
 package org.karnak.backend.model.profiles;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -20,13 +23,8 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @SpringBootTest
-public class AddTagTest {
+class AddTagTest {
 
 	@Test
 	void addTag() {

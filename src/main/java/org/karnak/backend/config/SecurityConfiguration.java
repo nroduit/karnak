@@ -86,7 +86,7 @@ public class SecurityConfiguration {
 	@Bean
 	public WebSecurityCustomizer webSecurityCustomizer() {
 		// Access to static resources, bypassing Spring security.
-		return (web) -> web.ignoring()
+		return web -> web.ignoring()
 			.requestMatchers(AntPathRequestMatcher.antMatcher("/VAADIN/**"),
 					AntPathRequestMatcher.antMatcher("/img/**"), AntPathRequestMatcher.antMatcher("/icons/**"),
 					AntPathRequestMatcher.antMatcher("/sw.js"), AntPathRequestMatcher.antMatcher("/favicon.ico"),

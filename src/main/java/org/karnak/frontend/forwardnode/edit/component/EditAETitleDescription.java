@@ -46,6 +46,7 @@ public class EditAETitleDescription extends HorizontalLayout {
 		}
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		textFieldAETitle.setEnabled(enabled);
 		textFieldDescription.setEnabled(enabled);

@@ -21,8 +21,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.data.provider.DataChangeEvent;
-import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.shared.Registration;
@@ -110,13 +108,7 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 	private void buildDataProvider() {
 		dataProviderForWorkListNodes = new ListDataProvider<>(workListNodes);
 
-		dataProviderForWorkListNodes.addDataProviderListener(new DataProviderListener<ConfigNode>() {
-
-			@Override
-			public void onDataChange(DataChangeEvent<ConfigNode> event) {
-				selectFirstItemInWorkListNodes();
-			}
-		});
+		dataProviderForWorkListNodes.addDataProviderListener(e -> selectFirstItemInWorkListNodes());
 	}
 
 	private void buildTitleBar() {
@@ -144,7 +136,7 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 	}
 
 	private ComponentRenderer<Div, ConfigNode> buildDicomNodeRenderer() {
-		return new ComponentRenderer<Div, ConfigNode>(item -> {
+		return new ComponentRenderer<>(item -> {
 			Div div = new Div();
 			div.getStyle().set("line-height", "92%");
 
@@ -198,13 +190,9 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 		selectBtn = new Button("Select");
 		selectBtn.addClassName("stroked-button");
 
-		selectBtn.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
-
-			@Override
-			public void onComponentEvent(ClickEvent<Button> event) {
-				fireWorkListSelectionEvent();
-				dialog.close();
-			}
+		selectBtn.addClickListener(e -> {
+			fireWorkListSelectionEvent();
+			dialog.close();
 		});
 	}
 

@@ -16,6 +16,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ProfileEntity;
@@ -114,7 +115,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> {
 	public void setProfileComponent(InputStream stream) {
 		try {
 			ProfilePipeBody profilePipe = readProfileYaml(stream);
-			ArrayList<ProfileError> profileErrors = profilePipeService.validateProfile(profilePipe);
+			List<ProfileError> profileErrors = profilePipeService.validateProfile(profilePipe);
 			Predicate<ProfileError> errorPredicate = profileError -> profileError.getError() != null;
 			if (profileErrors.stream().noneMatch(errorPredicate)) {
 				final ProfileEntity newProfileEntity = profilePipeService.saveProfilePipe(profilePipe, false);

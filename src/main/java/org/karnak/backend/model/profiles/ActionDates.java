@@ -16,6 +16,7 @@ import org.dcm4che3.data.VR;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.MultipleActions;
 import org.karnak.backend.model.action.Replace;
@@ -38,7 +39,7 @@ public class ActionDates extends AbstractProfileItem {
 
 	private final ActionItem actionByDefault;
 
-	public ActionDates(ProfileElementEntity profileElementEntity) throws Exception {
+	public ActionDates(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 		tagsAction = new TagActionMap();
 		exceptedTagsAction = new TagActionMap();
@@ -47,13 +48,13 @@ public class ActionDates extends AbstractProfileItem {
 		setActionHashMap();
 	}
 
-	private void setActionHashMap() throws Exception {
-		if (tagEntities != null && tagEntities.size() > 0) {
+	private void setActionHashMap() {
+		if (tagEntities != null && !tagEntities.isEmpty()) {
 			for (IncludedTagEntity tag : tagEntities) {
 				tagsAction.put(tag.getTagValue(), actionByDefault);
 			}
 		}
-		if (excludedTagEntities != null && excludedTagEntities.size() > 0) {
+		if (excludedTagEntities != null && !excludedTagEntities.isEmpty()) {
 			for (ExcludedTagEntity tag : excludedTagEntities) {
 				exceptedTagsAction.put(tag.getTagValue(), actionByDefault);
 			}
@@ -61,10 +62,10 @@ public class ActionDates extends AbstractProfileItem {
 	}
 
 	@Override
-	public void profileValidation() throws Exception {
+	public void profileValidation() throws ProfileException {
 		try {
 			if (option == null) {
-				throw new Exception("Cannot build the profile " + codeName
+				throw new ProfileException("Cannot build the profile " + codeName
 						+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, date_format]");
 			}
 			switch (option) {
@@ -72,7 +73,7 @@ public class ActionDates extends AbstractProfileItem {
 				case "shift_range" -> ShiftRangeDate.verifyShiftArguments(argumentEntities);
 				case "shift_by_tag" -> ShiftByTagDate.verifyShiftArguments(argumentEntities);
 				case "date_format" -> DateFormat.verifyPatternArguments(argumentEntities);
-				default -> throw new Exception("Cannot build the profile " + codeName + " with the option given "
+				default -> throw new ProfileException("Cannot build the profile " + codeName + " with the option given "
 						+ option + " : Option available (shift, shift_range, shift_by_tag, date_format)");
 			}
 		}
@@ -83,7 +84,7 @@ public class ActionDates extends AbstractProfileItem {
 		final ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(new Attributes()),
 				Boolean.class);
 		if (condition != null && !expressionError.isValid()) {
-			throw new Exception(expressionError.getMsg());
+			throw new ProfileException(expressionError.getMsg());
 		}
 	}
 

@@ -447,14 +447,12 @@ public class GatewaySetUpService {
 			else if (type == NodeEventType.REMOVE) {
 				destMap.remove(fwdNode);
 			}
-			else if (type == NodeEventType.UPDATE) {
-				if (!aet.equals(fwdNode.getAet())) {
-					ForwardDicomNode newfwdNode = new ForwardDicomNode(aet, null, id);
-					for (DicomNode srcNode : fwdNode.getAcceptedSourceNodes()) {
-						newfwdNode.getAcceptedSourceNodes().add(srcNode);
-					}
-					destMap.put(newfwdNode, destMap.remove(fwdNode));
+			else if (type == NodeEventType.UPDATE && !aet.equals(fwdNode.getAet())) {
+				ForwardDicomNode newfwdNode = new ForwardDicomNode(aet, null, id);
+				for (DicomNode srcNode : fwdNode.getAcceptedSourceNodes()) {
+					newfwdNode.getAcceptedSourceNodes().add(srcNode);
 				}
+				destMap.put(newfwdNode, destMap.remove(fwdNode));
 			}
 		}
 		else {
@@ -507,16 +505,15 @@ public class GatewaySetUpService {
 		// Check if refresh needed: current version of the gateway setup for this instance
 		// is lower than
 		// the last version in DB
-		if (lastVersion != null && gatewaySetUpVersion < lastVersion.getGatewaySetup()) {
+		if (lastVersion != null && gatewaySetUpVersion < lastVersion.getGatewaySetup()
+				&& destinationRepo.findAll().stream().noneMatch(DestinationEntity::isTransferInProgress)) {
 			// Check no transfer is in progress
-			if (destinationRepo.findAll().stream().noneMatch(DestinationEntity::isTransferInProgress)) {
-				// Rebuild the configuration
-				destMap.clear();
-				reloadGatewayPersistence();
+			// Rebuild the configuration
+			destMap.clear();
+			reloadGatewayPersistence();
 
-				// Update the current instance version
-				gatewaySetUpVersion = lastVersion.getGatewaySetup();
-			}
+			// Update the current instance version
+			gatewaySetUpVersion = lastVersion.getGatewaySetup();
 		}
 	}
 

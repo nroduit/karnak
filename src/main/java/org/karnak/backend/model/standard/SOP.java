@@ -10,6 +10,7 @@
 package org.karnak.backend.model.standard;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SOP {
 
@@ -47,7 +48,7 @@ public class SOP {
 		return ciod_id;
 	}
 
-	public ArrayList<Module> getModules() {
+	public List<Module> getModules() {
 		return modules;
 	}
 
