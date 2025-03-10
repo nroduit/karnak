@@ -47,7 +47,8 @@ public class Util {
 
 	private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 
-	private Util() {}
+	private Util() {
+	}
 
 	private static <T> T timedCall(Callable<T> c, long timeout, TimeUnit timeUnit)
 			throws InterruptedException, ExecutionException, TimeoutException {

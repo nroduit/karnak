@@ -14,7 +14,8 @@ import com.vaadin.flow.component.notification.Notification;
 
 public class NotificationUtil {
 
-	private NotificationUtil() {}
+	private NotificationUtil() {
+	}
 
 	/**
 	 * Display error message if issue when exporting

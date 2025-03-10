@@ -11,7 +11,8 @@ package org.karnak.backend.constant;
 
 public class EndPoint {
 
-	private EndPoint() {}
+	private EndPoint() {
+	}
 
 	// Paths
 	public static final String ECHO_PATH = "/api/echo";

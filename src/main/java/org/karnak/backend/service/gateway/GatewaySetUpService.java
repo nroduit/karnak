@@ -505,7 +505,8 @@ public class GatewaySetUpService {
 		// Check if refresh needed: current version of the gateway setup for this instance
 		// is lower than
 		// the last version in DB
-		if (lastVersion != null && gatewaySetUpVersion < lastVersion.getGatewaySetup() && destinationRepo.findAll().stream().noneMatch(DestinationEntity::isTransferInProgress)) {
+		if (lastVersion != null && gatewaySetUpVersion < lastVersion.getGatewaySetup()
+				&& destinationRepo.findAll().stream().noneMatch(DestinationEntity::isTransferInProgress)) {
 			// Check no transfer is in progress
 			// Rebuild the configuration
 			destMap.clear();

@@ -16,7 +16,8 @@ import java.util.Map;
 
 public class utils {
 
-	private utils() {}
+	private utils() {
+	}
 
 	public static HttpRequest.BodyPublisher buildDataFromMap(Map<Object, Object> data) {
 		var builder = new StringBuilder();

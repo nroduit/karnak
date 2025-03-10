@@ -47,6 +47,7 @@ public class Notification {
 	// Various
 	public static final long EXTRA_TIMER_DELAY = 10;
 
-	private Notification() {}
+	private Notification() {
+	}
 
 }

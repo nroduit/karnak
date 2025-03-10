@@ -132,8 +132,8 @@ public class ConfirmDialog extends Composite<Dialog> {
 		yesBtn.focus();
 
 		yesBtn.addClickListener(e -> {
-				fireConfirmationEvent();
-				dialog.close();
+			fireConfirmationEvent();
+			dialog.close();
 		});
 
 		yesBtn.addClickShortcut(Key.ENTER);

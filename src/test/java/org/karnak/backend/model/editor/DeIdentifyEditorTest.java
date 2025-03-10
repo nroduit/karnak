@@ -96,7 +96,8 @@ class DeIdentifyEditorTest {
 
 		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "expression.on.tags", null, null,
 				null, 0, profileEntity);
-		profileElementEntity.addArgument(new ArgumentEntity("expr", "getString(#Tag.BurnedInAnnotation) == 'YES' ? ExcludeInstance() : null", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("expr",
+				"getString(#Tag.BurnedInAnnotation) == 'YES' ? ExcludeInstance() : null", profileElementEntity));
 		profileElementEntity.addIncludedTag(new IncludedTagEntity("(xxxx,xxxx)", profileElementEntity));
 
 		profileEntity.addProfilePipe(profileElementEntity);
@@ -120,4 +121,5 @@ class DeIdentifyEditorTest {
 		assertEquals(AttributeEditorContext.Abort.FILE_EXCEPTION, attributeEditorContext.getAbort());
 		assertEquals("Instance excluded by profile: Expr", attributeEditorContext.getAbortMessage());
 	}
+
 }

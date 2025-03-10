@@ -115,9 +115,7 @@ public class ShiftDate {
 	public static void verifyShiftArguments(List<ArgumentEntity> argumentEntities) throws IllegalArgumentException {
 		if (argumentEntities.stream().noneMatch(argument -> argument.getArgumentKey().equals("seconds"))
 				|| argumentEntities.stream().noneMatch(argument -> argument.getArgumentKey().equals("days"))) {
-			List<String> args = argumentEntities.stream()
-				.map(ArgumentEntity::getArgumentKey)
-				.toList();
+			List<String> args = argumentEntities.stream().map(ArgumentEntity::getArgumentKey).toList();
 			IllegalArgumentException missingParameters = new IllegalArgumentException(
 					"Cannot build the option ShiftDate: Missing argument, the class need [seconds, days] as parameters. Parameters given "
 							+ args);
