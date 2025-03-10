@@ -79,6 +79,7 @@ public class PrivateTags extends AbstractProfileItem {
 		return null;
 	}
 
+	@Override
 	public void profileValidation() throws ProfileException {
 		if (action == null) {
 			throw new ProfileException("Cannot build the profile " + codeName + ": Unknown Action");

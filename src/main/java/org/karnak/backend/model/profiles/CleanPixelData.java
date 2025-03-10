@@ -11,12 +11,13 @@ package org.karnak.backend.model.profiles;
 
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.profilepipe.HMAC;
 
 public class CleanPixelData extends AbstractProfileItem {
 
-	public CleanPixelData(ProfileElementEntity profileElementEntity) throws Exception {
+	public CleanPixelData(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 		profileValidation();
 	}
