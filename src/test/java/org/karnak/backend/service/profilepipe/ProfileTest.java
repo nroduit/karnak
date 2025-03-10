@@ -35,6 +35,7 @@ import org.karnak.backend.enums.PseudonymType;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.weasis.dicom.param.AttributeEditorContext;
 
+@SpringBootTest
 class ProfileTest {
 
 	@Test
