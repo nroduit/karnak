@@ -59,7 +59,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 
 	private final FormSTOW parentForm;
 
-	private static final String requiredMessage = "This field is required";
+	private static final String REQUIRED_MESSAGE = "This field is required";
 
 	public AuthHeadersGenerationDialog(FormSTOW parentForm) {
 		this.parentForm = parentForm;
@@ -168,14 +168,14 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		basicUsername = new TextField();
 		basicUsername.setWidth(FIELD_WIDTH);
 		basicUsername.setRequiredIndicatorVisible(true);
-		basicUsername.setErrorMessage(requiredMessage);
+		basicUsername.setErrorMessage(REQUIRED_MESSAGE);
 		basicUsername.setRequired(true);
 		basicUsername.setLabel("Username");
 
 		basicPassword = new TextField();
 		basicPassword.setWidth(FIELD_WIDTH);
 		basicPassword.setRequiredIndicatorVisible(true);
-		basicPassword.setErrorMessage(requiredMessage);
+		basicPassword.setErrorMessage(REQUIRED_MESSAGE);
 		basicPassword.setRequired(true);
 		basicPassword.setLabel("Password");
 
@@ -194,7 +194,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		oauthToken = new TextField();
 		oauthToken.setWidth(FIELD_WIDTH);
 		oauthToken.setRequiredIndicatorVisible(true);
-		oauthToken.setErrorMessage(requiredMessage);
+		oauthToken.setErrorMessage(REQUIRED_MESSAGE);
 		oauthToken.setLabel("OAuth 2 Token");
 
 		oauthForm.add(oauthToken);
