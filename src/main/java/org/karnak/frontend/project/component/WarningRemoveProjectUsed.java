@@ -44,9 +44,7 @@ public class WarningRemoveProjectUsed extends Dialog {
 			}
 		}
 
-		Button cancelButton = new Button("Cancel", event -> {
-			close();
-		});
+		Button cancelButton = new Button("Cancel", event -> close());
 
 		cancelButton.getStyle().set("margin-left", "75%");
 		add(divTitle, divContent, cancelButton);

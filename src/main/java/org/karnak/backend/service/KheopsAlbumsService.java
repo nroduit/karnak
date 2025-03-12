@@ -90,9 +90,7 @@ public class KheopsAlbumsService {
 
 	public void deleteListSwitchingAlbums(List<KheopsAlbumsEntity> kheopsAlbumsEntityList) {
 		if (kheopsAlbumsEntityList != null) {
-			kheopsAlbumsEntityList.forEach(kheopsAlbums -> {
-				kheopsAlbumsRepo.deleteById(kheopsAlbums.getId());
-			});
+			kheopsAlbumsEntityList.forEach(kheopsAlbums -> kheopsAlbumsRepo.deleteById(kheopsAlbums.getId()));
 			kheopsAlbumsRepo.flush();
 		}
 	}

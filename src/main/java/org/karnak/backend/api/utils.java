@@ -16,10 +16,13 @@ import java.util.Map;
 
 public class utils {
 
+	private utils() {
+	}
+
 	public static HttpRequest.BodyPublisher buildDataFromMap(Map<Object, Object> data) {
 		var builder = new StringBuilder();
 		for (Map.Entry<Object, Object> entry : data.entrySet()) {
-			if (builder.length() > 0) {
+			if (!builder.isEmpty()) {
 				builder.append("&");
 			}
 			builder.append(URLEncoder.encode(entry.getKey().toString(), StandardCharsets.UTF_8));

@@ -21,7 +21,7 @@ public class DicomWebToolsBrand extends Composite<Div> {
 
 	private final Div div;
 
-	private Span text;
+	private Span textSpan;
 
 	public DicomWebToolsBrand() {
 		div = getContent();
@@ -29,14 +29,14 @@ public class DicomWebToolsBrand extends Composite<Div> {
 
 		createText();
 
-		div.add(text);
+		div.add(textSpan);
 	}
 
 	private void createText() {
-		text = new Span(TEXT);
-		text.getStyle().set("padding-left", "1em");
-		text.getStyle().set("padding-right", "1em");
-		text.getStyle().set("white-space", "nowrap");
+		textSpan = new Span(TEXT);
+		textSpan.getStyle().set("padding-left", "1em");
+		textSpan.getStyle().set("padding-right", "1em");
+		textSpan.getStyle().set("white-space", "nowrap");
 	}
 
 }

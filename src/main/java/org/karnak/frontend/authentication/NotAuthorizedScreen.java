@@ -38,7 +38,7 @@ public class NotAuthorizedScreen extends FlexLayout {
 	public static final String ROUTE = "not-authorized";
 
 	// Theme
-	private final String THEME_COLOR_KEY = "theme-variant";
+	private static final String THEME_COLOR_KEY = "theme-variant";
 
 	@Autowired
 	public NotAuthorizedScreen() {

@@ -20,6 +20,9 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 // https://docs.spring.io/spring/docs/3.0.x/reference/expressions.html
 public class ExpressionResult {
 
+	private ExpressionResult() {
+	}
+
 	public static Object get(String condition, ExpressionItem expressionItem, Class<?> typeOfReturn) {
 		try {
 			final ExpressionParser parser = new SpelExpressionParser();

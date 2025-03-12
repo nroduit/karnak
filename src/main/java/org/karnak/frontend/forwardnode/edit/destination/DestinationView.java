@@ -51,11 +51,11 @@ public class DestinationView extends VerticalLayout {
 
 	private NewUpdateDestination newUpdateDestination;
 
-	private final String LABEL_NEW_DESTINATION_DICOM = "DICOM";
+	private static final String LABEL_NEW_DESTINATION_DICOM = "DICOM";
 
-	private final String LABEL_NEW_DESTINATION_STOW = "STOW";
+	private static final String LABEL_NEW_DESTINATION_STOW = "STOW";
 
-	private final String PLACEHOLDER_FILTER = "Filter properties of destination";
+	private static final String PLACEHOLDER_FILTER = "Filter properties of destination";
 
 	/**
 	 * Destination view constructor
@@ -121,6 +121,7 @@ public class DestinationView extends VerticalLayout {
 		// destinationLogic.newDestinationStow());
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		filter.setEnabled(enabled);
 		newDestinationDICOM.setEnabled(enabled);

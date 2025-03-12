@@ -62,7 +62,7 @@ public class HMAC {
 
 	public static byte[] hexToByte(String hexKey) {
 		try {
-			return Hex.decodeHex(hexKey.replaceAll("-", ""));
+			return Hex.decodeHex(hexKey.replace("-", ""));
 		}
 		catch (DecoderException e) {
 			return null;
@@ -70,7 +70,7 @@ public class HMAC {
 	}
 
 	public static boolean validateKey(String hexKey) {
-		String cleanHexKey = hexKey.replaceAll("-", "");
+		String cleanHexKey = hexKey.replace("-", "");
 		if (cleanHexKey.length() == 32) {
 			return hexToByte(cleanHexKey) != null;
 		}

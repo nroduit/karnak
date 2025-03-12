@@ -31,6 +31,15 @@ public class Add extends AbstractAction {
 					tagValueIn, dummyValue);
 		}
 
+		if (dcm == null) {
+			return;
+		}
+
+		// If the DICOM object already contains the attribute, do nothing
+		if (dcm.contains(newTag)) {
+			return;
+		}
+
 		if (dummyValue != null) {
 			dcm.setString(newTag, vr, dummyValue);
 		}

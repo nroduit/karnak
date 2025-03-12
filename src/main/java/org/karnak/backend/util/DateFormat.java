@@ -28,6 +28,9 @@ import org.karnak.backend.dicom.DateTimeUtils;
 @Slf4j
 public class DateFormat {
 
+	private DateFormat() {
+	}
+
 	// Date formats
 	public static final String FORMAT_DDMMYYYY_SLASH = "dd/MM/yyyy";
 
@@ -36,6 +39,10 @@ public class DateFormat {
 	public static final String FORMAT_DDMMYYYY_SLASH_HHMMSS_2POINTS_SSS_POINT = "dd/MM/yyyy HH:mm:ss.SSS";
 
 	public static final String FORMAT_DDMMYYYY_SLASH_HHMMSS_2POINTS_SSSSSS_POINT = "dd/MM/yyyy HH:mm:ss.SSSSSS";
+
+	private static final String DAY = "day";
+
+	private static final String MONTH_DAY = "month_day";
 
 	/**
 	 * Build DateTimeFormatter
@@ -69,12 +76,13 @@ public class DateFormat {
 	public static String formatDA(String date, String option) {
 		LocalDate localDate = DateTimeUtils.parseDA(date);
 		switch (option) {
-			case "day":
+			case DAY:
 				localDate = localDate.minusDays(localDate.getDayOfMonth() - 1L);
 				break;
-			case "month_day":
+			case MONTH_DAY:
 				localDate = localDate.minusDays(localDate.getDayOfMonth() - 1L);
 				localDate = localDate.minusMonths(localDate.getMonthValue() - 1L);
+				break;
 		}
 
 		return localDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -85,13 +93,14 @@ public class DateFormat {
 		Temporal localDateTime = DateTimeUtils.parseDT(dateTime);
 
 		switch (option) {
-			case "day":
+			case DAY:
 				localDateTime = localDateTime.minus(localDateTime.get(ChronoField.DAY_OF_MONTH) - 1L, ChronoUnit.DAYS);
 				break;
-			case "month_day":
+			case MONTH_DAY:
 				localDateTime = localDateTime.minus(localDateTime.get(ChronoField.DAY_OF_MONTH) - 1L, ChronoUnit.DAYS);
 				localDateTime = localDateTime.minus(localDateTime.get(ChronoField.MONTH_OF_YEAR) - 1L,
 						ChronoUnit.MONTHS);
+				break;
 		}
 
 		return DateTimeUtils.formatDT(localDateTime);
@@ -136,8 +145,8 @@ public class DateFormat {
 
 	public static void verifyPatternArguments(List<ArgumentEntity> argumentEntities) throws IllegalArgumentException {
 		List<String> listValue = new ArrayList<>();
-		listValue.add("day");
-		listValue.add("month_day");
+		listValue.add(DAY);
+		listValue.add(MONTH_DAY);
 
 		if (argumentEntities.stream()
 			.noneMatch(argument -> argument.getArgumentKey().equals("remove")

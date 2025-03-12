@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.WeakHashMap;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.cache.PatientClient;
@@ -308,7 +307,7 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 			Collection<Patient> patients = externalIDCache.getAll();
 			patientsListInCache = new ArrayList<>();
 			for (Iterator<Patient> iterator = patients.iterator(); iterator.hasNext();) {
-				final Patient patient = (Patient) iterator.next();
+				final Patient patient = iterator.next();
 				if (projectEntity != null && patient.getProjectID() != null
 						&& patient.getProjectID().equals(projectEntity.getId())) {
 					patientsListInCache.add(patient);
@@ -344,38 +343,38 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		// TODO: replace by PatientFilter which will contains all filters and remove
 		// extidFilter, patientIdFilter, patientFirstNameFilter, patientLastNameFilter,
 		// issuerOfPatientIDFilter
-		List<Patient> filterList = patientsListInCache.stream().collect(Collectors.toList());
+		List<Patient> filterList = patientsListInCache.stream().toList();
 
-		if (!extidFilter.getValue().equals("")) {
+		if (!extidFilter.getValue().isEmpty()) {
 			filterList = filterList.stream()
 				.filter(cachedPatient -> cachedPatient.getPseudonym().contains(extidFilter.getValue()))
-				.collect(Collectors.toList());
+				.toList();
 		}
 
-		if (!patientIdFilter.getValue().equals("")) {
+		if (!patientIdFilter.getValue().isEmpty()) {
 			filterList = filterList.stream()
 				.filter(cachedPatient -> cachedPatient.getPatientId().contains(patientIdFilter.getValue()))
-				.collect(Collectors.toList());
+				.toList();
 		}
 
-		if (!patientFirstNameFilter.getValue().equals("")) {
+		if (!patientFirstNameFilter.getValue().isEmpty()) {
 			filterList = filterList.stream()
 				.filter(cachedPatient -> cachedPatient.getPatientFirstName()
 					.contains(patientFirstNameFilter.getValue()))
-				.collect(Collectors.toList());
+				.toList();
 		}
 
-		if (!patientLastNameFilter.getValue().equals("")) {
+		if (!patientLastNameFilter.getValue().isEmpty()) {
 			filterList = filterList.stream()
 				.filter(cachedPatient -> cachedPatient.getPatientLastName().contains(patientLastNameFilter.getValue()))
-				.collect(Collectors.toList());
+				.toList();
 		}
 
-		if (!issuerOfPatientIDFilter.getValue().equals("")) {
+		if (!issuerOfPatientIDFilter.getValue().isEmpty()) {
 			filterList = filterList.stream()
 				.filter(cachedPatient -> cachedPatient.getIssuerOfPatientId()
 					.contains(issuerOfPatientIDFilter.getValue()))
-				.collect(Collectors.toList());
+				.toList();
 		}
 
 		setItems(filterList);

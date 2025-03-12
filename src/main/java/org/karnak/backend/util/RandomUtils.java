@@ -16,25 +16,26 @@ import java.util.Random;
 
 public class RandomUtils {
 
+	private RandomUtils() {
+	}
+
 	public static String generateAlphanumeric(int targetStringLength, Random random) {
 		int leftLimit = 48; // numeral '0'
 		int rightLimit = 122; // letter 'z'
-		String generatedString = random.ints(leftLimit, rightLimit + 1)
+		return random.ints(leftLimit, rightLimit + 1)
 			.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
 			.limit(targetStringLength)
 			.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
 			.toString();
-		return generatedString;
 	}
 
 	public static String generateUppercase(int targetStringLength, Random random) {
 		int leftLimit = 65; // numeral '0'
 		int rightLimit = 90; // letter 'z'
-		String generatedString = random.ints(leftLimit, rightLimit + 1)
+		return random.ints(leftLimit, rightLimit + 1)
 			.limit(targetStringLength)
 			.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
 			.toString();
-		return generatedString;
 	}
 
 	public static String generateNumeric(int min, int max, Random random) {
@@ -67,8 +68,7 @@ public class RandomUtils {
 
 	public static String DAtoString(LocalDate date) {
 		DateTimeFormatter formatDA = DateTimeFormatter.ofPattern("yyyyMMdd");
-		String formattedDate = formatDA.format(date);
-		return formattedDate;
+		return formatDA.format(date);
 	}
 
 	public static String randomTM(Random random) {
@@ -81,8 +81,7 @@ public class RandomUtils {
 
 	public static String TMtoString(LocalTime time) {
 		DateTimeFormatter formatTM = DateTimeFormatter.ofPattern("HHmmss");
-		String formattedTM = formatTM.format(time);
-		return formattedTM;
+		return formatTM.format(time);
 	}
 
 	public static String randomDT(Random random) {

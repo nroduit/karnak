@@ -14,7 +14,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import java.util.ArrayList;
+import java.util.List;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.frontend.profile.component.editprofile.ProfileElementView;
 import org.karnak.frontend.profile.component.editprofile.ProfileShowHide;
@@ -25,7 +25,7 @@ public class ProfileErrorView extends VerticalLayout {
 		getStyle().set("overflow-y", "auto");
 	}
 
-	public void setView(ArrayList<ProfileError> profileErrors) {
+	public void setView(List<ProfileError> profileErrors) {
 		removeAll();
 		add(new H2("Errors occured in profile elements"));
 		for (ProfileError profileError : profileErrors) {

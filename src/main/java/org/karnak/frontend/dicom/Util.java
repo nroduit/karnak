@@ -47,9 +47,12 @@ public class Util {
 
 	private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 
+	private Util() {
+	}
+
 	private static <T> T timedCall(Callable<T> c, long timeout, TimeUnit timeUnit)
 			throws InterruptedException, ExecutionException, TimeoutException {
-		FutureTask<T> task = new FutureTask<T>(c);
+		FutureTask<T> task = new FutureTask<>(c);
 		THREAD_POOL.execute(task);
 		return task.get(timeout, timeUnit);
 	}

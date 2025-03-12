@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.component;
 
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
@@ -132,13 +131,9 @@ public class ConfirmDialog extends Composite<Dialog> {
 
 		yesBtn.focus();
 
-		yesBtn.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
-
-			@Override
-			public void onComponentEvent(ClickEvent<Button> event) {
-				fireConfirmationEvent();
-				dialog.close();
-			}
+		yesBtn.addClickListener(e -> {
+			fireConfirmationEvent();
+			dialog.close();
 		});
 
 		yesBtn.addClickShortcut(Key.ENTER);
@@ -151,13 +146,7 @@ public class ConfirmDialog extends Composite<Dialog> {
 		noBtn.setText("Non");
 		noBtn.setWidth("90px");
 
-		noBtn.addClickListener(new ComponentEventListener<ClickEvent<Button>>() {
-
-			@Override
-			public void onComponentEvent(ClickEvent<Button> event) {
-				dialog.close();
-			}
-		});
+		noBtn.addClickListener(e -> dialog.close());
 	}
 
 	private void fireConfirmationEvent() {

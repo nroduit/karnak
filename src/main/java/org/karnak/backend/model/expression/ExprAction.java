@@ -21,6 +21,7 @@ import org.dcm4che3.data.VR;
 import org.dcm4che3.img.util.DicomUtils;
 import org.karnak.backend.exception.ExpressionActionException;
 import org.karnak.backend.model.action.ActionItem;
+import org.karnak.backend.model.action.ExcludeInstance;
 import org.karnak.backend.model.action.Keep;
 import org.karnak.backend.model.action.Remove;
 import org.karnak.backend.model.action.Replace;
@@ -152,10 +153,8 @@ public class ExprAction implements ExpressionItem {
 		return replace;
 	}
 
-	/*
-	 * public ActionItem Add(int newTag, VR newVr, String newValue){ Add add = new
-	 * Add("A", newTag, newVr, newValue); add.execute(dcm, newTag, null, null); return
-	 * null; }
-	 */
+	public ActionItem ExcludeInstance() {
+		return new ExcludeInstance("E");
+	}
 
 }

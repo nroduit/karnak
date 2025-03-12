@@ -43,7 +43,7 @@ public class ProfilePipeService {
 		return list;
 	}
 
-	public ArrayList<ProfileError> validateProfile(ProfilePipeBody profilePipeYml) {
+	public List<ProfileError> validateProfile(ProfilePipeBody profilePipeYml) {
 		ProfileEntity newProfileEntity = createNewProfile(profilePipeYml, false);
 		ArrayList<ProfileError> profileErrors = new ArrayList<>();
 		for (ProfileElementEntity profileElementEntity : newProfileEntity.getProfileElementEntities()) {
@@ -76,7 +76,8 @@ public class ProfilePipeService {
 				profilePipeYml.getMinimumKarnakVersion(), null, byDefault);
 		if (profilePipeYml.getMasks() != null) {
 			profilePipeYml.getMasks().forEach(m -> {
-				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getColor(), newProfileEntity);
+				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getImageWidth(), m.getImageHeight(),
+						m.getColor(), newProfileEntity);
 				m.getRectangles().forEach(maskEntity::addRectangle);
 				newProfileEntity.addMask(maskEntity);
 			});

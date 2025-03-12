@@ -34,6 +34,9 @@ public final class SecurityUtil {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
+	private SecurityUtil() {
+	}
+
 	/**
 	 * Determines if a request is internal to Vaadin
 	 * @param request Request

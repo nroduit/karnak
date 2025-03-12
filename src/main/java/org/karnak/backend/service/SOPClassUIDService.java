@@ -12,7 +12,6 @@ package org.karnak.backend.service;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.data.repo.SOPClassUIDRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +47,7 @@ public class SOPClassUIDService extends ListDataProvider<SOPClassUIDEntity> {
 	}
 
 	public List<String> getAllSOPClassUIDsName() {
-		return sopClassUIDRepo.findAll().stream().map(SOPClassUIDEntity::getName).collect(Collectors.toList());
+		return sopClassUIDRepo.findAll().stream().map(SOPClassUIDEntity::getName).toList();
 	}
 
 	@Override

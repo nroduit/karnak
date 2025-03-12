@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import org.karnak.backend.exception.SOPNotFoundException;
 import org.karnak.backend.model.dicominnolitics.StandardCIODS;
 import org.karnak.backend.model.dicominnolitics.StandardCIODtoModules;
@@ -131,7 +130,7 @@ public class SOPS {
 			throw new SOPNotFoundException(
 					String.format("Unable to get SOP modules name. Could not find the SOP UID %s", uid));
 		}
-		return sop.getModules().stream().map(Module::getId).collect(Collectors.toList());
+		return sop.getModules().stream().map(Module::getId).toList();
 	}
 
 	public Boolean moduleIsPresent(String uid, String moduleId) throws SOPNotFoundException {

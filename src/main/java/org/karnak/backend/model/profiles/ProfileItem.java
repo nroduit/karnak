@@ -12,6 +12,7 @@ package org.karnak.backend.model.profiles;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.profilepipe.HMAC;
 
@@ -37,6 +38,6 @@ public interface ProfileItem {
 
 	Integer getPosition();
 
-	void profileValidation() throws Exception;
+	void profileValidation() throws ProfileException;
 
 }

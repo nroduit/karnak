@@ -9,6 +9,10 @@
  */
 package org.karnak.backend.service.kheops;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -27,12 +31,6 @@ import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profiles.CleanPixelData;
 import org.karnak.backend.model.profiles.ProfileItem;
 import org.karnak.backend.service.profilepipe.Profile;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class SwitchingAlbum {
@@ -86,9 +84,7 @@ public class SwitchingAlbum {
 				&& destinationEntity.getDeIdentificationProjectEntity().getProfileEntity() != null) {
 			List<ProfileItem> profileItems = Profile
 				.getProfileItems(destinationEntity.getDeIdentificationProjectEntity().getProfileEntity());
-			for (ProfileItem profileItem : profileItems.stream()
-				.filter(p -> !(p instanceof CleanPixelData))
-				.collect(Collectors.toList())) {
+			for (ProfileItem profileItem : profileItems.stream().filter(p -> !(p instanceof CleanPixelData)).toList()) {
 				try {
 					ActionItem action = profileItem.getAction(new Attributes(), new Attributes(), tag,
 							new HMAC(HMAC.generateRandomKey()));
@@ -122,7 +118,7 @@ public class SwitchingAlbum {
 		}
 		ArrayList<MetadataSwitching> metadataToDo = (ArrayList<MetadataSwitching>) switchingAlbumToDo.get(id);
 
-		if ((condition == null || condition.length() == 0 || validateCondition(condition, dcm)) && metadataToDo.stream()
+		if ((condition == null || condition.isEmpty() || validateCondition(condition, dcm)) && metadataToDo.stream()
 			.noneMatch(metadataSwitching -> metadataSwitching.getSeriesInstanceUID().equals(seriesInstanceUID))) {
 			final boolean validAuthorizationSource = validateToken(MIN_SCOPE_SOURCE, urlAPI, authorizationSource);
 			final boolean validDestinationSource = validateToken(MIN_SCOPE_DESTINATION, urlAPI,

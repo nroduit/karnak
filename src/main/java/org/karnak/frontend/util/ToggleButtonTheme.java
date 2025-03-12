@@ -20,7 +20,7 @@ public class ToggleButtonTheme extends HorizontalLayout {
 
 	private final ToggleButton toggleButton;
 
-	private final String THEME_COLOR_KEY = "theme-variant";
+	private static final String THEME_COLOR_KEY = "theme-variant";
 
 	public ToggleButtonTheme() {
 		Icon moonIcon = new Icon(VaadinIcon.MOON_O);

@@ -13,10 +13,10 @@ import com.vaadin.flow.component.html.Image;
 
 public class LogoKarnak extends Image {
 
-	private final String logoPath = "img/karnak.png";
+	private static final String LOGO_PATH = "img/karnak.png";
 
 	public LogoKarnak(String alt, String maxSize) {
-		setSrc(logoPath);
+		setSrc(LOGO_PATH);
 		setAlt(alt);
 		setMaxHeight(maxSize);
 		setMaxWidth(maxSize);

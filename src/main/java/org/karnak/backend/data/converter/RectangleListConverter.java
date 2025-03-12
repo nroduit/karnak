@@ -44,10 +44,7 @@ public class RectangleListConverter implements AttributeConverter<List<Rectangle
 
 	@Override
 	public List<Rectangle> convertToEntityAttribute(String string) {
-		return Arrays.asList(string.split(SPLIT_CHAR))
-			.stream()
-			.map(RectangleListConverter::stringToRectangle)
-			.collect(Collectors.toList());
+		return Arrays.asList(string.split(SPLIT_CHAR)).stream().map(RectangleListConverter::stringToRectangle).toList();
 	}
 
 }

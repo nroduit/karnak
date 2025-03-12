@@ -67,7 +67,7 @@ public class DicomGatewayService {
 		this.deviceService = new DeviceListenerService(storeScpForwardService.getDevice());
 	}
 
-	public void init(Map<ForwardDicomNode, List<ForwardDestination>> destinations) throws IOException {
+	public void init(Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
 		storeScpForwardService.init(destinations);
 		this.deviceService = new DeviceListenerService(storeScpForwardService.getDevice());
 	}

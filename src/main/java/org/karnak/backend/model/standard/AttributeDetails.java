@@ -12,7 +12,6 @@ package org.karnak.backend.model.standard;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.karnak.backend.model.dicominnolitics.StandardAttributes;
 import org.karnak.backend.model.dicominnolitics.jsonAttributes;
 
@@ -47,8 +46,8 @@ public class AttributeDetails {
 		return hmapAttributeDetail.entrySet()
 			.stream()
 			.filter(attributeDetail -> listId.contains(attributeDetail.getKey()))
-			.map(attributeDetail -> attributeDetail.getValue())
-			.collect(Collectors.toList());
+			.map(Map.Entry::getValue)
+			.toList();
 	}
 
 }

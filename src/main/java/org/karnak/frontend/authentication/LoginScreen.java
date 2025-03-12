@@ -107,7 +107,7 @@ public class LoginScreen extends FlexLayout implements BeforeEnterObserver {
 
 		// sets the LoginForm action to "login" in order to post the login form to Spring
 		// Security
-		loginForm.setAction("login");
+		loginForm.setAction(ROUTE);
 
 		// deactivate forgot password button
 		loginForm.setForgotPasswordButtonVisible(false);

@@ -15,6 +15,9 @@ import org.dcm4che3.util.TagUtils;
 
 public class MetadataDICOMObject {
 
+	private MetadataDICOMObject() {
+	}
+
 	/*
 	 * Search a tagValue in the current DicomObject and his parent Will loop in the parent
 	 * of the DicomObject until the last parent or the tagValue

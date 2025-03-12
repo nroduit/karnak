@@ -21,6 +21,9 @@ import org.weasis.core.util.StringUtil;
 
 public class DicomObjectTools {
 
+	private DicomObjectTools() {
+	}
+
 	public static boolean dicomObjectEquals(Attributes o1, Attributes o2) {
 		return Objects.equals(o1, o2);
 	}

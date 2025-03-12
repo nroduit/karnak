@@ -40,20 +40,20 @@ public class TextFieldsBindProject {
 	}
 
 	private Binder<ProjectEntity> setBinder() {
-		Binder<ProjectEntity> binder = new BeanValidationBinder<>(ProjectEntity.class);
-		binder.forField(textResearchName)
+		Binder<ProjectEntity> binderBean = new BeanValidationBinder<>(ProjectEntity.class);
+		binderBean.forField(textResearchName)
 			.withValidator(StringUtils::isNotBlank, "Name is mandatory")
 			.bind(ProjectEntity::getName, ProjectEntity::setName);
 
-		binder.forField(secretComboBox)
+		binderBean.forField(secretComboBox)
 			.withValidator(secretMandatoryValidator())
 			.withValidator(secretValidValidator())
 			.bind(ProjectEntity::retrieveActiveSecret, ProjectEntity::applyActiveSecret);
 
-		binder.forField(profileDropDown)
+		binderBean.forField(profileDropDown)
 			.withValidator(Objects::nonNull, "Choose the de-identification profile\n")
 			.bind(ProjectEntity::getProfileEntity, ProjectEntity::setProfileEntity);
-		return binder;
+		return binderBean;
 	}
 
 	/**

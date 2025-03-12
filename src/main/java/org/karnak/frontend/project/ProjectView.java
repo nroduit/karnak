@@ -155,9 +155,7 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 	 * Add event when selecting a project in the grid
 	 */
 	private void addEventGridSelection() {
-		gridProject.asSingleSelect().addValueChangeListener(event -> {
-			navigateProject(event.getValue());
-		});
+		gridProject.asSingleSelect().addValueChangeListener(event -> navigateProject(event.getValue()));
 	}
 
 	/**

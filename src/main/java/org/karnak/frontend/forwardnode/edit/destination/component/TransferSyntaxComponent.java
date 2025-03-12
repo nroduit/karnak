@@ -13,7 +13,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.binder.Binder;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.enums.UIDType;
 
@@ -54,8 +53,7 @@ public class TransferSyntaxComponent extends VerticalLayout {
 		// Values
 		transferSyntaxSelect.setEmptySelectionAllowed(true);
 		transferSyntaxSelect.setEmptySelectionCaption(UIDType.DEFAULT_DESCRIPTION);
-		transferSyntaxSelect
-			.setItems(Arrays.stream(UIDType.values()).map(UIDType::getCode).collect(Collectors.toList()));
+		transferSyntaxSelect.setItems(Arrays.stream(UIDType.values()).map(UIDType::getCode).toList());
 
 		// Labels
 		transferSyntaxSelect.setLabel("Transfer Syntax");
