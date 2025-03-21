@@ -140,6 +140,7 @@ public class DicomEchoSelectionDialog extends AbstractDialog {
 
 	private void init() {
 		dialog = this.getContent();
+		dialog.setWidth("500px");
 
 		dicomNodeTypes = new ArrayList<>();
 		dicomNodes = new DicomNodeList("DicomNodes");

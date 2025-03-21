@@ -11,9 +11,6 @@ package org.karnak.backend.constant;
 
 public class EndPoint {
 
-	private EndPoint() {
-	}
-
 	// Paths
 	public static final String ECHO_PATH = "/api/echo";
 
@@ -29,5 +26,8 @@ public class EndPoint {
 	// public static final String SOP_UID_PARAM = "sopUid";
 
 	public static final String ALL_REMAINING_PATH = "/**";
+
+	private EndPoint() {
+	}
 
 }

@@ -17,6 +17,8 @@ public class Notification {
 	// Default
 	public static final String DEFAULT_SUBJECT_ERROR_PREFIX = "**ERROR**";
 
+	public static final String DEFAULT_SUBJECT_REJECTION_PREFIX = "**REJECTED**";
+
 	public static final String DEFAULT_SUBJECT_PATTERN = "[Karnak Notification] %s %.30s";
 
 	public static final String DEFAULT_SUBJECT_VALUES = "PatientID,StudyDescription";

@@ -9,11 +9,11 @@
  */
 package org.karnak.frontend.pseudonym.mapping.component;
 
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.dom.Style;
 import org.karnak.frontend.component.BoxShadowComponent;
 
 /**
@@ -30,12 +30,12 @@ public class MappingInputComponent extends VerticalLayout {
 	 * Constructor
 	 */
 	public MappingInputComponent() {
-		setWidthFull();
 
 		// TextField input for pseudonym
 		pseudonymTextField = new TextField();
 		pseudonymTextField.setPlaceholder("Pseudonym to look for...");
-		pseudonymTextField.setMinWidth(85, Unit.PERCENTAGE);
+		pseudonymTextField.setWidth("30vw");
+		pseudonymTextField.setMinWidth("200px");
 
 		// Find Button
 		findButton = new Button("Find...");
@@ -43,10 +43,11 @@ public class MappingInputComponent extends VerticalLayout {
 
 		// Pseudonym layout
 		HorizontalLayout pseudonymLayout = new HorizontalLayout();
+		pseudonymLayout.getStyle().setJustifyContent(Style.JustifyContent.CENTER);
 		pseudonymLayout.add(pseudonymTextField, findButton);
 		BoxShadowComponent pseudonymBoxShadowComponent = new BoxShadowComponent(pseudonymLayout);
-		pseudonymBoxShadowComponent.getElement().getStyle().set("padding", "1%");
-		pseudonymBoxShadowComponent.getElement().getStyle().set("width", "44%");
+		pseudonymBoxShadowComponent.getElement().getStyle().set("padding", "10px");
+		pseudonymBoxShadowComponent.getElement().getStyle().set("margin", "auto");
 		add(pseudonymBoxShadowComponent);
 	}
 

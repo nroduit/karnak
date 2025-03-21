@@ -99,6 +99,7 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 
 	private void init() {
 		dialog = this.getContent();
+		dialog.setWidth("500px");
 
 		workListNodes = new DicomNodeList("Worklists");
 		buildDataProvider();

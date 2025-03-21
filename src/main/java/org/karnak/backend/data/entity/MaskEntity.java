@@ -19,14 +19,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import org.karnak.backend.data.converter.RectangleListConverter;
-import org.karnak.backend.data.converter.RectangleListToStringListConverter;
-
 import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.karnak.backend.data.converter.RectangleListConverter;
+import org.karnak.backend.data.converter.RectangleListToStringListConverter;
 
 @Entity(name = "Masks")
 @Table(name = "masks")

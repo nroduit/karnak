@@ -326,7 +326,7 @@ public class TransferStatusGrid extends PaginatedGrid<TransferStatusEntity, Tran
 	 */
 	private void createHasBeenSentFilter(Column<TransferStatusEntity> statusColumn, HeaderRow filterRow) {
 		ComboBox<TransferStatusType> statusComboBox = new ComboBox<>();
-		statusComboBox.setItemLabelGenerator(TransferStatusType::getDescription);
+		statusComboBox.setItemLabelGenerator(TransferStatusType::getLabel);
 		statusComboBox.setPlaceholder("Filter Status");
 		statusComboBox.setItems(TransferStatusType.values());
 		statusComboBox.addValueChangeListener(event -> {
@@ -406,9 +406,18 @@ public class TransferStatusGrid extends PaginatedGrid<TransferStatusEntity, Tran
 	 */
 	private ComponentRenderer<Span, TransferStatusEntity> createColumnStatusComponentRenderer() {
 		return new ComponentRenderer<>(Span::new, (span, transferStatusEntity) -> {
-			span.getElement()
-				.getThemeList()
-				.add(String.format("badge primary pill %s", transferStatusEntity.isSent() ? "success" : "error"));
+			StringBuilder pill = new StringBuilder();
+			pill.append("badge primary pill ");
+			if (transferStatusEntity.isSent()) {
+				pill.append("success");
+			}
+			else if (transferStatusEntity.isError()) {
+				pill.append("error");
+			}
+			else {
+				span.getStyle().setBackgroundColor("#d38900");
+			}
+			span.getElement().getThemeList().add(pill.toString());
 			span.setText(transferStatusEntity.isSent() ? "Sent" : transferStatusEntity.getReason());
 		});
 	}

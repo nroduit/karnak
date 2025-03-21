@@ -19,8 +19,15 @@ import org.slf4j.MDC;
 @Slf4j
 public class Add extends AbstractAction {
 
+	private String privateCreator;
+
 	public Add(String symbol, int newTag, VR vr, String dummyValue) {
 		super(symbol, newTag, vr, dummyValue);
+	}
+
+	public Add(String symbol, int newTag, VR vr, String dummyValue, String privateCreator) {
+		super(symbol, newTag, vr, dummyValue);
+		this.privateCreator = privateCreator;
 	}
 
 	@Override
@@ -41,10 +48,10 @@ public class Add extends AbstractAction {
 		}
 
 		if (dummyValue != null) {
-			dcm.setString(newTag, vr, dummyValue);
+			dcm.setString(privateCreator, newTag, vr, dummyValue);
 		}
 		else {
-			dcm.setNull(newTag, vr);
+			dcm.setNull(privateCreator, newTag, vr);
 		}
 	}
 

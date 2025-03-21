@@ -14,34 +14,40 @@ package org.karnak.backend.enums;
  */
 public enum TransferStatusType {
 
-	ALL(null, "All"), SENT(true, "Sent"), NOT_SENT(false, "Not Sent");
+	ALL(null, null, "All"), SENT(true, false, "Sent"), NOT_SENT(false, null, "Not Sent"),
+	EXCLUDED(false, false, "Excluded"), ERROR(false, true, "Error");
 
 	/**
-	 * Code of the enum
+	 * Predicate value for the sent attribute
 	 */
-	private final Boolean code;
+	private final Boolean sent;
 
 	/**
-	 * Description of the enum
+	 * Predicate value for the error attribute
 	 */
-	private final String description;
+	private final Boolean error;
 
 	/**
-	 * Constructor
-	 * @param code Code
-	 * @param description Description
+	 * Label of the filter value
 	 */
-	TransferStatusType(Boolean code, String description) {
-		this.code = code;
-		this.description = description;
+	private final String label;
+
+	TransferStatusType(Boolean sent, Boolean error, String label) {
+		this.label = label;
+		this.sent = sent;
+		this.error = error;
 	}
 
-	public Boolean getCode() {
-		return code;
+	public Boolean getSent() {
+		return sent;
 	}
 
-	public String getDescription() {
-		return description;
+	public Boolean getError() {
+		return error;
+	}
+
+	public String getLabel() {
+		return label;
 	}
 
 }
