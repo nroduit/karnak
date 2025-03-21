@@ -10,16 +10,15 @@
 package org.karnak.frontend.image;
 
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.server.StreamResource;
 
 public class LogoKarnak extends Image {
 
-	private static final String LOGO_PATH = "img/karnak.png";
+	private static final String LOGO_PATH = "karnak.png";
 
 	public LogoKarnak(String alt, String maxSize) {
-		setSrc(LOGO_PATH);
-		setAlt(alt);
+		super(new StreamResource(LOGO_PATH,() -> LogoKarnak.class.getResourceAsStream("/META-INF/resources/img/" + LOGO_PATH)), alt);
 		setMaxHeight(maxSize);
 		setMaxWidth(maxSize);
 	}
-
 }
