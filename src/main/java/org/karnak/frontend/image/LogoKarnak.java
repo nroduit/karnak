@@ -17,8 +17,10 @@ public class LogoKarnak extends Image {
 	private static final String LOGO_PATH = "karnak.png";
 
 	public LogoKarnak(String alt, String maxSize) {
-		super(new StreamResource(LOGO_PATH,() -> LogoKarnak.class.getResourceAsStream("/META-INF/resources/img/" + LOGO_PATH)), alt);
+		super(new StreamResource(LOGO_PATH,
+				() -> LogoKarnak.class.getResourceAsStream("/META-INF/resources/img/" + LOGO_PATH)), alt);
 		setMaxHeight(maxSize);
 		setMaxWidth(maxSize);
 	}
+
 }
