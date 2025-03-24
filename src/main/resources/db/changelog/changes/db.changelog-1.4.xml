@@ -49,4 +49,33 @@
     </addColumn>
   </changeSet>
 
+  <changeSet author="karnak" id="1.4-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_status" columnName="error"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_status">
+      <column name="error" type="BOOLEAN">
+      </column>
+    </addColumn>
+    <sql>
+        update transfer_status set error = true where sent = false;
+        update transfer_status set error = false where error is null;
+    </sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.4-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="notify_object_rejection_prefix"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="notify_object_rejection_prefix" type="VARCHAR(255)"/>
+    </addColumn>
+    <sql>update destination set notify_object_rejection_prefix = '**REJECTED**' where notify_object_rejection_prefix is null;</sql>
+  </changeSet>
+
+
 </databaseChangeLog>

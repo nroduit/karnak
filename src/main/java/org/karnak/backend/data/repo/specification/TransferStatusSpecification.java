@@ -65,6 +65,8 @@ public class TransferStatusSpecification implements Specification<TransferStatus
 		Path<String> pSopInstanceUidToSend = root.get("sopInstanceUidToSend");
 		// Status
 		Path<Boolean> pSent = root.get("sent");
+		// Error
+		Path<Boolean> pError = root.get("error");
 		// Transfer date
 		Path<LocalDateTime> pTransferDate = root.get("transferDate");
 
@@ -77,7 +79,7 @@ public class TransferStatusSpecification implements Specification<TransferStatus
 			// Sop Instance Uid
 			buildCriteriaSopInstanceUid(criteriaBuilder, predicates, pSopInstanceUidOriginal, pSopInstanceUidToSend);
 			// Sent
-			buildCriteriaSent(criteriaBuilder, predicates, pSent);
+			buildCriteriaSent(criteriaBuilder, predicates, pSent, pError);
 			// Transfer Date
 			buildCriteriaTransferDate(criteriaBuilder, predicates, pTransferDate);
 		}
@@ -142,10 +144,14 @@ public class TransferStatusSpecification implements Specification<TransferStatus
 	 * @param predicates Predicates to build
 	 * @param pSent Path of sent
 	 */
-	private void buildCriteriaSent(CriteriaBuilder criteriaBuilder, List<Predicate> predicates, Path<Boolean> pSent) {
+	private void buildCriteriaSent(CriteriaBuilder criteriaBuilder, List<Predicate> predicates, Path<Boolean> pSent,
+			Path<Boolean> pError) {
 		if (transferStatusFilter.getTransferStatusType() != null
 				&& !Objects.equals(transferStatusFilter.getTransferStatusType(), TransferStatusType.ALL)) {
-			predicates.add(criteriaBuilder.equal(pSent, transferStatusFilter.getTransferStatusType().getCode()));
+			predicates.add(criteriaBuilder.equal(pSent, transferStatusFilter.getTransferStatusType().getSent()));
+			if (!Objects.equals(transferStatusFilter.getTransferStatusType(), TransferStatusType.NOT_SENT)) {
+				predicates.add(criteriaBuilder.equal(pError, transferStatusFilter.getTransferStatusType().getError()));
+			}
 		}
 	}
 

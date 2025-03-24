@@ -53,6 +53,8 @@ public class TransferStatusEntity implements Serializable {
 
 	private boolean sent;
 
+	private boolean error;
+
 	private String reason;
 
 	// Original
@@ -105,17 +107,18 @@ public class TransferStatusEntity implements Serializable {
 	}
 
 	public TransferStatusEntity(Long forwardNodeId, Long destinationId, LocalDateTime transferDate, boolean sent,
-			String reason, String patientIdOriginal, String accessionNumberOriginal, String studyDescriptionOriginal,
-			LocalDateTime studyDateOriginal, String studyUidOriginal, String serieDescriptionOriginal,
-			LocalDateTime serieDateOriginal, String serieUidOriginal, String sopInstanceUidOriginal,
-			String patientIdToSend, String accessionNumberToSend, String studyDescriptionToSend,
-			LocalDateTime studyDateToSend, String studyUidToSend, String serieDescriptionToSend,
-			LocalDateTime serieDateToSend, String serieUidToSend, String sopInstanceUidToSend, String modality,
-			String sopClassUid) {
+			boolean error, String reason, String patientIdOriginal, String accessionNumberOriginal,
+			String studyDescriptionOriginal, LocalDateTime studyDateOriginal, String studyUidOriginal,
+			String serieDescriptionOriginal, LocalDateTime serieDateOriginal, String serieUidOriginal,
+			String sopInstanceUidOriginal, String patientIdToSend, String accessionNumberToSend,
+			String studyDescriptionToSend, LocalDateTime studyDateToSend, String studyUidToSend,
+			String serieDescriptionToSend, LocalDateTime serieDateToSend, String serieUidToSend,
+			String sopInstanceUidToSend, String modality, String sopClassUid) {
 		this.forwardNodeId = forwardNodeId;
 		this.destinationId = destinationId;
 		this.transferDate = transferDate;
 		this.sent = sent;
+		this.error = error;
 		this.reason = reason;
 		this.patientIdOriginal = patientIdOriginal;
 		this.accessionNumberOriginal = accessionNumberOriginal;
@@ -140,10 +143,10 @@ public class TransferStatusEntity implements Serializable {
 	}
 
 	public static TransferStatusEntity buildTransferStatusEntity(Long forwardNodeId, Long destinationId,
-			Attributes attributesOriginal, Attributes attributesToSend, boolean sent, String reason, String modality,
-			String sopClassUid) {
-		return new TransferStatusEntity(forwardNodeId, destinationId, LocalDateTime.now(ZoneId.of("CET")), sent, reason,
-				attributesOriginal.getString(Tag.PatientID), attributesOriginal.getString(Tag.AccessionNumber),
+			Attributes attributesOriginal, Attributes attributesToSend, boolean sent, boolean error, String reason,
+			String modality, String sopClassUid) {
+		return new TransferStatusEntity(forwardNodeId, destinationId, LocalDateTime.now(ZoneId.of("CET")), sent, error,
+				reason, attributesOriginal.getString(Tag.PatientID), attributesOriginal.getString(Tag.AccessionNumber),
 				attributesOriginal.getString(Tag.StudyDescription),
 				DateTimeUtils.dateTime(DateUtil.getDicomDate(attributesOriginal.getString(Tag.StudyDate)),
 						DateUtil.getDicomTime(attributesOriginal.getString(Tag.StudyTime))),
@@ -225,6 +228,14 @@ public class TransferStatusEntity implements Serializable {
 
 	public void setSent(boolean sent) {
 		this.sent = sent;
+	}
+
+	public boolean isError() {
+		return error;
+	}
+
+	public void setError(boolean error) {
+		this.error = error;
 	}
 
 	public String getReason() {

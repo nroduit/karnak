@@ -29,6 +29,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.validator.group.GroupSequenceProvider;
@@ -37,14 +44,6 @@ import org.karnak.backend.data.validator.DestinationGroupSequenceProvider.Destin
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider.DestinationStowGroup;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.PseudonymType;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 @GroupSequenceProvider(value = DestinationGroupSequenceProvider.class)
 @Entity(name = "Destination")
@@ -102,6 +101,9 @@ public class DestinationEntity implements Serializable {
 
 	// Prefix of the email object when containing an issue. Default value: **ERROR**
 	private String notifyObjectErrorPrefix;
+
+	// Prefix of the email object when a rejection occurred. Default value: **REJECTED**
+	private String notifyObjectRejectionPrefix;
 
 	// Pattern of the email object, see
 	// https://dzone.com/articles/java-string-format-examples.
@@ -180,6 +182,7 @@ public class DestinationEntity implements Serializable {
 
 		this.notify = "";
 		this.notifyObjectErrorPrefix = "";
+		this.notifyObjectRejectionPrefix = "";
 		this.notifyObjectPattern = "";
 		this.notifyObjectValues = "";
 		this.notifyInterval = 0;
@@ -302,6 +305,14 @@ public class DestinationEntity implements Serializable {
 
 	public void setNotifyObjectErrorPrefix(String notifyObjectErrorPrefix) {
 		this.notifyObjectErrorPrefix = notifyObjectErrorPrefix;
+	}
+
+	public String getNotifyObjectRejectionPrefix() {
+		return notifyObjectRejectionPrefix;
+	}
+
+	public void setNotifyObjectRejectionPrefix(String notifyObjectRejectionPrefix) {
+		this.notifyObjectRejectionPrefix = notifyObjectRejectionPrefix;
 	}
 
 	public String getNotifyObjectPattern() {
@@ -554,6 +565,7 @@ public class DestinationEntity implements Serializable {
 		return contains(description, filterText) //
 				|| contains(notify, filterText) //
 				|| contains(notifyObjectErrorPrefix, filterText) //
+				|| contains(notifyObjectRejectionPrefix, filterText) //
 				|| contains(notifyObjectPattern, filterText) //
 				|| contains(notifyObjectValues, filterText) //
 				|| contains(aeTitle, filterText) //
@@ -578,21 +590,22 @@ public class DestinationEntity implements Serializable {
 				case dicom:
 					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
 							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-							+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
-							+ notifyObjectValues + ", notifyInterval=" + notifyInterval + ", aeTitle=" + aeTitle
-							+ ", hostname=" + hostname + ", port=" + port + ", useaetdest=" + useaetdest + "]";
+							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
+							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
+							+ notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname + ", port=" + port
+							+ ", useaetdest=" + useaetdest + "]";
 				case stow:
 					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
 							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-							+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
-							+ notifyObjectValues + ", notifyInterval=" + notifyInterval + ", url=" + url + ", headers="
-							+ headers + "]";
+							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
+							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
+							+ notifyInterval + ", url=" + url + ", headers=" + headers + "]";
 			}
 		}
 		return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType + ", notify="
-				+ notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix + ", notifyObjectPattern="
-				+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
-				+ notifyInterval + "]";
+				+ notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix + ", notifyObjectRejectionPrefix="
+				+ notifyObjectRejectionPrefix + ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
+				+ notifyObjectValues + ", notifyInterval=" + notifyInterval + "]";
 	}
 
 	public String retrieveStringReference() {

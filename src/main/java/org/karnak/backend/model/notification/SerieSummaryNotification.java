@@ -29,6 +29,8 @@ public class SerieSummaryNotification {
 
 	private long nbTransferNotSent;
 
+	private boolean containsError;
+
 	private Set<String> unTransferedReasons;
 
 	private Set<String> transferredModalities;
@@ -73,6 +75,14 @@ public class SerieSummaryNotification {
 
 	public void setNbTransferNotSent(long nbTransferNotSent) {
 		this.nbTransferNotSent = nbTransferNotSent;
+	}
+
+	public boolean isContainsError() {
+		return containsError;
+	}
+
+	public void setContainsError(boolean containsError) {
+		this.containsError = containsError;
 	}
 
 	public Set<String> getUnTransferedReasons() {

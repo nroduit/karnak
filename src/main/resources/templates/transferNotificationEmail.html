@@ -64,11 +64,12 @@
                 <th>Sop class UID</th>
                 <th>Transferred</th>
                 <th>Not transferred</th>
+                <th>Contains error</th>
                 <th>Not transferred reasons</th>
               </tr>
               <tr th:each="serie, rowStat: ${notif.getSerieSummaryNotifications()}"
                   th:style="(${rowStat.odd} ? 'background: #f0f0f2;' : 'background: #ffffff;')+('text-align: center; vertical-align: middle;')"
-                  th:styleappend="${serie.getNbTransferNotSent()} > 0 ? 'color: red;' : 'color: black;'">
+                  th:styleappend="${serie.isContainsError()} ? 'color: red;' : (${serie.getNbTransferNotSent()} > 0 ? 'color: orange;' : 'color: black;')">
                 <td th:text="${serie.getSerieUid()}"/>
                 <td th:text="${serie.getSerieDescription()}"/>
                 <td th:text="${#temporals.format(serie.getSerieDate(), 'dd/MM/yyyy HH:mm:ss.SSS')}"/>
@@ -76,6 +77,7 @@
                 <td th:text="${serie.toStringTransferredSopClassUid()}"/>
                 <td th:text="${serie.getNbTransferSent()}"/>
                 <td th:text="${serie.getNbTransferNotSent()}"/>
+                <td th:text="${serie.isContainsError()} ? 'Yes' : 'No'"/>
                 <td th:text="${serie.toStringUnTransferredReasons}"/>
               </tr>
             </table>

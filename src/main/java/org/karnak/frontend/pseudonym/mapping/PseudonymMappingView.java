@@ -16,16 +16,15 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.karnak.backend.cache.Patient;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.pseudonym.mapping.component.MappingInputComponent;
 import org.karnak.frontend.pseudonym.mapping.component.MappingResultComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @Route(value = PseudonymMappingView.ROUTE, layout = MainLayout.class)
 @PageTitle("KARNAK - Mapping Pseudonym")
@@ -181,15 +180,12 @@ public class PseudonymMappingView extends HorizontalLayout {
 
 		// Layout
 		mappingLayout = new VerticalLayout();
-		VerticalLayout inputLayout = new VerticalLayout();
 
 		// Titles
 		mappingLayout.add(new H2("Pseudonym Mapping"));
 
 		// Input
-		inputLayout.add(mappingInputComponent);
-		inputLayout.getElement().getStyle().set("margin-left", "22%");
-		mappingLayout.add(inputLayout);
+		mappingLayout.add(mappingInputComponent);
 
 		// Layout
 		add(mappingLayout);

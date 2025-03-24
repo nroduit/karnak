@@ -33,6 +33,8 @@ public class NotificationComponent extends VerticalLayout {
 
 	private TextField notifyObjectErrorPrefix;
 
+	private TextField notifyObjectRejectionPrefix;
+
 	private TextField notifyObjectPattern;
 
 	private TextField notifyObjectValues;
@@ -42,6 +44,8 @@ public class NotificationComponent extends VerticalLayout {
 	private Checkbox activateNotification;
 
 	private Div notificationInputsDiv;
+
+	private Div notificationObjectsDiv;
 
 	/**
 	 * Constructor
@@ -67,11 +71,11 @@ public class NotificationComponent extends VerticalLayout {
 	 * Add components in notification components
 	 */
 	private void addComponents() {
-		notificationInputsDiv.add(UIS.setWidthFull(new HorizontalLayout(notify)),
-				UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectPattern, notifyObjectValues,
-						notifyInterval)));
+		notificationInputsDiv.add(UIS.setWidthFull(new VerticalLayout(UIS.setWidthFull(new HorizontalLayout(notify)),
+				UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectRejectionPrefix)),
+				UIS.setWidthFull(new HorizontalLayout(notifyObjectPattern, notifyObjectValues, notifyInterval)))));
 
-		add(UIS.setWidthFull(new HorizontalLayout(activateNotification)), UIS.setWidthFull(notificationInputsDiv));
+		add(UIS.setWidthFull(new HorizontalLayout(activateNotification)), notificationInputsDiv);
 	}
 
 	/**
@@ -88,11 +92,13 @@ public class NotificationComponent extends VerticalLayout {
 		activateNotification.addValueChangeListener(event -> {
 			if (event != null && event.getValue()) {
 				notificationInputsDiv.setVisible(true);
+				notificationObjectsDiv.setVisible(true);
 				// Set default values if null or empty
 				updateDefaultValuesNotificationTextFields();
 			}
 			else {
 				notificationInputsDiv.setVisible(false);
+				notificationObjectsDiv.setVisible(false);
 			}
 		});
 	}
@@ -103,6 +109,9 @@ public class NotificationComponent extends VerticalLayout {
 	private void updateDefaultValuesNotificationTextFields() {
 		if (notifyObjectErrorPrefix.getValue() == null || notifyObjectErrorPrefix.getValue().trim().isEmpty()) {
 			notifyObjectErrorPrefix.setValue(Notification.DEFAULT_SUBJECT_ERROR_PREFIX);
+		}
+		if (notifyObjectRejectionPrefix.getValue() == null || notifyObjectRejectionPrefix.getValue().trim().isEmpty()) {
+			notifyObjectRejectionPrefix.setValue(Notification.DEFAULT_SUBJECT_REJECTION_PREFIX);
 		}
 		if (notifyObjectPattern.getValue() == null || notifyObjectPattern.getValue().trim().isEmpty()) {
 			notifyObjectPattern.setValue(Notification.DEFAULT_SUBJECT_PATTERN);
@@ -124,6 +133,10 @@ public class NotificationComponent extends VerticalLayout {
 				|| destinationEntity.getNotifyObjectErrorPrefix().trim().isEmpty()) {
 			destinationEntity.setNotifyObjectErrorPrefix(Notification.DEFAULT_SUBJECT_ERROR_PREFIX);
 		}
+		if (destinationEntity.getNotifyObjectRejectionPrefix() == null
+				|| destinationEntity.getNotifyObjectRejectionPrefix().trim().isEmpty()) {
+			destinationEntity.setNotifyObjectRejectionPrefix(Notification.DEFAULT_SUBJECT_REJECTION_PREFIX);
+		}
 		if (destinationEntity.getNotifyObjectPattern() == null
 				|| destinationEntity.getNotifyObjectPattern().trim().isEmpty()) {
 			destinationEntity.setNotifyObjectPattern(Notification.DEFAULT_SUBJECT_PATTERN);
@@ -142,9 +155,11 @@ public class NotificationComponent extends VerticalLayout {
 	 */
 	private void buildComponents() {
 		buildNotificationInputsDiv();
+		buildNotificationObjectsDiv();
 		buildActivateNotification();
 		buildNotify();
 		buildNotifyObjectErrorPrefix();
+		buildNotifyObjectRejectionPrefix();
 		buildNotifyObjectPattern();
 		buildNotifyObjectValues();
 		buildNotifyInterval();
@@ -155,7 +170,7 @@ public class NotificationComponent extends VerticalLayout {
 	 */
 	private void buildNotifyInterval() {
 		notifyInterval = new TextField(String.format("Notif.: interval (Default: %s)", Notification.DEFAULT_INTERVAL));
-		notifyInterval.setWidth("18%");
+		notifyInterval.setWidth("32%");
 		notifyInterval.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
 		UIS.setTooltip(notifyInterval, String.format(
 				"Interval in seconds for sending a notification (when no new image is arrived in the archive folder). Default value: %s",
@@ -168,7 +183,7 @@ public class NotificationComponent extends VerticalLayout {
 	private void buildNotifyObjectValues() {
 		notifyObjectValues = new TextField(
 				String.format("Notif.: subject values (Default: %s)", Notification.DEFAULT_SUBJECT_VALUES));
-		notifyObjectValues.setWidth("24%");
+		notifyObjectValues.setWidth("32%");
 		UIS.setTooltip(notifyObjectValues, String.format(
 				"Values injected in the pattern [PatientID StudyDescription StudyDate StudyInstanceUID]. Default value: %s",
 				Notification.DEFAULT_SUBJECT_VALUES));
@@ -180,7 +195,7 @@ public class NotificationComponent extends VerticalLayout {
 	private void buildNotifyObjectPattern() {
 		notifyObjectPattern = new TextField(
 				String.format("Notif.: subject pattern (Default: %s)", Notification.DEFAULT_SUBJECT_PATTERN));
-		notifyObjectPattern.setWidth("24%");
+		notifyObjectPattern.setWidth("32%");
 		UIS.setTooltip(notifyObjectPattern, String.format(
 				"Pattern of the email object, see https://dzone.com/articles/java-string-format-examples. Default value: %s",
 				Notification.DEFAULT_SUBJECT_PATTERN));
@@ -192,10 +207,22 @@ public class NotificationComponent extends VerticalLayout {
 	private void buildNotifyObjectErrorPrefix() {
 		notifyObjectErrorPrefix = new TextField(
 				String.format("Notif.: error subject prefix (Default: %s)", Notification.DEFAULT_SUBJECT_ERROR_PREFIX));
-		notifyObjectErrorPrefix.setWidth("24%");
+		notifyObjectErrorPrefix.setWidth("49%");
 		UIS.setTooltip(notifyObjectErrorPrefix,
 				String.format("Prefix of the email object when containing an issue. Default value: %s",
 						Notification.DEFAULT_SUBJECT_ERROR_PREFIX));
+	}
+
+	/**
+	 * Notify Object Rejection Prefix
+	 */
+	private void buildNotifyObjectRejectionPrefix() {
+		notifyObjectRejectionPrefix = new TextField(String.format("Notif.: rejection subject prefix (Default: %s)",
+				Notification.DEFAULT_SUBJECT_REJECTION_PREFIX));
+		notifyObjectRejectionPrefix.setWidth("49%");
+		UIS.setTooltip(notifyObjectRejectionPrefix,
+				String.format("Prefix of the email object in case of rejections. Default value: %s",
+						Notification.DEFAULT_SUBJECT_REJECTION_PREFIX));
 	}
 
 	/**
@@ -224,6 +251,17 @@ public class NotificationComponent extends VerticalLayout {
 		notificationInputsDiv = new Div();
 		// By default hide
 		notificationInputsDiv.setVisible(false);
+		notificationInputsDiv.setWidthFull();
+	}
+
+	/**
+	 * Notification Inputs Div
+	 */
+	private void buildNotificationObjectsDiv() {
+		notificationObjectsDiv = new Div();
+		// By default hide
+		notificationObjectsDiv.setVisible(false);
+		notificationObjectsDiv.setWidthFull();
 	}
 
 	/**
@@ -253,6 +291,10 @@ public class NotificationComponent extends VerticalLayout {
 		binder.forField(getNotifyObjectErrorPrefix())
 			.bind(DestinationEntity::getNotifyObjectErrorPrefix, DestinationEntity::setNotifyObjectErrorPrefix);
 
+		// Error Prefix
+		binder.forField(getNotifyObjectRejectionPrefix())
+			.bind(DestinationEntity::getNotifyObjectRejectionPrefix, DestinationEntity::setNotifyObjectRejectionPrefix);
+
 		// Subject Pattern
 		binder.forField(getNotifyObjectPattern())
 			.bind(DestinationEntity::getNotifyObjectPattern, DestinationEntity::setNotifyObjectPattern);
@@ -276,6 +318,14 @@ public class NotificationComponent extends VerticalLayout {
 
 	public void setNotifyObjectErrorPrefix(TextField notifyObjectErrorPrefix) {
 		this.notifyObjectErrorPrefix = notifyObjectErrorPrefix;
+	}
+
+	public TextField getNotifyObjectRejectionPrefix() {
+		return notifyObjectRejectionPrefix;
+	}
+
+	public void setNotifyObjectRejectionPrefix(TextField notifyObjectRejectionPrefix) {
+		this.notifyObjectRejectionPrefix = notifyObjectRejectionPrefix;
 	}
 
 	public TextField getNotifyObjectPattern() {

@@ -488,14 +488,14 @@ public class Util {
 
 	private static String getWarningItem(boolean fontIcon) {
 		if (fontIcon) {
-			return "<iron-icon class=\"icon\" icon=\"icons:error\" style=\"width:1em; height:1em;\"></iron-icon>";
+			return "<vaadin-icon icon=\"vaadin:exclamation-circle\" style=\"width:1em; height:1em;\"></vaadin-icon>";
 		}
 		return "WARN";
 	}
 
 	private static String getOKItem(boolean fontIcon) {
 		if (fontIcon) {
-			return "<iron-icon class=\"icon\" icon=\"icons:check-circle\" style=\"width:1em; height:1em;\"></iron-icon>";
+			return "<vaadin-icon icon=\"vaadin:check-circle\" style=\"width:1em; height:1em;\"></vaadin-icon>";
 		}
 		return "OK";
 	}

@@ -28,9 +28,6 @@ import org.karnak.backend.dicom.DateTimeUtils;
 @Slf4j
 public class DateFormat {
 
-	private DateFormat() {
-	}
-
 	// Date formats
 	public static final String FORMAT_DDMMYYYY_SLASH = "dd/MM/yyyy";
 
@@ -43,6 +40,9 @@ public class DateFormat {
 	private static final String DAY = "day";
 
 	private static final String MONTH_DAY = "month_day";
+
+	private DateFormat() {
+	}
 
 	/**
 	 * Build DateTimeFormatter

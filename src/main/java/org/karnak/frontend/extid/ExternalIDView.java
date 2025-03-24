@@ -25,6 +25,8 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import java.io.InputStream;
+import java.util.ArrayList;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
@@ -32,9 +34,6 @@ import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.component.WarningConfirmDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-
-import java.io.InputStream;
-import java.util.ArrayList;
 
 @Route(value = ExternalIDView.ROUTE, layout = MainLayout.class)
 @PageTitle("KARNAK - External ID")

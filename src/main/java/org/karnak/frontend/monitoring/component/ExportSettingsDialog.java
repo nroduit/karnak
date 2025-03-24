@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.monitoring.component;
 
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -49,8 +48,6 @@ public class ExportSettingsDialog extends Dialog {
 	 */
 	public ExportSettingsDialog() {
 		setModal(true);
-		setWidth(11, Unit.PERCENTAGE);
-		setHeight(37, Unit.PERCENTAGE);
 
 		// Build components
 		buildComponents();
@@ -120,8 +117,8 @@ public class ExportSettingsDialog extends Dialog {
 		// Textfields
 		delimiterTextField = new TextField("Delimiter");
 		quoteCharacterTextField = new TextField("Quote character");
-		delimiterTextField.setWidth(60, Unit.PERCENTAGE);
-		quoteCharacterTextField.setWidth(60, Unit.PERCENTAGE);
+		delimiterTextField.setWidthFull();
+		quoteCharacterTextField.setWidthFull();
 		VerticalLayout fieldsLayout = new VerticalLayout();
 		fieldsLayout.add(delimiterTextField, quoteCharacterTextField);
 

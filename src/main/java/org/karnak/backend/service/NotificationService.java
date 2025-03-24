@@ -157,23 +157,27 @@ public class NotificationService {
 					transferStatusEntities, firstTransferStatus.getDestinationEntity().isDesidentification()));
 
 			// Has at least one file not transferred
-			boolean hasAtLeastOneFileNotTransferred = transferMonitoringNotification.getSerieSummaryNotifications()
+			boolean hasAtLeastOneFileInError = transferMonitoringNotification.getSerieSummaryNotifications()
+				.stream()
+				.anyMatch(SerieSummaryNotification::isContainsError);
+
+			boolean hasAtLeastOneFileNotSent = transferMonitoringNotification.getSerieSummaryNotifications()
 				.stream()
 				.anyMatch(ssm -> ssm.getNbTransferNotSent() > 0);
 
 			// Temporary disable send of notification de-identified and in error
 			// TODO: have a discussion with business to know how to handle such cases
-			if (hasAtLeastOneFileNotTransferred && firstTransferStatus.getDestinationEntity().isDesidentification()) {
+			if (hasAtLeastOneFileNotSent && firstTransferStatus.getDestinationEntity().isDesidentification()) {
 				return null;
 			}
 
 			// Check if we should use original or de-identified values
-			boolean useOriginalValues = determineUseOfOriginalOrDeIdentifyValues(hasAtLeastOneFileNotTransferred,
+			boolean useOriginalValues = determineUseOfOriginalOrDeIdentifyValues(hasAtLeastOneFileNotSent,
 					firstTransferStatus.getDestinationEntity().isDesidentification());
 
 			// Set values in transferMonitoringNotification
 			buildTransferMonitoringNotificationSetValues(transferMonitoringNotification, firstTransferStatus,
-					hasAtLeastOneFileNotTransferred, useOriginalValues);
+					hasAtLeastOneFileInError, hasAtLeastOneFileNotSent, useOriginalValues);
 		}
 		return transferMonitoringNotification;
 	}
@@ -182,12 +186,13 @@ public class NotificationService {
 	 * Set values in transferMonitoringNotification built
 	 * @param transferMonitoringNotification TransferMonitoringNotification built
 	 * @param transferStatusEntity Transfer status
-	 * @param hasAtLeastOneFileNotTransferred Has at least one file not transferred
+	 * @param hasAtLeastOneFileInError Has at least one file not transferred because of an
+	 * unexpected error
 	 * @param useOriginalValues Flag to know if we should use original values
 	 */
 	private void buildTransferMonitoringNotificationSetValues(
 			TransferMonitoringNotification transferMonitoringNotification, TransferStatusEntity transferStatusEntity,
-			boolean hasAtLeastOneFileNotTransferred, boolean useOriginalValues) {
+			boolean hasAtLeastOneFileInError, boolean hasAtLeastOneFileRejected, boolean useOriginalValues) {
 		transferMonitoringNotification
 			.setFrom(SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_SENDER", mailSender));
 		transferMonitoringNotification.setTo(transferStatusEntity.getDestinationEntity().getNotify());
@@ -207,24 +212,34 @@ public class NotificationService {
 				Objects.equals(transferStatusEntity.getDestinationEntity().getDestinationType(), DestinationType.dicom)
 						? transferStatusEntity.getDestinationEntity().toStringDicomNotificationDestination()
 						: transferStatusEntity.getDestinationEntity().getUrl());
-		transferMonitoringNotification
-			.setSubject(buildSubject(hasAtLeastOneFileNotTransferred, useOriginalValues, transferStatusEntity));
+		transferMonitoringNotification.setSubject(buildSubject(hasAtLeastOneFileInError, hasAtLeastOneFileRejected,
+				useOriginalValues, transferStatusEntity));
 	}
 
 	/**
 	 * Build notification subject email
-	 * @param hasAtLeastOneFileNotTransferred Flag to know if there is at least one file
-	 * not transferred
+	 * @param hasAtLeastOneFileInError Flag to know if there is at least one file that
+	 * could not be sent because of an unexpected error
 	 * @param useOriginalValues Check if we should use original or de-identified values
 	 * @param transferStatusEntity TransferStatusEntity to evaluate
 	 * @return Subject built
 	 */
-	private String buildSubject(boolean hasAtLeastOneFileNotTransferred, boolean useOriginalValues,
-			TransferStatusEntity transferStatusEntity) {
+	private String buildSubject(boolean hasAtLeastOneFileInError, boolean hasAtLeastOneFileRejected,
+			boolean useOriginalValues, TransferStatusEntity transferStatusEntity) {
 		StringBuilder subject = new StringBuilder();
-		if (hasAtLeastOneFileNotTransferred) {
-			subject.append(transferStatusEntity.getDestinationEntity().getNotifyObjectErrorPrefix());
-			subject.append(Notification.SPACE);
+		if (hasAtLeastOneFileInError) {
+			String errorPrefix = transferStatusEntity.getDestinationEntity().getNotifyObjectErrorPrefix();
+			if (errorPrefix != null && !errorPrefix.isEmpty()) {
+				subject.append(errorPrefix);
+				subject.append(Notification.SPACE);
+			}
+		}
+		else if (hasAtLeastOneFileRejected) {
+			String rejectPrefix = transferStatusEntity.getDestinationEntity().getNotifyObjectRejectionPrefix();
+			if (rejectPrefix != null && !rejectPrefix.isEmpty()) {
+				subject.append(rejectPrefix);
+				subject.append(Notification.SPACE);
+			}
 		}
 		subject.append(String.format(transferStatusEntity.getDestinationEntity().getNotifyObjectPattern(),
 				buildSubjectValues(useOriginalValues, transferStatusEntity)));
@@ -332,6 +347,8 @@ public class NotificationService {
 			.setNbTransferSent(transfersToEvaluate.stream().filter(TransferStatusEntity::isSent).count());
 		// Number transfers not sent
 		serieSummaryNotification.setNbTransferNotSent(transfersToEvaluate.stream().filter(t -> !t.isSent()).count());
+		// Any of the transfer contain an error
+		serieSummaryNotification.setContainsError(transfersToEvaluate.stream().anyMatch(TransferStatusEntity::isError));
 		// Distinct reasons
 		serieSummaryNotification.setUnTransferedReasons(transfersToEvaluate.stream()
 			.map(TransferStatusEntity::getReason)

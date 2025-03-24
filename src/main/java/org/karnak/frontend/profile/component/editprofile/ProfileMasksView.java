@@ -12,11 +12,10 @@ package org.karnak.frontend.profile.component.editprofile;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.karnak.backend.data.entity.MaskEntity;
-
 import java.awt.Rectangle;
 import java.util.List;
 import java.util.Set;
+import org.karnak.backend.data.entity.MaskEntity;
 
 public class ProfileMasksView extends VerticalLayout {
 
