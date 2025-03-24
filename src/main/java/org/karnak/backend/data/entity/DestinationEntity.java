@@ -586,26 +586,25 @@ public class DestinationEntity implements Serializable {
 	@Override
 	public String toString() {
 		if (destinationType != null) {
-			switch (destinationType) {
-				case dicom:
-					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
-							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
-							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
-							+ notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname + ", port=" + port
-							+ ", useaetdest=" + useaetdest + "]";
-				case stow:
-					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
-							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
-							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
-							+ notifyInterval + ", url=" + url + ", headers=" + headers + "]";
+			if (destinationType.equals(DestinationType.dicom)) {
+				return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
+						+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
+						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues
+						+ ", notifyInterval=" + notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname
+						+ ", port=" + port + ", useaetdest=" + useaetdest + "]";
+			}
+			else if (destinationType.equals(DestinationType.stow)) {
+				return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
+						+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
+						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues
+						+ ", notifyInterval=" + notifyInterval + ", url=" + url + ", headers=" + headers + "]";
+
 			}
 		}
 		return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType + ", notify="
-				+ notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix + ", notifyObjectRejectionPrefix="
-				+ notifyObjectRejectionPrefix + ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
-				+ notifyObjectValues + ", notifyInterval=" + notifyInterval + "]";
+				+ notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix + ", notifyObjectPattern="
+				+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
+				+ notifyInterval + "]";
 	}
 
 	public String retrieveStringReference() {
