@@ -589,15 +589,15 @@ public class DestinationEntity implements Serializable {
 			if (destinationType.equals(DestinationType.dicom)) {
 				return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
 						+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
-						+ notifyObjectValues + ", notifyInterval=" + notifyInterval + ", aeTitle=" + aeTitle
-						+ ", hostname=" + hostname + ", port=" + port + ", useaetdest=" + useaetdest + "]";
-			} else if (destinationType.equals(DestinationType.stow)) {
+						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues
+						+ ", notifyInterval=" + notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname
+						+ ", port=" + port + ", useaetdest=" + useaetdest + "]";
+			}
+			else if (destinationType.equals(DestinationType.stow)) {
 				return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
 						+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
-						+ notifyObjectValues + ", notifyInterval=" + notifyInterval + ", url=" + url + ", headers="
-						+ headers + "]";
+						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues
+						+ ", notifyInterval=" + notifyInterval + ", url=" + url + ", headers=" + headers + "]";
 
 			}
 		}
