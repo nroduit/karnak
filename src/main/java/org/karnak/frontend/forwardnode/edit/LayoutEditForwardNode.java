@@ -15,6 +15,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import org.dcm4che3.util.TagUtils;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -23,6 +25,8 @@ import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.NodeEventType;
+import static org.karnak.backend.enums.PseudonymType.EXTID_API;
+import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
@@ -42,11 +46,6 @@ import org.karnak.frontend.forwardnode.edit.destination.component.TranscodeOnlyU
 import org.karnak.frontend.forwardnode.edit.source.SourceView;
 import org.karnak.frontend.forwardnode.edit.source.component.NewUpdateSourceNode;
 import org.karnak.frontend.util.UIS;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 
 /**
  * Layout of the edit forward node
@@ -132,6 +131,8 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		addBindersFilterBySOPClassesForm(newUpdateDestination.getFormSTOW().getFilterBySOPClassesForm());
 		addBinderExtidInDicomTag(newUpdateDestination.getFormSTOW().getDeIdentificationComponent());
 		addBinderExtidInDicomTag(newUpdateDestination.getFormDICOM().getDeIdentificationComponent());
+		addBinderExtidFromApi(newUpdateDestination.getFormSTOW().getDeIdentificationComponent());
+		addBinderExtidFromApi(newUpdateDestination.getFormDICOM().getDeIdentificationComponent());
 	}
 
 	/**
@@ -422,9 +423,10 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 	private void removeCurrentDestination() {
 		if (newUpdateDestination.getCurrentDestinationEntity() != null) {
-			ConfirmDialog dialog = new ConfirmDialog("Are you sure to delete the forward node "
+			ConfirmDialog dialog = new ConfirmDialog("Are you sure to delete the destination "
 					+ newUpdateDestination.getCurrentDestinationEntity().getDescription() + " ["
-					+ newUpdateDestination.getCurrentDestinationEntity().getDestinationType() + "] ?");
+					+ newUpdateDestination.getCurrentDestinationEntity().getDestinationType() + "] ? "
+					+ "<br>It will also delete the related entries from the monitoring view.");
 			dialog.addConfirmationListener(componentEvent -> {
 				NodeEvent nodeEvent = new NodeEvent(newUpdateDestination.getCurrentDestinationEntity(),
 						NodeEventType.REMOVE);
@@ -585,6 +587,72 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		 * getSavePseudonym()) .bind(DestinationEntity::getSavePseudonym,
 		 * DestinationEntity::setSavePseudonym);
 		 */
+	}
+
+	public void addBinderExtidFromApi(DeIdentificationComponent deIdentificationComponent) {
+		deIdentificationComponent.getDestinationBinder()
+			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getUrl())
+			.withConverter(String::valueOf, value -> (value == null) ? "" : value, "Must be a URL")
+			.withValidator(url -> {
+				if (!deIdentificationComponent.getDeIdentificationCheckbox().getValue()
+						|| !deIdentificationComponent.getPseudonymTypeSelect()
+							.getValue()
+							.equals(EXTID_API.getValue())) {
+					return true;
+				}
+				return (url != null && !url.equals(""));
+			}, "Please enter a valid URL\n")
+			.bind(DestinationEntity::getPseudonymUrl, DestinationEntity::setPseudonymUrl);
+
+		deIdentificationComponent.getDestinationBinder()
+			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getMethod())
+			.withConverter(String::valueOf, value -> (value == null) ? "" : value, "Must be GET or POST method")
+			.withValidator(method -> {
+				if (!deIdentificationComponent.getDeIdentificationCheckbox().getValue()
+						|| !deIdentificationComponent.getPseudonymTypeSelect()
+							.getValue()
+							.equals(EXTID_API.getValue())) {
+					return true;
+				}
+				return method.equals("GET") || method.equals("POST");
+			}, "Method must be equal to GET or POST")
+			.bind(DestinationEntity::getMethod, DestinationEntity::setMethod);
+
+		deIdentificationComponent.getDestinationBinder()
+			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getBody())
+			.withConverter(String::valueOf, value -> (value == null) ? "" : value)
+			.withValidator(body -> {
+				if (!deIdentificationComponent.getDeIdentificationCheckbox().getValue()
+						|| !deIdentificationComponent.getPseudonymTypeSelect()
+							.getValue()
+							.equals(EXTID_API.getValue())) {
+					return true;
+				}
+				if (deIdentificationComponent.getPseudonymFromApiComponent().getMethod().getValue().equals("POST")) {
+					return body != null && !body.equals("");
+				}
+				return true;
+			}, "Body is mandatory for a POST request")
+			.bind(DestinationEntity::getBody, DestinationEntity::setBody);
+
+		deIdentificationComponent.getDestinationBinder()
+			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getAuthConfig())
+			.withConverter(String::valueOf, value -> (value == null) ? "" : value)
+			.bind(DestinationEntity::getAuthConfig, DestinationEntity::setAuthConfig);
+
+		deIdentificationComponent.getDestinationBinder()
+			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getResponsePath())
+			.withConverter(String::valueOf, value -> (value == null) ? "" : value, "Response Path is mandatory")
+			.withValidator(responsePath -> {
+				if (!deIdentificationComponent.getDeIdentificationCheckbox().getValue()
+						|| !deIdentificationComponent.getPseudonymTypeSelect()
+							.getValue()
+							.equals(EXTID_API.getValue())) {
+					return true;
+				}
+				return responsePath != null && !responsePath.equals("");
+			}, "JSON Response path is mandatory")
+			.bind(DestinationEntity::getResponsePath, DestinationEntity::setResponsePath);
 	}
 
 	/**

@@ -20,6 +20,7 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
 import org.karnak.backend.util.SecurityUtil;
+import org.karnak.frontend.authconfig.AuthConfigView;
 import org.karnak.frontend.dicom.DicomMainView;
 import org.karnak.frontend.extid.ExternalIDView;
 import org.karnak.frontend.forwardnode.ForwardNodeView;
@@ -55,6 +56,7 @@ public class MainLayout extends FlexLayout implements RouterLayout {
 		addSecuredMenu(PseudonymMappingView.class, PseudonymMappingView.VIEW_NAME, VaadinIcon.SITEMAP.create());
 		addSecuredMenu(MonitoringView.class, MonitoringView.VIEW_NAME, VaadinIcon.PIE_BAR_CHART.create());
 		addSecuredMenu(DicomMainView.class, DicomMainView.VIEW_NAME, VaadinIcon.TOOLS.create());
+		addSecuredMenu(AuthConfigView.class, AuthConfigView.VIEW_NAME, VaadinIcon.LOCK.create());
 		addSecuredMenu(HelpView.class, HelpView.VIEW_NAME, VaadinIcon.QUESTION_CIRCLE.create());
 		// menu.addView(AboutView.class, AboutView.VIEW_NAME,
 		// VaadinIcon.INFO_CIRCLE.create());

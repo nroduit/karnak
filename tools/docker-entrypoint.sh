@@ -51,6 +51,10 @@ file_env 'KARNAK_LOGIN_PASSWORD'
 SYS_PROPS+=" -Dkarnakadmin='$KARNAK_LOGIN_ADMIN'"
 SYS_PROPS+=" -Dkarnakpassword='$KARNAK_LOGIN_PASSWORD'"
 
+file_env 'DB_ENCRYPTION_KEY'
+: "${DB_ENCRYPTION_KEY:=undefined}"
+SYS_PROPS+=" -Dkarnakpostgreskey='$DB_ENCRYPTION_KEY'"
+
 ##########################
 # KARNAK OPENID PROVIDER #
 ##########################

@@ -17,17 +17,16 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import java.io.Serial;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.karnak.backend.data.entity.DestinationEntity;
+import static org.karnak.backend.enums.PseudonymType.CACHE_EXTID;
+import static org.karnak.backend.enums.PseudonymType.EXTID_API;
+import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.util.UIS;
-
-import java.io.Serial;
-import java.util.Objects;
-
-import static org.karnak.backend.enums.PseudonymType.CACHE_EXTID;
-import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 
 @Getter
 public class DeIdentificationComponent extends VerticalLayout {
@@ -51,10 +50,14 @@ public class DeIdentificationComponent extends VerticalLayout {
 
 	private PseudonymInDicomTagComponent pseudonymInDicomTagComponent;
 
+	private PseudonymFromApi pseudonymFromApiComponent;
+
 	@Setter
 	private Binder<DestinationEntity> destinationBinder;
 
 	private Div pseudonymDicomTagDiv;
+
+	private Div pseudonymApi;
 
 	private Div deIdentificationDiv;
 
@@ -105,7 +108,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 
 		// Add components in deidentification div
 		deIdentificationDiv.add(disclaimerLabel, projectDropDown, profileLabel, pseudonymTypeSelect,
-				pseudonymDicomTagDiv, issuerOfPatientIDByDefault);
+				pseudonymDicomTagDiv, pseudonymApi, issuerOfPatientIDByDefault);
 
 		// If checkbox is checked set div visible, invisible otherwise
 		deIdentificationDiv.setVisible(deIdentificationCheckbox.getValue());
@@ -136,8 +139,10 @@ public class DeIdentificationComponent extends VerticalLayout {
 		buildDisclaimerLabel();
 		buildPseudonymTypeSelect();
 		buildPseudonymInDicomTagComponent();
+		buildPseudonymFromApiComponent();
 		deIdentificationDiv = destinationComponentUtil.buildActivateDiv();
 		buildPseudonymDicomTagDiv();
+		buildPseudonymApi();
 	}
 
 	/**
@@ -145,6 +150,10 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void buildPseudonymInDicomTagComponent() {
 		pseudonymInDicomTagComponent = new PseudonymInDicomTagComponent(destinationBinder);
+	}
+
+	private void buildPseudonymFromApiComponent() {
+		pseudonymFromApiComponent = new PseudonymFromApi(destinationBinder);
 	}
 
 	/**
@@ -156,6 +165,11 @@ public class DeIdentificationComponent extends VerticalLayout {
 		pseudonymDicomTagDiv.add(pseudonymInDicomTagComponent);
 	}
 
+	private void buildPseudonymApi() {
+		pseudonymApi = new Div();
+		pseudonymApi.add(pseudonymFromApiComponent);
+	}
+
 	/**
 	 * Build pseudonym type
 	 */
@@ -164,8 +178,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 		pseudonymTypeSelect.setLabel("Pseudonym type");
 		pseudonymTypeSelect.setWidth("100%");
 		pseudonymTypeSelect.getStyle().set("right", "0px");
-		// TODO TELIMA-289: add pseudo service
-		pseudonymTypeSelect.setItems(CACHE_EXTID.getValue(), EXTID_IN_TAG.getValue());
+		pseudonymTypeSelect.setItems(CACHE_EXTID.getValue(), EXTID_IN_TAG.getValue(), EXTID_API.getValue());
 	}
 
 	/**
@@ -196,6 +209,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 		pseudonymTypeSelect.addValueChangeListener(event -> {
 			if (event.getValue() != null) {
 				pseudonymDicomTagDiv.setVisible(Objects.equals(event.getValue(), EXTID_IN_TAG.getValue()));
+				pseudonymApi.setVisible(Objects.equals(event.getValue(), EXTID_API.getValue()));
 			}
 		});
 	}
@@ -220,20 +234,16 @@ public class DeIdentificationComponent extends VerticalLayout {
 		destinationBinder.forField(pseudonymTypeSelect)
 			.withValidator(Objects::nonNull, "Choose pseudonym type\n")
 			.bind(destination -> {
-				// TODO TELIMA-289: case pseudo service
-				if (destination.getPseudonymType().equals(CACHE_EXTID)) {
-					return CACHE_EXTID.getValue();
-				}
-				else {
-					return EXTID_IN_TAG.getValue();
-				}
+				return destination.getPseudonymType().getValue();
 			}, (destination, s) -> {
-				// TODO TELIMA-289: case pseudo service
-				if (s.equals(CACHE_EXTID.getValue())) {
-					destination.setPseudonymType(CACHE_EXTID);
-				}
-				else {
+				if (s.equals(EXTID_IN_TAG.getValue())) {
 					destination.setPseudonymType(EXTID_IN_TAG);
+				}
+				else if (s.equals(EXTID_API.getValue())) {
+					destination.setPseudonymType(EXTID_API);
+				}
+				else if (s.equals(CACHE_EXTID.getValue())) {
+					destination.setPseudonymType(CACHE_EXTID);
 				}
 			});
 	}

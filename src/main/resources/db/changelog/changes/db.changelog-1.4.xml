@@ -77,5 +77,63 @@
     <sql>update destination set notify_object_rejection_prefix = '**REJECTED**' where notify_object_rejection_prefix is null;</sql>
   </changeSet>
 
+  <changeSet author="karnak" id="1.4-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="pseudonym_url"/>
+        <columnExists tableName="destination" columnName="response_path"/>
+        <columnExists tableName="destination" columnName="body"/>
+        <columnExists tableName="destination" columnName="auth_config"/>
+        <columnExists tableName="destination" columnName="method"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="pseudonym_url" type="VARCHAR(255)"/>
+      <column name="response_path" type="VARCHAR(255)"/>
+      <column name="body" type="VARCHAR(255)"/>
+      <column name="auth_config" type="VARCHAR(255)"/>
+      <column name="method" type="VARCHAR(255)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.4-7">
+    <sql>create extension if not exists pgcrypto;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.4-8">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="auth_config"/>
+      </not>
+    </preConditions>
+    <createTable tableName="auth_config">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="auth_config_pkey"/>
+      </column>
+      <column name="code" type="VARCHAR(255)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="auth_config_code"/>
+      </column>
+      <column name="type" type="VARCHAR(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="access_token_url" type="BYTEA"/>
+      <column name="scope" type="BYTEA"/>
+      <column name="client_secret" type="BYTEA"/>
+      <column name="client_id" type="BYTEA"/>
+      <column name="headers" type="BYTEA"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.4-9">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="destination_transfer_cascade_delete"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="destination_id" baseTableName="transfer_status"
+                             constraintName="destination_transfer_cascade_delete" deferrable="false" initiallyDeferred="false"
+                             onDelete="CASCADE" referencedColumnNames="id"
+                             referencedTableName="destination" validate="true"/>
+  </changeSet>
 
 </databaseChangeLog>

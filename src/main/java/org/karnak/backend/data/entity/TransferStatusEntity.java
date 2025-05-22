@@ -27,6 +27,8 @@ import java.util.Objects;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.karnak.backend.util.DateFormat;
 import org.weasis.dicom.util.DateUtil;
 
@@ -197,6 +199,7 @@ public class TransferStatusEntity implements Serializable {
 
 	@ManyToOne(targetEntity = DestinationEntity.class)
 	@JoinColumn(name = "destination_id", nullable = false, insertable = false, updatable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public DestinationEntity getDestinationEntity() {
 		return destinationEntity;
 	}

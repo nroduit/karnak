@@ -77,6 +77,16 @@ public class DestinationEntity implements Serializable {
 
 	private Integer position;
 
+	private String pseudonymUrl;
+
+	private String responsePath;
+
+	private String body;
+
+	private String method;
+
+	private String authConfig;
+
 	private Boolean savePseudonym;
 
 	private boolean filterBySOPClasses;
@@ -178,6 +188,11 @@ public class DestinationEntity implements Serializable {
 		this.delimiter = null;
 		this.position = null;
 		this.savePseudonym = null;
+		this.pseudonymUrl = null;
+		this.method = null;
+		this.body = null;
+		this.authConfig = null;
+		this.responsePath = null;
 		this.filterBySOPClasses = false;
 
 		this.notify = "";
@@ -464,6 +479,46 @@ public class DestinationEntity implements Serializable {
 		this.savePseudonym = savePseudonym;
 	}
 
+	public String getPseudonymUrl() {
+		return pseudonymUrl;
+	}
+
+	public void setPseudonymUrl(String pseudonymUrl) {
+		this.pseudonymUrl = pseudonymUrl;
+	}
+
+	public String getResponsePath() {
+		return responsePath;
+	}
+
+	public void setResponsePath(String responsePath) {
+		this.responsePath = responsePath;
+	}
+
+	public String getBody() {
+		return body;
+	}
+
+	public void setBody(String body) {
+		this.body = body;
+	}
+
+	public String getMethod() {
+		return method;
+	}
+
+	public void setMethod(String method) {
+		this.method = method;
+	}
+
+	public String getAuthConfig() {
+		return authConfig;
+	}
+
+	public void setAuthConfig(String authConfig) {
+		this.authConfig = authConfig;
+	}
+
 	@JsonGetter("kheopsAlbums")
 	@OneToMany(mappedBy = "destinationEntity", cascade = CascadeType.REMOVE)
 	@LazyCollection(LazyCollectionOption.FALSE)
@@ -586,25 +641,26 @@ public class DestinationEntity implements Serializable {
 	@Override
 	public String toString() {
 		if (destinationType != null) {
-			if (destinationType.equals(DestinationType.dicom)) {
-				return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
-						+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues
-						+ ", notifyInterval=" + notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname
-						+ ", port=" + port + ", useaetdest=" + useaetdest + "]";
-			}
-			else if (destinationType.equals(DestinationType.stow)) {
-				return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
-						+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
-						+ ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues
-						+ ", notifyInterval=" + notifyInterval + ", url=" + url + ", headers=" + headers + "]";
-
+			switch (destinationType) {
+				case dicom:
+					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
+							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
+							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
+							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
+							+ notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname + ", port=" + port
+							+ ", useaetdest=" + useaetdest + "]";
+				case stow:
+					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
+							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix
+							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
+							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
+							+ notifyInterval + ", url=" + url + ", headers=" + headers + "]";
 			}
 		}
 		return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType + ", notify="
-				+ notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix + ", notifyObjectPattern="
-				+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
-				+ notifyInterval + "]";
+				+ notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix + ", notifyObjectRejectionPrefix="
+				+ notifyObjectRejectionPrefix + ", notifyObjectPattern=" + notifyObjectPattern + ", notifyObjectValues="
+				+ notifyObjectValues + ", notifyInterval=" + notifyInterval + "]";
 	}
 
 	public String retrieveStringReference() {
