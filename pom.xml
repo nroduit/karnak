@@ -9,7 +9,7 @@
   <parent>
     <groupId>ch.hcuge.springcloud</groupId>
     <artifactId>spring-cloud-core-dependencies</artifactId>
-    <version>3.3.5-2023.0.3-1.0</version>
+    <version>3.3.11-2023.0.5-2.0</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
