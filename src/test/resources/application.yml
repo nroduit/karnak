@@ -48,5 +48,7 @@ spring:
         enabled: false
 monitoring:
   max-history: 50000
+cache-api:
+  ttl: 15
 mail:
   sender: no-reply@hcuge.ch

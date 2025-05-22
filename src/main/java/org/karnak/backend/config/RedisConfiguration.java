@@ -14,6 +14,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Duration;
 import org.karnak.backend.cache.Patient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfiguration {
+
+	@Value("${cache-api.ttl}")
+	private int ttl;
 
 	@Bean
 	ChannelTopic topic() {
@@ -53,8 +57,11 @@ public class RedisConfiguration {
 	public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
 		// TODO TELIMA-289: set cache for pseudo service 15 min + create cache class as
 		// ExternalIDCache
-		return builder -> builder.withCacheConfiguration("externalId.cache",
-				RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(7)));
+		return builder -> builder
+			.withCacheConfiguration("externalId.cache",
+					RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(7)))
+			.withCacheConfiguration("endpoint.cache",
+					RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(ttl)));
 	}
 
 }

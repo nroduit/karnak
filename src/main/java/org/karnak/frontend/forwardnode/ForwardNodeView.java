@@ -170,7 +170,8 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 		layoutEditForwardNode.getButtonForwardNodeSaveDeleteCancel().getDelete().addClickListener(event -> {
 			if (layoutEditForwardNode.getCurrentForwardNodeEntity() != null) {
 				ConfirmDialog dialog = new ConfirmDialog("Are you sure to delete the forward node "
-						+ layoutEditForwardNode.getCurrentForwardNodeEntity().getFwdAeTitle() + " ?");
+						+ layoutEditForwardNode.getCurrentForwardNodeEntity().getFwdAeTitle() + " ?"
+						+ "<br>It will also delete the related entries from the monitoring view.");
 				dialog.addConfirmationListener(componentEvent -> {
 					forwardNodeLogic.deleteForwardNode(layoutEditForwardNode.getCurrentForwardNodeEntity());
 					forwardNodeLogic.refreshAll();

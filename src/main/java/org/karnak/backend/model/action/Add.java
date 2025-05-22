@@ -33,9 +33,8 @@ public class Add extends AbstractAction {
 	@Override
 	public void execute(Attributes dcm, int tag, HMAC hmac) {
 		if (log.isTraceEnabled()) {
-			String tagValueIn = AbstractAction.getStringValue(dcm, newTag);
 			log.trace(CLINICAL_MARKER, PATTERN_WITH_INOUT, MDC.get("SOPInstanceUID"), TagUtils.toString(newTag), symbol,
-					tagValueIn, dummyValue);
+					null, dummyValue);
 		}
 
 		if (dcm == null) {

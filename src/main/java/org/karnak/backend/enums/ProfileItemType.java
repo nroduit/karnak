@@ -19,6 +19,7 @@ import org.karnak.backend.model.profiles.Defacing;
 import org.karnak.backend.model.profiles.Expression;
 import org.karnak.backend.model.profiles.PrivateTags;
 import org.karnak.backend.model.profiles.ProfileItem;
+import org.karnak.backend.model.profiles.ReplaceApi;
 import org.karnak.backend.model.profiles.UpdateUIDsProfile;
 
 public enum ProfileItemType {
@@ -34,7 +35,8 @@ public enum ProfileItemType {
 			"Retain Longitudinal Temporal Information Modified Dates Option"),
 	EXPRESSION_TAGS(Expression.class, "expression.on.tags", null, null),
 	ADD_TAG(AddTag.class, "action.add.tag", null, null),
-	ADD_PRIVATE_TAG(AddPrivateTag.class, "action.add.private.tag", null, null);
+	ADD_PRIVATE_TAG(AddPrivateTag.class, "action.add.private.tag", null, null),
+	REPLACE_API(ReplaceApi.class, "action.replace.api", null, null);
 
 	private final Class<? extends ProfileItem> profileClass;
 

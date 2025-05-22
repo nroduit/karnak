@@ -105,7 +105,7 @@ public class ConfirmDialog extends Composite<Dialog> {
 		messageLayout = new Div();
 		messageLayout.addClassName("dialog-content");
 
-		messageLayout.add(messageText);
+		messageLayout.getElement().setProperty("innerHTML", messageText);
 	}
 
 	private void createButtonsLayout() {
@@ -126,7 +126,7 @@ public class ConfirmDialog extends Composite<Dialog> {
 		yesBtn = new Button();
 		yesBtn.addClassName("stroked-button");
 		yesBtn.addClassName("primary");
-		yesBtn.setText("Oui");
+		yesBtn.setText("Confirm");
 		yesBtn.setWidth("90px");
 
 		yesBtn.focus();
@@ -143,7 +143,7 @@ public class ConfirmDialog extends Composite<Dialog> {
 	private void createNoBtn() {
 		noBtn = new Button();
 		noBtn.addClassName("primary");
-		noBtn.setText("Non");
+		noBtn.setText("Cancel");
 		noBtn.setWidth("90px");
 
 		noBtn.addClickListener(e -> dialog.close());
