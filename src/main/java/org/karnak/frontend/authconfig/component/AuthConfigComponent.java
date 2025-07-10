@@ -69,10 +69,12 @@ public class AuthConfigComponent extends VerticalLayout {
 		clientSecret = new PasswordField();
 		clientSecret.setLabel("Client Secret");
 		clientSecret.setWidthFull();
+        clientSecret.setRevealButtonVisible(false);
 		layout.add(clientSecret);
 		clientId = new PasswordField();
 		clientId.setLabel("Client ID");
 		clientId.setWidthFull();
+        clientId.setRevealButtonVisible(false);
 		layout.add(clientId);
 
 		add(layout);
