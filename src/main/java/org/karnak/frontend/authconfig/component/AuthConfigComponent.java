@@ -69,12 +69,10 @@ public class AuthConfigComponent extends VerticalLayout {
 		clientSecret = new PasswordField();
 		clientSecret.setLabel("Client Secret");
 		clientSecret.setWidthFull();
-		clientSecret.setRevealButtonVisible(false);
 		layout.add(clientSecret);
 		clientId = new PasswordField();
 		clientId.setLabel("Client ID");
 		clientId.setWidthFull();
-		clientId.setRevealButtonVisible(false);
 		layout.add(clientId);
 
 		add(layout);
@@ -121,6 +119,8 @@ public class AuthConfigComponent extends VerticalLayout {
 		scope.setReadOnly(true);
 		clientSecret.setReadOnly(true);
 		clientId.setReadOnly(true);
+        clientSecret.setRevealButtonVisible(false);
+        clientId.setRevealButtonVisible(false);
 
 		this.deleteBtn.setVisible(true);
 		this.saveBtn.setVisible(false);
@@ -145,7 +145,9 @@ public class AuthConfigComponent extends VerticalLayout {
 		url.setReadOnly(false);
 		scope.setReadOnly(false);
 		clientSecret.setReadOnly(false);
+        clientSecret.setRevealButtonVisible(true);
 		clientId.setReadOnly(false);
+        clientId.setRevealButtonVisible(true);
 		this.deleteBtn.setVisible(false);
 		this.saveBtn.setVisible(true);
 		this.cancelBtn.setVisible(true);
