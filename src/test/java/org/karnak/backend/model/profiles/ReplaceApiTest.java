@@ -48,6 +48,7 @@ public class ReplaceApiTest {
     void setUp() {
         when(endpointService.get(AUTH_CONFIG, TEST_URL)).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}");
         when(endpointService.get(null, TEST_URL)).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/birthdate")).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\",\"birthdate\": \"19900101\"}");
         when(endpointService.get(UNKNOWN_AUTH_CONFIG, TEST_URL)).thenThrow(new IllegalArgumentException("Authentication Code " + UNKNOWN_AUTH_CONFIG + " is not defined"));
         when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL)).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
@@ -81,6 +82,31 @@ public class ReplaceApiTest {
 		profile.applyAction(dataset1, dataset1, null, null, null, null);
 
 		assertEquals("78727671", dataset1.getString(Tag.PatientID));
+	}
+
+	@Test
+	public void replaceZawinIdWithAuthConfig_withDate() {
+		final Attributes dataset1 = new Attributes();
+
+		dataset1.setString(Tag.PatientName, VR.PN, "TEST-get-from-api");
+		dataset1.setString(Tag.StudyInstanceUID, VR.UI, "12345");
+		dataset1.setString(Tag.PatientID, VR.LO, "97035674");
+		dataset1.setString(Tag.PatientBirthDate, VR.DA, "");
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "action.replace.api", null, null,
+				null, 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("url", TEST_URL + "/birthdate", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("responsePath", "birthdate", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("authConfig", "endpoint", profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0010,0030)", profileElementEntity));
+		profileElementEntity.setProfileEntity(profileEntity);
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, dataset1, null, null, null, null);
+
+		assertEquals("19900101", dataset1.getString(Tag.PatientBirthDate));
 	}
 
 	@Test
