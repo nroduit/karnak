@@ -73,7 +73,7 @@ public class TransferMonitoringService {
 	 */
 	@Scheduled(cron = "0 0 * * * *")
 	public void cleanupOldRecords() {
-		transferStatusRepo.deleteOlderThan(LocalDateTime.now().minusDays(maxHistoryDays));
+		transferStatusRepo.deleteOlderThan(LocalDateTime.now().minusDays(this.maxHistoryDays));
 	}
 
 	/**
