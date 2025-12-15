@@ -143,8 +143,8 @@ management:
         enabled: true
 
 monitoring:
-  # Maximum of sop instance sent for the monitoring
-  max-history: 300000
+  # Maximum number of days in the monitoring history
+  max-history-days: 3
 cache-api:
   # Cache Time to leave in minutes for API calls
   ttl: 15

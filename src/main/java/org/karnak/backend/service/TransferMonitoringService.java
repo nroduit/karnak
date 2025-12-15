@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
@@ -36,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -45,8 +45,8 @@ import java.util.List;
 @Slf4j
 public class TransferMonitoringService {
 
-	@Value("${monitoring.max-history}")
-	private int sizeLimit;
+	@Value("${monitoring.max-history-days:7}")
+	private int maxHistoryDays;
 
 	// Repositories
 	private final TransferStatusRepo transferStatusRepo;
@@ -68,17 +68,14 @@ public class TransferMonitoringService {
 	}
 
 	/**
-	 * Occurs every 5 min: clean transfer_status table if over the size limit LIFO: clean
-	 * oldest records
+	 * Occurs every hour: clean transfer_status table if over a certain number of days:
+	 * Clean oldest records
 	 */
-	@Scheduled(fixedRate = 5 * 60 * 1000)
-	public void cleanTransferStatus() {
-		int nbRecords = (int) transferStatusRepo.count();
-		if (nbRecords > sizeLimit) {
-			Pageable pageable = PageRequest.of(0, nbRecords - sizeLimit);
-			transferStatusRepo.deleteAll(transferStatusRepo.findAllByOrderByTransferDateAsc(pageable));
-		}
+	@Scheduled(cron = "0 0 * * * *")
+	public void cleanupOldRecords() {
+		transferStatusRepo.deleteOlderThan(LocalDateTime.now().minusDays(maxHistoryDays));
 	}
+
 
 	/**
 	 * Retrieve transfer status depending on filter and pageable
