@@ -49,7 +49,6 @@ public interface TransferStatusRepo
 	 */
 	Page<TransferStatusEntity> findAllByOrderByTransferDateAsc(Pageable pageable);
 
-
 	@Transactional
 	@Modifying
 	@Query("DELETE FROM TransferStatus t WHERE t.transferDate < :threshold")

@@ -76,7 +76,6 @@ public class TransferMonitoringService {
 		transferStatusRepo.deleteOlderThan(LocalDateTime.now().minusDays(maxHistoryDays));
 	}
 
-
 	/**
 	 * Retrieve transfer status depending on filter and pageable
 	 * @param filter Filter to evaluate
