@@ -454,6 +454,13 @@ public class NotificationService {
 			log.error("Notification error when preparing email to send: {}", e.getMessage());
 		}
 		javaMailSender.send(mimeMessage);
+
+		// Transfer logs
+		log.info("Transfer processed from {} to {}. Details: {}", transferMonitoringNotification.getSource(),
+				transferMonitoringNotification.getDestination(),
+				transferMonitoringNotification.getSerieSummaryNotifications()
+						.stream().map(SerieSummaryNotification::toString)
+						.collect(Collectors.joining(",")));
 	}
 
 }
