@@ -459,8 +459,9 @@ public class NotificationService {
 		log.info("Transfer processed from {} to {}. Details: {}", transferMonitoringNotification.getSource(),
 				transferMonitoringNotification.getDestination(),
 				transferMonitoringNotification.getSerieSummaryNotifications()
-						.stream().map(SerieSummaryNotification::toString)
-						.collect(Collectors.joining(",")));
+					.stream()
+					.map(SerieSummaryNotification::toString)
+					.collect(Collectors.joining(",")));
 	}
 
 }
