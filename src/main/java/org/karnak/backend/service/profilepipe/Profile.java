@@ -353,7 +353,7 @@ public class Profile {
 		MDC.put("ProjectName", destinationEntity.getDeIdentificationProjectEntity().getName());
 		MDC.put("ProfileName", profileEntity.getName());
 		MDC.put("ProfileCodenames", profilesCodeName);
-		log.info(clincalMarker, "");
+		log.debug(clincalMarker, "");
 		MDC.clear();
 	}
 
@@ -383,7 +383,7 @@ public class Profile {
 		MDC.put("ProjectName", destinationEntity.getTagMorphingProjectEntity().getName());
 		MDC.put("ProfileName", profileEntity.getName());
 		MDC.put("ProfileCodenames", profilesCodeName);
-		log.info(clincalMarker, "");
+		log.debug(clincalMarker, "");
 		MDC.clear();
 	}
 
