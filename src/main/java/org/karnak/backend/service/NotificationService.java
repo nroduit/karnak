@@ -75,13 +75,10 @@ public class NotificationService {
 	 */
 	@Scheduled(fixedRate = 180 * 1000)
 	public void determineNotificationToSend() {
-		buildNotificationsToSend().stream()
-				.map(n -> {
-					logNotification(n);
-					return n;
-				})
-				.filter(TransferMonitoringNotification::isEmailSendingEnabled)
-				.forEach(this::prepareAndSendNotification);
+		buildNotificationsToSend().stream().map(n -> {
+			logNotification(n);
+			return n;
+		}).filter(TransferMonitoringNotification::isEmailSendingEnabled).forEach(this::prepareAndSendNotification);
 	}
 
 	/**
@@ -93,8 +90,9 @@ public class NotificationService {
 		log.info("Transfer processed from {} to {}. Details: {}", transferMonitoringNotification.getSource(),
 				transferMonitoringNotification.getDestination(),
 				transferMonitoringNotification.getSerieSummaryNotifications()
-						.stream().map(SerieSummaryNotification::toString)
-						.collect(Collectors.joining(",")));
+					.stream()
+					.map(SerieSummaryNotification::toString)
+					.collect(Collectors.joining(",")));
 	}
 
 	/**
@@ -173,7 +171,8 @@ public class NotificationService {
 			transferMonitoringNotification = new TransferMonitoringNotification();
 
 			// If email notification should be sent
-			transferMonitoringNotification.setEmailSendingEnabled(firstTransferStatus.getDestinationEntity().isActivateNotification());
+			transferMonitoringNotification
+				.setEmailSendingEnabled(firstTransferStatus.getDestinationEntity().isActivateNotification());
 
 			// Build the serie notification part
 			transferMonitoringNotification.setSerieSummaryNotifications(buildSeriesSummaryNotification(
