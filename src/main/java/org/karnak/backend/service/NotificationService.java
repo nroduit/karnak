@@ -73,7 +73,7 @@ public class NotificationService {
 	 * In a regular period of time, check for new inputs in the transfer notifications,
 	 * build the notifications and send them via email.
 	 */
-	@Scheduled(fixedRate = 180 * 1000)
+	@Scheduled(fixedRate = 120 * 1000)
 	public void determineNotificationToSend() {
 		buildNotificationsToSend().stream().map(n -> {
 			logNotification(n);
