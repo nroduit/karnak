@@ -81,6 +81,10 @@ public class NotificationService {
 				.forEach(this::prepareAndSendNotification);
 	}
 
+	/**
+	 * Transfer logs
+	 * @param transferMonitoringNotification Transfer to log
+	 */
 	private void logNotification(TransferMonitoringNotification transferMonitoringNotification) {
 		// Transfer logs
 		log.info("Transfer processed from {} to {}. Details: {}", transferMonitoringNotification.getSource(),
