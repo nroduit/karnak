@@ -46,4 +46,6 @@ public class TransferMonitoringNotification {
 
 	private List<SerieSummaryNotification> serieSummaryNotifications;
 
+	private boolean emailSendingEnabled;
+
 }
