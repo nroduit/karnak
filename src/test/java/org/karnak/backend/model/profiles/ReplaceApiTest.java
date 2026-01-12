@@ -1,10 +1,21 @@
+/*
+ * Copyright (c) 2025 Karnak Team and other contributors.
+ *
+ * This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
+ * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+ */
 package org.karnak.backend.model.profiles;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +31,6 @@ import org.karnak.backend.service.profilepipe.Profile;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.when;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
@@ -45,14 +55,20 @@ public class ReplaceApiTest {
 	private final static String TEST_UNKNOWN_URL = "http://sample.unknown.com/endpoint";
 
 	@BeforeEach
-    void setUp() {
-        when(endpointService.get(AUTH_CONFIG, TEST_URL)).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}");
-        when(endpointService.get(null, TEST_URL)).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\"}");
-        when(endpointService.get(UNKNOWN_AUTH_CONFIG, TEST_URL)).thenThrow(new IllegalArgumentException("Authentication Code " + UNKNOWN_AUTH_CONFIG + " is not defined"));
-        when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL)).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+	void setUp() {
+		when(endpointService.get(AUTH_CONFIG, TEST_URL))
+			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}");
+		when(endpointService.get(null, TEST_URL))
+			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/birthdate"))
+			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\",\"birthdate\": \"19900101\"}");
+		when(endpointService.get(UNKNOWN_AUTH_CONFIG, TEST_URL))
+			.thenThrow(new IllegalArgumentException("Authentication Code " + UNKNOWN_AUTH_CONFIG + " is not defined"));
+		when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL))
+			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
-        acp.when(() -> ApplicationContextProvider.bean(EndpointService.class)).thenReturn(endpointService);
-    }
+		acp.when(() -> ApplicationContextProvider.bean(EndpointService.class)).thenReturn(endpointService);
+	}
 
 	@BeforeAll
 	static void setUpStatic() {
@@ -81,6 +97,31 @@ public class ReplaceApiTest {
 		profile.applyAction(dataset1, dataset1, null, null, null, null);
 
 		assertEquals("78727671", dataset1.getString(Tag.PatientID));
+	}
+
+	@Test
+	public void replaceZawinIdWithAuthConfig_withDate() {
+		final Attributes dataset1 = new Attributes();
+
+		dataset1.setString(Tag.PatientName, VR.PN, "TEST-get-from-api");
+		dataset1.setString(Tag.StudyInstanceUID, VR.UI, "12345");
+		dataset1.setString(Tag.PatientID, VR.LO, "97035674");
+		dataset1.setString(Tag.PatientBirthDate, VR.DA, "");
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "action.replace.api", null, null,
+				null, 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("url", TEST_URL + "/birthdate", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("responsePath", "birthdate", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("authConfig", "endpoint", profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0010,0030)", profileElementEntity));
+		profileElementEntity.setProfileEntity(profileEntity);
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, dataset1, null, null, null, null);
+
+		assertEquals("19900101", dataset1.getString(Tag.PatientBirthDate));
 	}
 
 	@Test

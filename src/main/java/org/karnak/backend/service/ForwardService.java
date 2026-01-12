@@ -497,7 +497,7 @@ public class ForwardService {
 		TransformedPlanarImage transformedPlanarImage = new TransformedPlanarImage();
 		try {
 			transformedPlanarImage = transformImage(attributes, context, transformedPlanarImage);
-			stow.uploadPayload(ImageAdapter.preparePlayload(attributes, syntax, desc,
+			stow.uploadPayload(DicomStowRS.preparePayload(attributes, syntax, desc,
 					transformedPlanarImage != null ? transformedPlanarImage.getEditablePlanarImage() : null));
 		}
 		finally {

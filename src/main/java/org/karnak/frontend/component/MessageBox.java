@@ -20,8 +20,6 @@ import org.karnak.backend.model.dicom.Message;
 
 public class MessageBox extends Composite<Div> {
 
-	private static final long serialVersionUID = 1L;
-
 	// UI COMPONENTS
 	private HorizontalLayout layout;
 

@@ -27,10 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 
 @Route(value = PseudonymMappingView.ROUTE, layout = MainLayout.class)
-@PageTitle("KARNAK - Mapping Pseudonym")
+@PageTitle("Karnak - Mapping Pseudonym")
 @Tag("mapping-pseudonym-view")
 @Secured({ "ROLE_investigator" })
-@SuppressWarnings("serial")
 public class PseudonymMappingView extends HorizontalLayout {
 
 	public static final String VIEW_NAME = "Pseudonym mapping ";

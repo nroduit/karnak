@@ -9,26 +9,30 @@
  */
 package org.karnak;
 
-import ch.hcuge.springcloud.security.oauth2.userinfo.Oauth2UserInfoAutoConfiguration;
 import com.vaadin.flow.spring.annotation.EnableVaadin;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.enums.ApplicationProfile;
 import org.karnak.backend.enums.EnvironmentVariable;
 import org.opencv.osgi.OpenCVNativeLoader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.util.Objects;
-
-@SpringBootApplication(exclude = { ErrorMvcAutoConfiguration.class, Oauth2UserInfoAutoConfiguration.class })
+@SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 @EntityScan("org.karnak.backend.data.entity")
 @EnableJpaRepositories("org.karnak.backend.data.repo")
 @EnableVaadin(value = "org.karnak")
@@ -37,8 +41,18 @@ import java.util.Objects;
 @Slf4j
 public class KarnakApplication implements CommandLineRunner {
 
-	@Autowired(required = false)
-	private AppConfig myConfig;
+	private final AppConfig myConfig;
+
+	private final Environment environment;
+
+	@Autowired
+	public KarnakApplication(@Nullable AppConfig myConfig, Environment environment) {
+		this.myConfig = myConfig;
+		this.environment = environment;
+	}
+
+	@Value("${server.port}")
+	private int serverPort;
 
 	public static void main(String[] args) {
 
@@ -61,9 +75,22 @@ public class KarnakApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-		log.info("StartApplication");
-		log.info("using environment: " + (myConfig != null ? myConfig.getEnvironment() : ""));
-		log.info("name: " + (myConfig != null ? myConfig.getName() : ""));
+		log.info("Karnak application started successfully");
+		log.info("Environment: {}", myConfig != null ? myConfig.getEnvironment() : "not configured");
+		log.info("Profile name: {}", myConfig != null ? myConfig.getName() : "default");
+		try {
+			String hostname;
+			if (environment.acceptsProfiles(Profiles.of("portable"))) {
+				hostname = "localhost";
+			}
+			else {
+				hostname = InetAddress.getLocalHost().getHostName();
+			}
+			log.info("Web UI available at: http://{}:{}", hostname, serverPort);
+		}
+		catch (UnknownHostException e) {
+			log.info("Web UI available at: http://localhost:{}", serverPort);
+		}
 	}
 
 	/**

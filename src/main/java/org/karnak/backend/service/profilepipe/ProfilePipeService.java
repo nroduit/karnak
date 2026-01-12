@@ -37,10 +37,7 @@ public class ProfilePipeService {
 	}
 
 	public List<ProfileEntity> getAllProfiles() {
-		List<ProfileEntity> list = new ArrayList<>();
-		profileRepo.findAll() //
-			.forEach(list::add);
-		return list;
+		return new ArrayList<>(profileRepo.findAll());
 	}
 
 	public List<ProfileError> validateProfile(ProfilePipeBody profilePipeYml) {

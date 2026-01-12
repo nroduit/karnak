@@ -16,6 +16,7 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
+import org.karnak.frontend.util.CollatorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -86,7 +87,9 @@ public class ProjectService {
 	 * @return projects found
 	 */
 	public List<ProjectEntity> getAllProjects() {
-		return projectRepo.findAll();
+		List<ProjectEntity> projects = projectRepo.findAll();
+		projects.sort(CollatorUtils.comparing(ProjectEntity::getName));
+		return projects;
 	}
 
 	/**

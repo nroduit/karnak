@@ -12,7 +12,9 @@ package org.karnak.frontend.forwardnode.edit.component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import lombok.Getter;
 
+@Getter
 public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private final Button save;
@@ -57,18 +59,6 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 		save.setEnabled(enabled);
 		delete.setEnabled(enabled);
 		cancel.setEnabled(enabled);
-	}
-
-	public Button getSave() {
-		return save;
-	}
-
-	public Button getDelete() {
-		return delete;
-	}
-
-	public Button getCancel() {
-		return cancel;
 	}
 
 }

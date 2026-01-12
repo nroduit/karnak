@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Karnak Team and other contributors.
+ * Copyright (c) 2020-2021 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 
 @Route(value = AuthConfigView.ROUTE, layout = MainLayout.class)
-@PageTitle("KARNAK - Authentication Config")
+@PageTitle("Karnak - Authentication Config")
 @Tag("auth-config-view")
 @Secured({ "ROLE_admin" })
 public class AuthConfigView extends HorizontalLayout {

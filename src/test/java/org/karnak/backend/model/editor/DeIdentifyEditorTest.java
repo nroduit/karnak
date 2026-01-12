@@ -9,14 +9,13 @@
  */
 package org.karnak.backend.model.editor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
-import org.karnak.backend.cache.ExternalIDCache;
-import org.karnak.backend.config.RedisConfiguration;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -25,19 +24,12 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.enums.PseudonymType;
-import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.DicomNode;
 
 @SpringBootTest
 class DeIdentifyEditorTest {
-
-	@Mock
-	private ExternalIDCache externalIDCache;
-
-	@Mock
-	private RedisConfiguration redisConfiguration;
 
 	@Test
 	void should_apply_to_dicom_object() {

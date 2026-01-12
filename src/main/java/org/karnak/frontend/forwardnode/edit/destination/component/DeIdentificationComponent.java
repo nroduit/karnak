@@ -9,6 +9,10 @@
  */
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
+import static org.karnak.backend.enums.PseudonymType.CACHE_EXTID;
+import static org.karnak.backend.enums.PseudonymType.EXTID_API;
+import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
+
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
@@ -17,29 +21,22 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import java.io.Serial;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.karnak.backend.data.entity.DestinationEntity;
-import static org.karnak.backend.enums.PseudonymType.CACHE_EXTID;
-import static org.karnak.backend.enums.PseudonymType.EXTID_API;
-import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.util.UIS;
 
 @Getter
 public class DeIdentificationComponent extends VerticalLayout {
 
-	@Serial
-	private static final long serialVersionUID = -4535591077096019645L;
-
 	// Labels
 	private static final String LABEL_CHECKBOX_DEIDENTIFICATION = "Activate de-identification";
 
 	private static final String LABEL_DISCLAIMER_DEIDENTIFICATION = "In order to ensure complete de-identification, visual verification of metadata and images is necessary.";
 
-	private static final String LABEL_DEFAULT_ISSUER = "If this field is empty, the Issuer of Patient ID is not used to define the authenticity of the patient";
+	private static final String LABEL_DEFAULT_ISSUER = "If this field is filled, it will be used with the Patient ID to ensure unique patient identification across different healthcare systems.";
 
 	// Components
 	private Checkbox deIdentificationCheckbox;
@@ -233,9 +230,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 
 		destinationBinder.forField(pseudonymTypeSelect)
 			.withValidator(Objects::nonNull, "Choose pseudonym type\n")
-			.bind(destination -> {
-				return destination.getPseudonymType().getValue();
-			}, (destination, s) -> {
+			.bind(destination -> destination.getPseudonymType().getValue(), (destination, s) -> {
 				if (s.equals(EXTID_IN_TAG.getValue())) {
 					destination.setPseudonymType(EXTID_IN_TAG);
 				}
@@ -254,8 +249,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	public void cleanUnSavedData(DestinationEntity destinationEntity) {
 		// Reset the destination for the part tag is in dicom tag in case the pseudonym
-		// type selected is
-		// not pseudonym in dicom tag or deidentification not active
+		// type selected is not pseudonym in dicom tag or deidentification not active
 		if (!destinationEntity.isDesidentification()
 				|| !Objects.equals(destinationEntity.getPseudonymType(), EXTID_IN_TAG)) {
 			destinationEntity.setTag(null);
@@ -267,7 +261,6 @@ public class DeIdentificationComponent extends VerticalLayout {
 		if (!destinationEntity.isDesidentification()) {
 			// Reset the destination for pseudonym type, project, issuer of patient id
 			destinationEntity.setDeIdentificationProjectEntity(null);
-			// TODO TELIMA-289: set by default pseudo service
 			destinationEntity.setPseudonymType(CACHE_EXTID);
 			destinationEntity.setIssuerByDefault(null);
 		}

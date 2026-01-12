@@ -221,7 +221,7 @@ public class DestinationEntity implements Serializable {
 		destinationEntity.setDescription(description);
 		destinationEntity.setAeTitle(aeTitle);
 		destinationEntity.setHostname(hostname);
-		destinationEntity.setPort(Integer.valueOf(port));
+		destinationEntity.setPort(port);
 		destinationEntity.setUseaetdest(useaetdest);
 		return destinationEntity;
 	}

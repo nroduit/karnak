@@ -1,15 +1,25 @@
+/*
+ * Copyright (c) 2025 Karnak Team and other contributors.
+ *
+ * This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
+ * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+ */
 package org.karnak.backend.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
-import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
 
 public class EndpointServiceTest {
 
@@ -67,8 +77,8 @@ public class EndpointServiceTest {
 
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PatientID, VR.LO, "1234");
-		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_hug_research");
-		assertEquals("http://example.com/project_hug_research/patient/1234/endpoint",
+		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_A");
+		assertEquals("http://example.com/project_A/patient/1234/endpoint",
 				evaluateStringWithExpression(testUrl, attributes));
 	}
 
@@ -91,7 +101,7 @@ public class EndpointServiceTest {
 
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PatientID, VR.LO, "1234");
-		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_hug_research");
+		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_A");
 		assertEquals(testBody, evaluateStringWithExpression(testBody, attributes));
 	}
 
@@ -114,7 +124,7 @@ public class EndpointServiceTest {
 
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PatientID, VR.LO, "1234");
-		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_hug_research");
+		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_A");
 		assertEquals("{ \"patientId\": 1234 }", evaluateStringWithExpression(testBody, attributes));
 	}
 
@@ -137,8 +147,8 @@ public class EndpointServiceTest {
 
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PatientID, VR.LO, "1234");
-		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_hug_research");
-		assertEquals("{ \"patientId\": 1234, \"project\": \"project_hug_research\" }",
+		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_A");
+		assertEquals("{ \"patientId\": 1234, \"project\": \"project_A\" }",
 				evaluateStringWithExpression(testBody, attributes));
 	}
 

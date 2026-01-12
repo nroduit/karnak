@@ -9,26 +9,26 @@
  */
 package org.karnak.frontend.dicom.echo;
 
+import static org.karnak.frontend.dicom.mwl.DicomWorkListSelectionDialog.getDivConfigNodeComponentRenderer;
+
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.HasValue.ValueChangeListener;
-import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.shared.Registration;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.model.dicom.ConfigNode;
@@ -38,8 +38,6 @@ import org.karnak.backend.util.DicomNodeUtil;
 import org.karnak.frontend.component.AbstractDialog;
 
 public class DicomEchoSelectionDialog extends AbstractDialog {
-
-	private static final long serialVersionUID = 1L;
 
 	// CONTROLLER
 	private final DicomEchoSelectionLogic logic = new DicomEchoSelectionLogic(this);
@@ -134,8 +132,8 @@ public class DicomEchoSelectionDialog extends AbstractDialog {
 	}
 
 	// LISTENERS
-	public Registration addDicomNodeSelectionListener(ComponentEventListener<DicomNodeSelectionEvent> listener) {
-		return addListener(DicomNodeSelectionEvent.class, listener);
+	public void addDicomNodeSelectionListener(ComponentEventListener<DicomNodeSelectionEvent> listener) {
+		addListener(DicomNodeSelectionEvent.class, listener);
 	}
 
 	private void init() {
@@ -199,33 +197,18 @@ public class DicomEchoSelectionDialog extends AbstractDialog {
 	}
 
 	private ComponentRenderer<Div, ConfigNode> buildDicomNodeRenderer() {
-		return new ComponentRenderer<>(item -> {
-			Div div = new Div();
-			div.getStyle().set("line-height", "92%");
-
-			Span spanDescription = new Span(item.getName());
-			spanDescription.getStyle().set("font-weight", "500");
-
-			HtmlComponent htmlLineBreak = new HtmlComponent("BR");
-
-			Span spanOtherAttributes = new Span(item.getAet() + " | " + item.getHostname() + " | " + item.getPort());
-			spanOtherAttributes.getStyle().set("font-size", "75%");
-
-			div.add(spanDescription, htmlLineBreak, spanOtherAttributes);
-
-			return div;
-		});
+		return getDivConfigNodeComponentRenderer();
 	}
 
 	private void selectFirstItemInDicomNodeTypes() {
 		if (dicomNodeTypes != null && !dicomNodeTypes.isEmpty()) {
-			dicomNodeTypeSelector.setValue(dicomNodeTypes.get(0));
+			dicomNodeTypeSelector.setValue(dicomNodeTypes.getFirst());
 		}
 	}
 
 	private void selectFirstItemInDicomNodes() {
 		if (dicomNodes != null && !dicomNodes.isEmpty()) {
-			dicomNodeSelector.setValue(dicomNodes.get(0));
+			dicomNodeSelector.setValue(dicomNodes.getFirst());
 		}
 	}
 
@@ -262,9 +245,8 @@ public class DicomEchoSelectionDialog extends AbstractDialog {
 		fireEvent(new DicomNodeSelectionEvent(this, false, selectedDicomNode));
 	}
 
+	@Getter
 	public static class DicomNodeSelectionEvent extends ComponentEvent<DicomEchoSelectionDialog> {
-
-		private static final long serialVersionUID = 1L;
 
 		private final ConfigNode selectedDicomNode;
 
@@ -273,10 +255,6 @@ public class DicomEchoSelectionDialog extends AbstractDialog {
 			super(source, fromClient);
 
 			this.selectedDicomNode = selectedDicomNode;
-		}
-
-		public ConfigNode getSelectedDicomNode() {
-			return selectedDicomNode;
 		}
 
 	}

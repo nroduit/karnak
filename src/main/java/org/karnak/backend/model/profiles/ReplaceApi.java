@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Karnak Team and other contributors.
+ * Copyright (c) 2021 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -8,6 +8,9 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  */
 package org.karnak.backend.model.profiles;
+
+import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
+import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,8 +32,6 @@ import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
-import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
-import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
 import org.springframework.web.client.HttpClientErrorException;
 import org.weasis.dicom.param.AttributeEditorContext;
 

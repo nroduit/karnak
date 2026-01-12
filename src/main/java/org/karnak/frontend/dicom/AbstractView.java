@@ -21,8 +21,6 @@ import org.karnak.frontend.component.MessageBox;
 
 public abstract class AbstractView extends Div {
 
-	private static final long serialVersionUID = 1L;
-
 	private static final int DURATION_MSG_INFO_SUCCESS = 5000;
 
 	protected VerticalLayout mainLayout;

@@ -20,140 +20,64 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.Lumo;
-import java.util.Objects;
-import org.karnak.backend.cache.RequestCache;
-import org.karnak.backend.enums.SecurityRole;
+import lombok.extern.slf4j.Slf4j;
 import org.karnak.frontend.image.LogoKarnak;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * UI content when the user is not logged in yet.
  */
+@Slf4j
 @Route(LoginScreen.ROUTE)
-@PageTitle("KARNAK - Login")
+@PageTitle("Karnak - Login")
 @CssImport(value = "./styles/shared-styles.css")
-@SuppressWarnings("serial")
 public class LoginScreen extends FlexLayout implements BeforeEnterObserver {
 
-	// View route
 	public static final String ROUTE = "login";
 
-	// Theme
-	private final String THEME_COLOR_KEY = "theme-variant";
+	static final String KARNAK_TITLE = "KARNAK";
+	static final String LOGO_SIZE = "225px";
 
-	// Login form
+	private static final String ERROR_QUERY_PARAM = "error";
+
 	private final LoginForm loginForm;
 
-	// Authentication manager
-	private final AuthenticationManager authenticationManager;
-
-	// Request cache
-	private final RequestCache requestCache;
-
-	@Autowired
-	public LoginScreen(AuthenticationManager authenticationManager, RequestCache requestCache) {
+	public LoginScreen() {
 		this.loginForm = new LoginForm();
-		this.authenticationManager = authenticationManager;
-		this.requestCache = requestCache;
 		buildUI();
 	}
 
 	@Override
 	public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-		// inform the user about an authentication error
-		if (beforeEnterEvent.getLocation().getQueryParameters().getParameters().containsKey("error")) {
+		if (beforeEnterEvent.getLocation().getQueryParameters().getParameters().containsKey(ERROR_QUERY_PARAM)) {
 			loginForm.setError(true);
 		}
 	}
 
-	/**
-	 * Build User Interface
-	 */
 	private void buildUI() {
 		setSizeFull();
 		setClassName("login-screen");
 
-		// read local storage theme
-		UI.getCurrent()
-			.getPage()
-			.executeJs("return localStorage.getItem($0)", THEME_COLOR_KEY)
-			.then(String.class, string -> {
-				final String themeColor = string;
-				if ((string != null) && (string.equals(Lumo.DARK) || string.equals(Lumo.LIGHT))) {
-					UI.getCurrent().getElement().setAttribute("theme", themeColor);
-					UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, themeColor);
-				}
-			});
-
-		// Build component
+		ThemeUtil.initializeTheme();
 		add(buildLoginMainComponent());
-
-		// It's ugly but it works. @see
-		// https://github.com/vaadin/vaadin-login-flow/issues/53
-		UI.getCurrent().getPage().executeJs("document.getElementById(\"vaadinLoginUsername\").focus();");
+		focusUsernameField();
 	}
 
-	/**
-	 * Build login component
-	 * @return the built component
-	 */
 	private Component buildLoginMainComponent() {
-
-		// sets the LoginForm action to "login" in order to post the login form to Spring
-		// Security
 		loginForm.setAction(ROUTE);
 
-		// deactivate forgot password button
 		loginForm.setForgotPasswordButtonVisible(false);
 
-		// Listener on login form
-		loginForm.addLoginListener(this::login);
-
-		// layout to center login form when there is sufficient screen space
 		VerticalLayout loginInformation = new VerticalLayout();
 		loginInformation.setJustifyContentMode(JustifyContentMode.CENTER);
 		loginInformation.setAlignItems(Alignment.CENTER);
-		LogoKarnak logoKarnak = new LogoKarnak("KARNAK", "225px");
-		loginInformation.add(logoKarnak);
-		loginInformation.add(new H1("KARNAK"));
-		loginInformation.add(loginForm);
+		LogoKarnak logoKarnak = new LogoKarnak(KARNAK_TITLE, LOGO_SIZE);
+		loginInformation.add(logoKarnak, new H1(KARNAK_TITLE), loginForm);
 
 		return loginInformation;
 	}
 
-	/**
-	 * Manage event on login form submit
-	 * @param event Login Event
-	 */
-	private void login(LoginForm.LoginEvent event) {
-		try {
-			// try to authenticate with given credentials,
-			// should always return not null or throw an {@link AuthenticationException}
-			final Authentication authentication = authenticationManager
-				.authenticate(new UsernamePasswordAuthenticationToken(event.getUsername(), event.getPassword()));
-
-			// if the user is admin
-			if (authentication.getAuthorities()
-				.stream()
-				.anyMatch(ga -> Objects.equals(ga.getAuthority(), SecurityRole.ADMIN_ROLE.getRole()))) {
-
-				// if authentication was successful and user is admin,
-				// we will update the security context and redirect to the page requested
-				// first
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-				UI.getCurrent().navigate(requestCache.resolveRedirectUrl());
-			}
-		}
-		catch (AuthenticationException ex) { //
-			// show default error message
-			loginForm.setError(true);
-		}
+	private void focusUsernameField() {
+		UI.getCurrent().getPage().executeJs("document.getElementById('vaadinLoginUsername')?.focus();");
 	}
 
 }

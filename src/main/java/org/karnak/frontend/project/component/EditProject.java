@@ -15,15 +15,22 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.frontend.component.ProfileDropDown;
 
 public class EditProject extends VerticalLayout {
 
+	@Getter
+	@Setter
 	private ProfileDropDown profileDropDown;
 
+	@Getter
 	private final WarningRemoveProjectUsed dialogWarning;
 
+	@Getter
+	@Setter
 	private Binder<ProjectEntity> binder;
 
 	private TextField textProjectName;
@@ -32,10 +39,16 @@ public class EditProject extends VerticalLayout {
 
 	private HorizontalLayout horizontalLayoutButtons;
 
+	@Getter
+	@Setter
 	private Button buttonUpdate;
 
+	@Getter
+	@Setter
 	private Button buttonRemove;
 
+	@Getter
+	@Setter
 	private ProjectEntity projectEntity;
 
 	public EditProject() {
@@ -78,50 +91,6 @@ public class EditProject extends VerticalLayout {
 
 	public void clear() {
 		binder.readBean(new ProjectEntity());
-	}
-
-	public Button getButtonUpdate() {
-		return buttonUpdate;
-	}
-
-	public void setButtonUpdate(Button buttonUpdate) {
-		this.buttonUpdate = buttonUpdate;
-	}
-
-	public Binder<ProjectEntity> getBinder() {
-		return binder;
-	}
-
-	public void setBinder(Binder<ProjectEntity> binder) {
-		this.binder = binder;
-	}
-
-	public ProjectEntity getProjectEntity() {
-		return projectEntity;
-	}
-
-	public void setProjectEntity(ProjectEntity projectEntity) {
-		this.projectEntity = projectEntity;
-	}
-
-	public Button getButtonRemove() {
-		return buttonRemove;
-	}
-
-	public void setButtonRemove(Button buttonRemove) {
-		this.buttonRemove = buttonRemove;
-	}
-
-	public WarningRemoveProjectUsed getDialogWarning() {
-		return dialogWarning;
-	}
-
-	public ProfileDropDown getProfileDropDown() {
-		return profileDropDown;
-	}
-
-	public void setProfileDropDown(ProfileDropDown profileDropDown) {
-		this.profileDropDown = profileDropDown;
 	}
 
 }

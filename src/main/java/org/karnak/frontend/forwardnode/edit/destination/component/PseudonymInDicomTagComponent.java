@@ -18,13 +18,8 @@ import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.util.UIS;
 
-import java.io.Serial;
-
 @Getter
 public class PseudonymInDicomTagComponent extends Div {
-
-	@Serial
-	private static final long serialVersionUID = -8231199154345793870L;
 
 	private final Binder<DestinationEntity> destinationBinder;
 

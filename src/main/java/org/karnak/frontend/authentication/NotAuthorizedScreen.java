@@ -9,8 +9,10 @@
  */
 package org.karnak.frontend.authentication;
 
+import static org.karnak.frontend.authentication.LoginScreen.KARNAK_TITLE;
+import static org.karnak.frontend.authentication.LoginScreen.LOGO_SIZE;
+
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -20,77 +22,53 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.Lumo;
 import org.karnak.backend.util.SecurityUtil;
 import org.karnak.frontend.image.LogoKarnak;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * UI content when the user is not authorized to see the view.
  */
 @Route(NotAuthorizedScreen.ROUTE)
-@PageTitle("KARNAK - Not authorized")
+@PageTitle("Karnak - Not authorized")
 @CssImport(value = "./styles/shared-styles.css")
-@SuppressWarnings("serial")
 public class NotAuthorizedScreen extends FlexLayout {
 
-	// View route
 	public static final String ROUTE = "not-authorized";
 
-	// Theme
-	private static final String THEME_COLOR_KEY = "theme-variant";
+	private static final String NOT_AUTHORIZED_TITLE = "Not Authorized";
 
-	@Autowired
+	private static final String LOGOUT_LABEL = "Logout";
+
 	public NotAuthorizedScreen() {
 		buildUI();
 	}
 
-	/**
-	 * Build User Interface
-	 */
 	private void buildUI() {
 		setSizeFull();
 		setClassName("not-authorized-screen");
 
-		// read local storage theme
-		UI.getCurrent()
-			.getPage()
-			.executeJs("return localStorage.getItem($0)", THEME_COLOR_KEY)
-			.then(String.class, string -> {
-				final String themeColor = string;
-				if ((string != null) && (string.equals(Lumo.DARK) || string.equals(Lumo.LIGHT))) {
-					UI.getCurrent().getElement().setAttribute("theme", themeColor);
-					UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, themeColor);
-				}
-			});
-
-		// Build component
+		ThemeUtil.initializeTheme();
 		add(buildNotAuthorizedComponent());
 	}
 
-	/**
-	 * Build not authorized component
-	 * @return the built component
-	 */
 	private Component buildNotAuthorizedComponent() {
 
-		// layout to center login form when there is sufficient screen space
 		VerticalLayout notAuthorizedLayout = new VerticalLayout();
 		notAuthorizedLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 		notAuthorizedLayout.setAlignItems(Alignment.CENTER);
-		LogoKarnak logoKarnak = new LogoKarnak("KARNAK", "225px");
-		notAuthorizedLayout.add(logoKarnak);
-		notAuthorizedLayout.add(new H1("KARNAK"));
-		notAuthorizedLayout.add(new H1("Not Authorized"));
+		LogoKarnak logoKarnak = new LogoKarnak(KARNAK_TITLE, LOGO_SIZE);
+		Button logoutButton = createLogoutButton();
 
-		// logout button
-		Button logoutButton = new Button("Logout", VaadinIcon.SIGN_OUT.create());
-		logoutButton.addClickListener(event -> SecurityUtil.signOut());
-		logoutButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		logoutButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
-		notAuthorizedLayout.add(logoutButton);
+		notAuthorizedLayout.add(logoKarnak, new H1(KARNAK_TITLE), new H1(NOT_AUTHORIZED_TITLE), logoutButton);
 
 		return notAuthorizedLayout;
+	}
+
+	private Button createLogoutButton() {
+		Button logoutButton = new Button(LOGOUT_LABEL, VaadinIcon.SIGN_OUT.create());
+		logoutButton.addClickListener(event -> SecurityUtil.signOut());
+		logoutButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_LARGE);
+		return logoutButton;
 	}
 
 }

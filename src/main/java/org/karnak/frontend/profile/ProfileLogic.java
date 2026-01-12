@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
@@ -34,7 +36,8 @@ import org.yaml.snakeyaml.error.YAMLException;
 @Slf4j
 public class ProfileLogic extends ListDataProvider<ProfileEntity> {
 
-	// view
+	@Getter
+	@Setter
 	private ProfileView profileView;
 
 	// services
@@ -84,14 +87,6 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> {
 	public ProfileEntity retrieveProfile(Long profileID) {
 		refreshAll();
 		return getItems().stream().filter(project -> project.getId().equals(profileID)).findAny().orElse(null);
-	}
-
-	public ProfileView getProfileView() {
-		return profileView;
-	}
-
-	public void setProfileView(ProfileView profileView) {
-		this.profileView = profileView;
 	}
 
 	public void deleteProfile(ProfileEntity profileEntity) {

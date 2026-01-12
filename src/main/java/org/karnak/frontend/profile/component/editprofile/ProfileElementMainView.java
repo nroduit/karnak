@@ -30,8 +30,7 @@ public class ProfileElementMainView extends VerticalLayout {
 
 	private void profilesView() {
 		removeAll();
-		add(new HorizontalLayout(new H2("Profile element(s)"))); // new horizontalelayout
-		// because fix padding
+		add(new HorizontalLayout(new H2("Profile element(s)")));
 		for (ProfileElementEntity profileElementEntity : profilesOrder) {
 			add(setProfileName((profileElementEntity.getPosition() + 1) + ". " + profileElementEntity.getName()));
 			add(new ProfileElementView(profileElementEntity));

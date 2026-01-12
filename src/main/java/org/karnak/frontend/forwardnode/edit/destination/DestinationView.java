@@ -16,40 +16,61 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.spring.annotation.UIScope;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 import org.karnak.frontend.forwardnode.edit.destination.component.GridDestination;
 import org.karnak.frontend.forwardnode.edit.destination.component.NewUpdateDestination;
 import org.karnak.frontend.util.UIS;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.stereotype.Component;
 
 /**
  * Destination View
  */
-@SuppressWarnings("serial")
+@UIScope
+@Component
 public class DestinationView extends VerticalLayout {
 
-	// Destination Logic
+	@Getter
 	private final DestinationLogic destinationLogic;
 
 	private final ForwardNodeLogic forwardNodeLogic;
 
 	// UI components
+	@Setter
+	@Getter
 	private UI ui;
 
 	private TextField filter;
 
+	private final Environment environment;
+
+	@Getter
+	private Button newLocalDICOM;
+
+	@Getter
 	private Button newDestinationDICOM;
 
+	@Getter
 	private Button newDestinationSTOW;
 
+	@Getter
 	private GridDestination gridDestination;
 
-	private HorizontalLayout layoutFilterButton;
-
+	@Setter
+	@Getter
 	private ButtonSaveDeleteCancel buttonForwardNodeSaveDeleteCancel;
 
+	@Setter
+	@Getter
 	private NewUpdateDestination newUpdateDestination;
+
+	private static final String LABEL_NEW_LOCAL_DICOM = "LOCAL";
 
 	private static final String LABEL_NEW_DESTINATION_DICOM = "DICOM";
 
@@ -61,20 +82,21 @@ public class DestinationView extends VerticalLayout {
 	 * Destination view constructor
 	 * @param forwardNodeLogic Logic service of the view
 	 */
-	public DestinationView(final ForwardNodeLogic forwardNodeLogic) {
-
+	public DestinationView(ForwardNodeLogic forwardNodeLogic, Environment environment) {
+		this.environment = environment;
 		// Bind the autowired service
 		this.destinationLogic = forwardNodeLogic.getDestinationLogic();
 		this.forwardNodeLogic = forwardNodeLogic;
 
 		// Set the view in the service
-		this.destinationLogic.setDestinationsView(this);
 
 		// Keep the UI in order to be processed in the check of activity
 		ui = UI.getCurrent();
 
 		// Create components and layout
 		buildComponentsLayout();
+
+		this.destinationLogic.setDestinationsView(this);
 	}
 
 	/**
@@ -88,11 +110,16 @@ public class DestinationView extends VerticalLayout {
 		gridDestination = new GridDestination();
 
 		setTextFieldFilter();
+		if (environment.acceptsProfiles(Profiles.of("portable"))) {
+			setButtonNewLocalDICOM();
+		}
 		setButtonNewDestinationDICOM();
 		setButtonNewDestinationSTOW();
 		loadForwardNode(null);
 
-		layoutFilterButton = new HorizontalLayout(filter, newDestinationDICOM, newDestinationSTOW);
+		HorizontalLayout layoutFilterButton = (newLocalDICOM != null)
+				? new HorizontalLayout(filter, newLocalDICOM, newDestinationDICOM, newDestinationSTOW)
+				: new HorizontalLayout(filter, newDestinationDICOM, newDestinationSTOW);
 		layoutFilterButton.setVerticalComponentAlignment(Alignment.START, filter);
 		layoutFilterButton.expand(filter);
 
@@ -105,25 +132,31 @@ public class DestinationView extends VerticalLayout {
 		filter.addValueChangeListener(event -> destinationLogic.setFilter(event.getValue()));
 	}
 
+	private void setButtonNewLocalDICOM() {
+		newLocalDICOM = new Button(LABEL_NEW_LOCAL_DICOM);
+		newLocalDICOM.getElement().setAttribute("title", "New local folder destination");
+		newLocalDICOM.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newLocalDICOM.setIcon(VaadinIcon.PLUS_CIRCLE.create());
+	}
+
 	private void setButtonNewDestinationDICOM() {
 		newDestinationDICOM.getElement().setAttribute("title", "New destination of type dicom");
 		newDestinationDICOM.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		newDestinationDICOM.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-		// newDestinationDICOM.addClickListener(click ->
-		// destinationLogic.newDestinationDicom());
 	}
 
 	private void setButtonNewDestinationSTOW() {
 		newDestinationSTOW.getElement().setAttribute("title", "New destination of type stow");
 		newDestinationSTOW.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		newDestinationSTOW.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-		// newDestinationStow.addClickListener(click ->
-		// destinationLogic.newDestinationStow());
 	}
 
 	@Override
 	public void setEnabled(boolean enabled) {
 		filter.setEnabled(enabled);
+		if (newLocalDICOM != null) {
+			newLocalDICOM.setEnabled(enabled);
+		}
 		newDestinationDICOM.setEnabled(enabled);
 		newDestinationSTOW.setEnabled(enabled);
 		gridDestination.setEnabled(enabled);
@@ -138,46 +171,6 @@ public class DestinationView extends VerticalLayout {
 		destinationLogic.loadForwardNode(forwardNodeEntityReload);
 		gridDestination.setItems(destinationLogic);
 		setEnabled(forwardNodeEntity != null);
-	}
-
-	public Button getNewDestinationDICOM() {
-		return newDestinationDICOM;
-	}
-
-	public Button getNewDestinationSTOW() {
-		return newDestinationSTOW;
-	}
-
-	public GridDestination getGridDestination() {
-		return gridDestination;
-	}
-
-	public DestinationLogic getDestinationLogic() {
-		return destinationLogic;
-	}
-
-	public UI getUi() {
-		return ui;
-	}
-
-	public void setUi(UI ui) {
-		this.ui = ui;
-	}
-
-	public ButtonSaveDeleteCancel getButtonForwardNodeSaveDeleteCancel() {
-		return buttonForwardNodeSaveDeleteCancel;
-	}
-
-	public void setButtonForwardNodeSaveDeleteCancel(ButtonSaveDeleteCancel buttonForwardNodeSaveDeleteCancel) {
-		this.buttonForwardNodeSaveDeleteCancel = buttonForwardNodeSaveDeleteCancel;
-	}
-
-	public NewUpdateDestination getNewUpdateDestination() {
-		return newUpdateDestination;
-	}
-
-	public void setNewUpdateDestination(NewUpdateDestination newUpdateDestination) {
-		this.newUpdateDestination = newUpdateDestination;
 	}
 
 }

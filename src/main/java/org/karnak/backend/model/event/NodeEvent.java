@@ -10,6 +10,7 @@
 package org.karnak.backend.model.event;
 
 import java.util.Objects;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -18,8 +19,7 @@ import org.springframework.context.ApplicationEvent;
 
 public class NodeEvent extends ApplicationEvent {
 
-	private static final long serialVersionUID = -15504960651765311L;
-
+	@Getter
 	private final NodeEventType eventType;
 
 	private final ForwardNodeEntity forwardNodeEntity;
@@ -44,10 +44,6 @@ public class NodeEvent extends ApplicationEvent {
 
 	public ForwardNodeEntity getForwardNode() {
 		return forwardNodeEntity;
-	}
-
-	public NodeEventType getEventType() {
-		return eventType;
 	}
 
 }

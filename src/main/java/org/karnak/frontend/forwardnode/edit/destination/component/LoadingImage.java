@@ -10,15 +10,21 @@
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
+import java.io.InputStream;
 
 public class LoadingImage extends Image {
 
 	private static final String LOADING_IMAGE_PATH = "loading.gif";
 
 	public LoadingImage(String alt, String maxSize) {
-		super(new StreamResource(LOADING_IMAGE_PATH,
-				() -> LoadingImage.class.getResourceAsStream("/META-INF/resources/img/" + LOADING_IMAGE_PATH)), alt);
+		setAlt(alt);
+		setSrc(DownloadHandler.fromInputStream(event -> {
+			InputStream stream = LoadingImage.class
+				.getResourceAsStream("/META-INF/resources/img/" + LOADING_IMAGE_PATH);
+			return new DownloadResponse(stream, LOADING_IMAGE_PATH, "image/gif", -1);
+		}));
 		setMaxHeight(maxSize);
 		setMaxWidth(maxSize);
 	}

@@ -51,7 +51,7 @@ public class DestinationCondition extends Div {
 
 	private void setBinder(Binder<DestinationEntity> binder) {
 		binder.forField(condition).withValidator(value -> {
-			if (!condition.getValue().equals("")) {
+			if (!condition.getValue().isEmpty()) {
 				ExpressionError expressionError = ExpressionResult.isValid(condition.getValue(), new ExprCondition(),
 						Boolean.class);
 				textErrorConditionMsg.setText(expressionError.getMsg());

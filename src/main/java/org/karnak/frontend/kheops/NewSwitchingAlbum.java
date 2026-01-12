@@ -16,12 +16,15 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.KheopsAlbumsEntity;
 
 public class NewSwitchingAlbum extends Div {
 
+	@Getter
 	private final Binder<KheopsAlbumsEntity> binder;
 
+	@Getter
 	private final Button buttonAdd;
 
 	private final TextField textAuthorizationDestination;
@@ -32,14 +35,13 @@ public class NewSwitchingAlbum extends Div {
 
 	private final TextField textUrlAPI;
 
+	@Getter
 	private final Span textErrorConditionMsg;
-
-	private final TextFieldsBindSwitchingAlbum textFieldsBindSwitchingAlbum;
 
 	public NewSwitchingAlbum() {
 		setWidthFull();
 
-		textFieldsBindSwitchingAlbum = new TextFieldsBindSwitchingAlbum();
+		TextFieldsBindSwitchingAlbum textFieldsBindSwitchingAlbum = new TextFieldsBindSwitchingAlbum();
 		binder = textFieldsBindSwitchingAlbum.getBinder();
 		buttonAdd = new Button("Add");
 		textAuthorizationDestination = textFieldsBindSwitchingAlbum.getTextAuthorizationDestination();
@@ -80,20 +82,8 @@ public class NewSwitchingAlbum extends Div {
 		textCondition.setPlaceholder("Condition");
 	}
 
-	public Button getButtonAdd() {
-		return buttonAdd;
-	}
-
-	public Span getTextErrorConditionMsg() {
-		return textErrorConditionMsg;
-	}
-
 	public void clear() {
 		binder.readBean(new KheopsAlbumsEntity());
-	}
-
-	public Binder<KheopsAlbumsEntity> getBinder() {
-		return binder;
 	}
 
 }

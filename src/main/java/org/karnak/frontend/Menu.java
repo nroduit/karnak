@@ -24,18 +24,14 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
+import java.util.HashMap;
+import java.util.Map;
 import org.karnak.backend.util.SecurityUtil;
 import org.karnak.frontend.util.ToggleButtonTheme;
 
-import java.util.HashMap;
-import java.util.Map;
-
-@SuppressWarnings("serial")
 public class Menu extends FlexLayout {
 
 	private static final String SHOW_TABS = "show-tabs";
-
-	private final ToggleButtonTheme toggleButtonTheme;
 
 	private RouteTabs tabs;
 
@@ -65,7 +61,7 @@ public class Menu extends FlexLayout {
 		add(tabs);
 
 		// theme
-		toggleButtonTheme = new ToggleButtonTheme();
+		ToggleButtonTheme toggleButtonTheme = new ToggleButtonTheme();
 		VerticalLayout themeLayout = new VerticalLayout(toggleButtonTheme);
 		themeLayout.getElement().getStyle().set("align-items", "center");
 		add(themeLayout);

@@ -13,12 +13,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.binder.Binder;
 import java.util.Arrays;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.enums.UIDType;
 
 /**
  * Create a transfer syntax component
  */
+@Getter
 public class TransferSyntaxComponent extends VerticalLayout {
 
 	private Select<String> transferSyntaxSelect;
@@ -63,10 +65,6 @@ public class TransferSyntaxComponent extends VerticalLayout {
 	public void init(Binder<DestinationEntity> binder) {
 		binder.forField(transferSyntaxSelect)
 			.bind(DestinationEntity::getTransferSyntax, DestinationEntity::setTransferSyntax);
-	}
-
-	public Select<String> getTransferSyntaxSelect() {
-		return transferSyntaxSelect;
 	}
 
 }

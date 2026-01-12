@@ -9,14 +9,16 @@
  */
 package org.karnak.profilepipe;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.karnak.backend.cache.ExternalIDCache;
-import org.karnak.backend.config.RedisConfiguration;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
@@ -25,24 +27,12 @@ import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.HashContext;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.karnak.backend.util.DicomObjectTools;
-import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class ProfileTest {
 
 	private static HMAC defaultHMAC;
-
-	@Mock
-	private ExternalIDCache externalIDCache;
-
-	@Mock
-	private RedisConfiguration redisConfiguration;
 
 	@BeforeAll
 	static void beforeAll() {
@@ -410,7 +400,7 @@ class ProfileTest {
 		dataset2.setString(Tag.PatientAge, VR.AS, "070Y");
 		dataset2.setString(Tag.PatientBirthDate, VR.DA, "20070823");
 		dataset2.setString(Tag.AcquisitionDateTime, VR.DT, "20070730131403.000000");
-		dataset2.setString(Tag.InstanceCreationTime, VR.TM, "131635");
+		dataset2.setString(Tag.InstanceCreationTime, VR.TM, "131635.000000");
 
 		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
 		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Shift Date with argumentEntities",
@@ -447,7 +437,7 @@ class ProfileTest {
 		dataset2.setString(Tag.PatientAge, VR.AS, "069Y");
 		dataset2.setString(Tag.PatientBirthDate, VR.DA, "20080626");
 		dataset2.setString(Tag.AcquisitionDateTime, VR.DT, "20080602131454.000000");
-		dataset2.setString(Tag.InstanceCreationTime, VR.TM, "131726");
+		dataset2.setString(Tag.InstanceCreationTime, VR.TM, "131726.000000");
 
 		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
 		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Shift Date with argumentEntities",

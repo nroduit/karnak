@@ -13,18 +13,21 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 
-@SuppressWarnings("serial")
 public class NewUpdateSourceNode extends VerticalLayout {
 
+	@Getter
 	private final Binder<DicomSourceNodeEntity> binderFormSourceNode;
 
 	private final FormSourceNode formSourceNode;
 
+	@Getter
 	private final ButtonSaveDeleteCancel buttonSaveDeleteCancel;
 
+	@Getter
 	private DicomSourceNodeEntity currentSourceNode;
 
 	public NewUpdateSourceNode() {
@@ -54,22 +57,6 @@ public class NewUpdateSourceNode extends VerticalLayout {
 
 	public Button getButtonCancel() {
 		return buttonSaveDeleteCancel.getCancel();
-	}
-
-	public Binder<DicomSourceNodeEntity> getBinderFormSourceNode() {
-		return binderFormSourceNode;
-	}
-
-	public ButtonSaveDeleteCancel getButtonSaveDeleteCancel() {
-		return buttonSaveDeleteCancel;
-	}
-
-	public DicomSourceNodeEntity getCurrentSourceNode() {
-		return currentSourceNode;
-	}
-
-	public void setCurrentSourceNode(DicomSourceNodeEntity currentSourceNode) {
-		this.currentSourceNode = currentSourceNode;
 	}
 
 }

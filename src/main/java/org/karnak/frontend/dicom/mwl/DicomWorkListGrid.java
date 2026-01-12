@@ -10,7 +10,6 @@
 package org.karnak.frontend.dicom.mwl;
 
 import com.vaadin.flow.component.grid.Grid;
-import java.io.Serial;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Keyword;
@@ -20,9 +19,6 @@ import org.weasis.dicom.param.DicomParam;
 import org.weasis.dicom.tool.ModalityWorklist;
 
 public class DicomWorkListGrid extends Grid<Attributes> {
-
-	@Serial
-	private static final long serialVersionUID = 1L;
 
 	List<DicomParam> params = List.of(CFind.PatientName, CFind.PatientID, CFind.PatientBirthDate, CFind.PatientSex,
 			CFind.AccessionNumber, ModalityWorklist.ScheduledProcedureStepDescription, ModalityWorklist.Modality,
@@ -54,8 +50,8 @@ public class DicomWorkListGrid extends Grid<Attributes> {
 		else {
 			addColumn(a -> {
 				Attributes parent = a;
-				for (int k = 0; k < pSeq.length; k++) {
-					Attributes pn = parent.getNestedDataset(pSeq[k]);
+				for (int i : pSeq) {
+					Attributes pn = parent.getNestedDataset(i);
 					if (pn == null) {
 						break;
 					}

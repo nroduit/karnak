@@ -9,6 +9,11 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,10 +22,6 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -193,7 +194,6 @@ class ProfileTest {
 		attributes3.setString(Tag.StationName, VR.SH, "ICT258");
 		attributes3.setString(Tag.Rows, VR.US, "1024");
 		attributes3.setString(Tag.Columns, VR.US, "1024");
-
 		Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
 		ProfileElementEntity profileElementEntityCleanPixelData = new ProfileElementEntity();
 		profileElementEntityCleanPixelData.setCodename("clean.pixel.data");

@@ -20,11 +20,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.shared.Registration;
 
 public class ConfirmDialog extends Composite<Dialog> {
-
-	private static final long serialVersionUID = 1L;
 
 	// UI COMPONENTS
 	private Dialog dialog;
@@ -60,9 +57,8 @@ public class ConfirmDialog extends Composite<Dialog> {
 		dialog.open();
 	}
 
-	// LISTENERS
-	public Registration addConfirmationListener(ComponentEventListener<ConfirmationEvent> listener) {
-		return addListener(ConfirmationEvent.class, listener);
+	public void addConfirmationListener(ComponentEventListener<ConfirmationEvent> listener) {
+		addListener(ConfirmationEvent.class, listener);
 	}
 
 	private void init() {
@@ -121,7 +117,6 @@ public class ConfirmDialog extends Composite<Dialog> {
 		noBtn.getElement().getStyle().set("margin-left", "auto"); // https://vaadin.com/forum/thread/17198105/button-alignment-in-horizontal-layout
 	}
 
-	@SuppressWarnings("serial")
 	private void createYesBtn() {
 		yesBtn = new Button();
 		yesBtn.addClassName("stroked-button");
@@ -139,7 +134,6 @@ public class ConfirmDialog extends Composite<Dialog> {
 		yesBtn.addClickShortcut(Key.ENTER);
 	}
 
-	@SuppressWarnings("serial")
 	private void createNoBtn() {
 		noBtn = new Button();
 		noBtn.addClassName("primary");
@@ -153,9 +147,7 @@ public class ConfirmDialog extends Composite<Dialog> {
 		fireEvent(new ConfirmationEvent(this, false));
 	}
 
-	public class ConfirmationEvent extends ComponentEvent<ConfirmDialog> {
-
-		private static final long serialVersionUID = 1L;
+	public static class ConfirmationEvent extends ComponentEvent<ConfirmDialog> {
 
 		public ConfirmationEvent(ConfirmDialog source, boolean fromClient) {
 			super(source, fromClient);

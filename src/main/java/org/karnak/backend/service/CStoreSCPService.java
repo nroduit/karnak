@@ -20,6 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -48,10 +50,16 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 	private final ForwardService forwardService;
 
+	@Setter
+	@Getter
 	private Map<ForwardDicomNode, List<ForwardDestination>> destinations;
 
+	@Setter
+	@Getter
 	private volatile int priority;
 
+	@Setter
+	@Getter
 	private volatile int status;
 
 	// Scheduled service for updating status transfer in progress
@@ -60,7 +68,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	private final ScheduledExecutorService executorService;
 
 	@Autowired
-	public CStoreSCPService(final DestinationRepo destinationRepo, final ForwardService forwardService) {
+	public CStoreSCPService(DestinationRepo destinationRepo, ForwardService forwardService) {
 		super("*");
 		this.destinationRepo = destinationRepo;
 		this.forwardService = forwardService;
@@ -148,40 +156,17 @@ public class CStoreSCPService extends BasicCStoreSCP {
 		Optional<DestinationEntity> destinationEntityOptional = destinationRepo.findById(destination.getId());
 
 		if (destinationEntityOptional.isPresent()) {
-			// Update the destination transfer status if destination has been found and
-			// destination
-			// is active
+			// Update the transfer status if the destination has been found and is active
 			DestinationEntity destinationEntity = destinationEntityOptional.get();
 			if (destinationEntity.isActivate()) {
-				destinationEntity.setTransferInProgress(status);
-				destinationEntity.setLastTransfer(LocalDateTime.now(ZoneId.of("CET")));
-				destinationRepo.save(destinationEntity);
+				boolean oldStatus = destinationEntity.isTransferInProgress();
+				if (oldStatus != status) {
+					destinationEntity.setTransferInProgress(status);
+					destinationEntity.setLastTransfer(LocalDateTime.now(ZoneId.of("CET")));
+					destinationRepo.save(destinationEntity);
+				}
 			}
 		}
-	}
-
-	public Map<ForwardDicomNode, List<ForwardDestination>> getDestinations() {
-		return destinations;
-	}
-
-	public void setDestinations(Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
-		this.destinations = destinations;
-	}
-
-	public int getPriority() {
-		return priority;
-	}
-
-	public void setPriority(int priority) {
-		this.priority = priority;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
-	public void setStatus(int status) {
-		this.status = status;
 	}
 
 }

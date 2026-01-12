@@ -9,85 +9,81 @@
  */
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.DestinationEntity;
 
+@Setter
+@Getter
 public class GridDestination extends Grid<DestinationEntity> {
 
-	// Forward node / Id / Image
-	private Map<String, Map<Long, Image>> loadingImages = new HashMap<>();
+	private static final Map<Long, Boolean> loadingState = new HashMap<>();
+
+	private UI attachedUi;
 
 	public GridDestination() {
 		setSizeFull();
 
+		getListDataView().setIdentifierProvider(DestinationEntity::getId);
 		addColumn(DestinationEntity::getDescription).setHeader("Description").setFlexGrow(20).setSortable(true);
-
 		addColumn(DestinationEntity::getDestinationType).setHeader("Type").setFlexGrow(20).setSortable(true);
 
 		addComponentColumn(destination -> {
 			Span spanDot = new Span();
-			spanDot.getStyle().set("height", "25px");
-			spanDot.getStyle().set("width", "25px");
+			spanDot.getStyle().set("height", "30px");
+			spanDot.getStyle().set("width", "30px");
 			spanDot.getStyle().set("border-radius", "50%");
 			spanDot.getStyle().set("display", "inline-block");
-			if (destination.isActivate()) {
-				spanDot.getStyle().set("background-color", "#5FC04C");
-			}
-			else {
-				spanDot.getStyle().set("background-color", "#FC4848");
-			}
+			spanDot.getStyle().set("background-color", destination.isActivate() ? "#5FC04C" : "#FC4848");
 			return spanDot;
 		}).setHeader("Enabled").setFlexGrow(20).setSortable(true);
 
-		// Loading image
-		addComponentColumn(this::buildLoadingImage).setHeader("Activity").setKey("Activity").setFlexGrow(20);
+		// Loading image - always create fresh based on entity state
+		addComponentColumn(destination -> {
+			LoadingImage loading = new LoadingImage("In progress", "30px");
+			loading.getStyle().set("display", "block");
+			loading.getStyle().set("margin", "0 auto");
+			loading.setVisible(destination.isTransferInProgress());
+			return loading;
+		}).setHeader("Activity");
 	}
 
-	/**
-	 * Build loading image
-	 * @param destinationEntity Destination
-	 * @return Loading image built
-	 */
-	private LoadingImage buildLoadingImage(DestinationEntity destinationEntity) {
-		// Build loading image
-		LoadingImage image = new LoadingImage("In progress", "10%");
-
-		// Fill loading image map
-		if (loadingImages.isEmpty()
-				|| !loadingImages.containsKey(destinationEntity.getForwardNodeEntity().getFwdAeTitle())) {
-			HashMap<Long, Image> loadingImagesMap = new HashMap<>();
-			loadingImagesMap.put(destinationEntity.getId(), image);
-			loadingImages.put(destinationEntity.getForwardNodeEntity().getFwdAeTitle(), loadingImagesMap);
-		}
-		else {
-			loadingImages.get(destinationEntity.getForwardNodeEntity().getFwdAeTitle())
-				.put(destinationEntity.getId(), image);
-		}
-
-		// Visibility
-		image.setVisible(false);
-
-		return image;
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		attachedUi = attachEvent.getUI();
 	}
 
 	public DestinationEntity getSelectedRow() {
 		return asSingleSelect().getValue();
 	}
 
-	public void refresh(DestinationEntity data) {
-		getDataCommunicator().refresh(data);
+	public void refreshLoading(DestinationEntity entity) {
+		if (entity == null || attachedUi == null) {
+			return;
+		}
+
+		boolean loadingUI = isLoading(entity.getId());
+		boolean loading = entity.isTransferInProgress();
+		if (loadingUI == loading) {
+			return;
+		}
+		setLoading(entity.getId(), loading);
+
+		attachedUi.access(() -> getDataProvider().refreshItem(entity));
 	}
 
-	public Map<String, Map<Long, Image>> getLoadingImages() {
-		return loadingImages;
+	private static boolean isLoading(long id) {
+		return loadingState.getOrDefault(id, false);
 	}
 
-	public void setLoadingImages(Map<String, Map<Long, Image>> loadingImages) {
-		this.loadingImages = loadingImages;
+	private static void setLoading(long id, boolean isLoading) {
+		loadingState.put(id, isLoading);
 	}
 
 }

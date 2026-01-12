@@ -13,17 +13,21 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.frontend.component.ProfileDropDown;
 
 public class NewProject extends HorizontalLayout {
 
+	@Getter
 	private final Binder<ProjectEntity> binder;
 
+	@Getter
 	private final Button buttonAdd;
 
 	private final TextField textResearchName;
 
+	@Getter
 	private final ProfileDropDown profileDropDown;
 
 	public NewProject() {
@@ -47,20 +51,8 @@ public class NewProject extends HorizontalLayout {
 		textResearchName.setPlaceholder("Enter Name");
 	}
 
-	public Button getButtonAdd() {
-		return buttonAdd;
-	}
-
 	public void clear() {
 		binder.readBean(new ProjectEntity());
-	}
-
-	public Binder<ProjectEntity> getBinder() {
-		return binder;
-	}
-
-	public ProfileDropDown getProfileDropDown() {
-		return profileDropDown;
 	}
 
 }

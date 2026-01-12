@@ -16,7 +16,9 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
 
+@Getter
 public class NewForwardNode extends HorizontalLayout {
 
 	private final Button newForwardNodeBtn;
@@ -77,22 +79,6 @@ public class NewForwardNode extends HorizontalLayout {
 		});
 		// CTRL+N will create a new window which is unavoidable
 		newForwardNodeBtn.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-	}
-
-	public Button getNewForwardNodeBtn() {
-		return newForwardNodeBtn;
-	}
-
-	public TextField getNewAETitleForwardNode() {
-		return newAETitleForwardNode;
-	}
-
-	public Button getAddNewForwardNode() {
-		return addNewForwardNode;
-	}
-
-	public Button getCancelNewForwardNode() {
-		return cancelNewForwardNode;
 	}
 
 }

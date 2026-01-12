@@ -9,8 +9,8 @@
  */
 package org.karnak.backend.service.gateway;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.jsoup.Jsoup;
@@ -55,7 +56,9 @@ import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.ConnectOptions;
 import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomProgress;
+import org.weasis.dicom.param.ListenerParams;
 import org.weasis.dicom.param.TlsOptions;
+import org.weasis.dicom.tool.DicomListener;
 
 @Service
 @Slf4j
@@ -70,24 +73,25 @@ public class GatewaySetUpService {
 
 	private final Map<ForwardDicomNode, List<ForwardDestination>> destMap;
 
-	private final Path storePath;
-
+	@Getter
 	private final String listenerAET;
 
+	@Getter
 	private final int listenerPort;
 
+	@Getter
 	private final Boolean listenerTLS;
 
-	private final int intervalCheck;
-
-	private final String archiveUrl;
-
+	@Getter
 	private final String clientKey;
 
+	@Getter
 	private final String clientKeyPwd;
 
+	@Getter
 	private final String truststorePwd;
 
+	@Getter
 	private final String truststore;
 
 	// Version gateway setup for this instance
@@ -101,22 +105,8 @@ public class GatewaySetUpService {
 		this.destinationRepo = destinationRepo;
 		this.destMap = new HashMap<>();
 
-		String path = SystemPropertyUtil.retrieveSystemProperty("GATEWAY_ARCHIVE_PATH", null); // Only
-		// Archive
-		// and
-		// Pull
-		// mode
-		storePath = StringUtil.hasText(path) ? Path.of(path) : null;
-		intervalCheck = StringUtil
-			.getInt(SystemPropertyUtil.retrieveSystemProperty("GATEWAY_PULL_CHECK_INTERNAL", "5")); // Only
-		// Pull
-		// mode
-		archiveUrl = SystemPropertyUtil.retrieveSystemProperty("GATEWAY_ARCHIVE_URL", ""); // Only
-		// Archive
-		// mode
-
 		listenerAET = SystemPropertyUtil.retrieveSystemProperty("DICOM_LISTENER_AET", "KARNAK-GATEWAY");
-		listenerPort = 11119;
+		listenerPort = SystemPropertyUtil.retrieveIntegerSystemProperty("DICOM_LISTENER_PORT", 11119);
 		listenerTLS = LangUtil
 			.getEmptytoFalse(SystemPropertyUtil.retrieveSystemProperty("DICOM_LISTENER_TLS", "false"));
 
@@ -124,6 +114,20 @@ public class GatewaySetUpService {
 		clientKeyPwd = SystemPropertyUtil.retrieveSystemProperty("TLS_KEYSTORE_SECRET", null);
 		truststorePwd = SystemPropertyUtil.retrieveSystemProperty("TLS_TRUSTSTORE_PATH", null);
 		truststore = SystemPropertyUtil.retrieveSystemProperty("TLS_TRUSTSTORE_SECRET", null);
+
+		String localAET = SystemPropertyUtil.retrieveSystemProperty("LOCAL_NODE_AE_TITLE", "KARNAK-LOCAL");
+		Integer localPort = SystemPropertyUtil.retrieveIntegerSystemProperty("LOCAL_NODE_PORT", null);
+		String folder = SystemPropertyUtil.retrieveSystemProperty("LOCAL_NODE_STORAGE_PATH", null);
+		String filePattern = SystemPropertyUtil.retrieveSystemProperty("LOCAL_NODE_FILEPATH_PATTERN",
+				"{00100010}/{00080060}/{0020000E}/{00080018}.dcm");
+
+		if (localPort != null && StringUtil.hasText(folder)) {
+			DicomNode localNode = new DicomNode(localAET, null, localPort);
+			log.info("Local DICOM Node configured: {}", localNode);
+			DicomListener listener = new DicomListener(new File(folder));
+			ListenerParams params = new ListenerParams(null, true, filePattern, null);
+			listener.start(localNode, params);
+		}
 
 		// Init the current version of the gateway setup for this instance
 		this.gatewaySetUpVersion = 0L;
@@ -145,54 +149,7 @@ public class GatewaySetUpService {
 
 	@Override
 	public String toString() {
-		StringBuilder buf = new StringBuilder();
-		buf.append("Hostname=");
-		buf.append(DicomNode.convertToIP(null));
-		buf.append(" AETitle=");
-		buf.append(listenerAET);
-		buf.append(" Port=");
-		buf.append(listenerPort);
-		return buf.toString();
-	}
-
-	public String getArchiveUrl() {
-		return archiveUrl;
-	}
-
-	public Path getStorePath() {
-		return storePath;
-	}
-
-	public String getListenerAET() {
-		return listenerAET;
-	}
-
-	public int getListenerPort() {
-		return listenerPort;
-	}
-
-	public Boolean getListenerTLS() {
-		return listenerTLS;
-	}
-
-	public int getIntervalCheck() {
-		return intervalCheck;
-	}
-
-	public String getClientKey() {
-		return clientKey;
-	}
-
-	public String getClientKeyPwd() {
-		return clientKeyPwd;
-	}
-
-	public String getTruststorePwd() {
-		return truststorePwd;
-	}
-
-	public String getTruststore() {
-		return truststore;
+		return "Hostname=" + DicomNode.convertToIP(null) + " AETitle=" + listenerAET + " Port=" + listenerPort;
 	}
 
 	public AdvancedParams getAdvancedParams() {
@@ -412,51 +369,48 @@ public class GatewaySetUpService {
 		else {
 			fwdNode = val.get();
 		}
-		if (src instanceof DicomSourceNodeEntity) {
-			DicomSourceNodeEntity srcNode = (DicomSourceNodeEntity) src;
-			if (type == NodeEventType.ADD) {
-				fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
-			}
-			else if (type == NodeEventType.REMOVE) {
-				fwdNode.getAcceptedSourceNodes().removeIf(s -> srcNode.getId().equals(s.getId()));
-			}
-			else if (type == NodeEventType.UPDATE) {
-				fwdNode.getAcceptedSourceNodes().removeIf(s -> srcNode.getId().equals(s.getId()));
-				fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
-			}
-		}
-		else if (src instanceof DestinationEntity) {
-			DestinationEntity dstNode = (DestinationEntity) src;
-			if (type == NodeEventType.ADD) {
-				addDestinationNode(destMap.get(fwdNode), fwdNode, dstNode);
-			}
-			else if (type == NodeEventType.REMOVE) {
-				destMap.get(fwdNode).removeIf(d -> dstNode.getId().equals(d.getId()));
-			}
-			else if (type == NodeEventType.UPDATE) {
-				destMap.get(fwdNode).removeIf(d -> dstNode.getId().equals(d.getId()));
-				addDestinationNode(destMap.get(fwdNode), fwdNode, dstNode);
-			}
-		}
-		else if (src instanceof ForwardNodeEntity) {
-			ForwardNodeEntity fw = (ForwardNodeEntity) src;
-			if (type == NodeEventType.ADD) {
-				addAcceptedSourceNodes(fwdNode, fw);
-				destMap.put(fwdNode, addDestinationNodes(fwdNode, fw));
-			}
-			else if (type == NodeEventType.REMOVE) {
-				destMap.remove(fwdNode);
-			}
-			else if (type == NodeEventType.UPDATE && !aet.equals(fwdNode.getAet())) {
-				ForwardDicomNode newfwdNode = new ForwardDicomNode(aet, null, id);
-				for (DicomNode srcNode : fwdNode.getAcceptedSourceNodes()) {
-					newfwdNode.getAcceptedSourceNodes().add(srcNode);
+		switch (src) {
+			case DicomSourceNodeEntity srcNode -> {
+				if (type == NodeEventType.ADD) {
+					fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
 				}
-				destMap.put(newfwdNode, destMap.remove(fwdNode));
+				else if (type == NodeEventType.REMOVE) {
+					fwdNode.getAcceptedSourceNodes().removeIf(s -> srcNode.getId().equals(s.getId()));
+				}
+				else if (type == NodeEventType.UPDATE) {
+					fwdNode.getAcceptedSourceNodes().removeIf(s -> srcNode.getId().equals(s.getId()));
+					fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
+				}
 			}
-		}
-		else {
-			reloadGatewayPersistence();
+			case DestinationEntity dstNode -> {
+				if (type == NodeEventType.ADD) {
+					addDestinationNode(destMap.get(fwdNode), fwdNode, dstNode);
+				}
+				else if (type == NodeEventType.REMOVE) {
+					destMap.get(fwdNode).removeIf(d -> dstNode.getId().equals(d.getId()));
+				}
+				else if (type == NodeEventType.UPDATE) {
+					destMap.get(fwdNode).removeIf(d -> dstNode.getId().equals(d.getId()));
+					addDestinationNode(destMap.get(fwdNode), fwdNode, dstNode);
+				}
+			}
+			case ForwardNodeEntity fw -> {
+				if (type == NodeEventType.ADD) {
+					addAcceptedSourceNodes(fwdNode, fw);
+					destMap.put(fwdNode, addDestinationNodes(fwdNode, fw));
+				}
+				else if (type == NodeEventType.REMOVE) {
+					destMap.remove(fwdNode);
+				}
+				else if (type == NodeEventType.UPDATE && !aet.equals(fwdNode.getAet())) {
+					ForwardDicomNode newFwdNode = new ForwardDicomNode(aet, null, id);
+					for (DicomNode srcNode : fwdNode.getAcceptedSourceNodes()) {
+						newFwdNode.getAcceptedSourceNodes().add(srcNode);
+					}
+					destMap.put(newFwdNode, destMap.remove(fwdNode));
+				}
+			}
+			case null, default -> reloadGatewayPersistence();
 		}
 	}
 
@@ -499,12 +453,12 @@ public class GatewaySetUpService {
 	 */
 	@Scheduled(fixedRate = 5000)
 	public void checkRefreshGatewaySetUp() {
-		// Retrieve last gateway version
+		// Retrieve the last gateway version
 		VersionEntity lastVersion = versionRepo.findTopByOrderByIdDesc();
 
-		// Check if refresh needed: current version of the gateway setup for this instance
-		// is lower than
-		// the last version in DB
+		// Check if refresh needed: the current version of the gateway setup for this
+		// instance
+		// is lower than the last version in DB
 		if (lastVersion != null && gatewaySetUpVersion < lastVersion.getGatewaySetup()
 				&& destinationRepo.findAll().stream().noneMatch(DestinationEntity::isTransferInProgress)) {
 			// Check no transfer is in progress

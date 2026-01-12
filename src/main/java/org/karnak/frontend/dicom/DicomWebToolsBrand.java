@@ -15,16 +15,12 @@ import com.vaadin.flow.component.html.Span;
 
 public class DicomWebToolsBrand extends Composite<Div> {
 
-	private static final long serialVersionUID = 5833252271846713700L;
-
 	private static final String TEXT = "Dicom Web Tools";
-
-	private final Div div;
 
 	private Span textSpan;
 
 	public DicomWebToolsBrand() {
-		div = getContent();
+		Div div = getContent();
 		div.getStyle().set("display", "contents");
 
 		createText();

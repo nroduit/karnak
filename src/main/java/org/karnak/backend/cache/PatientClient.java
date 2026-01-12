@@ -10,9 +10,11 @@
 package org.karnak.backend.cache;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.data.redis.core.RedisTemplate;
 
 public abstract class PatientClient {
@@ -49,23 +51,49 @@ public abstract class PatientClient {
 	}
 
 	public Collection<Patient> getAll() {
-		return Objects.requireNonNull(redisTemplate.keys(patternSearchAllKeysCache))
-			.stream()
-			.filter(Objects::nonNull)
-			.filter(c -> c.length() > prefixKeySearchCache.length())
-			.map(k -> {
-				ValueWrapper keyValue = cache.get(k.substring(prefixKeySearchCache.length()));
-				return keyValue != null ? (Patient) keyValue.get() : null;
-			})
-			.toList();
+		// For in-memory cache (ConcurrentMapCache), get keys directly
+		if (cache instanceof ConcurrentMapCache concurrentMapCache) {
+			return concurrentMapCache.getNativeCache()
+				.keySet()
+				.stream()
+				.filter(Objects::nonNull)
+				.map(k -> get(k.toString()))
+				.filter(Objects::nonNull)
+				.toList();
+		}
+
+		// For Redis cache
+		if (redisTemplate != null) {
+			return Objects.requireNonNull(redisTemplate.keys(patternSearchAllKeysCache))
+				.stream()
+				.filter(Objects::nonNull)
+				.filter(c -> c.length() > prefixKeySearchCache.length())
+				.map(k -> {
+					ValueWrapper keyValue = cache.get(k.substring(prefixKeySearchCache.length()));
+					return keyValue != null ? (Patient) keyValue.get() : null;
+				})
+				.toList();
+		}
+
+		return Collections.emptyList();
 	}
 
 	public void removeAll() {
-		Objects.requireNonNull(redisTemplate.keys(patternSearchAllKeysCache))
-			.stream()
-			.filter(Objects::nonNull)
-			.filter(c -> c.length() > prefixKeySearchCache.length())
-			.forEach(k -> remove(k.substring(prefixKeySearchCache.length())));
+		// For in-memory cache (ConcurrentMapCache), clear directly
+		if (cache instanceof ConcurrentMapCache concurrentMapCache) {
+			concurrentMapCache.clear();
+			return;
+		}
+
+		// For Redis cache
+		if (redisTemplate != null) {
+			Objects.requireNonNull(redisTemplate.keys(patternSearchAllKeysCache))
+				.stream()
+				.filter(Objects::nonNull)
+				.filter(c -> c.length() > prefixKeySearchCache.length())
+				.forEach(k -> remove(k.substring(prefixKeySearchCache.length())));
+		}
+
 	}
 
 }

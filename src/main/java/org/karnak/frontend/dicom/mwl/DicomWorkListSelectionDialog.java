@@ -23,15 +23,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.shared.Registration;
 import java.util.Comparator;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.frontend.component.AbstractDialog;
 
 public class DicomWorkListSelectionDialog extends AbstractDialog {
-
-	private static final long serialVersionUID = 1L;
 
 	// CONTROLLER
 	private final DicomWorkListSelectionLogic logic = new DicomWorkListSelectionLogic(this);
@@ -93,8 +92,8 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 	}
 
 	// LISTENERS
-	public Registration addWorkListSelectionListener(ComponentEventListener<WorkListSelectionEvent> listener) {
-		return addListener(WorkListSelectionEvent.class, listener);
+	public void addWorkListSelectionListener(ComponentEventListener<WorkListSelectionEvent> listener) {
+		addListener(WorkListSelectionEvent.class, listener);
 	}
 
 	private void init() {
@@ -105,7 +104,6 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 		buildDataProvider();
 	}
 
-	@SuppressWarnings("serial")
 	private void buildDataProvider() {
 		dataProviderForWorkListNodes = new ListDataProvider<>(workListNodes);
 
@@ -137,6 +135,11 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 	}
 
 	private ComponentRenderer<Div, ConfigNode> buildDicomNodeRenderer() {
+		return getDivConfigNodeComponentRenderer();
+	}
+
+	@NotNull
+	public static ComponentRenderer<Div, ConfigNode> getDivConfigNodeComponentRenderer() {
 		return new ComponentRenderer<>(item -> {
 			Div div = new Div();
 			div.getStyle().set("line-height", "92%");
@@ -157,7 +160,7 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 
 	private void selectFirstItemInWorkListNodes() {
 		if (workListNodes != null && !workListNodes.isEmpty()) {
-			worklistNodeSelector.setValue(workListNodes.get(0));
+			worklistNodeSelector.setValue(workListNodes.getFirst());
 		}
 	}
 
@@ -173,7 +176,6 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 		buttonBar.add(cancelBtn, selectBtn);
 	}
 
-	@SuppressWarnings("serial")
 	private void buildCancelBtn() {
 		cancelBtn = new Button("Cancel");
 
@@ -186,7 +188,6 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 		});
 	}
 
-	@SuppressWarnings("serial")
 	private void buildSelectBtn() {
 		selectBtn = new Button("Select");
 		selectBtn.addClassName("stroked-button");
@@ -202,9 +203,8 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 		fireEvent(new WorkListSelectionEvent(this, false, selectedWorkList));
 	}
 
-	public class WorkListSelectionEvent extends ComponentEvent<DicomWorkListSelectionDialog> {
-
-		private static final long serialVersionUID = 1L;
+	@Getter
+	public static class WorkListSelectionEvent extends ComponentEvent<DicomWorkListSelectionDialog> {
 
 		private final ConfigNode selectedWorkList;
 
@@ -213,10 +213,6 @@ public class DicomWorkListSelectionDialog extends AbstractDialog {
 			super(source, fromClient);
 
 			this.selectedWorkList = selectedWorkList;
-		}
-
-		public ConfigNode getSelectedWorkList() {
-			return selectedWorkList;
 		}
 
 	}

@@ -32,19 +32,6 @@ class ExternalIDLogicTest {
 	}
 
 	@Test
-	void should_set_view() {
-
-		// Init data
-		ExternalIDView externalIDView = Mockito.mock(ExternalIDView.class);
-
-		// Call method
-		externalIDLogic.setExternalIDView(externalIDView);
-
-		// Test results
-		assertNotNull(externalIDLogic.getExternalIDView());
-	}
-
-	@Test
 	void should_retrieve_projects() {
 		// Call method
 		List<ProjectEntity> projectEntities = externalIDLogic.retrieveProject();

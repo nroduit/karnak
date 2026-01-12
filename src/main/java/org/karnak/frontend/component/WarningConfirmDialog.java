@@ -22,11 +22,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.shared.Registration;
 
 public class WarningConfirmDialog extends Composite<Dialog> {
-
-	private static final long serialVersionUID = 1L;
 
 	private static final String DEFAULT_TITLE = "Warning";
 
@@ -80,9 +77,8 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 		dialog.open();
 	}
 
-	public Registration addConfirmationListener(
-			ComponentEventListener<WarningConfirmDialog.ConfirmationEvent> listener) {
-		return addListener(WarningConfirmDialog.ConfirmationEvent.class, listener);
+	public void addConfirmationListener(ComponentEventListener<ConfirmationEvent> listener) {
+		addListener(ConfirmationEvent.class, listener);
 	}
 
 	private void init() {
@@ -127,7 +123,6 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 		buttonCancel.getElement().getStyle().set("margin-left", "auto");
 	}
 
-	@SuppressWarnings("serial")
 	private void createButtonValidate() {
 		buttonValidate = new Button();
 		buttonValidate.setText(valueValidate);
@@ -141,7 +136,6 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 		buttonValidate.addClickShortcut(Key.ENTER);
 	}
 
-	@SuppressWarnings("serial")
 	private void createButtonCancel() {
 		buttonCancel = new Button();
 		buttonCancel.setText(valueCancel);
@@ -150,12 +144,10 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 	}
 
 	private void fireConfirmationEvent() {
-		fireEvent(new WarningConfirmDialog.ConfirmationEvent(this, false));
+		fireEvent(new ConfirmationEvent(this, false));
 	}
 
-	public class ConfirmationEvent extends ComponentEvent<WarningConfirmDialog> {
-
-		private static final long serialVersionUID = 1L;
+	public static class ConfirmationEvent extends ComponentEvent<WarningConfirmDialog> {
 
 		public ConfirmationEvent(WarningConfirmDialog source, boolean fromClient) {
 			super(source, fromClient);

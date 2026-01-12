@@ -12,8 +12,9 @@ package org.karnak.frontend.project.component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
-import java.util.Arrays;
+import java.util.List;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.frontend.util.CollatorUtils;
 
 public class GridProject extends Grid<ProjectEntity> {
 
@@ -22,16 +23,20 @@ public class GridProject extends Grid<ProjectEntity> {
 
 		Column<ProjectEntity> projectNameColumn = addColumn(ProjectEntity::getName).setHeader("Project Name")
 			.setFlexGrow(15)
-			.setSortable(true);
+			.setSortable(true)
+			.setComparator(CollatorUtils.comparing(ProjectEntity::getName));
+
 		addColumn(project -> String.format("%s [version %s]", project.getProfileEntity().getName(),
 				project.getProfileEntity().getVersion()))
-			.setHeader("Desidenfication profile")
+			.setHeader("De-identification profile")
 			.setFlexGrow(15)
-			.setSortable(true);
+			.setSortable(true)
+			.setComparator(CollatorUtils.comparingThen(p -> CollatorUtils.nullSafe(p.getProfileEntity().getName()),
+					p -> CollatorUtils.nullSafe(p.getProfileEntity().getVersion())));
 
 		// Set by default the order on the name of the column
 		GridSortOrder<ProjectEntity> order = new GridSortOrder<>(projectNameColumn, SortDirection.ASCENDING);
-		sort(Arrays.asList(order));
+		sort(List.of(order));
 	}
 
 	public void selectRow(ProjectEntity row) {

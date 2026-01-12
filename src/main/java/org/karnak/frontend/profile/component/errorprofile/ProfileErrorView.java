@@ -27,7 +27,7 @@ public class ProfileErrorView extends VerticalLayout {
 
 	public void setView(List<ProfileError> profileErrors) {
 		removeAll();
-		add(new H2("Errors occured in profile elements"));
+		add(new H2("Errors occurred in profile elements"));
 		for (ProfileError profileError : profileErrors) {
 			ProfileElementEntity profileElementEntity = profileError.getProfileElement();
 			Div profileName = setProfileName(
@@ -47,7 +47,7 @@ public class ProfileErrorView extends VerticalLayout {
 
 	public void setView(String text) {
 		removeAll();
-		add(new H2("Error occured"));
+		add(new H2("Error occurred"));
 		add(setProfileError(text));
 	}
 

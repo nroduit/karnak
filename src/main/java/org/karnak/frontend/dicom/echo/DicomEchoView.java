@@ -40,12 +40,10 @@ import org.karnak.frontend.dicom.echo.DicomEchoSelectionDialog.DicomNodeSelectio
 /**
  * Calling Order 1) constructor 2) setParameter 3) beforeEnter
  */
-@SuppressWarnings("serial")
+
 public class DicomEchoView extends AbstractView implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Dicom Echo";
-
-	private static final long serialVersionUID = 1L;
 
 	private static final String PARAMETER_CALLING_AET = "callingAET";
 
@@ -63,9 +61,6 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 	// CONTROLLER
 	private final DicomEchoLogic logic = new DicomEchoLogic(this);
-
-	// DIALOGS
-	private DicomEchoSelectionDialog dicomEchoSelectionDialog;
 
 	// UI COMPONENTS
 	// Dicom Echo Query
@@ -247,7 +242,7 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	}
 
 	private void openDicomEchoSelectionDialog() {
-		dicomEchoSelectionDialog = new DicomEchoSelectionDialog();
+		DicomEchoSelectionDialog dicomEchoSelectionDialog = new DicomEchoSelectionDialog();
 
 		dicomEchoSelectionDialog
 			.addDicomNodeSelectionListener((ComponentEventListener<DicomNodeSelectionEvent>) event -> {
@@ -282,7 +277,6 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 		dicomEchoStatusLayout.setVisible(false);
 	}
 
-	@SuppressWarnings("serial")
 	private void bindFields() {
 		binder.forField(callingAetFld)
 			.asRequired(ERROR_MESSAGE)

@@ -9,12 +9,16 @@
  */
 package org.karnak.frontend.profile.component.errorprofile;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 
 public class ProfileError {
 
 	private ProfileElementEntity profileElementEntity;
 
+	@Setter
+	@Getter
 	private String error;
 
 	public ProfileError(ProfileElementEntity profileElementEntity) {
@@ -33,14 +37,6 @@ public class ProfileError {
 
 	public void setProfileElement(ProfileElementEntity profileElementEntity) {
 		this.profileElementEntity = profileElementEntity;
-	}
-
-	public String getError() {
-		return error;
-	}
-
-	public void setError(String error) {
-		this.error = error;
 	}
 
 }

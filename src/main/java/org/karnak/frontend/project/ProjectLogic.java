@@ -12,17 +12,22 @@ package org.karnak.frontend.project;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SecretService;
 import org.karnak.backend.service.profilepipe.ProfilePipeService;
 import org.karnak.frontend.component.ConfirmDialog;
+import org.karnak.frontend.component.ProfileDropDown;
 import org.karnak.frontend.project.component.EditProject;
 import org.karnak.frontend.project.component.GridProject;
 import org.karnak.frontend.project.component.NewProject;
+import org.karnak.frontend.util.CollatorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +40,8 @@ import org.springframework.stereotype.Service;
 public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 
 	// View
+	@Getter
+	@Setter
 	private ProjectView projectView;
 
 	// Services
@@ -122,7 +129,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 			if (editProject.getProjectEntity() != null
 					&& editProject.getBinder().writeBeanIfValid(editProject.getProjectEntity())) {
 				if (editProject.getProjectEntity().getDestinationEntities() != null
-						&& editProject.getProjectEntity().getDestinationEntities().size() > 0) {
+						&& !editProject.getProjectEntity().getDestinationEntities().isEmpty()) {
 					ConfirmDialog dialog = new ConfirmDialog(
 							String.format("The project %s is used, are you sure you want to updated ?",
 									editProject.getProjectEntity().getName()));
@@ -149,7 +156,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 	public void addEditEventButtonRemove(EditProject editProject) {
 		editProject.getButtonRemove().addClickListener(e -> {
 			List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getDestinationEntities();
-			if (destinationEntities != null && destinationEntities.size() > 0) {
+			if (destinationEntities != null && !destinationEntities.isEmpty()) {
 				editProject.getDialogWarning().setText(editProject.getProjectEntity());
 				editProject.getDialogWarning().open();
 
@@ -168,10 +175,15 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 	 * @param editProject Edit component
 	 */
 	public void initEditProfileDropDown(EditProject editProject) {
-		editProject.getProfileDropDown().setItems(profilePipeService.getAllProfiles());
-		editProject.getProfileDropDown()
-			.setItemLabelGenerator(profileEntity -> String.format("%s [version %s]", profileEntity.getName(),
-					profileEntity.getVersion()));
+		addDropDownProfileList(editProject.getProfileDropDown());
+	}
+
+	private void addDropDownProfileList(ProfileDropDown profileDropDown) {
+		List<ProfileEntity> profiles = profilePipeService.getAllProfiles();
+		profiles.sort(CollatorUtils.comparingThen(ProfileEntity::getName, ProfileEntity::getVersion));
+
+		profileDropDown.setItems(profiles);
+		profileDropDown.setItemLabelGenerator(p -> String.format("%s [version %s]", p.getName(), p.getVersion()));
 	}
 
 	/**
@@ -179,18 +191,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 	 * @param newProject New project component
 	 */
 	public void initNewProjectProfileDropDown(NewProject newProject) {
-		newProject.getProfileDropDown().setItems(profilePipeService.getAllProfiles());
-		newProject.getProfileDropDown()
-			.setItemLabelGenerator(profileEntity -> String.format("%s [version %s]", profileEntity.getName(),
-					profileEntity.getVersion()));
-	}
-
-	public ProjectView getProjectView() {
-		return projectView;
-	}
-
-	public void setProjectView(ProjectView projectView) {
-		this.projectView = projectView;
+		addDropDownProfileList(newProject.getProfileDropDown());
 	}
 
 }

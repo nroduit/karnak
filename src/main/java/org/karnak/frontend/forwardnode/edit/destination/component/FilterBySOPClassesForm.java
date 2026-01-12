@@ -13,8 +13,10 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 
+@Getter
 public class FilterBySOPClassesForm extends HorizontalLayout {
 
 	private final MultiSelectComboBox<String> sopFilter;
@@ -45,18 +47,6 @@ public class FilterBySOPClassesForm extends HorizontalLayout {
 
 		filterBySOPClassesCheckbox.addValueChangeListener(checkboxBooleanComponentValueChangeEvent -> sopFilter
 			.onEnabledStateChanged(checkboxBooleanComponentValueChangeEvent.getValue()));
-	}
-
-	public MultiSelectComboBox<String> getSopFilter() {
-		return sopFilter;
-	}
-
-	public Checkbox getFilterBySOPClassesCheckbox() {
-		return filterBySOPClassesCheckbox;
-	}
-
-	public Binder<DestinationEntity> getBinder() {
-		return binder;
 	}
 
 }

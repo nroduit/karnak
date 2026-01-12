@@ -14,15 +14,14 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.Binder;
-import java.io.Serial;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.util.UIS;
 
+@Getter
 public class TagMorphingComponent extends VerticalLayout {
-
-	@Serial
-	private static final long serialVersionUID = 6526643405482005449L;
 
 	// Labels
 	private static final String LABEL_CHECKBOX_TAG_MORPHING = "Activate tag morphing";
@@ -34,6 +33,7 @@ public class TagMorphingComponent extends VerticalLayout {
 
 	private WarningNoProjectsDefined warningNoProjectsDefined;
 
+	@Setter
 	private Binder<DestinationEntity> destinationBinder;
 
 	private Div tagMorphingDiv;
@@ -68,38 +68,6 @@ public class TagMorphingComponent extends VerticalLayout {
 
 		// Add components
 		addComponents();
-	}
-
-	public Checkbox getTagMorphingCheckbox() {
-		return tagMorphingCheckbox;
-	}
-
-	public void setTagMorphingCheckbox(Checkbox tagMorphingCheckbox) {
-		this.tagMorphingCheckbox = tagMorphingCheckbox;
-	}
-
-	public ProjectDropDown getProjectDropDown() {
-		return projectDropDown;
-	}
-
-	public void setProjectDropDown(ProjectDropDown projectDropDown) {
-		this.projectDropDown = projectDropDown;
-	}
-
-	public WarningNoProjectsDefined getWarningNoProjectsDefined() {
-		return warningNoProjectsDefined;
-	}
-
-	public void setWarningNoProjectsDefined(WarningNoProjectsDefined warningNoProjectsDefined) {
-		this.warningNoProjectsDefined = warningNoProjectsDefined;
-	}
-
-	public Binder<DestinationEntity> getDestinationBinder() {
-		return destinationBinder;
-	}
-
-	public void setDestinationBinder(Binder<DestinationEntity> destinationBinder) {
-		this.destinationBinder = destinationBinder;
 	}
 
 	/**
@@ -144,18 +112,6 @@ public class TagMorphingComponent extends VerticalLayout {
 
 		// Add components in view
 		add(UIS.setWidthFull(new HorizontalLayout(tagMorphingCheckbox, tagMorphingDiv)));
-	}
-
-	public Div getTagMorphingDiv() {
-		return tagMorphingDiv;
-	}
-
-	public DestinationComponentUtil getDestinationComponentUtil() {
-		return destinationComponentUtil;
-	}
-
-	public ProfileLabel getProfileLabel() {
-		return profileLabel;
 	}
 
 }

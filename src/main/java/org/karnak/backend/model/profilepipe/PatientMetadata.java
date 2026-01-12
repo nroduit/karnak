@@ -9,14 +9,20 @@
  */
 package org.karnak.backend.model.profilepipe;
 
+import java.time.LocalDate;
+import lombok.Getter;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
+import org.dcm4che3.img.util.DateTimeUtils;
 import org.karnak.backend.cache.Patient;
-import org.weasis.dicom.util.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.weasis.core.util.StringUtil;
 
-import java.time.LocalDate;
-
+@Getter
 public class PatientMetadata {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(PatientMetadata.class);
 
 	private static final String PATIENT_SEX_OTHER = "O";
 
@@ -33,7 +39,7 @@ public class PatientMetadata {
 	public PatientMetadata(Attributes dcm) {
 		patientID = dcm.getString(Tag.PatientID, "");
 		patientName = dcm.getString(Tag.PatientName, "");
-		patientBirthDate = setPatientBirthDate(dcm.getString(Tag.PatientBirthDate));
+		patientBirthDate = formatPatientBirthDate(dcm.getString(Tag.PatientBirthDate));
 		issuerOfPatientID = "";
 		patientSex = setPatientSex(dcm.getString(Tag.PatientSex, PATIENT_SEX_OTHER));
 	}
@@ -41,7 +47,7 @@ public class PatientMetadata {
 	public PatientMetadata(Attributes dcm, String issuerOfPatientIDByDefault) {
 		patientID = dcm.getString(Tag.PatientID, "");
 		patientName = dcm.getString(Tag.PatientName, "");
-		patientBirthDate = setPatientBirthDate(dcm.getString(Tag.PatientBirthDate));
+		patientBirthDate = formatPatientBirthDate(dcm.getString(Tag.PatientBirthDate));
 		issuerOfPatientID = dcm.getString(Tag.IssuerOfPatientID, issuerOfPatientIDByDefault);
 		patientSex = setPatientSex(dcm.getString(Tag.PatientSex, PATIENT_SEX_OTHER));
 	}
@@ -53,16 +59,17 @@ public class PatientMetadata {
 		return patientSex;
 	}
 
-	private String setPatientBirthDate(String rawPatientBirthDate) {
-		return DateUtil.formatDicomDate(DateUtil.getDicomDate(rawPatientBirthDate));
-	}
-
-	public String getPatientID() {
-		return patientID;
-	}
-
-	public String getPatientName() {
-		return patientName;
+	private String formatPatientBirthDate(String rawPatientBirthDate) {
+		if (!StringUtil.hasText(rawPatientBirthDate)) {
+			return "";
+		}
+		try {
+			return DateTimeUtils.formatDA(DateTimeUtils.parseDA(rawPatientBirthDate));
+		}
+		catch (Exception e) {
+			LOGGER.error("Error parsing patient birth date: {}", rawPatientBirthDate);
+			return "";
+		}
 	}
 
 	public String getPatientLastName() {
@@ -70,27 +77,18 @@ public class PatientMetadata {
 	}
 
 	public String getPatientFirstName() {
-		String[] patientNameSplitted = patientName.split("\\^");
-		if (patientNameSplitted.length > 1) {
-			return patientNameSplitted[1];
+		String[] patientNameSplit = patientName.split("\\^");
+		if (patientNameSplit.length > 1) {
+			return patientNameSplit[1];
 		}
 		return "";
 	}
 
-	public String getPatientBirthDate() {
-		return patientBirthDate;
-	}
-
 	public LocalDate getLocalDatePatientBirthDate() {
-		return DateUtil.getDicomDate(patientBirthDate);
-	}
-
-	public String getIssuerOfPatientID() {
-		return issuerOfPatientID;
-	}
-
-	public String getPatientSex() {
-		return patientSex;
+		if (StringUtil.hasText(patientBirthDate)) {
+			return DateTimeUtils.parseDA(patientBirthDate);
+		}
+		return null;
 	}
 
 	public boolean compareCachedPatient(Patient patient) {

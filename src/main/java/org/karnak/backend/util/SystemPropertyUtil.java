@@ -33,4 +33,22 @@ public class SystemPropertyUtil {
 		return val;
 	}
 
+	/**
+	 * Retrieve integer system property
+	 * @param key Key
+	 * @param defaultValue default value
+	 * @return property found
+	 */
+	public static Integer retrieveIntegerSystemProperty(String key, Integer defaultValue) {
+		String val = System.getProperty(key);
+		if (!StringUtil.hasText(val)) {
+			val = System.getenv(key);
+			if (!StringUtil.hasText(val)) {
+				return defaultValue;
+			}
+		}
+		Integer intValue = StringUtil.getInteger(val);
+		return intValue != null ? intValue : defaultValue;
+	}
+
 }

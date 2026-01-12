@@ -12,30 +12,30 @@ package org.karnak.frontend.forwardnode.component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 
 public class LayoutNewGridForwardNode extends VerticalLayout {
 
-	// UI Components
-	private final NewForwardNode newForwardNode;
-
+	@Getter
 	private final GridForwardNode gridForwardNode;
 
-	private final Button buttonNewForwardNode;
-
+	@Getter
 	private final TextField textFieldNewAETitleForwardNode;
 
+	@Getter
 	private final Button buttonAddNewForwardNode;
 
 	private Button buttonCancelNewForwardNode;
 
 	public LayoutNewGridForwardNode() {
-		newForwardNode = new NewForwardNode();
+		// UI Components
+		NewForwardNode newForwardNode = new NewForwardNode();
 		gridForwardNode = new GridForwardNode();
 
 		add(newForwardNode, gridForwardNode);
 
-		buttonNewForwardNode = newForwardNode.getNewForwardNodeBtn();
+		Button buttonNewForwardNode = newForwardNode.getNewForwardNodeBtn();
 		textFieldNewAETitleForwardNode = newForwardNode.getNewAETitleForwardNode();
 		buttonAddNewForwardNode = newForwardNode.getAddNewForwardNode();
 	}
@@ -47,18 +47,6 @@ public class LayoutNewGridForwardNode extends VerticalLayout {
 		else {
 			gridForwardNode.getSelectionModel().deselectAll();
 		}
-	}
-
-	public GridForwardNode getGridForwardNode() {
-		return gridForwardNode;
-	}
-
-	public TextField getTextFieldNewAETitleForwardNode() {
-		return textFieldNewAETitleForwardNode;
-	}
-
-	public Button getButtonAddNewForwardNode() {
-		return buttonAddNewForwardNode;
 	}
 
 }

@@ -14,12 +14,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.UIDType;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 
-@SuppressWarnings("serial")
+@Getter
 public class NewUpdateDestination extends VerticalLayout {
 
 	private final FormDICOM formDICOM;
@@ -34,6 +36,7 @@ public class NewUpdateDestination extends VerticalLayout {
 
 	private final ButtonSaveDeleteCancel buttonDestinationSTOWSaveDeleteCancel;
 
+	@Setter
 	private DestinationEntity currentDestinationEntity;
 
 	public static final String TRANSFER_IN_PROGRESS = "Transfer in progress";
@@ -119,38 +122,6 @@ public class NewUpdateDestination extends VerticalLayout {
 
 	public Button getButtonSTOWCancel() {
 		return buttonDestinationSTOWSaveDeleteCancel.getCancel();
-	}
-
-	public ButtonSaveDeleteCancel getButtonDestinationDICOMSaveDeleteCancel() {
-		return buttonDestinationDICOMSaveDeleteCancel;
-	}
-
-	public ButtonSaveDeleteCancel getButtonDestinationSTOWSaveDeleteCancel() {
-		return buttonDestinationSTOWSaveDeleteCancel;
-	}
-
-	public Binder<DestinationEntity> getBinderFormDICOM() {
-		return binderFormDICOM;
-	}
-
-	public Binder<DestinationEntity> getBinderFormSTOW() {
-		return binderFormSTOW;
-	}
-
-	public DestinationEntity getCurrentDestinationEntity() {
-		return currentDestinationEntity;
-	}
-
-	public void setCurrentDestinationEntity(DestinationEntity currentDestinationEntity) {
-		this.currentDestinationEntity = currentDestinationEntity;
-	}
-
-	public FormDICOM getFormDICOM() {
-		return formDICOM;
-	}
-
-	public FormSTOW getFormSTOW() {
-		return formSTOW;
 	}
 
 }

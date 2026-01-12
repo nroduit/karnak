@@ -11,6 +11,7 @@ package org.karnak.backend.dicom;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
 import org.weasis.core.util.FileUtil;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomProgress;
@@ -22,6 +23,7 @@ public class WebForwardDestination extends ForwardDestination {
 
 	private final ForwardDicomNode callingNode;
 
+	@Getter
 	private final DicomState state;
 
 	private final DicomStowRS stowRS;
@@ -89,10 +91,6 @@ public class WebForwardDestination extends ForwardDestination {
 	@Override
 	public String toString() {
 		return stowRS.getRequestURL();
-	}
-
-	public DicomState getState() {
-		return state;
 	}
 
 }

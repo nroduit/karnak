@@ -17,8 +17,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import java.io.ByteArrayInputStream;
+import lombok.Getter;
 import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.monitoring.component.ExportSettingsDialog;
@@ -30,7 +32,7 @@ import org.springframework.security.access.annotation.Secured;
  * Monitoring View
  */
 @Route(value = MonitoringView.ROUTE, layout = MainLayout.class)
-@PageTitle("KARNAK - Monitoring")
+@PageTitle("Karnak - Monitoring")
 @Secured({ "ROLE_admin" })
 public class MonitoringView extends VerticalLayout {
 
@@ -42,6 +44,7 @@ public class MonitoringView extends VerticalLayout {
 	private final MonitoringLogic monitoringLogic;
 
 	// UI components
+	@Getter
 	private TransferStatusGrid transferStatusGrid;
 
 	private final TransferStatusDataProvider<TransferStatusEntity> transferStatusDataProvider;
@@ -99,9 +102,10 @@ public class MonitoringView extends VerticalLayout {
 		exportSettingsButton.addClickListener(buttonClickEvent -> exportSettingsDialog.open());
 
 		// Export button
-		StreamResource streamResource = new StreamResource("export.csv",
-				() -> new ByteArrayInputStream(monitoringLogic.buildCsv(exportSettingsDialog.getExportSettings())));
-		exportAnchor = new Anchor(streamResource, "");
+		exportAnchor = new Anchor();
+		exportAnchor.setHref(DownloadHandler.fromInputStream(event -> new DownloadResponse(
+				new ByteArrayInputStream(monitoringLogic.buildCsv(exportSettingsDialog.getExportSettings())),
+				"export.csv", "text/csv", -1)));
 		exportAnchor.setWidth("33%");
 		Button exportButton = new Button("Export", new Icon(VaadinIcon.DOWNLOAD_ALT));
 		exportButton.setWidthFull();
@@ -119,10 +123,6 @@ public class MonitoringView extends VerticalLayout {
 		add(buttonLayout);
 		setSizeFull();
 		setWidthFull();
-	}
-
-	public TransferStatusGrid getTransferStatusGrid() {
-		return transferStatusGrid;
 	}
 
 }

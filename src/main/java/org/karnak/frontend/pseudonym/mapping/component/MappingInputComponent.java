@@ -14,11 +14,15 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.dom.Style;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.frontend.component.BoxShadowComponent;
 
 /**
  * Input pseudonym that the user wants to look for
  */
+@Setter
+@Getter
 public class MappingInputComponent extends VerticalLayout {
 
 	// Components
@@ -49,22 +53,6 @@ public class MappingInputComponent extends VerticalLayout {
 		pseudonymBoxShadowComponent.getElement().getStyle().set("padding", "10px");
 		pseudonymBoxShadowComponent.getElement().getStyle().set("margin", "auto");
 		add(pseudonymBoxShadowComponent);
-	}
-
-	public TextField getPseudonymTextField() {
-		return pseudonymTextField;
-	}
-
-	public void setPseudonymTextField(TextField pseudonymTextField) {
-		this.pseudonymTextField = pseudonymTextField;
-	}
-
-	public Button getFindButton() {
-		return findButton;
-	}
-
-	public void setFindButton(Button findButton) {
-		this.findButton = findButton;
 	}
 
 }

@@ -46,8 +46,6 @@ import org.karnak.frontend.dicom.PortField;
  */
 public class DicomWorkListView extends AbstractView implements HasUrlParameter<String> {
 
-	private static final long serialVersionUID = 1L;
-
 	private static final String PARAMETER_CALLING_AET = "callingAET";
 
 	private static final String PARAMETER_WORKLIST_AET = "worklistAet";
@@ -62,9 +60,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	// CONTROLLER
 	private final DicomWorkListLogic logic = new DicomWorkListLogic(this);
-
-	// DIALOGS
-	private DicomWorkListSelectionDialog dicomWorklistSelectionDialog;
 
 	// UI COMPONENTS
 	private VerticalLayout wlConfigurationAndQueryLayout;
@@ -118,8 +113,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private DicomWorkListGrid queryResultGrid;
 
-	private DicomPane dicomPane;
-
 	// DATA
 	private WorkListQueryData workListQueryData;
 
@@ -159,7 +152,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	public void openDicomPane(Attributes attributes) {
-		dicomPane = new DicomPane(attributes);
+		DicomPane dicomPane = new DicomPane(attributes);
 
 		dicomPane.open();
 	}
@@ -260,7 +253,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		workListPortFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
-	@SuppressWarnings("serial")
 	private void buildSelectWorkListBtn() {
 		selectWorkListBtn = new Button("Select Worklist");
 		selectWorkListBtn.getStyle().set("cursor", "pointer");
@@ -268,9 +260,9 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		selectWorkListBtn.addClickListener(e -> openDicomWorklistSelectionDialog());
 	}
 
-	@SuppressWarnings("serial")
 	private void openDicomWorklistSelectionDialog() {
-		dicomWorklistSelectionDialog = new DicomWorkListSelectionDialog();
+		// DIALOGS
+		DicomWorkListSelectionDialog dicomWorklistSelectionDialog = new DicomWorkListSelectionDialog();
 
 		dicomWorklistSelectionDialog.addWorkListSelectionListener(e -> {
 			ConfigNode selectedWorkList = e.getSelectedWorkList();
@@ -352,7 +344,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		buttonBar.add(clearBtn, selectWorkListBtn, queryBtn);
 	}
 
-	@SuppressWarnings("serial")
 	private void buildClearBtn() {
 		clearBtn = new Button("Clear");
 		clearBtn.getStyle().set("cursor", "pointer");
@@ -360,7 +351,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		clearBtn.addClickListener(e -> binderForWorkListQuery.readBean(workListQueryData));
 	}
 
-	@SuppressWarnings("serial")
 	private void buildQueryBtn() {
 		queryBtn = new Button("Query");
 		queryBtn.getStyle().set("cursor", "pointer");
@@ -393,7 +383,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		queryResultTitle.getStyle().set("padding-bottom", "var(--lumo-space-m)");
 	}
 
-	@SuppressWarnings("serial")
 	private void buildGrid() {
 		queryResultGrid = new DicomWorkListGrid();
 		queryResultGrid.setWidthFull();
@@ -404,7 +393,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 				(ComponentEventListener<ItemClickEvent<Attributes>>) event -> logic.itemSelected(event.getItem()));
 	}
 
-	@SuppressWarnings("serial")
 	private void bindFields() {
 		binderForWorkListQuery.forField(callingAetFld)
 			.asRequired("Ce champ est obligatoire")

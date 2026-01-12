@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.karnak.backend.model.dicom.WadoNode;
 import org.karnak.backend.service.thread.WadoResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,15 +40,22 @@ public class WadoService {
 	}
 
 	private List<Future<String>> createThreadsResult(List<WadoNode> nodes) throws InterruptedException {
-		ExecutorService executorService = Executors.newFixedThreadPool(nodes.size());
-
-		List<WadoResponse> threads = new ArrayList<>();
-
-		for (WadoNode node : nodes) {
-			WadoResponse checkWadoThread = new WadoResponse(node);
-			threads.add(checkWadoThread);
+		if (nodes == null || nodes.isEmpty()) {
+			throw new IllegalArgumentException("The nodes list cannot be null or empty");
 		}
-		return executorService.invokeAll(threads);
+
+		int poolSize = Math.min(nodes.size(), Runtime.getRuntime().availableProcessors());
+
+		try (ExecutorService executorService = Executors.newFixedThreadPool(poolSize)) {
+			List<WadoResponse> tasks = new ArrayList<>();
+			for (WadoNode node : nodes) {
+				if (node == null || node.getUrl() == null) {
+					throw new IllegalArgumentException("Invalid WadoNode detected");
+				}
+				tasks.add(new WadoResponse(node));
+			}
+			return executorService.invokeAll(tasks, 30, TimeUnit.SECONDS);
+		}
 	}
 
 }

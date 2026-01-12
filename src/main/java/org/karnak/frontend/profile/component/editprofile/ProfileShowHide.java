@@ -46,7 +46,7 @@ public class ProfileShowHide extends Div {
 	}
 
 	private void setTextButtonShowHide() {
-		btnShowHide.setText(show.booleanValue() ? textHide : textShow);
+		btnShowHide.setText(show ? textHide : textShow);
 	}
 
 	public void setView() {

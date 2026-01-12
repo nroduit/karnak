@@ -15,6 +15,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.karnak.frontend.forwardnode.edit.source.component.GridSourceNode;
@@ -23,10 +24,11 @@ import org.karnak.frontend.util.UIS;
 /**
  * Source View
  */
-@SuppressWarnings("serial")
+
 public class SourceView extends VerticalLayout {
 
 	// Source Logic
+	@Getter
 	private final SourceLogic sourceLogic;
 
 	private final ForwardNodeLogic forwardNodeLogic;
@@ -36,8 +38,10 @@ public class SourceView extends VerticalLayout {
 
 	private TextField filter;
 
+	@Getter
 	private Button newSourceNode;
 
+	@Getter
 	private GridSourceNode gridSourceNode;
 
 	private static final String LABEL_NEW_SOURCE_NODE = "Source";
@@ -91,14 +95,6 @@ public class SourceView extends VerticalLayout {
 		newSourceNode.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 
-	public Button getNewSourceNode() {
-		return newSourceNode;
-	}
-
-	public GridSourceNode getGridSourceNode() {
-		return gridSourceNode;
-	}
-
 	public void loadForwardNode(ForwardNodeEntity forwardNodeEntity) {
 		ForwardNodeEntity forwardNodeEntityReload = null;
 		if (forwardNodeEntity != null) {
@@ -108,10 +104,6 @@ public class SourceView extends VerticalLayout {
 		sourceLogic.loadForwardNode(forwardNodeEntityReload);
 		gridSourceNode.setItems(sourceLogic);
 		setEnabled(forwardNodeEntity != null);
-	}
-
-	public SourceLogic getSourceLogic() {
-		return sourceLogic;
 	}
 
 }

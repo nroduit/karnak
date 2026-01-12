@@ -16,6 +16,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
 
 public class ProfileMetadata extends VerticalLayout {
 
@@ -27,20 +28,15 @@ public class ProfileMetadata extends VerticalLayout {
 
 	private final Button editButton = new Button(new Icon(VaadinIcon.EDIT));
 
+	@Getter
 	private final Button validateEditButton = new Button(new Icon(VaadinIcon.CHECK));
 
 	private final Button disabledEditButton = new Button(new Icon(VaadinIcon.CLOSE));
 
 	private final String title;
 
+	@Getter
 	private String value;
-
-	public ProfileMetadata() {
-		this.title = "";
-		this.value = "";
-		this.titleDiv.setText("");
-		this.valueDiv.setText("");
-	}
 
 	public ProfileMetadata(String title, String value, Boolean profileByDefault) {
 		this.title = title;
@@ -51,7 +47,7 @@ public class ProfileMetadata extends VerticalLayout {
 		setElements();
 		addEvents();
 
-		if (!profileByDefault.booleanValue()) {
+		if (!profileByDefault) {
 			titleDiv.add(editButton);
 		}
 
@@ -123,14 +119,6 @@ public class ProfileMetadata extends VerticalLayout {
 		value = valueField.getValue();
 		valueDiv.removeAll();
 		setValueText();
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public Button getValidateEditButton() {
-		return validateEditButton;
 	}
 
 }

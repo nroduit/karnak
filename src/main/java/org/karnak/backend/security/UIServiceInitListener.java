@@ -13,6 +13,10 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.karnak.backend.util.SecurityUtil;
 import org.karnak.frontend.authentication.NotAuthorizedScreen;
 import org.karnak.frontend.dicom.DicomMainView;
@@ -23,11 +27,6 @@ import org.karnak.frontend.profile.ProfileView;
 import org.karnak.frontend.project.ProjectView;
 import org.karnak.frontend.pseudonym.mapping.PseudonymMappingView;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Component
 public class UIServiceInitListener implements VaadinServiceInitListener {

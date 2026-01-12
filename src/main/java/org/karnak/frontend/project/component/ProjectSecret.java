@@ -24,13 +24,13 @@ import org.karnak.frontend.component.WarningConfirmDialog;
 
 public class ProjectSecret extends Div {
 
-	private static final String WARNING_TEXT = "If you change the project secret, the integrity of the DICOM will be compromise";
+	private static final String WARNING_TEXT = "If you change the project secret, the consistency of previously de-identified DICOM files cannot be guaranteed anymore.";
 
 	private static final String REFER_LINK_TEXT = "For more details on the use of the project secret, please refer to the following link";
 
 	private static final Anchor REFER_LINK = new Anchor(
-			"https://osirix-foundation.github.io/karnak-documentation/docs/deidentification/rules#action-u-generate-a-new-uid",
-			"How KARNAK does ?");
+			"https://osirix-foundation.github.io/karnak-documentation/en/userguide/projects/index.html#4-project-secret",
+			"Project Secret Documentation");
 
 	private final Div messageWarningLayout = new Div();
 

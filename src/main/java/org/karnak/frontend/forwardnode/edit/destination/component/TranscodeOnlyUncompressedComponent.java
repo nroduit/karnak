@@ -12,11 +12,13 @@ package org.karnak.frontend.forwardnode.edit.destination.component;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 
 /**
  * Create a transfer syntax component
  */
+@Getter
 public class TranscodeOnlyUncompressedComponent extends VerticalLayout {
 
 	private Checkbox transcodeOnlyUncompressedCheckBox;
@@ -55,10 +57,6 @@ public class TranscodeOnlyUncompressedComponent extends VerticalLayout {
 	public void init(Binder<DestinationEntity> binder) {
 		binder.forField(transcodeOnlyUncompressedCheckBox)
 			.bind(DestinationEntity::isTranscodeOnlyUncompressed, DestinationEntity::setTranscodeOnlyUncompressed);
-	}
-
-	public Checkbox getTranscodeOnlyUncompressedCheckBox() {
-		return transcodeOnlyUncompressedCheckBox;
 	}
 
 }

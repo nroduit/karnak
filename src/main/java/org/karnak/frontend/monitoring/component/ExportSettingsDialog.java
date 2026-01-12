@@ -20,6 +20,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.frontend.util.NotificationUtil;
 
 /**
@@ -33,6 +35,8 @@ public class ExportSettingsDialog extends Dialog {
 	private TextField quoteCharacterTextField;
 
 	// Export setting model
+	@Setter
+	@Getter
 	private ExportSettings exportSettings;
 
 	// Binder
@@ -133,14 +137,6 @@ public class ExportSettingsDialog extends Dialog {
 		// Final layout
 		VerticalLayout dialogLayout = new VerticalLayout(titleLayout, fieldsLayout, buttonLayout);
 		add(dialogLayout);
-	}
-
-	public ExportSettings getExportSettings() {
-		return exportSettings;
-	}
-
-	public void setExportSettings(ExportSettings exportSettings) {
-		this.exportSettings = exportSettings;
 	}
 
 }

@@ -10,8 +10,11 @@
 package org.karnak.backend.config;
 
 import jakarta.annotation.PostConstruct;
+import java.io.InputStream;
+import java.net.URL;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.karnak.backend.cache.ExternalIDCache;
 import org.karnak.backend.cache.PatientClient;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
@@ -20,6 +23,7 @@ import org.karnak.backend.model.standard.StandardDICOM;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.karnak.backend.service.profilepipe.ProfilePipeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,9 +36,6 @@ import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-import java.io.InputStream;
-import java.net.URL;
-
 @Configuration
 @EnableConfigurationProperties
 @ConfigurationProperties
@@ -44,27 +45,35 @@ import java.net.URL;
 
 public class AppConfig {
 
+	@Getter
 	private static AppConfig instance;
 
+	@Getter
+	@Setter
 	private String environment;
 
+	@Getter
+	@Setter
 	private String name;
 
-	private String karnakadmin;
+	@Setter
+	private String karnakAdmin;
 
-	private String karnakpassword;
+	@Setter
+	private String karnakPassword;
 
 	private final ProfileRepo profileRepo;
 
 	private final ProfilePipeService profilePipeService;
 
-	private final ExternalIDCache externalIDCache;
+	@Getter
+	private final PatientClient externalIDCache;
 
 	// TODO TELIMA-289: cache for pseudo service
 
 	@Autowired
-	public AppConfig(final ProfileRepo profileRepo, final ProfilePipeService profilePipeService,
-			final ExternalIDCache externalIDCache) {
+	public AppConfig(ProfileRepo profileRepo, ProfilePipeService profilePipeService,
+			@Qualifier("patientClient") PatientClient externalIDCache) {
 		this.profileRepo = profileRepo;
 		this.profilePipeService = profilePipeService;
 		this.externalIDCache = externalIDCache;
@@ -76,50 +85,17 @@ public class AppConfig {
 		instance = this;
 	}
 
-	public static AppConfig getInstance() {
-		return instance;
+	public String getKarnakAdmin() {
+		return karnakAdmin != null ? karnakAdmin : "admin";
 	}
 
-	public String getEnvironment() {
-		return environment;
-	}
-
-	public void setEnvironment(String environment) {
-		this.environment = environment;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getKarnakadmin() {
-		return karnakadmin != null ? karnakadmin : "admin";
-	}
-
-	public void setKarnakadmin(String karnakadmin) {
-		this.karnakadmin = karnakadmin;
-	}
-
-	public String getKarnakpassword() {
-		return karnakpassword != null ? karnakpassword : "admin";
-	}
-
-	public void setKarnakpassword(String karnakpassword) {
-		this.karnakpassword = karnakpassword;
+	public String getKarnakPassword() {
+		return karnakPassword != null ? karnakPassword : "karnak";
 	}
 
 	@Bean("ConfidentialityProfiles")
 	public ConfidentialityProfiles getConfidentialityProfile() {
 		return new ConfidentialityProfiles();
-	}
-
-	@Bean("ExternalIDPatient")
-	public PatientClient getExternalIDCache() {
-		return externalIDCache;
 	}
 
 	// https://stackoverflow.com/questions/27405713/running-code-after-spring-boot-starts

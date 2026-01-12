@@ -13,6 +13,8 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.vaadin.flow.component.notification.Notification.Position;
 import java.io.IOException;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.backend.service.TransferMonitoringService;
@@ -33,6 +35,8 @@ import org.springframework.stereotype.Service;
 public class MonitoringLogic {
 
 	// View
+	@Setter
+	@Getter
 	private MonitoringView monitoringView;
 
 	// Services
@@ -42,14 +46,6 @@ public class MonitoringLogic {
 	public MonitoringLogic(final TransferMonitoringService transferMonitoringService) {
 		this.transferMonitoringService = transferMonitoringService;
 		this.monitoringView = null;
-	}
-
-	public MonitoringView getMonitoringView() {
-		return monitoringView;
-	}
-
-	public void setMonitoringView(MonitoringView monitoringView) {
-		this.monitoringView = monitoringView;
 	}
 
 	/**

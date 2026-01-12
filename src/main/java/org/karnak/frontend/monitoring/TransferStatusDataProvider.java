@@ -27,7 +27,7 @@ public class TransferStatusDataProvider<T> extends FilterablePageableDataProvide
 	private final MonitoringLogic monitoringLogic;
 
 	// Default sort order
-	private List<QuerySortOrder> defaultSortOrders;
+	private final List<QuerySortOrder> defaultSortOrders;
 
 	@Autowired
 	public TransferStatusDataProvider(MonitoringLogic monitoringLogic) {

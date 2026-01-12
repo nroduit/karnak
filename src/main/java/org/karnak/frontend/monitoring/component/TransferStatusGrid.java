@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Locale;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.backend.enums.TransferStatusType;
 import org.karnak.backend.util.DateFormat;
@@ -44,6 +46,8 @@ public class TransferStatusGrid extends PaginatedGrid<TransferStatusEntity, Tran
 	public static final String TOOLTIP_FORMAT_HH_MM = "Format: HH:MM";
 
 	// Filter grid rows
+	@Setter
+	@Getter
 	private TransferStatusFilter transferStatusFilter;
 
 	// DataProvider
@@ -407,7 +411,7 @@ public class TransferStatusGrid extends PaginatedGrid<TransferStatusEntity, Tran
 	private ComponentRenderer<Span, TransferStatusEntity> createColumnStatusComponentRenderer() {
 		return new ComponentRenderer<>(Span::new, (span, transferStatusEntity) -> {
 			StringBuilder pill = new StringBuilder();
-			pill.append("badge primary pill ");
+			pill.append("badge primary ");
 			if (transferStatusEntity.isSent()) {
 				pill.append("success");
 			}
@@ -420,14 +424,6 @@ public class TransferStatusGrid extends PaginatedGrid<TransferStatusEntity, Tran
 			span.getElement().getThemeList().add(pill.toString());
 			span.setText(transferStatusEntity.isSent() ? "Sent" : transferStatusEntity.getReason());
 		});
-	}
-
-	public TransferStatusFilter getTransferStatusFilter() {
-		return transferStatusFilter;
-	}
-
-	public void setTransferStatusFilter(TransferStatusFilter transferStatusFilter) {
-		this.transferStatusFilter = transferStatusFilter;
 	}
 
 }

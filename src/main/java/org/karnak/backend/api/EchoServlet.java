@@ -40,11 +40,15 @@ public class EchoServlet extends HttpServlet {
 	@Serial
 	private static final long serialVersionUID = -8349040600894140520L;
 
+	private final transient GatewaySetUpService globalConfig;
+
 	@Autowired
-	private GatewaySetUpService globalConfig;
+	public EchoServlet(GatewaySetUpService globalConfig) {
+		this.globalConfig = globalConfig;
+	}
 
 	@Override
-	public final void init() throws ServletException {
+	public void init() throws ServletException {
 		if (globalConfig == null) {
 			log.error("EchoServlet service cannot start: GatewaySetUpService is missing.");
 			destroy();

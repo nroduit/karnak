@@ -17,14 +17,9 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHeaders;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-
-// Link used:
-// https://www.baeldung.com/httpclient-guide
-// https://www.baeldung.com/httpclient4
 
 @Service
 @Slf4j
@@ -34,10 +29,11 @@ public class KheopsApi {
 
 	private static final String X_AUTHORIZATION_SOURCE = "X-Authorization-Source";
 
-	@Autowired
 	public KheopsApi() {
-		httpClient = HttpClient.newBuilder() // one instance, reuse
-			.version(HttpClient.Version.HTTP_1_1)
+		httpClient = HttpClient.newBuilder()
+			.version(HttpClient.Version.HTTP_1_1) // use HTTP 1.1 because an issue with
+													// HTTP 2 in Kheops (not image sent
+													// after 1000)
 			.build();
 	}
 

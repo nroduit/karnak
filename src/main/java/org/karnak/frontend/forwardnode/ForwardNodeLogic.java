@@ -13,6 +13,8 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import java.util.ArrayList;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.service.ForwardNodeAPIService;
@@ -31,7 +33,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 
-	// View
+	@Setter
+	@Getter
 	private ForwardNodeView forwardNodeView;
 
 	// Services
@@ -39,12 +42,16 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 
 	private final transient ForwardNodeService forwardNodeService;
 
+	@Getter
 	private final transient ProjectService projectService;
 
+	@Getter
 	private final SOPClassUIDService sopClassUIDService;
 
+	@Getter
 	private final SourceLogic sourceLogic;
 
+	@Getter
 	private final DestinationLogic destinationLogic;
 
 	/**
@@ -155,14 +162,6 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	// setFragmentParameter("");
 	// }
 
-	public ForwardNodeView getForwardNodeView() {
-		return forwardNodeView;
-	}
-
-	public void setForwardNodeView(ForwardNodeView forwardNodeView) {
-		this.forwardNodeView = forwardNodeView;
-	}
-
 	/**
 	 * Retrieve forward node depending on its id
 	 * @param idForwardNode id of the forward node to retrieve
@@ -212,22 +211,6 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 
 	public void updateForwardNode(ForwardNodeEntity forwardNodeEntity) {
 		forwardNodeAPIService.updateForwardNode(forwardNodeEntity);
-	}
-
-	public ProjectService getProjectService() {
-		return projectService;
-	}
-
-	public SOPClassUIDService getSopClassUIDService() {
-		return sopClassUIDService;
-	}
-
-	public SourceLogic getSourceLogic() {
-		return sourceLogic;
-	}
-
-	public DestinationLogic getDestinationLogic() {
-		return destinationLogic;
 	}
 
 }

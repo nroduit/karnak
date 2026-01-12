@@ -14,7 +14,6 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import java.util.Collection;
-import java.util.List;
 import org.karnak.backend.cache.Patient;
 
 public class DuplicateDialog extends Dialog {
@@ -25,7 +24,7 @@ public class DuplicateDialog extends Dialog {
 
 	public DuplicateDialog(String title, String text, Collection<Patient> duplicateList, String buttonText) {
 		removeAll();
-		this.duplicateList = (List<Patient>) (List<?>) duplicateList;
+		this.duplicateList = duplicateList;
 
 		Div divTitle = new Div();
 		divTitle.setText(title);

@@ -26,8 +26,6 @@ import org.karnak.frontend.dicom.Util;
 
 public class MonitorView extends AbstractView {
 
-	private static final long serialVersionUID = 1L;
-
 	// CONTROLLER
 	private final MonitorLogic logic = new MonitorLogic(this);
 

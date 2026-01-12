@@ -26,11 +26,10 @@ import java.time.ZoneId;
 import java.util.Objects;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
-import org.dcm4che3.img.util.DateTimeUtils;
+import org.dcm4che3.img.util.DicomObjectUtil;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.karnak.backend.util.DateFormat;
-import org.weasis.dicom.util.DateUtil;
 
 @Entity(name = "TransferStatus")
 @Table(name = "transfer_status")
@@ -150,19 +149,15 @@ public class TransferStatusEntity implements Serializable {
 		return new TransferStatusEntity(forwardNodeId, destinationId, LocalDateTime.now(ZoneId.of("CET")), sent, error,
 				reason, attributesOriginal.getString(Tag.PatientID), attributesOriginal.getString(Tag.AccessionNumber),
 				attributesOriginal.getString(Tag.StudyDescription),
-				DateTimeUtils.dateTime(DateUtil.getDicomDate(attributesOriginal.getString(Tag.StudyDate)),
-						DateUtil.getDicomTime(attributesOriginal.getString(Tag.StudyTime))),
+				DicomObjectUtil.dateTime(attributesOriginal, Tag.StudyDate, Tag.StudyTime),
 				attributesOriginal.getString(Tag.StudyInstanceUID), attributesOriginal.getString(Tag.SeriesDescription),
-				DateTimeUtils.dateTime(DateUtil.getDicomDate(attributesOriginal.getString(Tag.SeriesDate)),
-						DateUtil.getDicomTime(attributesOriginal.getString(Tag.SeriesTime))),
+				DicomObjectUtil.dateTime(attributesOriginal, Tag.SeriesDate, Tag.SeriesTime),
 				attributesOriginal.getString(Tag.SeriesInstanceUID), attributesOriginal.getString(Tag.SOPInstanceUID),
 				attributesToSend.getString(Tag.PatientID), attributesToSend.getString(Tag.AccessionNumber),
 				attributesToSend.getString(Tag.StudyDescription),
-				DateTimeUtils.dateTime(DateUtil.getDicomDate(attributesToSend.getString(Tag.StudyDate)),
-						DateUtil.getDicomTime(attributesToSend.getString(Tag.StudyTime))),
+				DicomObjectUtil.dateTime(attributesToSend, Tag.StudyDate, Tag.StudyTime),
 				attributesToSend.getString(Tag.StudyInstanceUID), attributesToSend.getString(Tag.SeriesDescription),
-				DateTimeUtils.dateTime(DateUtil.getDicomDate(attributesToSend.getString(Tag.SeriesDate)),
-						DateUtil.getDicomTime(attributesToSend.getString(Tag.SeriesTime))),
+				DicomObjectUtil.dateTime(attributesToSend, Tag.SeriesDate, Tag.SeriesTime),
 				attributesToSend.getString(Tag.SeriesInstanceUID), attributesToSend.getString(Tag.SOPInstanceUID),
 				modality, sopClassUid);
 	}

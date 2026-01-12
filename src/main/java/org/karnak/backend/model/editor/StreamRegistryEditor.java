@@ -9,9 +9,7 @@
  */
 package org.karnak.backend.model.editor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,7 +18,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
-import org.karnak.backend.dicom.DateTimeUtils;
+import org.dcm4che3.img.util.DicomObjectUtil;
 import org.karnak.backend.model.Series;
 import org.karnak.backend.model.SopInstance;
 import org.karnak.backend.model.Study;
@@ -28,7 +26,6 @@ import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
 import org.weasis.dicom.param.DicomProgress;
-import org.weasis.dicom.util.DateUtil;
 
 @Slf4j
 public class StreamRegistryEditor implements AttributeEditor {
@@ -38,12 +35,6 @@ public class StreamRegistryEditor implements AttributeEditor {
 	private boolean enable = false;
 
 	public StreamRegistryEditor() {
-	}
-
-	private static LocalDateTime getDateTime(Attributes dicom, int date, int time) {
-		LocalDate d = DateUtil.getDicomDate(dicom.getString(date));
-		LocalTime t = DateUtil.getDicomTime(dicom.getString(time));
-		return DateTimeUtils.dateTime(d, t);
 	}
 
 	@Override
@@ -56,7 +47,8 @@ public class StreamRegistryEditor implements AttributeEditor {
 				study.setOtherPatientIDs(dcm.getStrings(Tag.OtherPatientIDs));
 				study.setAccessionNumber(dcm.getString(Tag.AccessionNumber));
 				study.setStudyDescription(dcm.getString(Tag.StudyDescription, ""));
-				study.setStudyDate(getDateTime(dcm, Tag.StudyDate, Tag.StudyTime));
+				LocalDateTime dateTime = DicomObjectUtil.dateTime(dcm, Tag.StudyDate, Tag.StudyTime);
+				study.setStudyDate(dateTime);
 				addStudy(study);
 			}
 
@@ -65,7 +57,7 @@ public class StreamRegistryEditor implements AttributeEditor {
 			if (series == null) {
 				series = new Series(seriesUID);
 				series.setSeriesDescription(dcm.getString(Tag.SeriesDescription, study.getStudyDescription()));
-				LocalDateTime dateTime = getDateTime(dcm, Tag.SeriesDate, Tag.SeriesTime);
+				LocalDateTime dateTime = DicomObjectUtil.dateTime(dcm, Tag.SeriesDate, Tag.SeriesTime);
 				series.setSeriesDate(dateTime == null ? study.getStudyDate() : dateTime);
 				study.addSeries(series);
 			}

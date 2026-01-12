@@ -11,6 +11,9 @@ package org.karnak.backend.service.gateway;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.io.File;
+import java.net.URL;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
@@ -24,9 +27,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.weasis.core.util.FileUtil;
 import org.weasis.core.util.StringUtil;
-
-import java.io.File;
-import java.util.List;
 
 @Service
 @Slf4j

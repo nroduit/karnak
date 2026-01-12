@@ -10,10 +10,14 @@
 package org.karnak.frontend.monitoring.component;
 
 import com.opencsv.CSVWriter;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Model used to collect the export settings of the user
  */
+@Setter
+@Getter
 public class ExportSettings {
 
 	private String delimiter;
@@ -28,22 +32,6 @@ public class ExportSettings {
 	public ExportSettings() {
 		this.delimiter = String.valueOf(DEFAULT_CSV_DELIMITER);
 		this.quoteCharacter = String.valueOf(CSVWriter.DEFAULT_QUOTE_CHARACTER);
-	}
-
-	public String getDelimiter() {
-		return delimiter;
-	}
-
-	public void setDelimiter(String delimiter) {
-		this.delimiter = delimiter;
-	}
-
-	public String getQuoteCharacter() {
-		return quoteCharacter;
-	}
-
-	public void setQuoteCharacter(String quoteCharacter) {
-		this.quoteCharacter = quoteCharacter;
 	}
 
 }
