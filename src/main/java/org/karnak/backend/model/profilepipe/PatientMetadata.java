@@ -11,18 +11,16 @@ package org.karnak.backend.model.profilepipe;
 
 import java.time.LocalDate;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
 import org.karnak.backend.cache.Patient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.weasis.core.util.StringUtil;
 
 @Getter
+@Slf4j
 public class PatientMetadata {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(PatientMetadata.class);
 
 	private static final String PATIENT_SEX_OTHER = "O";
 
@@ -67,7 +65,7 @@ public class PatientMetadata {
 			return DateTimeUtils.formatDA(DateTimeUtils.parseDA(rawPatientBirthDate));
 		}
 		catch (Exception e) {
-			LOGGER.error("Error parsing patient birth date: {}", rawPatientBirthDate);
+			log.error("Error parsing patient birth date: {}", rawPatientBirthDate);
 			return "";
 		}
 	}
