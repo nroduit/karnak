@@ -109,7 +109,7 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <image>
-            <runImage>${docker-registry}/vna-docker-base-image:1.0.0</runImage>
+            <runImage>${docker-registry}/vna-docker-base-image:4.12.0</runImage>
           </image>
         </configuration>
       </plugin>
