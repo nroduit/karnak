@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -8,9 +8,6 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  */
 package org.karnak.frontend.authentication;
-
-import static org.karnak.frontend.authentication.LoginScreen.KARNAK_TITLE;
-import static org.karnak.frontend.authentication.LoginScreen.LOGO_SIZE;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -23,6 +20,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.karnak.backend.util.SecurityUtil;
+import static org.karnak.frontend.authentication.LoginScreen.KARNAK_TITLE;
+import static org.karnak.frontend.authentication.LoginScreen.LOGO_SIZE;
 import org.karnak.frontend.image.LogoKarnak;
 
 /**

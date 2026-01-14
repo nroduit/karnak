@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Karnak Team and other contributors.
+ * Copyright (c) 2025-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -9,10 +9,9 @@
  */
 package org.karnak.backend.standard;
 
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.model.standard.AttributeDetail;

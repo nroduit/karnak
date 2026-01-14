@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -8,9 +8,6 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  */
 package org.karnak.frontend.forwardnode.edit;
-
-import static org.karnak.backend.enums.PseudonymType.EXTID_API;
-import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -29,6 +26,8 @@ import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.NodeEventType;
+import static org.karnak.backend.enums.PseudonymType.EXTID_API;
+import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;

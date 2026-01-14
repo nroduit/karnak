@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Karnak Team and other contributors.
+ * Copyright (c) 2022-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -9,13 +9,10 @@
  */
 package org.karnak.backend.service;
 
+import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.TransferStatusEntity;
@@ -23,7 +20,9 @@ import org.karnak.backend.data.repo.TransferStatusRepo;
 import org.karnak.backend.data.repo.specification.TransferStatusSpecification;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.when;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
