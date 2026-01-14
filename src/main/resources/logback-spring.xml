@@ -15,5 +15,15 @@
         <appender-ref ref="logstash"/>
       </springProfile>
     </logger>
+    <logger name="org.weasis.dicom.web.DicomStowRS" level="warn">
+      <springProfile name="docker">
+        <appender-ref ref="logstash"/>
+      </springProfile>
+    </logger>
+    <logger name="org.weasis.dicom.util.StoreFromStreamSCU" level="warn">
+      <springProfile name="docker">
+        <appender-ref ref="logstash"/>
+      </springProfile>
+    </logger>
   </springProfile>
 </configuration>

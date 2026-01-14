@@ -10,13 +10,21 @@
 package org.karnak.backend.model.notification;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Set;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.karnak.backend.constant.Notification;
 
 /**
  * Model used for serie summary notification
  */
+@Setter
+@Getter
+@EqualsAndHashCode
+@ToString
 public class SerieSummaryNotification {
 
 	private String serieUid;
@@ -36,101 +44,6 @@ public class SerieSummaryNotification {
 	private Set<String> transferredModalities;
 
 	private Set<String> transferredSopClassUid;
-
-	public String getSerieUid() {
-		return serieUid;
-	}
-
-	public void setSerieUid(String serieUid) {
-		this.serieUid = serieUid;
-	}
-
-	public String getSerieDescription() {
-		return serieDescription;
-	}
-
-	public void setSerieDescription(String serieDescription) {
-		this.serieDescription = serieDescription;
-	}
-
-	public LocalDateTime getSerieDate() {
-		return serieDate;
-	}
-
-	public void setSerieDate(LocalDateTime serieDate) {
-		this.serieDate = serieDate;
-	}
-
-	public long getNbTransferSent() {
-		return nbTransferSent;
-	}
-
-	public void setNbTransferSent(long nbTransferSent) {
-		this.nbTransferSent = nbTransferSent;
-	}
-
-	public long getNbTransferNotSent() {
-		return nbTransferNotSent;
-	}
-
-	public void setNbTransferNotSent(long nbTransferNotSent) {
-		this.nbTransferNotSent = nbTransferNotSent;
-	}
-
-	public boolean isContainsError() {
-		return containsError;
-	}
-
-	public void setContainsError(boolean containsError) {
-		this.containsError = containsError;
-	}
-
-	public Set<String> getUnTransferedReasons() {
-		return unTransferedReasons;
-	}
-
-	public void setUnTransferedReasons(Set<String> unTransferedReasons) {
-		this.unTransferedReasons = unTransferedReasons;
-	}
-
-	public Set<String> getTransferredModalities() {
-		return transferredModalities;
-	}
-
-	public void setTransferredModalities(Set<String> transferredModalities) {
-		this.transferredModalities = transferredModalities;
-	}
-
-	public Set<String> getTransferredSopClassUid() {
-		return transferredSopClassUid;
-	}
-
-	public void setTransferredSopClassUid(Set<String> transferredSopClassUid) {
-		this.transferredSopClassUid = transferredSopClassUid;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		SerieSummaryNotification that = (SerieSummaryNotification) o;
-		return nbTransferSent == that.nbTransferSent && nbTransferNotSent == that.nbTransferNotSent
-				&& Objects.equals(serieUid, that.serieUid) && Objects.equals(serieDescription, that.serieDescription)
-				&& Objects.equals(serieDate, that.serieDate)
-				&& Objects.equals(unTransferedReasons, that.unTransferedReasons)
-				&& Objects.equals(transferredModalities, that.transferredModalities)
-				&& Objects.equals(transferredSopClassUid, that.transferredSopClassUid);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(serieUid, serieDescription, serieDate, nbTransferSent, nbTransferNotSent,
-				unTransferedReasons, transferredModalities, transferredSopClassUid);
-	}
 
 	public String toStringUnTransferredReasons() {
 		return String.join(Notification.COMMA_SEPARATOR, unTransferedReasons);

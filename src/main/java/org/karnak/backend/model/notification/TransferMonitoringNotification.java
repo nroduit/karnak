@@ -9,13 +9,19 @@
  */
 package org.karnak.backend.model.notification;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Model used to build transfer monitoring notification
  */
+@Setter
+@Getter
+@EqualsAndHashCode
 public class TransferMonitoringNotification {
 
 	private String subject;
@@ -40,115 +46,6 @@ public class TransferMonitoringNotification {
 
 	private List<SerieSummaryNotification> serieSummaryNotifications;
 
-	public String getSubject() {
-		return subject;
-	}
-
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
-
-	public String getFrom() {
-		return from;
-	}
-
-	public void setFrom(String from) {
-		this.from = from;
-	}
-
-	public String getTo() {
-		return to;
-	}
-
-	public void setTo(String to) {
-		this.to = to;
-	}
-
-	public String getPatientId() {
-		return patientId;
-	}
-
-	public void setPatientId(String patientId) {
-		this.patientId = patientId;
-	}
-
-	public String getStudyUid() {
-		return studyUid;
-	}
-
-	public void setStudyUid(String studyUid) {
-		this.studyUid = studyUid;
-	}
-
-	public String getAccessionNumber() {
-		return accessionNumber;
-	}
-
-	public void setAccessionNumber(String accessionNumber) {
-		this.accessionNumber = accessionNumber;
-	}
-
-	public String getStudyDescription() {
-		return studyDescription;
-	}
-
-	public void setStudyDescription(String studyDescription) {
-		this.studyDescription = studyDescription;
-	}
-
-	public LocalDateTime getStudyDate() {
-		return studyDate;
-	}
-
-	public void setStudyDate(LocalDateTime studyDate) {
-		this.studyDate = studyDate;
-	}
-
-	public String getSource() {
-		return source;
-	}
-
-	public void setSource(String source) {
-		this.source = source;
-	}
-
-	public String getDestination() {
-		return destination;
-	}
-
-	public void setDestination(String destination) {
-		this.destination = destination;
-	}
-
-	public List<SerieSummaryNotification> getSerieSummaryNotifications() {
-		return serieSummaryNotifications;
-	}
-
-	public void setSerieSummaryNotifications(List<SerieSummaryNotification> serieSummaryNotifications) {
-		this.serieSummaryNotifications = serieSummaryNotifications;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		TransferMonitoringNotification that = (TransferMonitoringNotification) o;
-		return Objects.equals(subject, that.subject) && Objects.equals(from, that.from) && Objects.equals(to, that.to)
-				&& Objects.equals(patientId, that.patientId) && Objects.equals(studyUid, that.studyUid)
-				&& Objects.equals(accessionNumber, that.accessionNumber)
-				&& Objects.equals(studyDescription, that.studyDescription) && Objects.equals(studyDate, that.studyDate)
-				&& Objects.equals(source, that.source) && Objects.equals(destination, that.destination)
-				&& Objects.equals(serieSummaryNotifications, that.serieSummaryNotifications);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(subject, from, to, patientId, studyUid, accessionNumber, studyDescription, studyDate,
-				source, destination, serieSummaryNotifications);
-	}
+	private boolean emailSendingEnabled;
 
 }
