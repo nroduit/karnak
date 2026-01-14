@@ -94,49 +94,49 @@ public class SecurityConfiguration {
 					"/offline.html", "/sw-runtime-resources-precache.js");
 	}
 
-    /**
-     * Retrieve roles from access token
-     * @param jwt access token
-     * @return Roles found
-     */
-    private Set<SimpleGrantedAuthority> retrieveRolesFromAccessToken(Jwt jwt) {
-        // Build roles
-        return ((List<String>) ((Map<String, Object>) ((Map<String, Object>) jwt.getClaims().get(Token.RESOURCE_ACCESS))
-                .get(Token.RESOURCE_NAME)).get(Token.ROLES)).stream()
-                .map(roleName -> Token.PREFIX_ROLE + roleName)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toSet());
-    }
+	/**
+	 * Retrieve roles from access token
+	 * @param jwt access token
+	 * @return Roles found
+	 */
+	private Set<SimpleGrantedAuthority> retrieveRolesFromAccessToken(Jwt jwt) {
+		// Build roles
+		return ((List<String>) ((Map<String, Object>) ((Map<String, Object>) jwt.getClaims().get(Token.RESOURCE_ACCESS))
+			.get(Token.RESOURCE_NAME)).get(Token.ROLES)).stream()
+			.map(roleName -> Token.PREFIX_ROLE + roleName)
+			.map(SimpleGrantedAuthority::new)
+			.collect(Collectors.toSet());
+	}
 
-    /**
-     * Decode access token
-     * @param accessToken Access token to decode
-     * @return access token decoded
-     */
-    private Jwt decodeAccessToken(OAuth2AccessToken accessToken) {
-        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build().decode(accessToken.getTokenValue());
-    }
+	/**
+	 * Decode access token
+	 * @param accessToken Access token to decode
+	 * @return access token decoded
+	 */
+	private Jwt decodeAccessToken(OAuth2AccessToken accessToken) {
+		return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build().decode(accessToken.getTokenValue());
+	}
 
-    /**
-     * Extract roles from access token and set authorities in the authenticated user
-     * @return OAuth2UserService
-     */
-    private OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
-        final OidcUserService oidcUserService = new OidcUserService();
-        return userRequest -> {
-            // Get the user from the request
-            OidcUser oidcUser = oidcUserService.loadUser(userRequest);
+	/**
+	 * Extract roles from access token and set authorities in the authenticated user
+	 * @return OAuth2UserService
+	 */
+	private OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
+		final OidcUserService oidcUserService = new OidcUserService();
+		return userRequest -> {
+			// Get the user from the request
+			OidcUser oidcUser = oidcUserService.loadUser(userRequest);
 
-            // Decode access token
-            Jwt jwt = decodeAccessToken(userRequest.getAccessToken());
+			// Decode access token
+			Jwt jwt = decodeAccessToken(userRequest.getAccessToken());
 
-            // Retrieve roles from access token
-            Set<SimpleGrantedAuthority> grantedAuthoritiesFromAccessToken = retrieveRolesFromAccessToken(jwt);
+			// Retrieve roles from access token
+			Set<SimpleGrantedAuthority> grantedAuthoritiesFromAccessToken = retrieveRolesFromAccessToken(jwt);
 
-            // Update the user with roles found
-            return new DefaultOidcUser(grantedAuthoritiesFromAccessToken, oidcUser.getIdToken(),
-                    oidcUser.getUserInfo());
-        };
-    }
+			// Update the user with roles found
+			return new DefaultOidcUser(grantedAuthoritiesFromAccessToken, oidcUser.getIdToken(),
+					oidcUser.getUserInfo());
+		};
+	}
 
 }
