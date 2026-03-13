@@ -22,7 +22,6 @@
     <root level="INFO">
       <appender-ref ref="logstash"/>
       <appender-ref ref="OpenTelemetry" />
-      <appender-ref ref="CONSOLE"/>
     </root>
   </springProfile>
 </configuration>
