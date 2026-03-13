@@ -1,3 +1,7 @@
+# - Info
+application:
+  team: imagerie
+
 #  --------------------------------------------------------
 #  Karnak Application Profiles
 #  --------------------------------------------------------
@@ -37,10 +41,8 @@ spring:
     version: '@project.version@'
   cloud:
     config:
-      discovery:
-        enabled: false
 #    Currently no cs configured in docker deploy/ vault
-#      fail-fast: true
+      fail-fast: true
       name: ${spring.application.name}
       label: ${ENVIRONMENT}
 #      uri: ${CONFIGSERVER_URI}
@@ -149,4 +151,4 @@ cache-api:
   ttl: 15
 
 mail:
-  sender: no-reply@hcuge.ch
+  sender: no-reply@hug.ch
