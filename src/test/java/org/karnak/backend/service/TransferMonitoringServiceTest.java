@@ -133,4 +133,13 @@ class TransferMonitoringServiceTest {
 		Mockito.verify(transferStatusRepoMock, Mockito.times(1)).count(Mockito.any(TransferStatusSpecification.class));
 	}
 
+	@Test
+	void shouldDeleteAllTransferStatus() {
+		// Call service
+		transferMonitoringService.deleteAllTransferStatus();
+
+		// Test result: verify deleteAll() is called exactly once on the repository
+		Mockito.verify(transferStatusRepoMock, Mockito.times(1)).deleteAll();
+	}
+
 }

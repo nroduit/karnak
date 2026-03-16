@@ -136,6 +136,13 @@ public class TransferMonitoringService {
 	}
 
 	/**
+	 * Delete all transfer status records
+	 */
+	public void deleteAllTransferStatus() {
+		transferStatusRepo.deleteAll();
+	}
+
+	/**
 	 * Build a transfer status csv file depending on filters
 	 * @param filter Filters
 	 * @param exportSettings Export settings
