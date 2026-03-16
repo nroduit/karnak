@@ -90,10 +90,16 @@ public class PatientMetadata {
 	}
 
 	public boolean compareCachedPatient(Patient patient) {
+		return compareCachedPatient(patient, false);
+	}
+
+	public boolean compareCachedPatient(Patient patient, boolean skipIssuerOfPatientId) {
 		if (patient != null) {
 			boolean samePatient = patient.getPatientId().equals(patientID);
-			samePatient = samePatient && (patient.getIssuerOfPatientId() == null
-					|| patient.getIssuerOfPatientId().equals(issuerOfPatientID));
+			if (!skipIssuerOfPatientId) {
+				samePatient = samePatient && (patient.getIssuerOfPatientId() == null
+						|| patient.getIssuerOfPatientId().equals(issuerOfPatientID));
+			}
 			return samePatient;
 		}
 		return false;
