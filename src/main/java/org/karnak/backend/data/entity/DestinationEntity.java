@@ -73,8 +73,8 @@ public class DestinationEntity implements Serializable {
 	private String issuerByDefault;
 
 	@Setter
-    @Getter
-    private boolean skipIssuerOfPatientId;
+	@Getter
+	private boolean skipIssuerOfPatientId;
 
 	private PseudonymType pseudonymType;
 
@@ -306,7 +306,7 @@ public class DestinationEntity implements Serializable {
 		this.issuerByDefault = issuerByDefault;
 	}
 
-    public boolean isFilterBySOPClasses() {
+	public boolean isFilterBySOPClasses() {
 		return filterBySOPClasses;
 	}
 
