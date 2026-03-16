@@ -9,8 +9,11 @@
  */
 package org.karnak.frontend.monitoring;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -23,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import lombok.Getter;
 import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.frontend.MainLayout;
+import org.karnak.frontend.component.WarningConfirmDialog;
 import org.karnak.frontend.monitoring.component.ExportSettingsDialog;
 import org.karnak.frontend.monitoring.component.TransferStatusGrid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +58,8 @@ public class MonitoringView extends VerticalLayout {
 	private Anchor exportAnchor;
 
 	private Button exportSettingsButton;
+	
+	private Button deleteButton;
 
 	private ExportSettingsDialog exportSettingsDialog;
 
@@ -91,14 +97,14 @@ public class MonitoringView extends VerticalLayout {
 		// Refresh button
 		refreshGridButton = new Button("Refresh", new Icon(VaadinIcon.REFRESH));
 		refreshGridButton.addClickListener(buttonClickEvent -> transferStatusDataProvider.refreshAll());
-		refreshGridButton.setWidth("33%");
+		refreshGridButton.setWidth("25%");
 
 		// Export Settings Dialog
 		exportSettingsDialog = new ExportSettingsDialog();
 
 		// Export Settings Button
 		exportSettingsButton = new Button("Export Settings", new Icon(VaadinIcon.COGS));
-		exportSettingsButton.setWidth("33%");
+		exportSettingsButton.setWidth("25%");
 		exportSettingsButton.addClickListener(buttonClickEvent -> exportSettingsDialog.open());
 
 		// Export button
@@ -106,11 +112,28 @@ public class MonitoringView extends VerticalLayout {
 		exportAnchor.setHref(DownloadHandler.fromInputStream(event -> new DownloadResponse(
 				new ByteArrayInputStream(monitoringLogic.buildCsv(exportSettingsDialog.getExportSettings())),
 				"export.csv", "text/csv", -1)));
-		exportAnchor.setWidth("33%");
+		exportAnchor.setWidth("25%");
 		Button exportButton = new Button("Export", new Icon(VaadinIcon.DOWNLOAD_ALT));
 		exportButton.setWidthFull();
 		exportAnchor.getElement().setAttribute("download", true);
 		exportAnchor.add(exportButton);
+		
+		// Delete button
+		deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
+		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteButton.setWidth("25%");
+		deleteButton.addClickListener(buttonClickEvent -> {
+			Div dialogContent = new Div();
+			dialogContent.add(new Text(
+					"You are about to delete all entries from monitoring. This action cannot be undone. Are you sure?"));
+			WarningConfirmDialog dialog = new WarningConfirmDialog("Delete all monitoring entries", dialogContent,
+					"Delete", "Cancel");
+			dialog.addConfirmationListener(componentEvent -> {
+				monitoringLogic.deleteAllTransferStatus();
+				transferStatusDataProvider.refreshAll();
+			});
+			dialog.open();
+		});
 	}
 
 	/**
@@ -118,7 +141,8 @@ public class MonitoringView extends VerticalLayout {
 	 */
 	private void addComponentsView() {
 		add(transferStatusGrid);
-		HorizontalLayout buttonLayout = new HorizontalLayout(exportSettingsButton, exportAnchor, refreshGridButton);
+		HorizontalLayout buttonLayout = new HorizontalLayout(exportSettingsButton, exportAnchor, refreshGridButton,
+				deleteButton);
 		buttonLayout.setWidthFull();
 		add(buttonLayout);
 		setSizeFull();

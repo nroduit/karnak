@@ -68,6 +68,13 @@ public class MonitoringLogic {
 	}
 
 	/**
+	 * Delete all transfer status records
+	 */
+	public void deleteAllTransferStatus() {
+		transferMonitoringService.deleteAllTransferStatus();
+	}
+
+	/**
 	 * Build monitoring export in CSV format
 	 * @param exportSettings Export settings
 	 */
