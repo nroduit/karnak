@@ -141,4 +141,17 @@
                              referencedTableName="destination" validate="true"/>
   </changeSet>
 
+  <changeSet author="karnak" id="1.4-10">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="skip_issuer_of_patient_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="skip_issuer_of_patient_id" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

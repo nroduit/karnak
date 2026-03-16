@@ -37,8 +37,14 @@ public class DeIdentificationComponent extends VerticalLayout {
 
 	private static final String LABEL_DEFAULT_ISSUER = "If this field is filled, it will be used with the Patient ID to ensure unique patient identification across different healthcare systems.";
 
+	private static final String LABEL_CHECKBOX_SKIP_ISSUER = "Does the Issuer of Patient ID of the image to de-identify should be ignored when retrieving the pseudonym in the cache ? (only for \"Pseudonym is already stored in KARNAK\")";
+
+	private static final String TOOLTIP_SKIP_ISSUER = "When checked, the Issuer of Patient ID of the image to de-identify will not be taken into account when generating the key to retrieve the pseudonym in the cache.";
+
 	// Components
 	private Checkbox deIdentificationCheckbox;
+
+	private Checkbox skipIssuerOfPatientIdCheckbox;
 
 	private NativeLabel disclaimerLabel;
 
@@ -102,9 +108,16 @@ public class DeIdentificationComponent extends VerticalLayout {
 		// Padding
 		setPadding(true);
 
+		// Group issuer text field + skip checkbox in a dedicated block
+		VerticalLayout issuerLayout = new VerticalLayout();
+		issuerLayout.setPadding(false);
+		issuerLayout.setSpacing(false);
+		issuerLayout.setWidthFull();
+		issuerLayout.add(issuerOfPatientIDByDefault, skipIssuerOfPatientIdCheckbox);
+
 		// Add components in deidentification div
 		deIdentificationDiv.add(disclaimerLabel, projectDropDown, profileLabel, pseudonymTypeSelect,
-				pseudonymDicomTagDiv, pseudonymApi, issuerOfPatientIDByDefault);
+				pseudonymDicomTagDiv, pseudonymApi, issuerLayout);
 
 		// If checkbox is checked set div visible, invisible otherwise
 		deIdentificationDiv.setVisible(deIdentificationCheckbox.getValue());
@@ -118,6 +131,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void buildListeners() {
 		buildPseudonymTypeListener();
+		buildSkipIssuerListener();
 		destinationComponentUtil.buildWarningNoProjectDefinedListener(warningNoProjectsDefined,
 				deIdentificationCheckbox);
 		destinationComponentUtil.buildProjectDropDownListener(projectDropDown, profileLabel);
@@ -128,6 +142,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void buildComponents() {
 		buildIssuerOfPatientID();
+		buildSkipIssuerOfPatientIdCheckbox();
 		projectDropDown = destinationComponentUtil.buildProjectDropDown();
 		profileLabel = new ProfileLabel();
 		warningNoProjectsDefined = destinationComponentUtil.buildWarningNoProjectDefined();
@@ -199,6 +214,28 @@ public class DeIdentificationComponent extends VerticalLayout {
 	}
 
 	/**
+	 * Build skip issuer of patient ID checkbox — hidden by default until CACHE_EXTID is selected
+	 */
+	private void buildSkipIssuerOfPatientIdCheckbox() {
+		skipIssuerOfPatientIdCheckbox = new Checkbox(LABEL_CHECKBOX_SKIP_ISSUER);
+		skipIssuerOfPatientIdCheckbox.setVisible(false);
+		UIS.setTooltip(skipIssuerOfPatientIdCheckbox, TOOLTIP_SKIP_ISSUER);
+	}
+
+	/**
+	 * Listener on skip issuer checkbox: disables the issuer text field when checked
+	 */
+	private void buildSkipIssuerListener() {
+		skipIssuerOfPatientIdCheckbox.addValueChangeListener(event -> {
+			boolean skip = Boolean.TRUE.equals(event.getValue());
+			issuerOfPatientIDByDefault.setEnabled(!skip);
+			if (skip) {
+				issuerOfPatientIDByDefault.clear();
+			}
+		});
+	}
+
+	/**
 	 * Listener on pseudonym type
 	 */
 	private void buildPseudonymTypeListener() {
@@ -206,8 +243,22 @@ public class DeIdentificationComponent extends VerticalLayout {
 			if (event.getValue() != null) {
 				pseudonymDicomTagDiv.setVisible(Objects.equals(event.getValue(), EXTID_IN_TAG.getValue()));
 				pseudonymApi.setVisible(Objects.equals(event.getValue(), EXTID_API.getValue()));
+				updateSkipIssuerCheckboxState(event.getValue());
 			}
 		});
+	}
+
+	/**
+	 * Show the skip issuer checkbox only for CACHE_EXTID, hide and reset it otherwise
+	 * @param pseudonymTypeValue Currently selected pseudonym type value
+	 */
+	private void updateSkipIssuerCheckboxState(String pseudonymTypeValue) {
+		boolean isCacheExtid = Objects.equals(pseudonymTypeValue, CACHE_EXTID.getValue());
+		skipIssuerOfPatientIdCheckbox.setVisible(isCacheExtid);
+		if (!isCacheExtid) {
+			skipIssuerOfPatientIdCheckbox.setValue(false);
+			issuerOfPatientIDByDefault.setEnabled(true);
+		}
 	}
 
 	private void initDestinationBinder() {
@@ -222,6 +273,8 @@ public class DeIdentificationComponent extends VerticalLayout {
 			});
 		destinationBinder.forField(deIdentificationCheckbox)
 			.bind(DestinationEntity::isDesidentification, DestinationEntity::setDesidentification);
+		destinationBinder.forField(skipIssuerOfPatientIdCheckbox)
+			.bind(DestinationEntity::isSkipIssuerOfPatientId, DestinationEntity::setSkipIssuerOfPatientId);
 		destinationBinder.forField(projectDropDown)
 			.withValidator(project -> project != null || !deIdentificationCheckbox.getValue(), "Choose a project")
 			.bind(DestinationEntity::getDeIdentificationProjectEntity,
@@ -258,10 +311,11 @@ public class DeIdentificationComponent extends VerticalLayout {
 		}
 
 		if (!destinationEntity.isDesidentification()) {
-			// Reset the destination for pseudonym type, project, issuer of patient id
+			// Reset the destination for pseudonym type, project, issuer of patient id, skip issuer
 			destinationEntity.setDeIdentificationProjectEntity(null);
 			destinationEntity.setPseudonymType(CACHE_EXTID);
 			destinationEntity.setIssuerByDefault(null);
+			destinationEntity.setSkipIssuerOfPatientId(false);
 		}
 	}
 

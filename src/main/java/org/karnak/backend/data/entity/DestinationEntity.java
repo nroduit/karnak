@@ -69,6 +69,8 @@ public class DestinationEntity implements Serializable {
 
 	private String issuerByDefault;
 
+	private boolean skipIssuerOfPatientId;
+
 	private PseudonymType pseudonymType;
 
 	private String tag;
@@ -182,6 +184,7 @@ public class DestinationEntity implements Serializable {
 		this.description = "";
 		this.desidentification = false;
 		this.issuerByDefault = "";
+		this.skipIssuerOfPatientId = false;
 		// TODO TELIMA-289: set by default pseudo service
 		this.pseudonymType = PseudonymType.CACHE_EXTID;
 		this.tag = null;
@@ -296,6 +299,14 @@ public class DestinationEntity implements Serializable {
 
 	public void setIssuerByDefault(String issuerByDefault) {
 		this.issuerByDefault = issuerByDefault;
+	}
+
+	public boolean isSkipIssuerOfPatientId() {
+		return skipIssuerOfPatientId;
+	}
+
+	public void setSkipIssuerOfPatientId(boolean skipIssuerOfPatientId) {
+		this.skipIssuerOfPatientId = skipIssuerOfPatientId;
 	}
 
 	public boolean isFilterBySOPClasses() {
