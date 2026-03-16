@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -25,8 +25,6 @@ import org.karnak.frontend.dicom.AbstractView;
 import org.karnak.frontend.dicom.Util;
 
 public class MonitorView extends AbstractView {
-
-	private static final long serialVersionUID = 1L;
 
 	// CONTROLLER
 	private final MonitorLogic logic = new MonitorLogic(this);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -51,7 +51,7 @@ public class Pseudonym {
 		}
 
 		if (destinationEntity.getPseudonymType().equals(PseudonymType.EXTID_IN_TAG)) {
-			return getPseudonymInDicom(dcm, destinationEntity, patientMetadata);
+			return getPseudonymInDicom(dcm, destinationEntity);
 		}
 
 		if (destinationEntity.getPseudonymType().equals(PseudonymType.EXTID_API)) {
@@ -91,8 +91,7 @@ public class Pseudonym {
 		return value;
 	}
 
-	private String getPseudonymInDicom(Attributes dcm, DestinationEntity destinationEntity,
-			PatientMetadata patientMetadata) {
+	private String getPseudonymInDicom(Attributes dcm, DestinationEntity destinationEntity) {
 		final String cleanTag = destinationEntity.getTag().replaceAll("[(),]", "").toUpperCase();
 		final String tagValue = dcm.getString(TagUtils.intFromHexString(cleanTag));
 		String pseudonymExtidInTag = null;

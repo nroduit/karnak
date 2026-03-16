@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -10,6 +10,7 @@
 package org.karnak.backend.model.event;
 
 import java.util.Objects;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -18,8 +19,7 @@ import org.springframework.context.ApplicationEvent;
 
 public class NodeEvent extends ApplicationEvent {
 
-	private static final long serialVersionUID = -15504960651765311L;
-
+	@Getter
 	private final NodeEventType eventType;
 
 	private final ForwardNodeEntity forwardNodeEntity;
@@ -44,10 +44,6 @@ public class NodeEvent extends ApplicationEvent {
 
 	public ForwardNodeEntity getForwardNode() {
 		return forwardNodeEntity;
-	}
-
-	public NodeEventType getEventType() {
-		return eventType;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -18,6 +18,7 @@ import com.vaadin.flow.data.binder.Binder;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
+import lombok.Setter;
 import org.dcm4che3.util.TagUtils;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
@@ -31,6 +32,7 @@ import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
 import org.karnak.backend.util.DoubleToIntegerConverter;
+import org.karnak.backend.util.SystemPropertyUtil;
 import org.karnak.frontend.component.ConfirmDialog;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
@@ -46,11 +48,14 @@ import org.karnak.frontend.forwardnode.edit.destination.component.TranscodeOnlyU
 import org.karnak.frontend.forwardnode.edit.source.SourceView;
 import org.karnak.frontend.forwardnode.edit.source.component.NewUpdateSourceNode;
 import org.karnak.frontend.util.UIS;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.weasis.core.util.StringUtil;
 
 /**
  * Layout of the edit forward node
  */
-@SuppressWarnings("serial")
+
 public class LayoutEditForwardNode extends VerticalLayout {
 
 	// Services
@@ -59,6 +64,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	private final SOPClassUIDService sopClassUIDService;
 
 	// UI components
+	@Getter
 	private final Binder<ForwardNodeEntity> binderForwardNode;
 
 	private final EditAETitleDescription editAETitleDescription;
@@ -78,14 +84,11 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 	private final NewUpdateSourceNode newUpdateSourceNode;
 
+	@Setter
 	@Getter
 	private ForwardNodeEntity currentForwardNodeEntity;
 
-	/**
-	 * Autowired constructor
-	 * @param forwardNodeLogic
-	 */
-	public LayoutEditForwardNode(final ForwardNodeLogic forwardNodeLogic) {
+	public LayoutEditForwardNode(ForwardNodeLogic forwardNodeLogic, Environment environment) {
 		this.projectService = forwardNodeLogic.getProjectService();
 		this.sopClassUIDService = forwardNodeLogic.getSopClassUIDService();
 		this.currentForwardNodeEntity = null;
@@ -96,8 +99,8 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		this.newUpdateDestination = new NewUpdateDestination();
 		this.newUpdateSourceNode = new NewUpdateSourceNode();
 		this.sourceView = new SourceView(forwardNodeLogic);
-		this.destinationView = new DestinationView(forwardNodeLogic);
-		this.editAETitleDescription = new EditAETitleDescription(binderForwardNode);
+		this.destinationView = new DestinationView(forwardNodeLogic, environment);
+		this.editAETitleDescription = new EditAETitleDescription(binderForwardNode, forwardNodeLogic, environment);
 
 		// Init components
 		initComponents();
@@ -106,7 +109,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		buildLayout();
 
 		// Events
-		addEvents();
+		addEvents(environment);
 
 		// Binder
 		addBinders();
@@ -138,7 +141,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	/**
 	 * Add events on components
 	 */
-	private void addEvents() {
+	private void addEvents(Environment environment) {
 		addEventButtonSaveNewUpdateSourceNode();
 		addEventButtonDeleteNewUpdateSourceNode();
 		addEventButtonSaveNewUpdateDestination();
@@ -160,6 +163,9 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		setEventChangeTabValue();
 		setEventBinderForwardNode();
 		setEventDestination();
+		if (environment.acceptsProfiles(Profiles.of("portable"))) {
+			setEventDestinationsViewLocalDICOM();
+		}
 		setEventDestinationsViewDICOM();
 		setEventDestinationsViewSTOW();
 		setEventDestinationCancelButton();
@@ -246,6 +252,29 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		}
 	}
 
+	private void setEventDestinationsViewLocalDICOM() {
+		this.destinationView.getNewLocalDICOM().addClickListener(event -> {
+			DestinationEntity dicomEntity = new DestinationEntity();
+			dicomEntity.setDestinationType(DestinationType.dicom);
+			String localAET = SystemPropertyUtil.retrieveSystemProperty("LOCAL_NODE_AE_TITLE", "KARNAK-LOCAL");
+			Integer localPort = SystemPropertyUtil.retrieveIntegerSystemProperty("LOCAL_NODE_PORT", null);
+			String folder = SystemPropertyUtil.retrieveSystemProperty("LOCAL_NODE_STORAGE_PATH", null);
+			if (localPort != null && StringUtil.hasText(folder)) {
+				dicomEntity.setDescription("Local DICOM Folder: " + folder);
+				dicomEntity.setAeTitle(localAET);
+				dicomEntity.setHostname("localhost");
+				dicomEntity.setPort(localPort);
+				dicomEntity.setActivate(true);
+			}
+			else {
+				dicomEntity = null;
+			}
+
+			this.newUpdateDestination.load(dicomEntity, DestinationType.dicom);
+			addFormView(this.newUpdateDestination);
+		});
+	}
+
 	private void setEventDestinationsViewDICOM() {
 		this.destinationView.getNewDestinationDICOM().addClickListener(event -> {
 			this.newUpdateDestination.load(null, DestinationType.dicom);
@@ -310,14 +339,6 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 	public void updateForwardNodeInEditView() {
 		this.load(currentForwardNodeEntity);
-	}
-
-	public void setCurrentForwardNodeEntity(ForwardNodeEntity currentForwardNodeEntity) {
-		this.currentForwardNodeEntity = currentForwardNodeEntity;
-	}
-
-	public Binder<ForwardNodeEntity> getBinderForwardNode() {
-		return binderForwardNode;
 	}
 
 	private void addEventButtonSaveNewUpdateSourceNode() {
@@ -537,7 +558,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 				catch (Exception e) {
 					return false;
 				}
-				return (tag != null && !tag.equals("") && cleanTag.length() == 8);
+				return !tag.isEmpty() && cleanTag.length() == 8;
 			}, "Choose a valid tag\n")
 			.bind(DestinationEntity::getTag, DestinationEntity::setTag);
 
@@ -553,7 +574,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 				}
 				if (deIdentificationComponent.getPseudonymInDicomTagComponent().getPosition().getValue() != null
 						&& deIdentificationComponent.getPseudonymInDicomTagComponent().getPosition().getValue() > 0) {
-					return delimiter != null && !delimiter.equals("");
+					return delimiter != null && !delimiter.isEmpty();
 				}
 				return true;
 			}, "A delimiter must be defined, when a position is present")
@@ -573,7 +594,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 						&& !deIdentificationComponent.getPseudonymInDicomTagComponent()
 							.getDelimiter()
 							.getValue()
-							.equals("")) {
+							.isEmpty()) {
 					return position != null && position >= 0;
 				}
 				return true;
@@ -600,7 +621,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 							.equals(EXTID_API.getValue())) {
 					return true;
 				}
-				return (url != null && !url.equals(""));
+				return (url != null && !url.isEmpty());
 			}, "Please enter a valid URL\n")
 			.bind(DestinationEntity::getPseudonymUrl, DestinationEntity::setPseudonymUrl);
 
@@ -629,7 +650,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 					return true;
 				}
 				if (deIdentificationComponent.getPseudonymFromApiComponent().getMethod().getValue().equals("POST")) {
-					return body != null && !body.equals("");
+					return body != null && !body.isEmpty();
 				}
 				return true;
 			}, "Body is mandatory for a POST request")
@@ -650,7 +671,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 							.equals(EXTID_API.getValue())) {
 					return true;
 				}
-				return responsePath != null && !responsePath.equals("");
+				return responsePath != null && !responsePath.isEmpty();
 			}, "JSON Response path is mandatory")
 			.bind(DestinationEntity::getResponsePath, DestinationEntity::setResponsePath);
 	}

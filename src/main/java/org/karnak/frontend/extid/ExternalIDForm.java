@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -18,6 +18,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.validator.StringLengthValidator;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.data.entity.ProjectEntity;
@@ -28,6 +30,7 @@ public class ExternalIDForm extends Div {
 
 	private final Binder<Patient> binder;
 
+	@Setter
 	private transient ProjectEntity projectEntity;
 
 	private TextField externalIdField;
@@ -40,6 +43,7 @@ public class ExternalIDForm extends Div {
 
 	private TextField issuerOfPatientIdField;
 
+	@Getter
 	private Button addPatientButton;
 
 	private Button clearFieldsButton;
@@ -92,8 +96,11 @@ public class ExternalIDForm extends Div {
 
 		externalIdField = new TextField("External Pseudonym");
 		externalIdField.setWidth("20%");
+		externalIdField.setRequired(true);
 		patientIdField = new TextField("Patient ID");
 		patientIdField.setWidth("20%");
+		patientIdField.setRequired(true);
+
 		patientFirstNameField = new TextField("Patient first name");
 		patientFirstNameField.setWidth("20%");
 		patientLastNameField = new TextField("Patient last name");
@@ -119,18 +126,17 @@ public class ExternalIDForm extends Div {
 			.withValidator(new StringLengthValidator(ERROR_MESSAGE_PATIENT, 1, 50))
 			.bind("patientId");
 
+		String maxLengthMessage = "Length must be between 0 and 50.";
 		binder.forField(patientFirstNameField)
-			.withValidator(StringUtils::isNotBlank, "Patient first name is empty")
-			.withValidator(new StringLengthValidator(ERROR_MESSAGE_PATIENT, 1, 50))
+			.withValidator(new StringLengthValidator(maxLengthMessage, 0, 50))
 			.bind("patientFirstName");
 
 		binder.forField(patientLastNameField)
-			.withValidator(StringUtils::isNotBlank, "Patient last name is empty")
-			.withValidator(new StringLengthValidator(ERROR_MESSAGE_PATIENT, 1, 50))
+			.withValidator(new StringLengthValidator(maxLengthMessage, 0, 50))
 			.bind("patientLastName");
 
 		binder.forField(issuerOfPatientIdField)
-			.withValidator(new StringLengthValidator("Length must be between 0 and 50.", 0, 50))
+			.withValidator(new StringLengthValidator(maxLengthMessage, 0, 50))
 			.bind("issuerOfPatientId");
 	}
 
@@ -153,14 +159,6 @@ public class ExternalIDForm extends Div {
 		patientLastNameField.clear();
 		issuerOfPatientIdField.clear();
 		binder.readBean(null);
-	}
-
-	public Button getAddPatientButton() {
-		return addPatientButton;
-	}
-
-	public void setProjectEntity(ProjectEntity projectEntity) {
-		this.projectEntity = projectEntity;
 	}
 
 }

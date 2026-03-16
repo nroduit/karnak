@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -18,13 +18,8 @@ import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.util.UIS;
 
-import java.io.Serial;
-
 @Getter
 public class PseudonymInDicomTagComponent extends Div {
-
-	@Serial
-	private static final long serialVersionUID = -8231199154345793870L;
 
 	private final Binder<DestinationEntity> destinationBinder;
 

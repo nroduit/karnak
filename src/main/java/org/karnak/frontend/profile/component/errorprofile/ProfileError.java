@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -9,12 +9,16 @@
  */
 package org.karnak.frontend.profile.component.errorprofile;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 
 public class ProfileError {
 
 	private ProfileElementEntity profileElementEntity;
 
+	@Setter
+	@Getter
 	private String error;
 
 	public ProfileError(ProfileElementEntity profileElementEntity) {
@@ -33,14 +37,6 @@ public class ProfileError {
 
 	public void setProfileElement(ProfileElementEntity profileElementEntity) {
 		this.profileElementEntity = profileElementEntity;
-	}
-
-	public String getError() {
-		return error;
-	}
-
-	public void setError(String error) {
-		this.error = error;
 	}
 
 }

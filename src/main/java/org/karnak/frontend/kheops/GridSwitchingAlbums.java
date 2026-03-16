@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -34,14 +34,6 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 
 	private final Collection<Button> editButtons;
 
-	private final TextField textUrlAPI;
-
-	private final TextField textAuthorizationDestination;
-
-	private final TextField textAuthorizationSource;
-
-	private final TextField textCondition;
-
 	private Editor<KheopsAlbumsEntity> editor;
 
 	public GridSwitchingAlbums() {
@@ -52,10 +44,10 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 
 		TextFieldsBindSwitchingAlbum textFieldsBindSwitchingAlbum = new TextFieldsBindSwitchingAlbum();
 		binder = textFieldsBindSwitchingAlbum.getBinder();
-		textUrlAPI = textFieldsBindSwitchingAlbum.getTextUrlAPI();
-		textAuthorizationDestination = textFieldsBindSwitchingAlbum.getTextAuthorizationDestination();
-		textAuthorizationSource = textFieldsBindSwitchingAlbum.getTextAuthorizationSource();
-		textCondition = textFieldsBindSwitchingAlbum.getTextCondition();
+		TextField textUrlAPI = textFieldsBindSwitchingAlbum.getTextUrlAPI();
+		TextField textAuthorizationDestination = textFieldsBindSwitchingAlbum.getTextAuthorizationDestination();
+		TextField textAuthorizationSource = textFieldsBindSwitchingAlbum.getTextAuthorizationSource();
+		TextField textCondition = textFieldsBindSwitchingAlbum.getTextCondition();
 		editButtons = Collections.newSetFromMap(new WeakHashMap<>());
 
 		addColumn(KheopsAlbumsEntity::getUrlAPI).setHeader("URL API")
@@ -104,8 +96,8 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 			return new Div(edit, remove);
 		}).setFlexGrow(15);
 
-		editor.addOpenListener(e -> editButtons.stream().forEach(button -> button.setEnabled(!editor.isOpen())));
-		editor.addCloseListener(e -> editButtons.stream().forEach(button -> button.setEnabled(!editor.isOpen())));
+		editor.addOpenListener(e -> editButtons.forEach(button -> button.setEnabled(!editor.isOpen())));
+		editor.addCloseListener(e -> editButtons.forEach(button -> button.setEnabled(!editor.isOpen())));
 
 		Button save = new Button("Validate");
 		save.addClickListener(event -> {

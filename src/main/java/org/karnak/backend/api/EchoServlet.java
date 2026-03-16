@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -40,11 +40,15 @@ public class EchoServlet extends HttpServlet {
 	@Serial
 	private static final long serialVersionUID = -8349040600894140520L;
 
+	private final transient GatewaySetUpService globalConfig;
+
 	@Autowired
-	private GatewaySetUpService globalConfig;
+	public EchoServlet(GatewaySetUpService globalConfig) {
+		this.globalConfig = globalConfig;
+	}
 
 	@Override
-	public final void init() throws ServletException {
+	public void init() throws ServletException {
 		if (globalConfig == null) {
 			log.error("EchoServlet service cannot start: GatewaySetUpService is missing.");
 			destroy();

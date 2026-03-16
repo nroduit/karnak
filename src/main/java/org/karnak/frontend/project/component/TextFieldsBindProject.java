@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -16,12 +16,14 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import java.util.Objects;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.frontend.component.ProfileDropDown;
 
+@Getter
 public class TextFieldsBindProject {
 
 	private final Binder<ProjectEntity> binder;
@@ -85,22 +87,6 @@ public class TextFieldsBindProject {
 				return ValidationResult.error("Secret is mandatory");
 			}
 		};
-	}
-
-	public Binder<ProjectEntity> getBinder() {
-		return binder;
-	}
-
-	public TextField getTextResearchName() {
-		return textResearchName;
-	}
-
-	public ComboBox<SecretEntity> getSecretComboBox() {
-		return secretComboBox;
-	}
-
-	public ProfileDropDown getProfileDropDown() {
-		return profileDropDown;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -21,6 +21,7 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.AuthConfigEntity;
 
@@ -37,10 +38,13 @@ public class AuthConfigComponent extends VerticalLayout {
 
 	private H2 title;
 
+	@Getter
 	private Button saveBtn;
 
+	@Getter
 	private Button cancelBtn;
 
+	@Getter
 	private Button deleteBtn;
 
 	private Binder<AuthConfigEntity> binder;
@@ -161,18 +165,6 @@ public class AuthConfigComponent extends VerticalLayout {
 	private void initDeleteButton() {
 		deleteBtn = new Button((new Icon(VaadinIcon.TRASH)));
 		deleteBtn.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
-	}
-
-	public Button getDeleteBtn() {
-		return this.deleteBtn;
-	}
-
-	public Button getSaveBtn() {
-		return this.saveBtn;
-	}
-
-	public Button getCancelBtn() {
-		return this.cancelBtn;
 	}
 
 	public String getAuthConfigCode() {

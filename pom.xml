@@ -9,10 +9,11 @@
   <parent>
     <groupId>ch.hcuge.springcloud</groupId>
     <artifactId>spring-cloud-core-dependencies</artifactId>
-    <version>3.3.11-2023.0.5-2.0</version>
+    <version>3.5.11-2025.0.1-1.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
+  <!-- Karnak  -->
   <groupId>org.karnak</groupId>
   <artifactId>karnak</artifactId>
   <name>${project.artifactId}</name>
@@ -31,20 +32,22 @@
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
     <java.version>21</java.version>
 
-    <vaadin.version>24.6.2</vaadin.version>
-    <org.json.version>20231013</org.json.version>
+    <vaadin.version>24.9.4</vaadin.version>
+    <org.json.version>20250517</org.json.version>
     <gson.version>2.10.1</gson.version>
-    <liquibase.version>4.23.0</liquibase.version>
-    <opencsv.version>5.7.1</opencsv.version>
+    <opencsv.version>5.12.0</opencsv.version>
     <node.version>v20.11.0</node.version>
-    <weasis-dicom-tools.version>5.31.1</weasis-dicom-tools.version>
-    <h2.version>2.2.224</h2.version>
-    <mockito.version>5.2.0</mockito.version>
-    <swagger.version>2.2.14</swagger.version>
+    <weasis-dicom-tools.version>5.34.1.1</weasis-dicom-tools.version>
+
+    <h2.version>2.4.240</h2.version>
+    <mockito.version>5.20.0</mockito.version>
+    <swagger.version>2.2.40</swagger.version>
 
     <sonar.language>java</sonar.language>
     <sonar.java.source>${java.version}</sonar.java.source>
     <sonar.test.exclusions>src/test/**/*</sonar.test.exclusions>
+
+    <bash.executable>bash</bash.executable>
 
   </properties>
 
@@ -107,7 +110,7 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <image>
-            <runImage>${docker-registry}/vna-docker-base-image:1.0.0</runImage>
+            <runImage>${docker-registry}/vna-docker-base-image:4.12.0</runImage>
           </image>
         </configuration>
       </plugin>
@@ -419,7 +422,7 @@
     <dependency>
       <groupId>org.vaadin.klaudeta</groupId>
       <artifactId>grid-pagination</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
     </dependency>
 
     <!-- ========== -->
@@ -462,8 +465,8 @@
 
     <!-- Mockito inline -->
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
@@ -571,6 +574,71 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+
+    <profile>
+      <id>portable</id>
+      <properties>
+        <vaadin.productionMode>true</vaadin.productionMode>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>build-frontend</goal>
+                </goals>
+                <phase>compile</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <pnpmEnable>true</pnpmEnable>
+            </configuration>
+          </plugin>
+
+          <!-- Execute the packaging script -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.4.0</version>
+            <executions>
+              <execution>
+                <id>run-portable-package-script</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                    <executable>${bash.executable}</executable>
+                    <arguments>
+                    <argument>${project.basedir}/build-portable/package.sh</argument>
+                    <argument>--jdk</argument>
+                    <argument>${java.home}</argument>
+                  </arguments>
+                  <environmentVariables>
+                    <JAVA_VERSION>${java.version}</JAVA_VERSION>
+                    <KARNAK_VERSION>${project.version}</KARNAK_VERSION>
+                  </environmentVariables>
+                  <workingDirectory>${project.basedir}</workingDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+      <dependencies>
+        <!-- DB H2 for embedded database -->
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <version>${h2.version}</version>
+          <scope>runtime</scope> <!-- Remove test scope -->
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 </project>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -17,6 +17,8 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.util.DateFormat;
 import org.karnak.frontend.component.BoxShadowComponent;
@@ -24,6 +26,8 @@ import org.karnak.frontend.component.BoxShadowComponent;
 /**
  * Result component
  */
+@Setter
+@Getter
 public class MappingResultComponent extends VerticalLayout {
 
 	// Components
@@ -135,14 +139,6 @@ public class MappingResultComponent extends VerticalLayout {
 		badgeTitle.getStyle().set("color", "var(--lumo-primary-text-color)");
 
 		return badgeTitle;
-	}
-
-	public Details getPatientFoundDetails() {
-		return patientFoundDetails;
-	}
-
-	public void setPatientFoundDetails(Details patientFoundDetails) {
-		this.patientFoundDetails = patientFoundDetails;
 	}
 
 }

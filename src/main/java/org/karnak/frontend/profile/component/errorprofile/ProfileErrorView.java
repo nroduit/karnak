@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -27,7 +27,7 @@ public class ProfileErrorView extends VerticalLayout {
 
 	public void setView(List<ProfileError> profileErrors) {
 		removeAll();
-		add(new H2("Errors occured in profile elements"));
+		add(new H2("Errors occurred in profile elements"));
 		for (ProfileError profileError : profileErrors) {
 			ProfileElementEntity profileElementEntity = profileError.getProfileElement();
 			Div profileName = setProfileName(
@@ -47,7 +47,7 @@ public class ProfileErrorView extends VerticalLayout {
 
 	public void setView(String text) {
 		removeAll();
-		add(new H2("Error occured"));
+		add(new H2("Error occurred"));
 		add(setProfileError(text));
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -17,6 +17,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.dom.Style;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.BoxShadowComponent;
@@ -27,33 +28,39 @@ import org.karnak.frontend.util.UIS;
 
 public class FormSTOW extends VerticalLayout {
 
-	private final DeIdentificationComponent deIdentificationComponent;
-
-	private final TagMorphingComponent tagMorphingComponent;
-
 	private Binder<DestinationEntity> binder;
 
 	private TextField description;
 
 	private TextField url;
 
-	private Button generateAuthorizationHeaderButton;
-
-	private TextArea headers;
-
-	private final FilterBySOPClassesForm filterBySOPClassesForm;
-
-	private SwitchingAlbumsView switchingAlbumsView;
-
 	private Checkbox activate;
 
 	private final DestinationCondition destinationCondition;
 
+	@Getter
+	private final FilterBySOPClassesForm filterBySOPClassesForm;
+
+	@Getter
+	private final DeIdentificationComponent deIdentificationComponent;
+
+	@Getter
+	private final TagMorphingComponent tagMorphingComponent;
+
+	@Getter
 	private final NotificationComponent notificationComponent;
 
+	@Getter
 	private final TransferSyntaxComponent transferSyntaxComponent;
 
+	@Getter
 	private final TranscodeOnlyUncompressedComponent transcodeOnlyUncompressedComponent;
+
+	private SwitchingAlbumsView switchingAlbumsView;
+
+	private Button generateAuthorizationHeaderButton;
+
+	private TextArea headers;
 
 	public FormSTOW() {
 		this.deIdentificationComponent = new DeIdentificationComponent();
@@ -146,10 +153,14 @@ public class FormSTOW extends VerticalLayout {
 	}
 
 	private void setBinder() {
+		binder.forField(description).bind(DestinationEntity::getDescription, DestinationEntity::setDescription);
 		binder.forField(url)
 			.withValidator(StringUtils::isNotBlank, "URL is mandatory")
 			.bind(DestinationEntity::getUrl, DestinationEntity::setUrl);
 
+		binder.forField(headers).bind(DestinationEntity::getHeaders, DestinationEntity::setHeaders);
+
+		binder.forField(activate).bind(DestinationEntity::isActivate, DestinationEntity::setActivate);
 		binder.forField(switchingAlbumsView)
 			.bind(DestinationEntity::getKheopsAlbumEntities, DestinationEntity::setKheopsAlbumEntities);
 
@@ -162,30 +173,6 @@ public class FormSTOW extends VerticalLayout {
 			existingHeaders += "\n";
 		}
 		this.headers.setValue(existingHeaders + value);
-	}
-
-	public DeIdentificationComponent getDeIdentificationComponent() {
-		return deIdentificationComponent;
-	}
-
-	public TagMorphingComponent getTagMorphingComponent() {
-		return tagMorphingComponent;
-	}
-
-	public FilterBySOPClassesForm getFilterBySOPClassesForm() {
-		return filterBySOPClassesForm;
-	}
-
-	public NotificationComponent getNotificationComponent() {
-		return notificationComponent;
-	}
-
-	public TransferSyntaxComponent getTransferSyntaxComponent() {
-		return transferSyntaxComponent;
-	}
-
-	public TranscodeOnlyUncompressedComponent getTranscodeOnlyUncompressedComponent() {
-		return transcodeOnlyUncompressedComponent;
 	}
 
 }

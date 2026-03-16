@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -20,9 +20,9 @@ import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.expression.ExprAction;
 import org.karnak.backend.model.expression.ExpressionError;
 import org.karnak.backend.model.expression.ExpressionResult;
-import org.karnak.backend.oauth2.OAuth2ClientHttpRequestInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -32,6 +32,8 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
+import static org.springframework.security.oauth2.client.web.client.RequestAttributeClientRegistrationIdResolver.clientRegistrationId;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.stereotype.Service;
@@ -65,7 +67,7 @@ public class EndpointService {
 		return RestClient.builder().requestInterceptor(requestInterceptor).build();
 	}
 
-	public RestClient getAuthConfiguredRestClient(String authConfig, String url) throws IllegalArgumentException {
+	public RestClient getAuthConfiguredRestClient(String authConfig) throws IllegalArgumentException {
 		AuthConfigEntity ace = authConfigRepo.findByCode(authConfig);
 		if (ace == null) {
 			throw new IllegalArgumentException("Authentication Code " + authConfig + " is not defined");
@@ -75,7 +77,7 @@ public class EndpointService {
 		String scope = ace.getScope();
 		String tokenUrl = ace.getAccessTokenUrl();
 
-		ClientRegistration registration = ClientRegistration.withRegistrationId(url)
+		ClientRegistration registration = ClientRegistration.withRegistrationId(authConfig)
 			.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
 			.clientId(clientId)
 			.clientSecret(clientSecret)
@@ -94,34 +96,31 @@ public class EndpointService {
 	@Cacheable(value = "endpoint.cache")
 	public String get(String authConfig, String url) throws IllegalArgumentException, HttpClientErrorException {
 		if (authConfig != null && !authConfig.isEmpty()) {
-			return getAuthConfiguredRestClient(authConfig, url).get()
+			return getAuthConfiguredRestClient(authConfig).get()
 				.uri(url)
-				// TODO TELIMA-319 Uncomment when upgrading Spring Boot
-				// .attributes(clientRegistrationId(authConfig))
+				.attributes(clientRegistrationId(authConfig))
 				.retrieve()
 				.body(String.class);
 		}
-		else if (authConfig == null) {
+		else {
 			return get(url);
 		}
-		return null;
 	}
 
 	@Cacheable(value = "endpoint.cache")
 	public String post(String authConfig, String url, String body) {
 		if (authConfig != null && !authConfig.isEmpty()) {
-			return getAuthConfiguredRestClient(authConfig, url).post()
+			return getAuthConfiguredRestClient(authConfig).post()
 				.uri(url)
-				// TODO TELIMA-319 Uncomment when upgrading Spring Boot
-				// .attributes(clientRegistrationId(authConfig))
+				.attributes(clientRegistrationId(authConfig))
 				.body(body)
+				.contentType(MediaType.APPLICATION_JSON)
 				.retrieve()
 				.body(String.class);
 		}
-		else if (authConfig == null) {
+		else {
 			return post(url, body);
 		}
-		return null;
 	}
 
 	@Cacheable(value = "endpoint.cache")
@@ -132,7 +131,12 @@ public class EndpointService {
 
 	@Cacheable(value = "endpoint.cache")
 	public String post(String url, String body) {
-		return getNoAuthRestClient().post().uri(url).body(body).retrieve().body(String.class);
+		return getNoAuthRestClient().post()
+			.uri(url)
+			.body(body)
+			.contentType(MediaType.APPLICATION_JSON)
+			.retrieve()
+			.body(String.class);
 	}
 
 	public static String evaluateStringWithExpression(String url, Attributes dcm) {

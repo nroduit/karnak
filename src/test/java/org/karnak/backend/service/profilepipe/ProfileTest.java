@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -193,7 +193,6 @@ class ProfileTest {
 		attributes3.setString(Tag.StationName, VR.SH, "ICT258");
 		attributes3.setString(Tag.Rows, VR.US, "1024");
 		attributes3.setString(Tag.Columns, VR.US, "1024");
-
 		Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
 		ProfileElementEntity profileElementEntityCleanPixelData = new ProfileElementEntity();
 		profileElementEntityCleanPixelData.setCodename("clean.pixel.data");

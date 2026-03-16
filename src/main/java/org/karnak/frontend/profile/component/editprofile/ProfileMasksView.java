@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -30,7 +30,7 @@ public class ProfileMasksView extends VerticalLayout {
 	public void setView() {
 		removeAll();
 		if (!maskEntities.isEmpty()) {
-			add(setTitleValue("Masks"));
+			add(setTitleValue());
 			maskEntities.forEach(maskEntity -> {
 				if (maskEntity.getStationName() != null) {
 					add(setMasksValue("Station name : " + maskEntity.getStationName()));
@@ -45,7 +45,7 @@ public class ProfileMasksView extends VerticalLayout {
 					add(setMasksValue("Color : " + maskEntity.getColor()));
 				}
 
-				if (maskEntity.getRectangles().size() > 0) {
+				if (!maskEntity.getRectangles().isEmpty()) {
 					add(setMasksValue("Rectangles"));
 					add(setMasksRectangles(maskEntity.getRectangles()));
 				}
@@ -53,9 +53,9 @@ public class ProfileMasksView extends VerticalLayout {
 		}
 	}
 
-	private Div setTitleValue(String title) {
+	private Div setTitleValue() {
 		Div profileNameDiv = new Div();
-		profileNameDiv.add(new Text(title));
+		profileNameDiv.add(new Text("Masks"));
 		profileNameDiv.getStyle().set("font-weight", "bold").set("margin-top", "0px").set("padding-left", "5px");
 		return profileNameDiv;
 	}

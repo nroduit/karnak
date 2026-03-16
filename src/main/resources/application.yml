@@ -1,3 +1,7 @@
+# - Info
+application:
+  team: imagerie
+
 #  --------------------------------------------------------
 #  Karnak Application Profiles
 #  --------------------------------------------------------
@@ -37,10 +41,8 @@ spring:
     version: '@project.version@'
   cloud:
     config:
-      discovery:
-        enabled: false
 #    Currently no cs configured in docker deploy/ vault
-#      fail-fast: true
+      fail-fast: true
       name: ${spring.application.name}
       label: ${ENVIRONMENT}
 #      uri: ${CONFIGSERVER_URI}
@@ -50,11 +52,12 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
   profiles:
-    active: '@activatedProperties@,docker,redis, eureka'
+    active: docker,redis,eureka
   datasource:
-    password: ${DB_PASSWORD:5!KAnN@%98%d}
     url: 'jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:karnak}'
+    driver-class-name: org.postgresql.Driver
     username: ${DB_USER:karnak}
+    password: ${DB_PASSWORD:karnak}
     hikari:
       pool-name: karnak
       leak-detection-threshold: 0
@@ -75,18 +78,16 @@ spring:
     generate-ddl: false
     show-sql: false
     open-in-view: false
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
-        #    In order to still use the unique hibernate_sequence, otherwise we should create a sequence table_name_seq for
-        #  each tables
+        #  To still use the unique hibernate_sequence, otherwise we should create a sequence table_name_seq for each table
         id:
           db_structure_naming_strategy: legacy
-        temp:
+        boot:
           use_jdbc_metadata_defaults: false
-      jdbc:
-        lob:
-          non_contextual_creation: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
 # - Info
 info:
@@ -150,4 +151,4 @@ cache-api:
   ttl: 15
 
 mail:
-  sender: no-reply@hcuge.ch
+  sender: no-reply@hug.ch

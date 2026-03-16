@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -10,6 +10,8 @@
 package org.karnak.frontend.extid;
 
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ExternalIDLogic {
 
+	@Getter
+	@Setter
 	private ExternalIDView externalIDView;
 
 	private final ProjectService projectService;
@@ -26,14 +30,6 @@ public class ExternalIDLogic {
 	public ExternalIDLogic(final ProjectService projectService) {
 		this.projectService = projectService;
 		this.externalIDView = null;
-	}
-
-	public void setExternalIDView(ExternalIDView externalIDView) {
-		this.externalIDView = externalIDView;
-	}
-
-	public ExternalIDView getExternalIDView() {
-		return externalIDView;
 	}
 
 	public List<ProjectEntity> retrieveProject() {

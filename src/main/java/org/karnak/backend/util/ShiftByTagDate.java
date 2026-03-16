@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -10,16 +10,14 @@
 package org.karnak.backend.util;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.profilepipe.HMAC;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class ShiftByTagDate {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(ShiftByTagDate.class);
 
 	private ShiftByTagDate() {
 	}
@@ -53,7 +51,7 @@ public class ShiftByTagDate {
 				}
 			}
 			catch (Exception e) {
-				LOGGER.error("args {} is not correct", value, e);
+				log.error("args {} is not correct", value, e);
 			}
 		}
 
@@ -68,7 +66,7 @@ public class ShiftByTagDate {
 			}
 		}
 		catch (Exception e) {
-			LOGGER.error("args {} is not correct", shiftDaysValue, e);
+			log.error("args {} is not correct", shiftDaysValue, e);
 		}
 		try {
 			if (shiftSecondsValue != null) {
@@ -76,7 +74,7 @@ public class ShiftByTagDate {
 			}
 		}
 		catch (Exception e) {
-			LOGGER.error("args {} is not correct", shiftSecondsValue, e);
+			log.error("args {} is not correct", shiftSecondsValue, e);
 		}
 
 		return ShiftDate.shiftValue(dcm, tag, dcmElValue, shiftDays, shiftSeconds);

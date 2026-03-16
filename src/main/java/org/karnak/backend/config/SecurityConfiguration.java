@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karnak Team and other contributors.
+ * Copyright (c) 2024-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -39,7 +39,6 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @EnableWebSecurity
 @Configuration
@@ -53,11 +52,15 @@ public class SecurityConfiguration {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			// Disables cross-site request forgery (CSRF) protection for main route
-			.csrf(csrf -> csrf.ignoringRequestMatchers(AntPathRequestMatcher.antMatcher(EndPoint.ALL_REMAINING_PATH)))
+			.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.ALL_REMAINING_PATH))
 			// Turns on/off authorizations
 			.authorizeHttpRequests(authorize -> authorize
+				// Static resources - no authentication required
+				.requestMatchers("/VAADIN/**", "/img/**", "/icons/**", "/sw.js", "/favicon.ico",
+						"/manifest.webmanifest", "/offline.html", "/sw-runtime-resources-precache.js")
+				.permitAll()
 				// Actuator, health, info
-				.requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**"))
+				.requestMatchers("/actuator/**")
 				.permitAll()
 				.requestMatchers(EndpointRequest.to(HealthEndpoint.class, InfoEndpoint.class))
 				.permitAll()
@@ -65,7 +68,7 @@ public class SecurityConfiguration {
 				.requestMatchers(SecurityUtil::isFrameworkInternalRequest)
 				.permitAll()
 				// Allow endpoints
-				.requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/echo/destinations"))
+				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
 				.permitAll()
 				// Deny
 				.requestMatchers(EndpointRequest.to(ShutdownEndpoint.class))
@@ -87,12 +90,8 @@ public class SecurityConfiguration {
 	public WebSecurityCustomizer webSecurityCustomizer() {
 		// Access to static resources, bypassing Spring security.
 		return web -> web.ignoring()
-			.requestMatchers(AntPathRequestMatcher.antMatcher("/VAADIN/**"),
-					AntPathRequestMatcher.antMatcher("/img/**"), AntPathRequestMatcher.antMatcher("/icons/**"),
-					AntPathRequestMatcher.antMatcher("/sw.js"), AntPathRequestMatcher.antMatcher("/favicon.ico"),
-					AntPathRequestMatcher.antMatcher("/manifest.webmanifest"),
-					AntPathRequestMatcher.antMatcher("/offline.html"),
-					AntPathRequestMatcher.antMatcher("/sw-runtime-resources-precache.js"));
+			.requestMatchers("/VAADIN/**", "/img/**", "/icons/**", "/sw.js", "/favicon.ico", "/manifest.webmanifest",
+					"/offline.html", "/sw-runtime-resources-precache.js");
 	}
 
 	/**

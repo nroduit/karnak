@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2025-2026 Karnak Team and other contributors.
+ *
+ * This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
+ * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+ */
 package org.karnak.backend.model.profiles;
 
 import org.dcm4che3.data.Attributes;
@@ -45,15 +54,20 @@ public class ReplaceApiTest {
 	private final static String TEST_UNKNOWN_URL = "http://sample.unknown.com/endpoint";
 
 	@BeforeEach
-    void setUp() {
-        when(endpointService.get(AUTH_CONFIG, TEST_URL)).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}");
-        when(endpointService.get(null, TEST_URL)).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\"}");
-		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/birthdate")).thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\",\"birthdate\": \"19900101\"}");
-        when(endpointService.get(UNKNOWN_AUTH_CONFIG, TEST_URL)).thenThrow(new IllegalArgumentException("Authentication Code " + UNKNOWN_AUTH_CONFIG + " is not defined"));
-        when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL)).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+	void setUp() {
+		when(endpointService.get(AUTH_CONFIG, TEST_URL))
+			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}");
+		when(endpointService.get(null, TEST_URL))
+			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/birthdate"))
+			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\",\"birthdate\": \"19900101\"}");
+		when(endpointService.get(UNKNOWN_AUTH_CONFIG, TEST_URL))
+			.thenThrow(new IllegalArgumentException("Authentication Code " + UNKNOWN_AUTH_CONFIG + " is not defined"));
+		when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL))
+			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
-        acp.when(() -> ApplicationContextProvider.bean(EndpointService.class)).thenReturn(endpointService);
-    }
+		acp.when(() -> ApplicationContextProvider.bean(EndpointService.class)).thenReturn(endpointService);
+	}
 
 	@BeforeAll
 	static void setUpStatic() {

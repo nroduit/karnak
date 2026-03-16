@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -23,6 +23,7 @@ import org.karnak.frontend.component.ConfirmDialog;
 import org.karnak.frontend.forwardnode.component.LayoutNewGridForwardNode;
 import org.karnak.frontend.forwardnode.edit.LayoutEditForwardNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -30,9 +31,9 @@ import org.springframework.security.access.annotation.Secured;
  */
 @Route(value = ForwardNodeView.ROUTE, layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@PageTitle("KARNAK - Forward node")
+@PageTitle("Karnak - Forward node")
 @Secured({ "ROLE_admin" })
-@SuppressWarnings("serial")
+
 public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Gateway";
@@ -57,7 +58,7 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 	 * implement logic linked to the view
 	 */
 	@Autowired
-	public ForwardNodeView(final ForwardNodeLogic forwardNodeLogic) {
+	public ForwardNodeView(ForwardNodeLogic forwardNodeLogic, Environment environment) {
 
 		// Bind the autowired service
 		this.forwardNodeLogic = forwardNodeLogic;
@@ -67,7 +68,7 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 
 		// Build components
 		this.layoutNewGridForwardNode = new LayoutNewGridForwardNode();
-		this.layoutEditForwardNode = new LayoutEditForwardNode(forwardNodeLogic);
+		this.layoutEditForwardNode = new LayoutEditForwardNode(forwardNodeLogic, environment);
 
 		// Init components
 		initComponents();

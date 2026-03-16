@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -14,6 +14,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import java.util.List;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.karnak.backend.api.KheopsApi;
@@ -27,18 +28,24 @@ public class TextFieldsBindSwitchingAlbum {
 
 	private final KheopsApi kheopsApi;
 
+	@Getter
 	private final Binder<KheopsAlbumsEntity> binder;
 
+	@Getter
 	private final TextField textUrlAPI;
 
+	@Getter
 	private final TextField textAuthorizationDestination;
 
+	@Getter
 	private final TextField textAuthorizationSource;
 
+	@Getter
 	private final TextField textCondition;
 
 	private ExpressionError expressionError;
 
+	@Getter
 	private final Span textErrorConditionMsg;
 
 	public TextFieldsBindSwitchingAlbum() {
@@ -76,7 +83,7 @@ public class TextFieldsBindSwitchingAlbum {
 			.withValidator(StringUtils::isNotBlank, "Url API is mandatory")
 			.bind(KheopsAlbumsEntity::getUrlAPI, KheopsAlbumsEntity::setUrlAPI);
 		b.forField(textCondition).withValidator(value -> {
-			if (!textCondition.getValue().equals("")) {
+			if (!textCondition.getValue().isEmpty()) {
 				expressionError = ExpressionResult.isValid(textCondition.getValue(), new ExprCondition(),
 						Boolean.class);
 				textErrorConditionMsg.setText(expressionError.getMsg());
@@ -100,30 +107,6 @@ public class TextFieldsBindSwitchingAlbum {
 			// Do nothing
 		}
 		return false;
-	}
-
-	public Binder<KheopsAlbumsEntity> getBinder() {
-		return binder;
-	}
-
-	public TextField getTextUrlAPI() {
-		return textUrlAPI;
-	}
-
-	public TextField getTextAuthorizationDestination() {
-		return textAuthorizationDestination;
-	}
-
-	public TextField getTextAuthorizationSource() {
-		return textAuthorizationSource;
-	}
-
-	public TextField getTextCondition() {
-		return textCondition;
-	}
-
-	public Span getTextErrorConditionMsg() {
-		return textErrorConditionMsg;
 	}
 
 }

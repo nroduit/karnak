@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -15,8 +15,6 @@ import org.dcm4che3.data.VR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
-import org.karnak.backend.cache.ExternalIDCache;
-import org.karnak.backend.config.RedisConfiguration;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -25,19 +23,12 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.enums.PseudonymType;
-import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.DicomNode;
 
 @SpringBootTest
 class DeIdentifyEditorTest {
-
-	@Mock
-	private ExternalIDCache externalIDCache;
-
-	@Mock
-	private RedisConfiguration redisConfiguration;
 
 	@Test
 	void should_apply_to_dicom_object() {

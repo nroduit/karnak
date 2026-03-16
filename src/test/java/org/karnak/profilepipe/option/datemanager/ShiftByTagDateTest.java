@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -54,11 +54,11 @@ public class ShiftByTagDateTest {
 	@Test
 	void shiftNoop() {
 		assertEquals("20180209", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120843", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
+		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
 		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
 		assertEquals("20180209120854.354000",
 				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("010134", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
 	}
 
 	@Test
@@ -71,11 +71,11 @@ public class ShiftByTagDateTest {
 		argumentEntities.add(days_tag);
 
 		assertEquals("20180130", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120023", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
+		assertEquals("120023.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
 		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
 		assertEquals("20180130120034.354000",
 				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("005314", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+		assertEquals("005314.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
 	}
 
 	@Test
@@ -88,11 +88,11 @@ public class ShiftByTagDateTest {
 		argumentEntities.add(days_tag);
 
 		assertEquals("20180209", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120843", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
+		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
 		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
 		assertEquals("20180209120854.354000",
 				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("010134", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
 	}
 
 	@Test
@@ -105,11 +105,11 @@ public class ShiftByTagDateTest {
 		argumentEntities.add(days_tag);
 
 		assertEquals("20180209", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120843", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
+		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
 		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
 		assertEquals("20180209120854.354000",
 				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("010134", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
 	}
 
 }

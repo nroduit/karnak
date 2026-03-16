@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -13,6 +13,10 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.karnak.backend.util.SecurityUtil;
 import org.karnak.frontend.authentication.NotAuthorizedScreen;
 import org.karnak.frontend.dicom.DicomMainView;
@@ -23,11 +27,6 @@ import org.karnak.frontend.profile.ProfileView;
 import org.karnak.frontend.project.ProjectView;
 import org.karnak.frontend.pseudonym.mapping.PseudonymMappingView;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Component
 public class UIServiceInitListener implements VaadinServiceInitListener {

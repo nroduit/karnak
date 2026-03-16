@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -11,6 +11,7 @@ package org.karnak.frontend.extid;
 
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -22,9 +23,9 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 import java.io.InputStream;
 import java.util.ArrayList;
 import org.karnak.backend.cache.Patient;
@@ -36,10 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 
 @Route(value = ExternalIDView.ROUTE, layout = MainLayout.class)
-@PageTitle("KARNAK - External ID")
+@PageTitle("Karnak - External ID")
 @Tag("extid-view")
 @Secured({ "ROLE_user", "ROLE_admin" })
-@SuppressWarnings("serial")
 public class ExternalIDView extends HorizontalLayout {
 
 	public static final String VIEW_NAME = "External pseudonym";
@@ -49,15 +49,15 @@ public class ExternalIDView extends HorizontalLayout {
 	private static final String LABEL_CHOOSE_PROJECT = "Choose a project:";
 
 	private static final String LABEL_DISCLAIMER_EXTID = "WARNING: The data that is added to this grid will be stored"
-			+ " temporally for a short period of time. If the machine restarts, the data will be deleted.";
+			+ " temporally for a short period of time. If the application restarts, the data will be deleted.";
 
 	private final ProjectDropDown projectDropDown;
 
 	private final ExternalIDGrid externalIDGrid;
 
-	private final Div validationStatus;
-
 	private final ExternalIDForm externalIDForm;
+
+	private UI ui;
 
 	private transient InputStream inputStream;
 
@@ -67,13 +67,10 @@ public class ExternalIDView extends HorizontalLayout {
 
 	private Div uploadCsvLabelDiv;
 
-	private final transient ExternalIDLogic externalIDLogic;
-
 	@Autowired
 	public ExternalIDView(final ExternalIDLogic externalIDLogic) {
 		setSizeFull();
-		this.externalIDLogic = externalIDLogic;
-		this.externalIDLogic.setExternalIDView(this);
+		externalIDLogic.setExternalIDView(this);
 		getStyle().set("overflow-y", "auto");
 		VerticalLayout verticalLayout = new VerticalLayout();
 
@@ -138,52 +135,54 @@ public class ExternalIDView extends HorizontalLayout {
 			uploadCsvButton.setMaxFiles(1);
 		});
 
-		validationStatus = externalIDGrid.setBinder();
+		Div validationStatus = externalIDGrid.setBinder();
 
 		verticalLayout.add(new H2("External Pseudonym"), labelDisclaimer, labelProject, projectDropDown,
 				uploadCsvLabelDiv, uploadCsvButton, externalIDForm, deleteAllButton, validationStatus, externalIDGrid);
 
 		add(verticalLayout);
+
+		addAttachListener(event -> this.ui = event.getUI());
 	}
 
 	public void setUploadCSVElement() {
 		uploadCsvLabelDiv = new Div();
 		uploadCsvLabelDiv.setText("Upload the CSV file containing the external ID associated with patient(s): ");
 		uploadCsvLabelDiv.getStyle().set("font-size", "large").set("font-weight", "bolder");
-		MemoryBuffer memoryBuffer = new MemoryBuffer();
-		uploadCsvButton = new Upload(memoryBuffer);
-		uploadCsvButton.setDropLabel(new Span("Drag and drop your CSV file here"));
-		uploadCsvButton.addSucceededListener(event -> {
-			inputStream = memoryBuffer.getInputStream();
 
-			Dialog chooseSeparatorDialog = new Dialog();
-			TextField separatorCSVField = new TextField("Choose the separator for reading the CSV file");
-			separatorCSVField.setWidthFull();
-			separatorCSVField.setMaxLength(1);
-			separatorCSVField.setValue(",");
-			Button openCSVButton = new Button("Open CSV");
+		uploadCsvButton = new Upload((UploadHandler) upload -> {
+			inputStream = upload.getInputStream();
+			ui.access(() -> {
+				Dialog chooseSeparatorDialog = new Dialog();
+				TextField separatorCSVField = new TextField("Choose the separator for reading the CSV file");
+				separatorCSVField.setWidthFull();
+				separatorCSVField.setMaxLength(1);
+				separatorCSVField.setValue(",");
+				Button openCSVButton = new Button("Open CSV");
 
-			openCSVButton.addClickListener(buttonClickEvent -> {
-				chooseSeparatorDialog.close();
-				char separator = ',';
-				if (!separatorCSVField.getValue().equals("")) {
-					separator = separatorCSVField.getValue().charAt(0);
-				}
-				CSVDialog csvDialog = new CSVDialog(inputStream, separator, projectDropDown.getValue());
-				csvDialog.setWidth("80%");
-				csvDialog.open();
+				openCSVButton.addClickListener(buttonClickEvent -> {
+					chooseSeparatorDialog.close();
+					char separator = ',';
+					if (!separatorCSVField.getValue().isEmpty()) {
+						separator = separatorCSVField.getValue().charAt(0);
+					}
+					CSVDialog csvDialog = new CSVDialog(inputStream, separator, projectDropDown.getValue());
+					csvDialog.setWidth("80%");
+					csvDialog.open();
 
-				csvDialog.getReadCSVButton().addClickListener(buttonClickEvent1 -> {
-					externalIDGrid.addPatientList(csvDialog.getPatientsList());
-					checkDuplicatePatient();
-					csvDialog.resetPatientsList();
+					csvDialog.getReadCSVButton().addClickListener(buttonClickEvent1 -> {
+						externalIDGrid.addPatientList(csvDialog.getPatientsList());
+						checkDuplicatePatient();
+						csvDialog.resetPatientsList();
+					});
 				});
-			});
 
-			chooseSeparatorDialog.add(separatorCSVField, openCSVButton);
-			chooseSeparatorDialog.open();
-			separatorCSVField.focus();
+				chooseSeparatorDialog.add(separatorCSVField, openCSVButton);
+				chooseSeparatorDialog.open();
+				separatorCSVField.focus();
+			});
 		});
+		uploadCsvButton.setDropLabel(new Span("Drag and drop your CSV file here"));
 	}
 
 	public void checkDuplicatePatient() {

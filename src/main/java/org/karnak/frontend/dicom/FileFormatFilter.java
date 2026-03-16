@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.swing.filechooser.FileFilter;
+import lombok.Setter;
 
 /**
  * The Class FileFormatFilter.
@@ -27,6 +28,7 @@ public class FileFormatFilter extends FileFilter {
 
 	private String fDescription;
 
+	@Setter
 	private String fFullDescription;
 
 	private String fDefaultExtension;
@@ -52,13 +54,13 @@ public class FileFormatFilter extends FileFilter {
 	}
 
 	public FileFormatFilter(String[] filters, String description) {
-		fExtensions = new TreeMap<String, FileFormatFilter>();
+		fExtensions = new TreeMap<>();
 		fDescription = null;
 		fFullDescription = null;
 		fDefaultExtension = null;
 		fUseExtensionsInDescription = true;
-		for (int i = 0; i < filters.length; i++) {
-			addExtension(filters[i]);
+		for (String filter : filters) {
+			addExtension(filter);
 		}
 		if (description != null) {
 			setDescription(description);
@@ -136,10 +138,6 @@ public class FileFormatFilter extends FileFilter {
 	public void setExtensionListInDescription(boolean b) {
 		fUseExtensionsInDescription = b;
 		fFullDescription = null;
-	}
-
-	public void setFFullDescription(String fFullDescription) {
-		this.fFullDescription = fFullDescription;
 	}
 
 }

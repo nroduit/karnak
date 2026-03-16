@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -18,9 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.enums.SecurityRole;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -29,10 +28,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public final class SecurityUtil {
-
-	private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
 	private SecurityUtil() {
 	}
@@ -108,7 +106,7 @@ public final class SecurityUtil {
 			VaadinServletService.getCurrentServletRequest().logout();
 		}
 		catch (ServletException e) {
-			LOG.error("Error during logout");
+			log.error("Error during logout");
 		}
 	}
 

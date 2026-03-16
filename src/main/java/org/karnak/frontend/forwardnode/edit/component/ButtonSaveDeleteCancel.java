@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -12,7 +12,9 @@ package org.karnak.frontend.forwardnode.edit.component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import lombok.Getter;
 
+@Getter
 public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private final Button save;
@@ -57,18 +59,6 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 		save.setEnabled(enabled);
 		delete.setEnabled(enabled);
 		cancel.setEnabled(enabled);
-	}
-
-	public Button getSave() {
-		return save;
-	}
-
-	public Button getDelete() {
-		return delete;
-	}
-
-	public Button getCancel() {
-		return cancel;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -27,15 +27,13 @@ import org.karnak.frontend.dicom.mwl.DicomWorkListView;
 import org.springframework.security.access.annotation.Secured;
 
 @Route(value = DicomMainView.ROUTE, layout = MainLayout.class)
-@PageTitle("KARNAK - DICOM Tools")
+@PageTitle("Karnak - DICOM Tools")
 @Secured({ "ROLE_admin" })
 public class DicomMainView extends VerticalLayout {
 
 	public static final String VIEW_NAME = "DICOM Tools";
 
 	public static final String ROUTE = "dicom";
-
-	private static final long serialVersionUID = 1L;
 
 	// UI COMPONENTS
 	private DicomWebToolsBrand dicomWebToolsBrand;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -20,7 +20,8 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import java.io.ByteArrayInputStream;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -50,7 +51,7 @@ public class ProfileComponent extends VerticalLayout {
 		this.dialogWarning = new WarningDeleteProfileUsed();
 	}
 
-	public static StreamResource createStreamResource(ProfileEntity profileEntity) {
+	public static String createStreamResource(ProfileEntity profileEntity) {
 		try {
 			Set<ProfileElementEntity> profileElementEntities = profileEntity.getProfileElementEntities()
 				.stream()
@@ -62,15 +63,12 @@ public class ProfileComponent extends VerticalLayout {
 			ObjectMapper mapper = new ObjectMapper(
 					new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
 
-			String strYaml = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(profileEntity);
-			return new StreamResource(String.format("%s.yml", profileEntity.getName()).replace(" ", "-"),
-					() -> new ByteArrayInputStream(strYaml.getBytes()));
-
+			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(profileEntity);
 		}
 		catch (final Exception e) {
 			log.error("Cannot create the StreamResource for downloading the yaml profile", e);
 		}
-		return null;
+		return "";
 	}
 
 	public void setProfile() {
@@ -89,8 +87,8 @@ public class ProfileComponent extends VerticalLayout {
 			updatedProfilePipes();
 		});
 
-		ProfileMetadata minVersion = new ProfileMetadata("Min. version KARNAK required",
-				profileEntity.getMinimumKarnakVersion(), profileEntity.getByDefault());
+		ProfileMetadata minVersion = new ProfileMetadata("Min Karnak version", profileEntity.getMinimumKarnakVersion(),
+				profileEntity.getByDefault());
 		minVersion.getValidateEditButton().addClickListener(event -> {
 			profileEntity.setMinimumKarnakVersion(minVersion.getValue());
 			updatedProfilePipes();
@@ -100,7 +98,7 @@ public class ProfileComponent extends VerticalLayout {
 
 		ProfileMasksView profileMasksView = new ProfileMasksView(profileEntity.getMaskEntities());
 
-		if (profileEntity.getByDefault().booleanValue()) {
+		if (profileEntity.getByDefault()) {
 			add(new HorizontalLayout(title, download), name, version, minVersion, profileMasksView);
 		}
 		else {
@@ -111,8 +109,8 @@ public class ProfileComponent extends VerticalLayout {
 
 	private void updatedProfilePipes() {
 		profileEntity = profileLogic.updateProfile(profileEntity);
-		final StreamResource profileStreamResource = createStreamResource(profileEntity);
-		download.setHref(profileStreamResource);
+		String profile = createStreamResource(profileEntity);
+		updatedDownloadProfile(profile);
 		createDeleteButton(profileEntity);
 	}
 
@@ -137,10 +135,17 @@ public class ProfileComponent extends VerticalLayout {
 	}
 
 	public void createDownloadButton(ProfileEntity profileEntity) {
-		final StreamResource profileStreamResource = createStreamResource(profileEntity);
-		download = new Anchor(profileStreamResource, "");
+		String profile = createStreamResource(profileEntity);
+		download = new Anchor();
+		updatedDownloadProfile(profile);
 		download.getElement().setAttribute("download", true);
 		download.add(new Button(new Icon(VaadinIcon.DOWNLOAD_ALT)));
+	}
+
+	private void updatedDownloadProfile(String profile) {
+		download.setHref(DownloadHandler
+			.fromInputStream(event -> new DownloadResponse(new ByteArrayInputStream(profile.getBytes()),
+					String.format("%s.yml", profileEntity.getName()).replace(" ", "-"), "application/x-yaml", -1)));
 	}
 
 	private void createDeleteButton(ProfileEntity profileEntity) {

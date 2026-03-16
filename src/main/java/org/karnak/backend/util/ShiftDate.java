@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -21,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.dicom.DateTimeUtils;
-import org.weasis.dicom.util.DateUtil;
 
 @Slf4j
 public class ShiftDate {
@@ -32,13 +31,13 @@ public class ShiftDate {
 	public static String dateByDays(String date, int shiftDays) {
 		LocalDate localDate = DateTimeUtils.parseDA(date);
 		LocalDate dummyLocalDate = localDate.minusDays(shiftDays);
-		return DateUtil.formatDicomDate(dummyLocalDate);
+		return DateTimeUtils.formatDA(dummyLocalDate);
 	}
 
 	public static String timeBySeconds(String time, int shiftSeconds) {
 		LocalTime localTime = DateTimeUtils.parseTM(time);
 		LocalTime dummyLocalTime = localTime.minusSeconds(shiftSeconds);
-		return DateUtil.formatDicomTime(dummyLocalTime);
+		return DateTimeUtils.formatTM(dummyLocalTime);
 	}
 
 	public static String datetimeByDays(Date dateTime, int shiftDays, int shiftSeconds) {

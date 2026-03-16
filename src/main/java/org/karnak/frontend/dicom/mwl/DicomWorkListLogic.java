@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -77,7 +77,7 @@ public class DicomWorkListLogic {
 
 		view.loadAttributes(state.getDicomRSP());
 
-		if (state != null && state.getStatus() != Status.Success) {
+		if (state.getStatus() != Status.Success) {
 			String errorMsg = "Cannot get a worklist! DICOM error status: " + Integer.toHexString(state.getStatus());
 			Message message = new Message(MessageLevel.ERROR, MessageFormat.TEXT, errorMsg);
 			view.displayMessage(message);

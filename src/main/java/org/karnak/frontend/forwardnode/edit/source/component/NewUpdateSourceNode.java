@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -13,18 +13,21 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 
-@SuppressWarnings("serial")
 public class NewUpdateSourceNode extends VerticalLayout {
 
+	@Getter
 	private final Binder<DicomSourceNodeEntity> binderFormSourceNode;
 
 	private final FormSourceNode formSourceNode;
 
+	@Getter
 	private final ButtonSaveDeleteCancel buttonSaveDeleteCancel;
 
+	@Getter
 	private DicomSourceNodeEntity currentSourceNode;
 
 	public NewUpdateSourceNode() {
@@ -54,22 +57,6 @@ public class NewUpdateSourceNode extends VerticalLayout {
 
 	public Button getButtonCancel() {
 		return buttonSaveDeleteCancel.getCancel();
-	}
-
-	public Binder<DicomSourceNodeEntity> getBinderFormSourceNode() {
-		return binderFormSourceNode;
-	}
-
-	public ButtonSaveDeleteCancel getButtonSaveDeleteCancel() {
-		return buttonSaveDeleteCancel;
-	}
-
-	public DicomSourceNodeEntity getCurrentSourceNode() {
-		return currentSourceNode;
-	}
-
-	public void setCurrentSourceNode(DicomSourceNodeEntity currentSourceNode) {
-		this.currentSourceNode = currentSourceNode;
 	}
 
 }

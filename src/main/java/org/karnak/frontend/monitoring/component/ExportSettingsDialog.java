@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Karnak Team and other contributors.
+ * Copyright (c) 2022-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -20,6 +20,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.frontend.util.NotificationUtil;
 
 /**
@@ -33,6 +35,8 @@ public class ExportSettingsDialog extends Dialog {
 	private TextField quoteCharacterTextField;
 
 	// Export setting model
+	@Setter
+	@Getter
 	private ExportSettings exportSettings;
 
 	// Binder
@@ -133,14 +137,6 @@ public class ExportSettingsDialog extends Dialog {
 		// Final layout
 		VerticalLayout dialogLayout = new VerticalLayout(titleLayout, fieldsLayout, buttonLayout);
 		add(dialogLayout);
-	}
-
-	public ExportSettings getExportSettings() {
-		return exportSettings;
-	}
-
-	public void setExportSettings(ExportSettings exportSettings) {
-		this.exportSettings = exportSettings;
 	}
 
 }

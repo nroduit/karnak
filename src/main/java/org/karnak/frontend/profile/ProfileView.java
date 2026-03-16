@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -14,12 +14,14 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
+import java.io.InputStream;
+import lombok.Getter;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.profile.component.ProfileGrid;
@@ -30,9 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 
 @Route(value = ProfileView.ROUTE, layout = MainLayout.class)
-@PageTitle("KARNAK - Profiles")
+@PageTitle("Karnak - Profiles")
 @Secured({ "ROLE_admin" })
-@SuppressWarnings("serial")
+
 public class ProfileView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Profiles";
@@ -41,21 +43,26 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 
 	private final ProfileLogic profileLogic;
 
+	@Getter
 	private final ProfileComponent profileComponent;
 
+	@Getter
 	private final ProfileElementMainView profileElementMainView;
 
+	@Getter
 	private final ProfileGrid profileGrid;
 
+	@Getter
 	private final ProfileErrorView profileErrorView;
 
 	private VerticalLayout barAndGridLayout;
 
+	@Getter
 	private final HorizontalLayout profileHorizontalLayout;
 
 	private Upload uploadProfile;
 
-	private MemoryBuffer memoryBuffer;
+	private UI ui;
 
 	@Autowired
 	public ProfileView(final ProfileLogic profileLogic) {
@@ -71,10 +78,10 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 		initComponents();
 		buildLayout();
 
-		addEventUploadProfile();
-		addEventGridSelection();
-
 		add(barAndGridLayout, profileHorizontalLayout);
+
+		addEventGridSelection();
+		addAttachListener(event -> this.ui = event.getUI());
 	}
 
 	@Override
@@ -116,14 +123,13 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 	}
 
 	private void initUploadProfile() {
-		memoryBuffer = new MemoryBuffer();
-		// https://github.com/vaadin/vaadin-upload-flow/blob/6fa9cc429e1d0894704fb962e0df375a9d0439c8/vaadin-upload-flow-integration-tests/src/main/java/com/vaadin/flow/component/upload/tests/it/UploadView.java#L122
-		uploadProfile = new Upload(memoryBuffer);
+		uploadProfile = new Upload((UploadHandler) upload -> {
+			InputStream inputStream = upload.getInputStream();
+			if (ui != null) {
+				ui.access(() -> profileLogic.setProfileComponent(inputStream));
+			}
+		});
 		uploadProfile.setDropLabel(new Span("Drag and drop your profile here"));
-	}
-
-	private void addEventUploadProfile() {
-		uploadProfile.addSucceededListener(e -> profileLogic.setProfileComponent(memoryBuffer.getInputStream()));
 	}
 
 	private void addEventGridSelection() {
@@ -135,33 +141,17 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 	 * @param profileEntity Profile to navigate to
 	 */
 	public void navigateProfile(ProfileEntity profileEntity) {
-		if (profileEntity == null) {
-			UI.getCurrent().navigate(ProfileView.class, "");
+		if (ui != null) {
+			ui.access(() -> {
+				if (profileEntity == null) {
+					ui.navigate(ProfileView.class, "");
+				}
+				else {
+					String profileID = String.valueOf(profileEntity.getId());
+					ui.navigate(ProfileView.class, profileID);
+				}
+			});
 		}
-		else {
-			String profileID = String.valueOf(profileEntity.getId());
-			UI.getCurrent().navigate(ProfileView.class, profileID);
-		}
-	}
-
-	public ProfileComponent getProfileComponent() {
-		return profileComponent;
-	}
-
-	public ProfileElementMainView getProfileElementMainView() {
-		return profileElementMainView;
-	}
-
-	public ProfileGrid getProfileGrid() {
-		return profileGrid;
-	}
-
-	public ProfileErrorView getProfileErrorView() {
-		return profileErrorView;
-	}
-
-	public HorizontalLayout getProfileHorizontalLayout() {
-		return profileHorizontalLayout;
 	}
 
 }

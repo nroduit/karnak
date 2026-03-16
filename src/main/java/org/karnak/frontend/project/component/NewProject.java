@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -13,17 +13,21 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import lombok.Getter;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.frontend.component.ProfileDropDown;
 
 public class NewProject extends HorizontalLayout {
 
+	@Getter
 	private final Binder<ProjectEntity> binder;
 
+	@Getter
 	private final Button buttonAdd;
 
 	private final TextField textResearchName;
 
+	@Getter
 	private final ProfileDropDown profileDropDown;
 
 	public NewProject() {
@@ -47,20 +51,8 @@ public class NewProject extends HorizontalLayout {
 		textResearchName.setPlaceholder("Enter Name");
 	}
 
-	public Button getButtonAdd() {
-		return buttonAdd;
-	}
-
 	public void clear() {
 		binder.readBean(new ProjectEntity());
-	}
-
-	public Binder<ProjectEntity> getBinder() {
-		return binder;
-	}
-
-	public ProfileDropDown getProfileDropDown() {
-		return profileDropDown;
 	}
 
 }

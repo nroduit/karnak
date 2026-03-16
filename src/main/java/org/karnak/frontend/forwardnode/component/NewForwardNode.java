@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -16,7 +16,9 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
 
+@Getter
 public class NewForwardNode extends HorizontalLayout {
 
 	private final Button newForwardNodeBtn;
@@ -77,22 +79,6 @@ public class NewForwardNode extends HorizontalLayout {
 		});
 		// CTRL+N will create a new window which is unavoidable
 		newForwardNodeBtn.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-	}
-
-	public Button getNewForwardNodeBtn() {
-		return newForwardNodeBtn;
-	}
-
-	public TextField getNewAETitleForwardNode() {
-		return newAETitleForwardNode;
-	}
-
-	public Button getAddNewForwardNode() {
-		return addNewForwardNode;
-	}
-
-	public Button getCancelNewForwardNode() {
-		return cancelNewForwardNode;
 	}
 
 }

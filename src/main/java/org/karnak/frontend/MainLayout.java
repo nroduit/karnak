@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -37,7 +37,6 @@ import org.springframework.security.access.annotation.Secured;
 @CssImport(value = "./styles/shared-styles.css")
 @Route(value = "mainLayout")
 @Secured({ "ROLE_admin" })
-@SuppressWarnings("serial")
 public class MainLayout extends FlexLayout implements RouterLayout {
 
 	private final Menu menu;
@@ -58,14 +57,11 @@ public class MainLayout extends FlexLayout implements RouterLayout {
 		addSecuredMenu(DicomMainView.class, DicomMainView.VIEW_NAME, VaadinIcon.TOOLS.create());
 		addSecuredMenu(AuthConfigView.class, AuthConfigView.VIEW_NAME, VaadinIcon.LOCK.create());
 		addSecuredMenu(HelpView.class, HelpView.VIEW_NAME, VaadinIcon.QUESTION_CIRCLE.create());
-		// menu.addView(AboutView.class, AboutView.VIEW_NAME,
-		// VaadinIcon.INFO_CIRCLE.create());
 
 		// Add menu to the layout
 		add(menu);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	protected void onAttach(AttachEvent attachEvent) {
 		super.onAttach(attachEvent);

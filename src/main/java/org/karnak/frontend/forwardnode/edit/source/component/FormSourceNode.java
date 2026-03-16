@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -31,12 +31,9 @@ public class FormSourceNode extends VerticalLayout {
 
 	private final Checkbox checkHostname;
 
-	private final ButtonSaveDeleteCancel buttonSaveDeleteCancel;
-
 	public FormSourceNode(Binder<DicomSourceNodeEntity> binder, ButtonSaveDeleteCancel buttonSaveDeleteCancel) {
 		setSizeFull();
 		this.binder = binder;
-		this.buttonSaveDeleteCancel = buttonSaveDeleteCancel;
 		aeTitle = new TextField("AETitle");
 		description = new TextField("Description");
 		hostname = new TextField("Hostname");
@@ -62,6 +59,12 @@ public class FormSourceNode extends VerticalLayout {
 		binder.forField(aeTitle)
 			.withValidator(StringUtils::isNotBlank, "AETitle is mandatory")
 			.bind(DicomSourceNodeEntity::getAeTitle, DicomSourceNodeEntity::setAeTitle);
+		binder.forField(description).bind(DicomSourceNodeEntity::getDescription, DicomSourceNodeEntity::setDescription);
+
+		binder.forField(hostname).bind(DicomSourceNodeEntity::getHostname, DicomSourceNodeEntity::setHostname);
+
+		binder.forField(checkHostname)
+			.bind(DicomSourceNodeEntity::getCheckHostname, DicomSourceNodeEntity::setCheckHostname);
 		binder.bindInstanceFields(this);
 	}
 

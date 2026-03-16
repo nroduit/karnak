@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -14,11 +14,15 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.dom.Style;
+import lombok.Getter;
+import lombok.Setter;
 import org.karnak.frontend.component.BoxShadowComponent;
 
 /**
  * Input pseudonym that the user wants to look for
  */
+@Setter
+@Getter
 public class MappingInputComponent extends VerticalLayout {
 
 	// Components
@@ -49,22 +53,6 @@ public class MappingInputComponent extends VerticalLayout {
 		pseudonymBoxShadowComponent.getElement().getStyle().set("padding", "10px");
 		pseudonymBoxShadowComponent.getElement().getStyle().set("margin", "auto");
 		add(pseudonymBoxShadowComponent);
-	}
-
-	public TextField getPseudonymTextField() {
-		return pseudonymTextField;
-	}
-
-	public void setPseudonymTextField(TextField pseudonymTextField) {
-		this.pseudonymTextField = pseudonymTextField;
-	}
-
-	public Button getFindButton() {
-		return findButton;
-	}
-
-	public void setFindButton(Button findButton) {
-		this.findButton = findButton;
 	}
 
 }

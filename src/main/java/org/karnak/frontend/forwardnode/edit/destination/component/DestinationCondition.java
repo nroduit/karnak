@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -51,7 +51,7 @@ public class DestinationCondition extends Div {
 
 	private void setBinder(Binder<DestinationEntity> binder) {
 		binder.forField(condition).withValidator(value -> {
-			if (!condition.getValue().equals("")) {
+			if (!condition.getValue().isEmpty()) {
 				ExpressionError expressionError = ExpressionResult.isValid(condition.getValue(), new ExprCondition(),
 						Boolean.class);
 				textErrorConditionMsg.setText(expressionError.getMsg());

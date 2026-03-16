@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Karnak Team and other contributors.
+ * Copyright (c) 2022-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -13,6 +13,8 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.vaadin.flow.component.notification.Notification.Position;
 import java.io.IOException;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.backend.service.TransferMonitoringService;
@@ -33,6 +35,8 @@ import org.springframework.stereotype.Service;
 public class MonitoringLogic {
 
 	// View
+	@Setter
+	@Getter
 	private MonitoringView monitoringView;
 
 	// Services
@@ -42,14 +46,6 @@ public class MonitoringLogic {
 	public MonitoringLogic(final TransferMonitoringService transferMonitoringService) {
 		this.transferMonitoringService = transferMonitoringService;
 		this.monitoringView = null;
-	}
-
-	public MonitoringView getMonitoringView() {
-		return monitoringView;
-	}
-
-	public void setMonitoringView(MonitoringView monitoringView) {
-		this.monitoringView = monitoringView;
 	}
 
 	/**

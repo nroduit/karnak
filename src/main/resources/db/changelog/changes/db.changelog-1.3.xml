@@ -31,7 +31,19 @@
     <preConditions onFail="MARK_RAN">
       <columnExists tableName="profile" columnName="defaultissueropatientid"/>
     </preConditions>
-    <sql>
+    <sql dbms="h2">
+      MERGE INTO destination
+        USING (
+          SELECT dest.id as dest_id, profile.defaultissueropatientid
+          FROM destination as dest
+                 JOIN project ON dest.project_id = project.id
+                 JOIN profile ON project.profile_pipe_id = profile.id
+          WHERE profile.defaultissueropatientid IS NOT NULL
+        ) as source
+        ON destination.id = source.dest_id
+        WHEN MATCHED THEN UPDATE SET issuer_by_default = source.defaultissueropatientid
+    </sql>
+    <sql dbms="postgresql">
       UPDATE destination
       SET issuer_by_default = profile.defaultissueropatientid FROM destination as dest
       JOIN project
@@ -197,7 +209,32 @@
       minValue="1" sequenceName="transfer_status_sequence" startValue="1"/>
   </changeSet>
 
-  <changeSet author="karnak" id="1.3-14">
+  <changeSet author="karnak" id="1.3-14-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="secret"/>
+      </not>
+    </preConditions>
+    <createTable tableName="secret">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="secret_pkey"/>
+      </column>
+      <column name="project_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="secret_key" type="BYTEA">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="active" type="BOOLEAN">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.3-14-postgresql" dbms="postgresql">
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="secret"/>
@@ -227,7 +264,12 @@
       <tableExists tableName="secret"/>
       <tableExists tableName="project"/>
     </preConditions>
-    <sql>
+    <sql dbms="h2">
+      INSERT INTO secret(id, project_id, secret_key, creation_date, active)
+      SELECT NEXT VALUE FOR hibernate_sequence, id, secret, current_timestamp, true
+      FROM project
+    </sql>
+    <sql dbms="postgresql">
       INSERT INTO secret(id, project_id, key, creation_date, active)
       SELECT NEXTVAL('hibernate_sequence'), id, secret, current_timestamp, true
       FROM project;
@@ -376,7 +418,7 @@
     <renameColumn newColumnName="argument_value" oldColumnName="value" tableName="arguments"/>
   </changeSet>
 
-  <changeSet author="karnak" id="1.3-30">
+  <changeSet author="karnak" id="1.3-30" dbms="postgresql">
     <preConditions onFail="MARK_RAN">
         <columnExists tableName="secret" columnName="key"/>
     </preConditions>

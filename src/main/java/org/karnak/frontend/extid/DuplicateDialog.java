@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -14,7 +14,6 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import java.util.Collection;
-import java.util.List;
 import org.karnak.backend.cache.Patient;
 
 public class DuplicateDialog extends Dialog {
@@ -25,7 +24,7 @@ public class DuplicateDialog extends Dialog {
 
 	public DuplicateDialog(String title, String text, Collection<Patient> duplicateList, String buttonText) {
 		removeAll();
-		this.duplicateList = (List<Patient>) (List<?>) duplicateList;
+		this.duplicateList = duplicateList;
 
 		Div divTitle = new Div();
 		divTitle.setText(title);

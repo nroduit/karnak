@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -13,11 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.karnak.backend.cache.ExternalIDCache;
 import org.karnak.backend.cache.Patient;
+import org.karnak.backend.cache.PatientClient;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
@@ -34,16 +35,17 @@ public class PseudonymMappingLogic {
 	private final ProjectService projectService;
 
 	// Cache
-	private final ExternalIDCache externalIDCache;
+	private final PatientClient externalIDCache;
 
 	/**
 	 * Autowired constructor
-	 * @param externalIDCache External ID Cache
+	 * @param patientClient External ID Cache
 	 * @param projectService Project service
 	 */
 	@Autowired
-	public PseudonymMappingLogic(final ExternalIDCache externalIDCache, final ProjectService projectService) {
-		this.externalIDCache = externalIDCache;
+	public PseudonymMappingLogic(@Qualifier("patientClient") PatientClient patientClient,
+			ProjectService projectService) {
+		this.externalIDCache = patientClient;
 		this.projectService = projectService;
 		this.pseudonymMappingView = null;
 	}
@@ -57,8 +59,7 @@ public class PseudonymMappingLogic {
 	public Map<String, Patient> retrieveExternalIDCachePatients(String pseudonym) {
 		Map<String, Patient> externalIDCacheMapping = new HashMap<>();
 
-		// Look for patients in externalID cache corresponding to the input of the
-		// user
+		// Look for patients in externalID cache corresponding to the input of the user
 		List<Patient> patientsFound = externalIDCache.getAll()
 			.stream()
 			.filter(extId -> Objects.equals(extId.getPseudonym(), pseudonym))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -31,9 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.weasis.core.util.StringUtil;
 
 @Slf4j
 public class CSVDialog extends Dialog {
@@ -53,10 +55,12 @@ public class CSVDialog extends Dialog {
 	private final String[] selectValues = { "", EXTERNAL_PSEUDONYM, PATIENT_ID, PATIENT_FIRST_NAME, PATIENT_LAST_NAME,
 			ISSUER_OF_PATIENT_ID };
 
+	@Getter
 	private final List<Patient> patientsList;
 
 	private NumberField fromLineField;
 
+	@Getter
 	private Button readCSVButton;
 
 	private Button cancelButton;
@@ -121,9 +125,7 @@ public class CSVDialog extends Dialog {
 
 		readCSVButton = new Button("Upload CSV", event -> {
 			if (selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM).equals(-1)
-					|| selectValuesPositionHashMap.get(PATIENT_ID).equals(-1)
-					|| selectValuesPositionHashMap.get(PATIENT_FIRST_NAME).equals(-1)
-					|| selectValuesPositionHashMap.get(PATIENT_LAST_NAME).equals(-1)) {
+					|| selectValuesPositionHashMap.get(PATIENT_ID).equals(-1)) {
 				generateErrorMsg();
 			}
 			else {
@@ -140,7 +142,7 @@ public class CSVDialog extends Dialog {
 	public void buildGrid() {
 		csvGrid = new Grid<>();
 
-		String[] headers = allRows.isEmpty() ? new String[0] : allRows.get(0);
+		String[] headers = allRows.isEmpty() ? new String[0] : allRows.getFirst();
 		listOfSelect = new ArrayList<>();
 
 		selectValuesPositionHashMap = new HashMap<>();
@@ -188,7 +190,7 @@ public class CSVDialog extends Dialog {
 			int currentPosition = Integer.parseInt(currentSelect.getId().orElse("-1"));
 
 			currentSelect.setItemEnabledProvider(item -> selectValuesPositionHashMap.get(item).equals(-1)
-					|| selectValuesPositionHashMap.get(item).equals(currentPosition) || item.equals(""));
+					|| selectValuesPositionHashMap.get(item).equals(currentPosition) || item.isEmpty());
 		}
 	}
 
@@ -205,7 +207,7 @@ public class CSVDialog extends Dialog {
 		final Stream<String> streamFieldNotSelected = selectValuesPositionHashMap.entrySet()
 			.stream()
 			.map(stringIntegerEntry -> {
-				if (stringIntegerEntry.getValue().equals(-1) && !stringIntegerEntry.getKey().equals("")
+				if (stringIntegerEntry.getValue().equals(-1) && !stringIntegerEntry.getKey().isEmpty()
 						&& !stringIntegerEntry.getKey().equals(ISSUER_OF_PATIENT_ID)) {
 					return stringIntegerEntry.getKey();
 				}
@@ -213,7 +215,7 @@ public class CSVDialog extends Dialog {
 					return "";
 				}
 			})
-			.filter(s -> !s.equals(""));
+			.filter(StringUtil::hasText);
 		final String concatFieldNotSelected = streamFieldNotSelected.collect(Collectors.joining(", "));
 		errorMsg.setText(String.format("These fields are not selected: %s", concatFieldNotSelected));
 	}
@@ -225,9 +227,7 @@ public class CSVDialog extends Dialog {
 				String issuerOfPatientID = selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID).equals(-1) ? ""
 						: row[selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID)];
 				final Patient newPatient = new Patient(row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
-						row[selectValuesPositionHashMap.get(PATIENT_ID)],
-						row[selectValuesPositionHashMap.get(PATIENT_FIRST_NAME)],
-						row[selectValuesPositionHashMap.get(PATIENT_LAST_NAME)], issuerOfPatientID,
+						row[selectValuesPositionHashMap.get(PATIENT_ID)], "", "", issuerOfPatientID,
 						projectEntity.getId());
 				patientsList.add(newPatient);
 			}
@@ -235,14 +235,6 @@ public class CSVDialog extends Dialog {
 		catch (Exception e) {
 			log.error("Error when reading selected columns", e);
 		}
-	}
-
-	public Button getReadCSVButton() {
-		return readCSVButton;
-	}
-
-	public List<Patient> getPatientsList() {
-		return patientsList;
 	}
 
 	public void resetPatientsList() {

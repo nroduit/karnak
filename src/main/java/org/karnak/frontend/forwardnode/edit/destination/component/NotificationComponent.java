@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Karnak Team and other contributors.
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -17,6 +17,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationResult;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.constant.Notification;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -29,18 +31,32 @@ import org.karnak.frontend.util.UIS;
 public class NotificationComponent extends VerticalLayout {
 
 	// Components
+	@Setter
+	@Getter
 	private TextField notify;
 
+	@Setter
+	@Getter
 	private TextField notifyObjectErrorPrefix;
 
+	@Setter
+	@Getter
 	private TextField notifyObjectRejectionPrefix;
 
+	@Setter
+	@Getter
 	private TextField notifyObjectPattern;
 
+	@Setter
+	@Getter
 	private TextField notifyObjectValues;
 
+	@Setter
+	@Getter
 	private TextField notifyInterval;
 
+	@Setter
+	@Getter
 	private Checkbox activateNotification;
 
 	private Div notificationInputsDiv;
@@ -71,6 +87,9 @@ public class NotificationComponent extends VerticalLayout {
 	 * Add components in notification components
 	 */
 	private void addComponents() {
+		// notificationObjectsDiv.add(UIS.setWidthFull(new HorizontalLayout(notify)),
+		// UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix,
+		// notifyObjectRejectionPrefix)));
 		notificationInputsDiv.add(UIS.setWidthFull(new VerticalLayout(UIS.setWidthFull(new HorizontalLayout(notify)),
 				UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectRejectionPrefix)),
 				UIS.setWidthFull(new HorizontalLayout(notifyObjectPattern, notifyObjectValues, notifyInterval)))));
@@ -302,62 +321,6 @@ public class NotificationComponent extends VerticalLayout {
 		// Subject Values
 		binder.forField(getNotifyObjectValues())
 			.bind(DestinationEntity::getNotifyObjectValues, DestinationEntity::setNotifyObjectValues);
-	}
-
-	public TextField getNotify() {
-		return notify;
-	}
-
-	public void setNotify(TextField notify) {
-		this.notify = notify;
-	}
-
-	public TextField getNotifyObjectErrorPrefix() {
-		return notifyObjectErrorPrefix;
-	}
-
-	public void setNotifyObjectErrorPrefix(TextField notifyObjectErrorPrefix) {
-		this.notifyObjectErrorPrefix = notifyObjectErrorPrefix;
-	}
-
-	public TextField getNotifyObjectRejectionPrefix() {
-		return notifyObjectRejectionPrefix;
-	}
-
-	public void setNotifyObjectRejectionPrefix(TextField notifyObjectRejectionPrefix) {
-		this.notifyObjectRejectionPrefix = notifyObjectRejectionPrefix;
-	}
-
-	public TextField getNotifyObjectPattern() {
-		return notifyObjectPattern;
-	}
-
-	public void setNotifyObjectPattern(TextField notifyObjectPattern) {
-		this.notifyObjectPattern = notifyObjectPattern;
-	}
-
-	public TextField getNotifyObjectValues() {
-		return notifyObjectValues;
-	}
-
-	public void setNotifyObjectValues(TextField notifyObjectValues) {
-		this.notifyObjectValues = notifyObjectValues;
-	}
-
-	public TextField getNotifyInterval() {
-		return notifyInterval;
-	}
-
-	public void setNotifyInterval(TextField notifyInterval) {
-		this.notifyInterval = notifyInterval;
-	}
-
-	public Checkbox getActivateNotification() {
-		return activateNotification;
-	}
-
-	public void setActivateNotification(Checkbox activateNotification) {
-		this.activateNotification = activateNotification;
 	}
 
 }

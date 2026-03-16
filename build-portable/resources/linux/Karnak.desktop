@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=APPLICATION_NAME
+Comment=DICOM gateway for deidentification
+Exec=APPLICATION_LAUNCHER
+StartupWMClass=org-karnak-launcher-AppLauncher
+Icon=APPLICATION_ICON
+Terminal=true
+Type=Application
+Categories=DEPLOY_BUNDLE_CATEGORY

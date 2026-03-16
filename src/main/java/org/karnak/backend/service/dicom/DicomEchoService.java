@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.service.thread.DicomEchoThread;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,24 +40,26 @@ public class DicomEchoService {
 	}
 
 	private List<Future<String>> createThreadsResult(List<ConfigNode> nodes) throws InterruptedException {
-		List<Future<String>> threadResult = null;
-		try {
-			ExecutorService executorService = Executors.newFixedThreadPool(nodes.size());
+		List<Future<String>> threadResult = new ArrayList<>();
+		int poolSize = Math.min(nodes.size(), Runtime.getRuntime().availableProcessors());
 
-			List<DicomEchoThread> threads = new ArrayList<>();
-
-			for (ConfigNode node : nodes) {
-				DicomEchoThread dicomEchoThread = new DicomEchoThread(node);
-				threads.add(dicomEchoThread);
-			}
-
-			threadResult = executorService.invokeAll(threads);
-
-			return threadResult;
+		try (ExecutorService executorService = Executors.newFixedThreadPool(poolSize)) {
+			List<DicomEchoThread> threads = createThreads(nodes); // Refactored helper
+			threadResult = executorService.invokeAll(threads, 30, TimeUnit.SECONDS);
 		}
 		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw e;
 		}
+		return threadResult;
+	}
+
+	private List<DicomEchoThread> createThreads(List<ConfigNode> nodes) {
+		List<DicomEchoThread> threads = new ArrayList<>();
+		for (ConfigNode node : nodes) {
+			threads.add(new DicomEchoThread(node));
+		}
+		return threads;
 	}
 
 }

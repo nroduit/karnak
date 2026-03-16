@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -31,13 +31,12 @@ public class ToggleButtonTheme extends HorizontalLayout {
 		UI.getCurrent()
 			.getPage()
 			.executeJs("return localStorage.getItem($0)", THEME_COLOR_KEY)
-			.then(String.class, string -> {
-				final String themeColor = string;
+			.then(String.class, themeColor -> {
 				if (themeColor != null) {
-					if (string.equals(Lumo.DARK)) {
+					if (themeColor.equals(Lumo.DARK)) {
 						toggleButton.setValue(true);
 					}
-					else if (string.equals(Lumo.LIGHT)) {
+					else if (themeColor.equals(Lumo.LIGHT)) {
 						toggleButton.setValue(false);
 					}
 				}
