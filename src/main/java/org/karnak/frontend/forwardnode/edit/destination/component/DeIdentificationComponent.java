@@ -214,7 +214,8 @@ public class DeIdentificationComponent extends VerticalLayout {
 	}
 
 	/**
-	 * Build skip issuer of patient ID checkbox — hidden by default until CACHE_EXTID is selected
+	 * Build skip issuer of patient ID checkbox — hidden by default until CACHE_EXTID is
+	 * selected
 	 */
 	private void buildSkipIssuerOfPatientIdCheckbox() {
 		skipIssuerOfPatientIdCheckbox = new Checkbox(LABEL_CHECKBOX_SKIP_ISSUER);
@@ -311,7 +312,8 @@ public class DeIdentificationComponent extends VerticalLayout {
 		}
 
 		if (!destinationEntity.isDesidentification()) {
-			// Reset the destination for pseudonym type, project, issuer of patient id, skip issuer
+			// Reset the destination for pseudonym type, project, issuer of patient id,
+			// skip issuer
 			destinationEntity.setDeIdentificationProjectEntity(null);
 			destinationEntity.setPseudonymType(CACHE_EXTID);
 			destinationEntity.setIssuerByDefault(null);

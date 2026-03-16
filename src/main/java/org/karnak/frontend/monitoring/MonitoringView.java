@@ -58,7 +58,7 @@ public class MonitoringView extends VerticalLayout {
 	private Anchor exportAnchor;
 
 	private Button exportSettingsButton;
-	
+
 	private Button deleteButton;
 
 	private ExportSettingsDialog exportSettingsDialog;
@@ -117,7 +117,7 @@ public class MonitoringView extends VerticalLayout {
 		exportButton.setWidthFull();
 		exportAnchor.getElement().setAttribute("download", true);
 		exportAnchor.add(exportButton);
-		
+
 		// Delete button
 		deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
 		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);

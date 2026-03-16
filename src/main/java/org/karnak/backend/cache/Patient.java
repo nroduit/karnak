@@ -38,7 +38,6 @@ public class Patient implements Serializable {
 
 	private Long projectID;
 
-
 	public Patient(String pseudonym, String patientId, String patientName, String patientFirstName,
 			String patientLastName, LocalDate patientBirthDate, String patientSex, String issuerOfPatientId,
 			Long projectID) {
@@ -147,7 +146,6 @@ public class Patient implements Serializable {
 	public void setProjectID(Long projectID) {
 		this.projectID = projectID;
 	}
-
 
 	protected static String createPatientName(String patientFirstName, String patientLastName) {
 		if (patientFirstName == null || patientFirstName.equals("")) {

@@ -17,8 +17,8 @@ import org.mockito.Mockito;
 class MonitoringLogicTest {
 
 	// Service mock
-	private final TransferMonitoringService transferMonitoringServiceMock =
-			Mockito.mock(TransferMonitoringService.class);
+	private final TransferMonitoringService transferMonitoringServiceMock = Mockito
+		.mock(TransferMonitoringService.class);
 
 	// Logic under test
 	private MonitoringLogic monitoringLogic;
@@ -38,4 +38,3 @@ class MonitoringLogicTest {
 	}
 
 }
-
