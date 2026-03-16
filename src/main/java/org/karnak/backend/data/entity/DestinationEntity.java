@@ -36,6 +36,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.validator.group.GroupSequenceProvider;
@@ -69,7 +72,9 @@ public class DestinationEntity implements Serializable {
 
 	private String issuerByDefault;
 
-	private boolean skipIssuerOfPatientId;
+	@Setter
+    @Getter
+    private boolean skipIssuerOfPatientId;
 
 	private PseudonymType pseudonymType;
 
@@ -301,15 +306,7 @@ public class DestinationEntity implements Serializable {
 		this.issuerByDefault = issuerByDefault;
 	}
 
-	public boolean isSkipIssuerOfPatientId() {
-		return skipIssuerOfPatientId;
-	}
-
-	public void setSkipIssuerOfPatientId(boolean skipIssuerOfPatientId) {
-		this.skipIssuerOfPatientId = skipIssuerOfPatientId;
-	}
-
-	public boolean isFilterBySOPClasses() {
+    public boolean isFilterBySOPClasses() {
 		return filterBySOPClasses;
 	}
 
