@@ -118,3 +118,9 @@ dicom-tools:
   web:
     # Connect / TLS / HTTP timeout for the DICOMweb (STOW-RS) reachability probe
     timeout-ms: 5000
+
+# External de-identification image API
+# This API checks if sensitive patient data is burned into DICOM pixel data.
+karnak:
+  deidentify-image:
+    url: ${DEIDENTIFY_IMAGE_URL:http://localhost:8000}
