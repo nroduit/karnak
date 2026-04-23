@@ -11,6 +11,11 @@ package org.karnak.backend.model.editor;
 
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
+import org.karnak.backend.service.profilepipe.Profile;
+import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext;
 
 public class DeIdentifyEditor extends AbstractProfileEditor {

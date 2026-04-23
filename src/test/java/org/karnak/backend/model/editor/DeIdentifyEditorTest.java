@@ -58,7 +58,7 @@ class DeIdentifyEditorTest {
 		attributes.setString(Tag.BurnedInAnnotation, VR.SH, "YES");
 		attributes.setString(Tag.StationName, VR.SH, "stationName");
 		attributes.setString(524416, VR.SH, "pseudonym");
-		DeIdentifyEditor deIdentifyEditor = new DeIdentifyEditor(destinationEntity);
+		DeIdentifyEditor deIdentifyEditor = new DeIdentifyEditor(destinationEntity, null);
 
 		// Call method
 		deIdentifyEditor.apply(attributes, attributeEditorContext);
@@ -104,7 +104,7 @@ class DeIdentifyEditorTest {
 		attributes.setString(Tag.BurnedInAnnotation, VR.SH, "YES");
 		attributes.setString(Tag.StationName, VR.SH, "stationName");
 		attributes.setString(524416, VR.SH, "pseudonym");
-		DeIdentifyEditor deIdentifyEditor = new DeIdentifyEditor(destinationEntity);
+		DeIdentifyEditor deIdentifyEditor = new DeIdentifyEditor(destinationEntity, null);
 
 		// Call method
 		deIdentifyEditor.apply(attributes, attributeEditorContext);
