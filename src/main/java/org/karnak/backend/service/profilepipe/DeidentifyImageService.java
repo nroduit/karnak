@@ -23,7 +23,7 @@ import org.dcm4che3.data.Fragments;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.karnak.backend.model.profilebody.MaskBody;
-import org.karnak.backend.model.profilebody.ProfilePipeBody;
+import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -32,18 +32,9 @@ import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
 
 /**
  * Service responsible for calling the external de-identification image API.
- *
- * <ol>
- * <li>It extracts the pixel data bytes from the DICOM instance.</li>
- * <li>It collects the values of "sensitive" DICOM tags (patient name, ID, etc.).</li>
- * <li>It sends both to an external API via a multipart HTTP POST request.</li>
- * </ol>
  */
 @Slf4j
 @Service
@@ -65,11 +56,11 @@ public class DeidentifyImageService {
 
 	/**
 	 * Sends the DICOM instance image and sensitive data to the external
-	 * de-identification API, and extracts the mask definitions from the YAML response.
+	 * de-identification API, and extracts the mask definitions from the JSON response.
 	 *
 	 * <p>
-	 * If the API detects no sensitive data burned into the image, the YAML response will
-	 * have no {@code masks} section. In that case, this method returns an empty list.
+	 * If the API detects no sensitive data burned into the image, the JSON response will
+	 * have no {@code masks} field. In that case, this method returns an empty list.
 	 * @param dcmAttributes the DICOM attributes of the instance
 	 * @param sensitiveData a map of tag name → tag value for sensitive information
 	 * @return a list of {@link MaskBody} extracted from the API response, or an empty list
@@ -97,10 +88,10 @@ public class DeidentifyImageService {
 		MultiValueMap<String, HttpEntity<?>> multipartBody = generateMultipartBody(dcmAttributes,
 				imageBytes, sensitiveDataJson);
 
-		// Send the POST request and get the YAML response
-		String yamlResponse;
+		// Send the POST request and get the JSON response
+		String jsonResponse;
 		try {
-			yamlResponse = restClient.post()
+			jsonResponse = restClient.post()
 				.uri("/desidentify-image")
 				.contentType(MediaType.MULTIPART_FORM_DATA)
 				.body(multipartBody)
@@ -113,8 +104,8 @@ public class DeidentifyImageService {
 			return Collections.emptyList();
 		}
 
-		// Parse the YAML and extract the "masks" section
-		return extractMasksFromYaml(yamlResponse);
+		// Parse the JSON and extract the "masks" field
+		return extractMasksFromJson(jsonResponse);
 	}
 
 
@@ -143,34 +134,32 @@ public class DeidentifyImageService {
 	}
 
 	/**
-	 * Parses a YAML string as a Karnak {@link ProfilePipeBody} and extracts only the
-	 * {@code masks} list.
+	 * Parses the JSON string returned by the API into a {@link DeidentifyImageResponse}
+	 * and extracts the {@code masks} field.
 	 *
-	 * @param yamlContent the raw YAML string returned by the API
+	 * @param jsonContent the raw JSON string returned by the API
 	 * @return a list of {@link MaskBody}, or an empty list if none found
 	 */
-	List<MaskBody> extractMasksFromYaml(String yamlContent) {
-		if (yamlContent == null || yamlContent.isBlank()) {
-			log.debug("Empty YAML response from de-identification image API — no masks to apply");
+	List<MaskBody> extractMasksFromJson(String jsonContent) {
+		if (jsonContent == null || jsonContent.isBlank()) {
+			log.debug("Empty JSON response from de-identification image API — no masks to apply");
 			return Collections.emptyList();
 		}
 
 		try {
-			Yaml yaml = new Yaml(new Constructor(ProfilePipeBody.class, new LoaderOptions()));
-			ProfilePipeBody profilePipeBody = yaml.load(yamlContent);
+			DeidentifyImageResponse response = objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
 
-			if (profilePipeBody == null || profilePipeBody.getMasks() == null
-					|| profilePipeBody.getMasks().isEmpty()) {
-				log.debug("No masks found in de-identification image API response");
+			if (response.getMasks() == null || response.getMasks().isEmpty()) {
+				log.debug("No masks found in de-identification image API response (message: {})", response.getMessage());
 				return Collections.emptyList();
 			}
 
-			log.debug("Extracted {} mask(s) from de-identification image API response",
-					profilePipeBody.getMasks().size());
-			return profilePipeBody.getMasks();
+			log.debug("Masks extracted from de-identification image API response (message: {})",
+					response.getMessage());
+			return response.getMasks();
 		}
 		catch (Exception e) {
-			log.error("Failed to parse YAML response from de-identification image API", e);
+			log.error("Failed to parse JSON response from de-identification image API", e);
 			return Collections.emptyList();
 		}
 	}
