@@ -10,6 +10,7 @@
 package org.karnak.backend.model.profilepipe;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.karnak.backend.model.profilebody.MaskBody;
 
@@ -39,15 +40,17 @@ import java.util.List;
  *         "231 44 271 20"
  *       ]
  *     }
- *   ]
+ *   ],
+ *   "sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
  * }
  * }</pre>
  *
  * <p>If no sensitive data is detected, the API returns a response with no {@code mask}
- * field (or {@code null}):
+ * field:
  * <pre>{@code
  * {
- *   "message": "No sensitive data detected"
+ *   "message": "No sensitive data detected",
+ *   "sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
  * }
  * }</pre>
  */
@@ -58,6 +61,9 @@ public class DeidentifyImageResponse {
 	private String message;
 
 	private List<MaskBody> masks;
+
+	@JsonProperty("sop_instance_uid")
+	private String sopInstanceUid;
 
 }
 

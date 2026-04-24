@@ -130,6 +130,9 @@ public class DeidentifyImageService {
 			}
 		}).contentType(MediaType.APPLICATION_JSON);
 
+		bodyBuilder.part("sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID))
+			.contentType(MediaType.TEXT_PLAIN);
+
 		if (filename.endsWith(".raw")) {
 			bodyBuilder.part("rows", String.valueOf(dcmAttributes.getInt(Tag.Rows, 0)))
 				.contentType(MediaType.TEXT_PLAIN);
