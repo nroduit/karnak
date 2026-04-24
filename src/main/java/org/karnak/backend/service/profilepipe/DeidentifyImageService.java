@@ -31,6 +31,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 /**
@@ -98,9 +101,25 @@ public class DeidentifyImageService {
 				.retrieve()
 				.body(String.class);
 		}
+		catch (HttpClientErrorException e) {
+			// Errors 4xx
+			log.error("Client error {} from de-identification image API — check the request format: {}",
+					e.getStatusCode(), e.getMessage());
+			return Collections.emptyList();
+		}
+		catch (HttpServerErrorException e) {
+			// Errors 5xx
+			log.warn("Server error {} from de-identification image API — service may be temporarily unavailable",
+					e.getStatusCode());
+			return Collections.emptyList();
+		}
+		catch (ResourceAccessException e) {
+			log.warn("Cannot reach de-identification image API at {} — service is unavailable: {}",
+					apiBaseUrl, e.getMessage());
+			return Collections.emptyList();
+		}
 		catch (Exception e) {
-			log.error("Error calling de-identification image API at {}/desidentify-image: {}",
-					apiBaseUrl, e.getMessage(), e);
+			log.error("Unexpected error calling de-identification image API", e);
 			return Collections.emptyList();
 		}
 
