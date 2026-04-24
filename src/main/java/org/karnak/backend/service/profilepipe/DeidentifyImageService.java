@@ -130,6 +130,17 @@ public class DeidentifyImageService {
 			}
 		}).contentType(MediaType.APPLICATION_JSON);
 
+		if (filename.endsWith(".raw")) {
+			bodyBuilder.part("rows", String.valueOf(dcmAttributes.getInt(Tag.Rows, 0)))
+				.contentType(MediaType.TEXT_PLAIN);
+			bodyBuilder.part("columns", String.valueOf(dcmAttributes.getInt(Tag.Columns, 0)))
+				.contentType(MediaType.TEXT_PLAIN);
+			bodyBuilder.part("bits_allocated", String.valueOf(dcmAttributes.getInt(Tag.BitsAllocated, 0)))
+				.contentType(MediaType.TEXT_PLAIN);
+			bodyBuilder.part("samples_per_pixel", String.valueOf(dcmAttributes.getInt(Tag.SamplesPerPixel, 0)))
+				.contentType(MediaType.TEXT_PLAIN);
+		}
+
 		return bodyBuilder.build();
 	}
 
