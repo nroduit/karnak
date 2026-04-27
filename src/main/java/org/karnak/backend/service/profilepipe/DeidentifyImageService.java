@@ -95,7 +95,7 @@ public class DeidentifyImageService {
 		String jsonResponse;
 		try {
 			jsonResponse = restClient.post()
-				.uri("/desidentify-image")
+				.uri("/deidentify-image")
 				.contentType(MediaType.MULTIPART_FORM_DATA)
 				.body(multipartBody)
 				.retrieve()
