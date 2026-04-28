@@ -134,63 +134,54 @@ public class DeidentifyImageService {
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
 		String filename = determineImageFilename(dcmAttributes);
-		MediaType imageMediaType = determineImageMediaType(dcmAttributes);
-
 		bodyBuilder.part("image", new ByteArrayResource(imageBytes) {
 			@Override
 			public String getFilename() {
 				return filename;
 			}
-		}).contentType(imageMediaType);
+		}).contentType(determineImageMediaType(dcmAttributes));
 
-		bodyBuilder.part("sensitive_data_list", sensitiveDataJson).contentType(MediaType.TEXT_PLAIN);
-
-		bodyBuilder.part("sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID))
-			.contentType(MediaType.TEXT_PLAIN);
+		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
+		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
 
 		if (filename.endsWith(".raw")) {
-			bodyBuilder.part("rows", String.valueOf(dcmAttributes.getInt(Tag.Rows, 0)))
-				.contentType(MediaType.TEXT_PLAIN);
-			bodyBuilder.part("columns", String.valueOf(dcmAttributes.getInt(Tag.Columns, 0)))
-				.contentType(MediaType.TEXT_PLAIN);
-			bodyBuilder.part("bits_allocated", String.valueOf(dcmAttributes.getInt(Tag.BitsAllocated, 0)))
-				.contentType(MediaType.TEXT_PLAIN);
-			bodyBuilder.part("samples_per_pixel", String.valueOf(dcmAttributes.getInt(Tag.SamplesPerPixel, 0)))
-				.contentType(MediaType.TEXT_PLAIN);
-
-			if (dcmAttributes.containsValue(Tag.RescaleSlope)) {
-				bodyBuilder.part("rescale_slope",
-						String.valueOf(dcmAttributes.getDouble(Tag.RescaleSlope, 1.0)))
-					.contentType(MediaType.TEXT_PLAIN);
-			}
-			if (dcmAttributes.containsValue(Tag.RescaleIntercept)) {
-				bodyBuilder.part("rescale_intercept",
-						String.valueOf(dcmAttributes.getDouble(Tag.RescaleIntercept, 0.0)))
-					.contentType(MediaType.TEXT_PLAIN);
-			}
-			if (dcmAttributes.containsValue(Tag.WindowCenter)) {
-				bodyBuilder.part("window_center",
-						String.valueOf(dcmAttributes.getDouble(Tag.WindowCenter, 0.0)))
-					.contentType(MediaType.TEXT_PLAIN);
-			}
-			if (dcmAttributes.containsValue(Tag.WindowWidth)) {
-				bodyBuilder.part("window_width",
-						String.valueOf(dcmAttributes.getDouble(Tag.WindowWidth, 0.0)))
-					.contentType(MediaType.TEXT_PLAIN);
-			}
-
-			String photometric = dcmAttributes.getString(Tag.PhotometricInterpretation);
-			if ("MONOCHROME1".equals(photometric)) {
-				bodyBuilder.part("is_monochrome1", "true").contentType(MediaType.TEXT_PLAIN);
-			}
-
-			String paletteLutJson = buildPaletteColorLutJson(dcmAttributes);
-			if (paletteLutJson != null) {
-				bodyBuilder.part("palette_color_lut", paletteLutJson).contentType(MediaType.TEXT_PLAIN);
-			}
+			addRawPixelDataParts(bodyBuilder, dcmAttributes);
 		}
 
 		return bodyBuilder.build();
+	}
+
+	private void addRawPixelDataParts(MultipartBodyBuilder bodyBuilder, Attributes attrs) {
+		addTextPart(bodyBuilder, "rows", attrs.getInt(Tag.Rows, 0));
+		addTextPart(bodyBuilder, "columns", attrs.getInt(Tag.Columns, 0));
+		addTextPart(bodyBuilder, "bits_allocated", attrs.getInt(Tag.BitsAllocated, 0));
+		addTextPart(bodyBuilder, "samples_per_pixel", attrs.getInt(Tag.SamplesPerPixel, 0));
+
+		addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "window_width", Tag.WindowWidth, 0.0);
+
+		String photometric = attrs.getString(Tag.PhotometricInterpretation);
+		if ("MONOCHROME1".equals(photometric)) {
+			addTextPart(bodyBuilder, "is_monochrome1", "true");
+		}
+
+		String paletteLutJson = buildPaletteColorLutJson(attrs);
+		if (paletteLutJson != null) {
+			addTextPart(bodyBuilder, "palette_color_lut", paletteLutJson);
+		}
+	}
+
+	private void addOptionalDoublePart(MultipartBodyBuilder bodyBuilder, Attributes attrs,
+									   String name, int tag, double defaultValue) {
+		if (attrs.containsValue(tag)) {
+			addTextPart(bodyBuilder, name, attrs.getDouble(tag, defaultValue));
+		}
+	}
+
+	private void addTextPart(MultipartBodyBuilder bodyBuilder, String name, Object value) {
+		bodyBuilder.part(name, String.valueOf(value)).contentType(MediaType.TEXT_PLAIN);
 	}
 
 	/**
