@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +96,7 @@ public class DeidentifyImageService {
 		String jsonResponse;
 		try {
 			jsonResponse = restClient.post()
-				.uri("/deidentify-image")
+				.uri("/v1/deidentify-image")
 				.contentType(MediaType.MULTIPART_FORM_DATA)
 				.body(multipartBody)
 				.retrieve()
@@ -142,12 +143,7 @@ public class DeidentifyImageService {
 			}
 		}).contentType(imageMediaType);
 
-		bodyBuilder.part("sensitive_data_list", new ByteArrayResource(sensitiveDataJson.getBytes()) {
-			@Override
-			public String getFilename() {
-				return "sensitive_data_list.json";
-			}
-		}).contentType(MediaType.APPLICATION_JSON);
+		bodyBuilder.part("sensitive_data_list", sensitiveDataJson).contentType(MediaType.TEXT_PLAIN);
 
 		bodyBuilder.part("sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID))
 			.contentType(MediaType.TEXT_PLAIN);
@@ -161,6 +157,37 @@ public class DeidentifyImageService {
 				.contentType(MediaType.TEXT_PLAIN);
 			bodyBuilder.part("samples_per_pixel", String.valueOf(dcmAttributes.getInt(Tag.SamplesPerPixel, 0)))
 				.contentType(MediaType.TEXT_PLAIN);
+
+			if (dcmAttributes.containsValue(Tag.RescaleSlope)) {
+				bodyBuilder.part("rescale_slope",
+						String.valueOf(dcmAttributes.getDouble(Tag.RescaleSlope, 1.0)))
+					.contentType(MediaType.TEXT_PLAIN);
+			}
+			if (dcmAttributes.containsValue(Tag.RescaleIntercept)) {
+				bodyBuilder.part("rescale_intercept",
+						String.valueOf(dcmAttributes.getDouble(Tag.RescaleIntercept, 0.0)))
+					.contentType(MediaType.TEXT_PLAIN);
+			}
+			if (dcmAttributes.containsValue(Tag.WindowCenter)) {
+				bodyBuilder.part("window_center",
+						String.valueOf(dcmAttributes.getDouble(Tag.WindowCenter, 0.0)))
+					.contentType(MediaType.TEXT_PLAIN);
+			}
+			if (dcmAttributes.containsValue(Tag.WindowWidth)) {
+				bodyBuilder.part("window_width",
+						String.valueOf(dcmAttributes.getDouble(Tag.WindowWidth, 0.0)))
+					.contentType(MediaType.TEXT_PLAIN);
+			}
+
+			String photometric = dcmAttributes.getString(Tag.PhotometricInterpretation);
+			if ("MONOCHROME1".equals(photometric)) {
+				bodyBuilder.part("is_monochrome1", "true").contentType(MediaType.TEXT_PLAIN);
+			}
+
+			String paletteLutJson = buildPaletteColorLutJson(dcmAttributes);
+			if (paletteLutJson != null) {
+				bodyBuilder.part("palette_color_lut", paletteLutJson).contentType(MediaType.TEXT_PLAIN);
+			}
 		}
 
 		return bodyBuilder.build();
@@ -278,6 +305,68 @@ public class DeidentifyImageService {
 		}
 		// No standard MediaType for JPEG2000 in Spring, use octet-stream
 		return MediaType.APPLICATION_OCTET_STREAM;
+	}
+
+	/**
+	 * Builds a JSON string for the Palette Color LUT if present in DICOM attributes.
+	 * Returns a JSON object with "red", "green", "blue" arrays, or null if no palette
+	 * LUT data is found.
+	 */
+	String buildPaletteColorLutJson(Attributes dcmAttributes) {
+		String photometric = dcmAttributes.getString(Tag.PhotometricInterpretation);
+		if (!"PALETTE COLOR".equals(photometric)) {
+			return null;
+		}
+
+		int[] redDesc = dcmAttributes.getInts(Tag.RedPaletteColorLookupTableDescriptor);
+		int[] greenDesc = dcmAttributes.getInts(Tag.GreenPaletteColorLookupTableDescriptor);
+		int[] blueDesc = dcmAttributes.getInts(Tag.BluePaletteColorLookupTableDescriptor);
+		if (redDesc == null || greenDesc == null || blueDesc == null) {
+			log.warn("PALETTE COLOR photometric but missing LUT descriptors");
+			return null;
+		}
+
+		int[] redLut = extractLutData(dcmAttributes, Tag.RedPaletteColorLookupTableData, redDesc);
+		int[] greenLut = extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
+		int[] blueLut = extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
+		if (redLut == null || greenLut == null || blueLut == null) {
+			log.warn("PALETTE COLOR photometric but missing LUT data");
+			return null;
+		}
+
+		Map<String, int[]> lutMap = new HashMap<>();
+		lutMap.put("red", redLut);
+		lutMap.put("green", greenLut);
+		lutMap.put("blue", blueLut);
+
+		try {
+			return objectMapper.writeValueAsString(lutMap);
+		}
+		catch (JsonProcessingException e) {
+			log.error("Failed to serialize Palette Color LUT to JSON", e);
+			return null;
+		}
+	}
+
+	/**
+	 * Extracts LUT data for a single color channel. The descriptor array has 3 values:
+	 * [numberOfEntries, firstStoredPixelValue, bitsPerEntry]. If bitsPerEntry is 8,
+	 * values are read as bytes; if 16, as unsigned shorts (ints).
+	 */
+	private int[] extractLutData(Attributes dcmAttributes, int lutDataTag, int[] descriptor) {
+		int bitsPerEntry = descriptor[2];
+		if (bitsPerEntry == 8) {
+			byte[] data = dcmAttributes.getSafeBytes(lutDataTag);
+			if (data == null) {
+				return null;
+			}
+			int[] result = new int[data.length];
+			for (int i = 0; i < data.length; i++) {
+				result[i] = data[i] & 0xFF;
+			}
+			return result;
+		}
+		return dcmAttributes.getInts(lutDataTag);
 	}
 
 }
