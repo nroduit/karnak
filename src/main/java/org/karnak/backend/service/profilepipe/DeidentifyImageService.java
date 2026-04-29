@@ -48,6 +48,44 @@ public class DeidentifyImageService {
 	private final RestClient restClient;
 	private final ObjectMapper objectMapper;
 
+	private record TransferSyntaxMapping(String filename, MediaType mediaType) {}
+
+	private static final TransferSyntaxMapping JPEG = new TransferSyntaxMapping("image.jpg", MediaType.IMAGE_JPEG);
+	private static final TransferSyntaxMapping JP2 = new TransferSyntaxMapping("image.jp2", MediaType.parseMediaType("image/jp2"));
+	private static final TransferSyntaxMapping JLS = new TransferSyntaxMapping("image.jls", MediaType.parseMediaType("image/jls"));
+	private static final TransferSyntaxMapping JPX = new TransferSyntaxMapping("image.jpx", MediaType.parseMediaType("image/jpx"));
+	private static final TransferSyntaxMapping JXL = new TransferSyntaxMapping("image.jxl", MediaType.parseMediaType("image/jxl"));
+	private static final TransferSyntaxMapping JPHC = new TransferSyntaxMapping("image.jphc", MediaType.parseMediaType("image/jphc"));
+	private static final TransferSyntaxMapping RAW = new TransferSyntaxMapping("image.raw", MediaType.APPLICATION_OCTET_STREAM);
+
+  private static final Map<String, TransferSyntaxMapping> TS_MAPPINGS =
+      Map.ofEntries(
+			  // JPEG
+			  Map.entry("1.2.840.10008.1.2.4.50", JPEG),
+			  Map.entry("1.2.840.10008.1.2.4.51", JPEG),
+			  Map.entry("1.2.840.10008.1.2.4.53", JPEG),
+			  Map.entry("1.2.840.10008.1.2.4.55", JPEG),
+			  Map.entry("1.2.840.10008.1.2.4.57", JPEG),
+			  Map.entry("1.2.840.10008.1.2.4.70", JPEG),
+			  // JPEG-LS
+			  Map.entry("1.2.840.10008.1.2.4.80", JLS),
+			  Map.entry("1.2.840.10008.1.2.4.81", JLS),
+			  // JPEG 2000
+			  Map.entry("1.2.840.10008.1.2.4.90", JP2),
+			  Map.entry("1.2.840.10008.1.2.4.91", JP2),
+			  // JPEG 2000 Part 2
+			  Map.entry("1.2.840.10008.1.2.4.92", JPX),
+			  Map.entry("1.2.840.10008.1.2.4.93", JPX),
+			  // JPEG XL
+			  Map.entry("1.2.840.10008.1.2.4.110", JXL),
+			  Map.entry("1.2.840.10008.1.2.4.111", JXL),
+			  Map.entry("1.2.840.10008.1.2.4.112", JXL),
+			  // High-Throughput JPEG 2000
+			  Map.entry("1.2.840.10008.1.2.4.201", JPHC),
+			  Map.entry("1.2.840.10008.1.2.4.202", JPHC),
+			  Map.entry("1.2.840.10008.1.2.4.203", JPHC)
+	  );
+
 	/**
 	 * @param apiBaseUrl the base URL of the de-identification image API
 	 */
@@ -133,18 +171,18 @@ public class DeidentifyImageService {
 															   byte[] imageBytes, String sensitiveDataJson) {
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
-		String filename = determineImageFilename(dcmAttributes);
+		TransferSyntaxMapping mapping = resolveMapping(dcmAttributes);
 		bodyBuilder.part("image", new ByteArrayResource(imageBytes) {
 			@Override
 			public String getFilename() {
-				return filename;
+				return mapping.filename();
 			}
-		}).contentType(determineImageMediaType(dcmAttributes));
+		}).contentType(mapping.mediaType());
 
 		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
 		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
 
-		if (filename.endsWith(".raw")) {
+		if (mapping.filename().endsWith(".raw")) {
 			addRawPixelDataParts(bodyBuilder, dcmAttributes);
 		}
 
@@ -259,43 +297,15 @@ public class DeidentifyImageService {
 		return null;
 	}
 
-	/**
-	 * Determines a suitable filename for the image part of the multipart request.
-	 *
-	 * @param dcmAttributes the DICOM attributes
-	 * @return a filename like "image.jpg", "image.jp2", or "image.raw"
-	 */
-	String determineImageFilename(Attributes dcmAttributes) {
+	private TransferSyntaxMapping resolveMapping(Attributes dcmAttributes) {
 		String tsuid = dcmAttributes.getString(Tag.TransferSyntaxUID);
 		if (tsuid != null) {
-			// JPEG transfer syntaxes start with 1.2.840.10008.1.2.4.50 to .57
-			if (tsuid.startsWith("1.2.840.10008.1.2.4.5") || tsuid.equals("1.2.840.10008.1.2.4.70")) {
-				return "image.jpg";
-			}
-			// JPEG 2000 transfer syntaxes: 1.2.840.10008.1.2.4.90, .91
-			if (tsuid.startsWith("1.2.840.10008.1.2.4.9")) {
-				return "image.jp2";
+			TransferSyntaxMapping retrievedMapping = TS_MAPPINGS.get(tsuid);
+			if (retrievedMapping != null) {
+				return retrievedMapping;
 			}
 		}
-		// Default: raw uncompressed pixel data
-		return "image.raw";
-	}
-
-	/**
-	 * Determines the appropriate media type for the image data.
-	 * @param dcmAttributes the DICOM attributes
-	 * @return {@link MediaType#IMAGE_JPEG}, or {@link MediaType#APPLICATION_OCTET_STREAM}
-	 * as default
-	 */
-	MediaType determineImageMediaType(Attributes dcmAttributes) {
-		String tsuid = dcmAttributes.getString(Tag.TransferSyntaxUID);
-		if (tsuid != null) {
-			if (tsuid.startsWith("1.2.840.10008.1.2.4.5")) {
-				return MediaType.IMAGE_JPEG;
-			}
-		}
-		// No standard MediaType for JPEG2000 in Spring, use octet-stream
-		return MediaType.APPLICATION_OCTET_STREAM;
+		return RAW;
 	}
 
 	/**
