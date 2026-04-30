@@ -108,7 +108,7 @@ public class DeidentifyImageService {
 	 * @return a list of {@link MaskBody} extracted from the API response, or an empty list
 	 * if no masks were found or an error occurred
 	 */
-	public List<MaskBody> callDeidentifyImageApi(Attributes dcmAttributes, Map<String, String> sensitiveData) {
+	public List<MaskBody> callDeidentifyImageApi(Attributes dcmAttributes, Map<String, String> sensitiveData, String tsuid) {
 		// Extract pixel data bytes from the DICOM instance
 		byte[] imageBytes = extractPixelDataBytes(dcmAttributes);
 		if (imageBytes == null || imageBytes.length == 0) {
@@ -128,7 +128,7 @@ public class DeidentifyImageService {
 
 		// Build the multipart request body
 		MultiValueMap<String, HttpEntity<?>> multipartBody = generateMultipartBody(dcmAttributes,
-				imageBytes, sensitiveDataJson);
+				imageBytes, sensitiveDataJson, tsuid);
 
 		// Send the POST request and get the JSON response
 		String jsonResponse;
@@ -168,10 +168,10 @@ public class DeidentifyImageService {
 
 
 	MultiValueMap<String, HttpEntity<?>> generateMultipartBody(Attributes dcmAttributes,
-															   byte[] imageBytes, String sensitiveDataJson) {
+															   byte[] imageBytes, String sensitiveDataJson, String tsuid) {
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
-		TransferSyntaxMapping mapping = resolveMapping(dcmAttributes);
+		TransferSyntaxMapping mapping = resolveMapping(tsuid);
 		bodyBuilder.part("image", new ByteArrayResource(imageBytes) {
 			@Override
 			public String getFilename() {
@@ -181,6 +181,12 @@ public class DeidentifyImageService {
 
 		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
 		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
+		addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
+
+		addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));
+		addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
+		addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
+		addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
 
 		if (mapping.filename().endsWith(".raw")) {
 			addRawPixelDataParts(bodyBuilder, dcmAttributes);
@@ -190,11 +196,6 @@ public class DeidentifyImageService {
 	}
 
 	private void addRawPixelDataParts(MultipartBodyBuilder bodyBuilder, Attributes attrs) {
-		addTextPart(bodyBuilder, "rows", attrs.getInt(Tag.Rows, 0));
-		addTextPart(bodyBuilder, "columns", attrs.getInt(Tag.Columns, 0));
-		addTextPart(bodyBuilder, "bits_allocated", attrs.getInt(Tag.BitsAllocated, 0));
-		addTextPart(bodyBuilder, "samples_per_pixel", attrs.getInt(Tag.SamplesPerPixel, 0));
-
 		addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
 		addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
 		addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
@@ -297,8 +298,7 @@ public class DeidentifyImageService {
 		return null;
 	}
 
-	private TransferSyntaxMapping resolveMapping(Attributes dcmAttributes) {
-		String tsuid = dcmAttributes.getString(Tag.TransferSyntaxUID);
+	private TransferSyntaxMapping resolveMapping(String tsuid) {
 		if (tsuid != null) {
 			TransferSyntaxMapping retrievedMapping = TS_MAPPINGS.get(tsuid);
 			if (retrievedMapping != null) {

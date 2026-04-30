@@ -266,7 +266,7 @@ public class Profile {
 			}
 
 			MaskArea mask = null;
-			List<MaskArea> apiMasks = fetchMasksFromDeidentifyImageApi(dcmCopy);
+			List<MaskArea> apiMasks = fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
 
 			if (!apiMasks.isEmpty()) {
 				// Use the first API mask as the "primary" mask (set on the context),
@@ -305,14 +305,14 @@ public class Profile {
 	 * @param dcmCopy DICOM attributes (original copy, before de-identification)
 	 * @return a list of {@link MaskArea}, possibly empty but never {@code null}
 	 */
-	private List<MaskArea> fetchMasksFromDeidentifyImageApi(Attributes dcmCopy) {
+	private List<MaskArea> fetchMasksFromDeidentifyImageApi(Attributes dcmCopy, String tsuid) {
 		if (deidentifyImageService == null) {
 			return Collections.emptyList();
 		}
 		try {
 			Map<String, String> sensitiveData = SensitiveTagDefinition.extractSensitiveData(dcmCopy);
 
-			List<MaskBody> masks = deidentifyImageService.callDeidentifyImageApi(dcmCopy, sensitiveData);
+			List<MaskBody> masks = deidentifyImageService.callDeidentifyImageApi(dcmCopy, sensitiveData, tsuid);
 
 			if (masks.isEmpty()) {
 				return Collections.emptyList();
