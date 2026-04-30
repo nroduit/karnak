@@ -18,9 +18,20 @@ import org.karnak.backend.model.profilepipe.HMAC;
 
 public class CleanPixelData extends AbstractProfileItem {
 
+	private final boolean automaticMasksGeneration;
+
 	public CleanPixelData(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
+		this.automaticMasksGeneration = argumentEntities != null && argumentEntities.stream()
+				.filter(argument -> "automaticMasksGeneration".equals(argument.getArgumentKey()))
+				.map(argument -> Boolean.parseBoolean(argument.getArgumentValue()))
+				.findFirst()
+				.orElse(false);
 		profileValidation();
+	}
+
+	public boolean isAutomaticMasksGeneration() {
+		return automaticMasksGeneration;
 	}
 
 	@Override

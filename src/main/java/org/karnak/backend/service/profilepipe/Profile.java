@@ -266,19 +266,27 @@ public class Profile {
 			}
 
 			MaskArea mask = null;
-			List<MaskArea> apiMasks = fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
 
-			if (!apiMasks.isEmpty()) {
-				// Use the first API mask as the "primary" mask (set on the context),
-				// and store the rest as "additional" masks in context.properties.
-				mask = apiMasks.getFirst();
-				if (apiMasks.size() > 1) {
-					context.getProperties()
+			CleanPixelData cleanPixelDataItem = (CleanPixelData) profiles.stream()
+					.filter(CleanPixelData.class::isInstance)
+					.findFirst()
+					.orElse(null);
+
+			if (cleanPixelDataItem != null && cleanPixelDataItem.isAutomaticMasksGeneration()) {
+        		List<MaskArea> apiMasks = fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
+
+        		if (!apiMasks.isEmpty()) {
+				  // Use the first API mask as the "primary" mask (set on the context),
+				  // and store the rest as "additional" masks in context.properties.
+				  mask = apiMasks.getFirst();
+				  if (apiMasks.size() > 1) {
+					context
+						.getProperties()
 						.put(ADDITIONAL_MASK_AREAS_KEY, apiMasks.subList(1, apiMasks.size()));
+				  }
 				}
-			}
-			else {
-				// No mask from the API → fall back to the static mask configuration
+			} if (mask == null) {
+				// No mask from the API or manual masks → fall back to the static mask configuration
 				mask = getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
 						dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
 			}
