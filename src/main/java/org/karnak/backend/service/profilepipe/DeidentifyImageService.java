@@ -124,8 +124,8 @@ public class DeidentifyImageService {
 		try {
 			sensitiveDataJson = this.objectMapper.writeValueAsString(sensitiveData);
 		}
-		catch (JsonProcessingException e) {
-			log.error("Failed to serialize sensitive data to JSON", e);
+		catch (JsonProcessingException ex) {
+			log.error("Failed to serialize sensitive data to JSON", ex);
 			return Collections.emptyList();
 		}
 
@@ -166,8 +166,10 @@ public class DeidentifyImageService {
 			return Collections.emptyList();
 		}
 
-		// Parse the JSON and extract the "masks" field
-		return this.extractMasksFromJson(jsonResponse);
+		// Parse the JSON response
+		// Check the SOP UID
+		// Extract the masks field
+		return this.extractMasksFromJson(jsonResponse, dcmAttributes.getString(Tag.SOPInstanceUID));
 	}
 
 	MultiValueMap<String, HttpEntity<?>> generateMultipartBody(Attributes dcmAttributes, byte[] imageBytes,
@@ -228,7 +230,7 @@ public class DeidentifyImageService {
 	 * @param jsonContent the raw JSON string returned by the API
 	 * @return a list of {@link MaskBody}, or an empty list if none found
 	 */
-	List<MaskBody> extractMasksFromJson(String jsonContent) {
+	List<MaskBody> extractMasksFromJson(String jsonContent, String expectedSopInstanceUID) {
 		if (jsonContent == null || jsonContent.isBlank()) {
 			log.debug("Empty JSON response from de-identification image API — no masks to apply");
 			return Collections.emptyList();
@@ -236,6 +238,17 @@ public class DeidentifyImageService {
 
 		try {
 			DeidentifyImageResponse response = this.objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
+
+			if (response.getSopInstanceUid() == null) {
+				log.error("The SOP Instance UID in the API response is null");
+				return Collections.emptyList();
+			}
+
+			if (!response.getSopInstanceUid().equals(expectedSopInstanceUID)) {
+				log.error("The SOP Instance UID in the API response ({}) does not match the expected UID ({}) — skipping masks",
+					response.getSopInstanceUid(), expectedSopInstanceUID);
+				return Collections.emptyList();
+			}
 
 			if (response.getMasks() == null || response.getMasks().isEmpty()) {
 				log.debug("No masks found in de-identification image API response (message: {})",
