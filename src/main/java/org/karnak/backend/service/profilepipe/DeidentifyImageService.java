@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Karnak Team and other contributors.
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -9,14 +9,14 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -25,6 +25,7 @@ import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -45,72 +46,74 @@ import org.springframework.web.client.RestClient;
 public class DeidentifyImageService {
 
 	private final String apiBaseUrl;
+
 	private final RestClient restClient;
+
 	private final ObjectMapper objectMapper;
 
-	private record TransferSyntaxMapping(String filename, MediaType mediaType) {}
-
 	private static final TransferSyntaxMapping JPEG = new TransferSyntaxMapping("image.jpg", MediaType.IMAGE_JPEG);
-	private static final TransferSyntaxMapping JP2 = new TransferSyntaxMapping("image.jp2", MediaType.parseMediaType("image/jp2"));
-	private static final TransferSyntaxMapping JLS = new TransferSyntaxMapping("image.jls", MediaType.parseMediaType("image/jls"));
-	private static final TransferSyntaxMapping JPX = new TransferSyntaxMapping("image.jpx", MediaType.parseMediaType("image/jpx"));
-	private static final TransferSyntaxMapping JXL = new TransferSyntaxMapping("image.jxl", MediaType.parseMediaType("image/jxl"));
-	private static final TransferSyntaxMapping JPHC = new TransferSyntaxMapping("image.jphc", MediaType.parseMediaType("image/jphc"));
-	private static final TransferSyntaxMapping RAW = new TransferSyntaxMapping("image.raw", MediaType.APPLICATION_OCTET_STREAM);
 
-  private static final Map<String, TransferSyntaxMapping> TS_MAPPINGS =
-      Map.ofEntries(
-			  // JPEG
-			  Map.entry("1.2.840.10008.1.2.4.50", JPEG),
-			  Map.entry("1.2.840.10008.1.2.4.51", JPEG),
-			  Map.entry("1.2.840.10008.1.2.4.53", JPEG),
-			  Map.entry("1.2.840.10008.1.2.4.55", JPEG),
-			  Map.entry("1.2.840.10008.1.2.4.57", JPEG),
-			  Map.entry("1.2.840.10008.1.2.4.70", JPEG),
-			  // JPEG-LS
-			  Map.entry("1.2.840.10008.1.2.4.80", JLS),
-			  Map.entry("1.2.840.10008.1.2.4.81", JLS),
-			  // JPEG 2000
-			  Map.entry("1.2.840.10008.1.2.4.90", JP2),
-			  Map.entry("1.2.840.10008.1.2.4.91", JP2),
-			  // JPEG 2000 Part 2
-			  Map.entry("1.2.840.10008.1.2.4.92", JPX),
-			  Map.entry("1.2.840.10008.1.2.4.93", JPX),
-			  // JPEG XL
-			  Map.entry("1.2.840.10008.1.2.4.110", JXL),
-			  Map.entry("1.2.840.10008.1.2.4.111", JXL),
-			  Map.entry("1.2.840.10008.1.2.4.112", JXL),
-			  // High-Throughput JPEG 2000
-			  Map.entry("1.2.840.10008.1.2.4.201", JPHC),
-			  Map.entry("1.2.840.10008.1.2.4.202", JPHC),
-			  Map.entry("1.2.840.10008.1.2.4.203", JPHC)
-	  );
+	private static final TransferSyntaxMapping JP2 = new TransferSyntaxMapping("image.jp2",
+			MediaType.parseMediaType("image/jp2"));
+
+	private static final TransferSyntaxMapping JLS = new TransferSyntaxMapping("image.jls",
+			MediaType.parseMediaType("image/jls"));
+
+	private static final TransferSyntaxMapping JPX = new TransferSyntaxMapping("image.jpx",
+			MediaType.parseMediaType("image/jpx"));
+
+	private static final TransferSyntaxMapping JXL = new TransferSyntaxMapping("image.jxl",
+			MediaType.parseMediaType("image/jxl"));
+
+	private static final TransferSyntaxMapping JPHC = new TransferSyntaxMapping("image.jphc",
+			MediaType.parseMediaType("image/jphc"));
+
+	private static final TransferSyntaxMapping RAW = new TransferSyntaxMapping("image.raw",
+			MediaType.APPLICATION_OCTET_STREAM);
+
+	private static final Map<String, TransferSyntaxMapping> TS_MAPPINGS = Map.ofEntries(
+			// JPEG
+			Map.entry("1.2.840.10008.1.2.4.50", JPEG), Map.entry("1.2.840.10008.1.2.4.51", JPEG),
+			Map.entry("1.2.840.10008.1.2.4.53", JPEG), Map.entry("1.2.840.10008.1.2.4.55", JPEG),
+			Map.entry("1.2.840.10008.1.2.4.57", JPEG), Map.entry("1.2.840.10008.1.2.4.70", JPEG),
+			// JPEG-LS
+			Map.entry("1.2.840.10008.1.2.4.80", JLS), Map.entry("1.2.840.10008.1.2.4.81", JLS),
+			// JPEG 2000
+			Map.entry("1.2.840.10008.1.2.4.90", JP2), Map.entry("1.2.840.10008.1.2.4.91", JP2),
+			// JPEG 2000 Part 2
+			Map.entry("1.2.840.10008.1.2.4.92", JPX), Map.entry("1.2.840.10008.1.2.4.93", JPX),
+			// JPEG XL
+			Map.entry("1.2.840.10008.1.2.4.110", JXL), Map.entry("1.2.840.10008.1.2.4.111", JXL),
+			Map.entry("1.2.840.10008.1.2.4.112", JXL),
+			// High-Throughput JPEG 2000
+			Map.entry("1.2.840.10008.1.2.4.201", JPHC), Map.entry("1.2.840.10008.1.2.4.202", JPHC),
+			Map.entry("1.2.840.10008.1.2.4.203", JPHC));
 
 	/**
 	 * @param apiBaseUrl the base URL of the de-identification image API
 	 */
-	public DeidentifyImageService(
-			@Value("${karnak.deidentify-image.url:http://localhost:8000}") String apiBaseUrl) {
+	public DeidentifyImageService(@Value("${karnak.deidentify-image.url:http://localhost:8000}") String apiBaseUrl) {
 		this.apiBaseUrl = apiBaseUrl;
 		this.restClient = RestClient.builder().baseUrl(apiBaseUrl).build();
 		this.objectMapper = new ObjectMapper();
 	}
 
 	/**
-	 * Sends the DICOM instance image and sensitive data to the external
-	 * de-identification API, and extracts the mask definitions from the JSON response.
+	 * Sends the DICOM instance image and sensitive data to the external de-identification
+	 * API, and extracts the mask definitions from the JSON response.
 	 *
 	 * <p>
 	 * If the API detects no sensitive data burned into the image, the JSON response will
 	 * have no {@code masks} field. In that case, this method returns an empty list.
 	 * @param dcmAttributes the DICOM attributes of the instance
 	 * @param sensitiveData a map of tag name → tag value for sensitive information
-	 * @return a list of {@link MaskBody} extracted from the API response, or an empty list
-	 * if no masks were found or an error occurred
+	 * @return a list of {@link MaskBody} extracted from the API response, or an empty
+	 * list if no masks were found or an error occurred
 	 */
-	public List<MaskBody> callDeidentifyImageApi(Attributes dcmAttributes, Map<String, String> sensitiveData, String tsuid) {
+	public List<MaskBody> callDeidentifyImageApi(Attributes dcmAttributes, Map<String, String> sensitiveData,
+			String tsuid) {
 		// Extract pixel data bytes from the DICOM instance
-		byte[] imageBytes = extractPixelDataBytes(dcmAttributes);
+		byte[] imageBytes = this.extractPixelDataBytes(dcmAttributes);
 		if (imageBytes == null || imageBytes.length == 0) {
 			log.warn("Could not extract pixel data from DICOM instance — skipping API call");
 			return Collections.emptyList();
@@ -119,7 +122,7 @@ public class DeidentifyImageService {
 		// Serialize the sensitive data map to JSON
 		String sensitiveDataJson;
 		try {
-			sensitiveDataJson = objectMapper.writeValueAsString(sensitiveData);
+			sensitiveDataJson = this.objectMapper.writeValueAsString(sensitiveData);
 		}
 		catch (JsonProcessingException e) {
 			log.error("Failed to serialize sensitive data to JSON", e);
@@ -127,51 +130,51 @@ public class DeidentifyImageService {
 		}
 
 		// Build the multipart request body
-		MultiValueMap<String, HttpEntity<?>> multipartBody = generateMultipartBody(dcmAttributes,
-				imageBytes, sensitiveDataJson, tsuid);
+		MultiValueMap<String, HttpEntity<?>> multipartBody = this.generateMultipartBody(dcmAttributes, imageBytes,
+				sensitiveDataJson, tsuid);
 
 		// Send the POST request and get the JSON response
 		String jsonResponse;
 		try {
-			jsonResponse = restClient.post()
+			jsonResponse = this.restClient.post()
 				.uri("/deidentify-image")
 				.contentType(MediaType.MULTIPART_FORM_DATA)
-				.body(multipartBody).accept(MediaType.parseMediaType("application/json; version=1"))
+				.body(multipartBody)
+				.accept(MediaType.parseMediaType("application/json; version=1"))
 				.retrieve()
 				.body(String.class);
 		}
-		catch (HttpClientErrorException e) {
+		catch (HttpClientErrorException ex) {
 			// Errors 4xx
 			log.error("Client error {} from de-identification image API — check the request format: {}",
-					e.getStatusCode(), e.getMessage());
+					ex.getStatusCode(), ex.getMessage());
 			return Collections.emptyList();
 		}
-		catch (HttpServerErrorException e) {
+		catch (HttpServerErrorException ex) {
 			// Errors 5xx
 			log.warn("Server error {} from de-identification image API — service may be temporarily unavailable",
-					e.getStatusCode());
+					ex.getStatusCode());
 			return Collections.emptyList();
 		}
-		catch (ResourceAccessException e) {
-			log.warn("Cannot reach de-identification image API at {} — service is unavailable: {}",
-					apiBaseUrl, e.getMessage());
+		catch (ResourceAccessException ex) {
+			log.warn("Cannot reach de-identification image API at {} — service is unavailable: {}", this.apiBaseUrl,
+					ex.getMessage());
 			return Collections.emptyList();
 		}
-		catch (Exception e) {
-			log.error("Unexpected error calling de-identification image API", e);
+		catch (Exception ex) {
+			log.error("Unexpected error calling de-identification image API", ex);
 			return Collections.emptyList();
 		}
 
 		// Parse the JSON and extract the "masks" field
-		return extractMasksFromJson(jsonResponse);
+		return this.extractMasksFromJson(jsonResponse);
 	}
 
-
-	MultiValueMap<String, HttpEntity<?>> generateMultipartBody(Attributes dcmAttributes,
-															   byte[] imageBytes, String sensitiveDataJson, String tsuid) {
+	MultiValueMap<String, HttpEntity<?>> generateMultipartBody(Attributes dcmAttributes, byte[] imageBytes,
+			String sensitiveDataJson, String tsuid) {
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
-		TransferSyntaxMapping mapping = resolveMapping(tsuid);
+		TransferSyntaxMapping mapping = this.resolveMapping(tsuid);
 		bodyBuilder.part("image", new ByteArrayResource(imageBytes) {
 			@Override
 			public String getFilename() {
@@ -179,43 +182,39 @@ public class DeidentifyImageService {
 			}
 		}).contentType(mapping.mediaType());
 
-		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
-		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
-		addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
+		this.addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
+		this.addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
+		this.addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
 
-		addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));
-		addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
-		addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
-		addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
+		this.addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));
+		this.addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
+		this.addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
+		this.addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
+		this.addTextPart(bodyBuilder, "photometric_interpretation", dcmAttributes.getString(Tag.PhotometricInterpretation));
 
 		if (mapping.filename().endsWith(".raw")) {
-			addRawPixelDataParts(bodyBuilder, dcmAttributes);
+			this.addRawPixelDataParts(bodyBuilder, dcmAttributes);
 		}
 
 		return bodyBuilder.build();
 	}
 
 	private void addRawPixelDataParts(MultipartBodyBuilder bodyBuilder, Attributes attrs) {
-		addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
-		addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
-		addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
-		addOptionalDoublePart(bodyBuilder, attrs, "window_width", Tag.WindowWidth, 0.0);
+		this.addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
+		this.addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
+		this.addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
+		this.addOptionalDoublePart(bodyBuilder, attrs, "window_width", Tag.WindowWidth, 0.0);
 
-		String photometric = attrs.getString(Tag.PhotometricInterpretation);
-		if ("MONOCHROME1".equals(photometric)) {
-			addTextPart(bodyBuilder, "is_monochrome1", "true");
-		}
-
-		String paletteLutJson = buildPaletteColorLutJson(attrs);
+		String paletteLutJson = this.buildPaletteColorLutJson(attrs);
 		if (paletteLutJson != null) {
-			addTextPart(bodyBuilder, "palette_color_lut", paletteLutJson);
+			this.addTextPart(bodyBuilder, "palette_color_lut", paletteLutJson);
 		}
 	}
 
-	private void addOptionalDoublePart(MultipartBodyBuilder bodyBuilder, Attributes attrs,
-									   String name, int tag, double defaultValue) {
+	private void addOptionalDoublePart(MultipartBodyBuilder bodyBuilder, Attributes attrs, String name, int tag,
+			double defaultValue) {
 		if (attrs.containsValue(tag)) {
-			addTextPart(bodyBuilder, name, attrs.getDouble(tag, defaultValue));
+			this.addTextPart(bodyBuilder, name, attrs.getDouble(tag, defaultValue));
 		}
 	}
 
@@ -226,7 +225,6 @@ public class DeidentifyImageService {
 	/**
 	 * Parses the JSON string returned by the API into a {@link DeidentifyImageResponse}
 	 * and extracts the {@code masks} field.
-	 *
 	 * @param jsonContent the raw JSON string returned by the API
 	 * @return a list of {@link MaskBody}, or an empty list if none found
 	 */
@@ -237,26 +235,25 @@ public class DeidentifyImageService {
 		}
 
 		try {
-			DeidentifyImageResponse response = objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
+			DeidentifyImageResponse response = this.objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
 
 			if (response.getMasks() == null || response.getMasks().isEmpty()) {
-				log.debug("No masks found in de-identification image API response (message: {})", response.getMessage());
+				log.debug("No masks found in de-identification image API response (message: {})",
+						response.getMessage());
 				return Collections.emptyList();
 			}
 
-			log.debug("Masks extracted from de-identification image API response (message: {})",
-					response.getMessage());
+			log.debug("Masks extracted from de-identification image API response (message: {})", response.getMessage());
 			return response.getMasks();
 		}
-		catch (Exception e) {
-			log.error("Failed to parse JSON response from de-identification image API", e);
+		catch (Exception ex) {
+			log.error("Failed to parse JSON response from de-identification image API", ex);
 			return Collections.emptyList();
 		}
 	}
 
 	/**
 	 * Extracts the raw pixel data bytes from a DICOM Attributes object.
-	 *
 	 * @param dcmAttributes the DICOM attributes containing pixel data
 	 * @return the pixel data as a byte array, or {@code null} if extraction fails
 	 */
@@ -268,8 +265,8 @@ public class DeidentifyImageService {
 			try {
 				return bulkData.toBytes(VR.OW, bulkData.bigEndian());
 			}
-			catch (IOException e) {
-				log.error("Failed to read BulkData pixel bytes", e);
+			catch (IOException ex) {
+				log.error("Failed to read BulkData pixel bytes", ex);
 				return null;
 			}
 		}
@@ -286,8 +283,8 @@ public class DeidentifyImageService {
 					try {
 						return frameBulkData.toBytes(fragments.vr(), frameBulkData.bigEndian());
 					}
-					catch (IOException e) {
-						log.error("Failed to read Fragments frame BulkData bytes", e);
+					catch (IOException ex) {
+						log.error("Failed to read Fragments frame BulkData bytes", ex);
 						return null;
 					}
 				}
@@ -310,8 +307,8 @@ public class DeidentifyImageService {
 
 	/**
 	 * Builds a JSON string for the Palette Color LUT if present in DICOM attributes.
-	 * Returns a JSON object with "red", "green", "blue" arrays, or null if no palette
-	 * LUT data is found.
+	 * Returns a JSON object with "red", "green", "blue" arrays, or null if no palette LUT
+	 * data is found.
 	 */
 	String buildPaletteColorLutJson(Attributes dcmAttributes) {
 		String photometric = dcmAttributes.getString(Tag.PhotometricInterpretation);
@@ -327,9 +324,9 @@ public class DeidentifyImageService {
 			return null;
 		}
 
-		int[] redLut = extractLutData(dcmAttributes, Tag.RedPaletteColorLookupTableData, redDesc);
-		int[] greenLut = extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
-		int[] blueLut = extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
+		int[] redLut = this.extractLutData(dcmAttributes, Tag.RedPaletteColorLookupTableData, redDesc);
+		int[] greenLut = this.extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
+		int[] blueLut = this.extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
 		if (redLut == null || greenLut == null || blueLut == null) {
 			log.warn("PALETTE COLOR photometric but missing LUT data");
 			return null;
@@ -341,10 +338,10 @@ public class DeidentifyImageService {
 		lutMap.put("blue", blueLut);
 
 		try {
-			return objectMapper.writeValueAsString(lutMap);
+			return this.objectMapper.writeValueAsString(lutMap);
 		}
-		catch (JsonProcessingException e) {
-			log.error("Failed to serialize Palette Color LUT to JSON", e);
+		catch (JsonProcessingException ex) {
+			log.error("Failed to serialize Palette Color LUT to JSON", ex);
 			return null;
 		}
 	}
@@ -368,6 +365,9 @@ public class DeidentifyImageService {
 			return result;
 		}
 		return dcmAttributes.getInts(lutDataTag);
+	}
+
+	private record TransferSyntaxMapping(String filename, MediaType mediaType) {
 	}
 
 }
