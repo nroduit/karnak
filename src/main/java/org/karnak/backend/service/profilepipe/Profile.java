@@ -9,7 +9,9 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +50,7 @@ import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.HashContext;
+import org.karnak.backend.model.profilepipe.SensitiveTagDefinition;
 import org.karnak.backend.model.profiles.ActionTags;
 import org.karnak.backend.model.profiles.CleanPixelData;
 import org.karnak.backend.model.profiles.Defacing;
@@ -111,30 +114,6 @@ public class Profile {
 		this(profileEntity, null);
 	}
 
-	public @Nullable MaskArea getMask(MaskStationCondition key) {
-		MaskArea mask = maskMap.get(key);
-		if (mask == null) {
-			// No exact match, remove image size information to match the station name
-			// only
-			key.setImageWidth(null);
-			key.setImageHeight(null);
-			mask = maskMap.get(key);
-		}
-		if (mask == null) {
-			// No match with the station name, get the universal mask
-			mask = maskMap.get(new MaskStationCondition("*"));
-		}
-		return mask;
-	}
-
-	public void addMask(String stationName, MaskArea maskArea) {
-		this.maskMap.put(new MaskStationCondition(stationName), maskArea);
-	}
-
-	public void addMask(MaskStationCondition key, MaskArea maskArea) {
-		this.maskMap.put(key, maskArea);
-	}
-
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
 		final Set<ProfileElementEntity> listProfileElementEntity = profileEntity.getProfileElementEntities();
 		List<ProfileItem> profileItems = new ArrayList<>();
@@ -156,6 +135,30 @@ public class Profile {
 		}
 		profileItems.sort(Comparator.comparing(ProfileItem::getPosition));
 		return profileItems;
+	}
+
+	public @Nullable MaskArea getMask(MaskStationCondition key) {
+		MaskArea mask = this.maskMap.get(key);
+		if (mask == null) {
+			// No exact match, remove image size information to match the station name
+			// only
+			key.setImageWidth(null);
+			key.setImageHeight(null);
+			mask = this.maskMap.get(key);
+		}
+		if (mask == null) {
+			// No match with the station name, get the universal mask
+			mask = this.maskMap.get(new MaskStationCondition("*"));
+		}
+		return mask;
+	}
+
+	public void addMask(String stationName, MaskArea maskArea) {
+		this.maskMap.put(new MaskStationCondition(stationName), maskArea);
+	}
+
+	public void addMask(MaskStationCondition key, MaskArea maskArea) {
+		this.maskMap.put(key, maskArea);
 	}
 
 	public List<ProfileItem> createProfilesList(final ProfileEntity profileEntity) {
@@ -273,19 +276,19 @@ public class Profile {
 					.orElse(null);
 
 			if (cleanPixelDataItem != null && cleanPixelDataItem.isAutomaticMasksGeneration()) {
-        		List<MaskArea> apiMasks = fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
-
-        		if (!apiMasks.isEmpty()) {
-				  // Use the first API mask as the "primary" mask (set on the context),
-				  // and store the rest as "additional" masks in context.properties.
-				  mask = apiMasks.getFirst();
-				  if (apiMasks.size() > 1) {
-					context
-						.getProperties()
-						.put(ADDITIONAL_MASK_AREAS_KEY, apiMasks.subList(1, apiMasks.size()));
-				  }
+				List<MaskArea> apiMasks = this.fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
+				if (!apiMasks.isEmpty()) {
+					// Use the first API mask as the "primary" mask (set on the context),
+					// and store the rest as "additional" masks in context.properties.
+					mask = apiMasks.getFirst();
+					if (apiMasks.size() > 1) {
+						context
+							.getProperties()
+							.put(ADDITIONAL_MASK_AREAS_KEY, apiMasks.subList(1, apiMasks.size()));
+					}
 				}
-			} if (mask == null) {
+			}
+			if (mask == null) {
 				// No mask from the API or manual masks → fall back to the static mask configuration
 				mask = getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
 						dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
@@ -385,7 +388,7 @@ public class Profile {
 			// Evaluate the condition
 			ExprCondition exprCondition = new ExprCondition(dcmCopy);
 			conditionCleanPixelData = (Boolean) ExpressionResult.get(profileItemCleanPixelData.getCondition(),
-					exprCondition, Boolean.class);
+				exprCondition, Boolean.class);
 		}
 		return conditionCleanPixelData;
 	}
@@ -399,7 +402,7 @@ public class Profile {
 			else {
 				ExprCondition exprCondition = new ExprCondition(dcmCopy);
 				boolean conditionIsOk = (Boolean) ExpressionResult.get(profileItemDefacing.getCondition(),
-						exprCondition, Boolean.class);
+					exprCondition, Boolean.class);
 				if (conditionIsOk) {
 					context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
 				}
@@ -472,7 +475,7 @@ public class Profile {
 		}
 
 		SecretEntity secretEntity = projectEntity.retrieveActiveSecret();
-		byte[] secret = secretEntity != null ? secretEntity.getSecretKey() : null;
+		byte[] secret = (secretEntity != null) ? secretEntity.getSecretKey() : null;
 		if (secret == null || secret.length != HMAC.KEY_BYTE_LENGTH) {
 			throw new IllegalStateException(
 					"Cannot build the HMAC no secret defined in the project associate at the destination");
