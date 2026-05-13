@@ -239,25 +239,25 @@ public class DeidentifyImageService {
 		try {
 			DeidentifyImageResponse response = this.objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
 
-			if (response.getSopInstanceUid() == null) {
+			if (response.sopInstanceUid() == null) {
 				log.error("The SOP Instance UID in the API response is null");
 				return Collections.emptyList();
 			}
 
-			if (!response.getSopInstanceUid().equals(expectedSopInstanceUID)) {
+			if (!response.sopInstanceUid().equals(expectedSopInstanceUID)) {
 				log.error("The SOP Instance UID in the API response ({}) does not match the expected UID ({}) — skipping masks",
-					response.getSopInstanceUid(), expectedSopInstanceUID);
+					response.sopInstanceUid(), expectedSopInstanceUID);
 				return Collections.emptyList();
 			}
 
-			if (response.getMasks() == null || response.getMasks().isEmpty()) {
+			if (response.masks() == null || response.masks().isEmpty()) {
 				log.debug("No masks found in de-identification image API response (message: {})",
-						response.getMessage());
+						response.message());
 				return Collections.emptyList();
 			}
 
-			log.debug("Masks extracted from de-identification image API response (message: {})", response.getMessage());
-			return response.getMasks();
+			log.debug("Masks extracted from de-identification image API response (message: {})", response.message());
+			return response.masks();
 		}
 		catch (Exception ex) {
 			log.error("Failed to parse JSON response from de-identification image API", ex);
@@ -271,6 +271,11 @@ public class DeidentifyImageService {
 	 * @return the pixel data as a byte array, or {@code null} if extraction fails
 	 */
 	byte[] extractPixelDataBytes(Attributes dcmAttributes) {
+		if (dcmAttributes == null) {
+			log.error("The passed DCMAttributes is null !");
+			return null;
+		}
+
 		Object pixelData = dcmAttributes.getValue(Tag.PixelData);
 
 		if (pixelData instanceof BulkData bulkData) {

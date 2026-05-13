@@ -9,12 +9,11 @@
  */
 package org.karnak.backend.model.profilepipe;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
 import org.karnak.backend.model.profilebody.MaskBody;
-
-import java.util.List;
 
 /**
  * Represents the JSON response returned by the external de-identification image API
@@ -54,17 +53,8 @@ import java.util.List;
  * }
  * }</pre>
  */
-@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DeidentifyImageResponse {
-
-	private String message;
-
-	private List<MaskBody> masks;
-
-	@JsonProperty("sop_instance_uid")
-	private String sopInstanceUid;
+public record DeidentifyImageResponse(String message, List<MaskBody> masks,
+                                      @JsonProperty("sop_instance_uid") String sopInstanceUid) {
 
 }
-
-
