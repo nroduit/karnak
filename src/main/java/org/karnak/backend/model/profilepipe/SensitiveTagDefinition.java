@@ -36,6 +36,7 @@ public final class SensitiveTagDefinition {
 	public static final List<SensitiveTag> SENSITIVE_TAGS = List.of(
 			new SensitiveTag("AccessionNumber", Tag.AccessionNumber),
 			new SensitiveTag("InstitutionName", Tag.InstitutionName),
+			new SensitiveTag("OperatorsName", Tag.OperatorsName),
 			new SensitiveTag("PatientAge", Tag.PatientAge),
 			new SensitiveTag("PatientBirthDate", Tag.PatientBirthDate),
 			new SensitiveTag("PatientID", Tag.PatientID),
