@@ -8,11 +8,8 @@ application:
 name: KARNAK-Profile
 #environment: LOCAL
 karnakadmin: ${KARNAK_ADMIN:admin}
-karnakpassword: ${KARNAK_PASSWORD:admin}
+karnakpassword: ${KARNAK_PASSWORD:karnak}
 karnakpostgreskey: ${DB_ENCRYPTION_KEY}
-
-# TODO TELIMA-289: config pseudo service server url + port + etc.. + update readme + set paths to retrieve data depending
-# on pseudo service used
 
 # - Logs
 logging:

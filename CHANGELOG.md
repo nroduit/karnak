@@ -1,5 +1,61 @@
 # Changelog
 
+## [v1.1.0](https://github.com/OsiriX-Foundation/karnak/tree/v1.1.0) (2025-03-21)
+
+[Full Changelog](https://github.com/OsiriX-Foundation/karnak/compare/v1.0.3...v1.1.0)
+
+**Implemented enhancements:**
+
+- Email notifications fix: do not display rejected instances as errors [\#240](https://github.com/OsiriX-Foundation/karnak/issues/240)
+- Improvements of profile element Add Action [\#237](https://github.com/OsiriX-Foundation/karnak/issues/237)
+- New profile action : add tag [\#228](https://github.com/OsiriX-Foundation/karnak/issues/228)
+- Develop a helper to generate the authorization header in the Destination STOW Form [\#227](https://github.com/OsiriX-Foundation/karnak/issues/227)
+- Update DICOM's JSON reference files [\#221](https://github.com/OsiriX-Foundation/karnak/issues/221)
+- New Profile Expression : ComputePatientAge\(\) [\#220](https://github.com/OsiriX-Foundation/karnak/issues/220)
+- External Pseudonym tab : add delete all patients [\#213](https://github.com/OsiriX-Foundation/karnak/issues/213)
+- New expression: call to an API endpoint  [\#209](https://github.com/OsiriX-Foundation/karnak/issues/209)
+- Upgrade various dependencies [\#208](https://github.com/OsiriX-Foundation/karnak/issues/208)
+- Upgrade Vaadin to version 24 [\#207](https://github.com/OsiriX-Foundation/karnak/issues/207)
+- Springboot 3 migration [\#206](https://github.com/OsiriX-Foundation/karnak/issues/206)
+- Clean pixel data profile: mask position issue when the same equipement produces different images sizes [\#179](https://github.com/OsiriX-Foundation/karnak/issues/179)
+- Clean pixel data limitation [\#175](https://github.com/OsiriX-Foundation/karnak/issues/175)
+- \[Clean Pixel\] Define exclusion rules in the UI [\#37](https://github.com/OsiriX-Foundation/karnak/issues/37)
+- Feat/expression excludeinstance [\#236](https://github.com/OsiriX-Foundation/karnak/pull/236) ([mhenx](https://github.com/mhenx))
+- Upgrade dependencies \(SpringBoot 3, Vaadin 24, ...\)+ new expression to call an API endpoint [\#210](https://github.com/OsiriX-Foundation/karnak/pull/210) ([jdcshug](https://github.com/jdcshug))
+
+**Fixed bugs:**
+
+- HTTP 405 error when accessing to the static images \(logo and spinner gif\) [\#243](https://github.com/OsiriX-Foundation/karnak/issues/243)
+- Fix NPE loading spinner [\#224](https://github.com/OsiriX-Foundation/karnak/issues/224)
+- Fix NPE loading spinner [\#223](https://github.com/OsiriX-Foundation/karnak/pull/223) ([jdcshug](https://github.com/jdcshug))
+
+**Closed issues:**
+
+- New Profile Expression Action : ExcludeInstance\(\) [\#235](https://github.com/OsiriX-Foundation/karnak/issues/235)
+- Expression do not handle multiple string values of a DICOM tag [\#211](https://github.com/OsiriX-Foundation/karnak/issues/211)
+
+**Merged pull requests:**
+
+- Remove unecessary MVC configuration to fix static images serving [\#244](https://github.com/OsiriX-Foundation/karnak/pull/244) ([mhenx](https://github.com/mhenx))
+- Unit tests for JSON standard files [\#242](https://github.com/OsiriX-Foundation/karnak/pull/242) ([mhenx](https://github.com/mhenx))
+- Adds a differentiation between error and excluded instances in monitoring and email notifications [\#241](https://github.com/OsiriX-Foundation/karnak/pull/241) ([mhenx](https://github.com/mhenx))
+- Feat/code cleaning [\#239](https://github.com/OsiriX-Foundation/karnak/pull/239) ([mhenx](https://github.com/mhenx))
+- new profile element add private tag and validation improvements on add action [\#238](https://github.com/OsiriX-Foundation/karnak/pull/238) ([mhenx](https://github.com/mhenx))
+- UI fixes: pseudonym mapping flex display and icons for DICOM tools [\#234](https://github.com/OsiriX-Foundation/karnak/pull/234) ([mhenx](https://github.com/mhenx))
+- fix merge error ProfileTest [\#233](https://github.com/OsiriX-Foundation/karnak/pull/233) ([mhenx](https://github.com/mhenx))
+- Clean Pixel Data: add conditions on the image size to masks definition and application [\#232](https://github.com/OsiriX-Foundation/karnak/pull/232) ([mhenx](https://github.com/mhenx))
+- Apply masks & clean pixel to any type of non compliant image [\#231](https://github.com/OsiriX-Foundation/karnak/pull/231) ([mhenx](https://github.com/mhenx))
+- New profile action : add tag [\#230](https://github.com/OsiriX-Foundation/karnak/pull/230) ([mhenx](https://github.com/mhenx))
+- Remove unused import and braces [\#229](https://github.com/OsiriX-Foundation/karnak/pull/229) ([mhenx](https://github.com/mhenx))
+- Dialog to help generate Authorization Headers in the Destination STOW Form [\#226](https://github.com/OsiriX-Foundation/karnak/pull/226) ([mhenx](https://github.com/mhenx))
+- ExternalID : Delete selected and delete all buttons - bug fix [\#225](https://github.com/OsiriX-Foundation/karnak/pull/225) ([mhenx](https://github.com/mhenx))
+- Update DICOM's JSON reference files from Innolitics [\#222](https://github.com/OsiriX-Foundation/karnak/pull/222) ([mhenx](https://github.com/mhenx))
+- New profile expression : computePatientAge [\#219](https://github.com/OsiriX-Foundation/karnak/pull/219) ([mhenx](https://github.com/mhenx))
+- Minor UI fixes [\#218](https://github.com/OsiriX-Foundation/karnak/pull/218) ([mhenx](https://github.com/mhenx))
+- ExternalID : Delete selected and delete all buttons [\#217](https://github.com/OsiriX-Foundation/karnak/pull/217) ([mhenx](https://github.com/mhenx))
+- build\(deps\): bump org.json:json from 20230227 to 20231013 [\#212](https://github.com/OsiriX-Foundation/karnak/pull/212) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Feat/shift by date [\#204](https://github.com/OsiriX-Foundation/karnak/pull/204) ([redwork321](https://github.com/redwork321))
+
 ## [v1.0.3](https://github.com/OsiriX-Foundation/karnak/tree/v1.0.3) (2023-03-31)
 
 [Full Changelog](https://github.com/OsiriX-Foundation/karnak/compare/v1.0.2...v1.0.3)

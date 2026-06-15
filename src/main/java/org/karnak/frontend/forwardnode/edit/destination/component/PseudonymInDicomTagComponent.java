@@ -29,15 +29,11 @@ public class PseudonymInDicomTagComponent extends Div {
 
 	private NumberField position;
 
-	// private Checkbox savePseudonym;
-
 	public PseudonymInDicomTagComponent(Binder<DestinationEntity> destinationBinder) {
 		this.destinationBinder = destinationBinder;
 		setWidthFull();
 		setElements();
-		// TODO TELIMA-289: reactive save pseudonym
-		add(UIS.setWidthFull(
-				new HorizontalLayout(tag, delimiter, position/* , savePseudonym */)));
+		add(UIS.setWidthFull(new HorizontalLayout(tag, delimiter, position)));
 	}
 
 	public void setElements() {
@@ -47,21 +43,11 @@ public class PseudonymInDicomTagComponent extends Div {
 		position.setStepButtonsVisible(true);
 		position.setMin(0);
 		position.setStep(1);
-
-		// TODO: currently deactivate: to reactivate when implementing pseudonym-service
-		// in Karnak
-		/*
-		 * savePseudonym = new Checkbox("Save pseudonym in pseudonym service");
-		 * savePseudonym.getStyle().set("margin-top", "30px");
-		 * savePseudonym.setValue(true);
-		 */
 	}
 
 	public void clear() {
 		tag.clear();
 		delimiter.clear();
 		position.clear();
-		// savePseudonym.clear();
 	}
-
 }

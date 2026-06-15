@@ -13,9 +13,6 @@ environment: LOCAL
 karnakadmin: admin
 karnakpassword: admin
 
-# TODO TELIMA-289: config pseudo service server url + port + etc.. + update readme + set paths to retrieve data depending
-# on pseudo service used
-
 logging:
   level:
     com:
