@@ -9,11 +9,13 @@
  */
 package org.karnak.backend.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
+
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -23,7 +25,6 @@ import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.TransferStatusRepo;
 import org.karnak.backend.model.notification.TransferMonitoringNotification;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.when;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
 

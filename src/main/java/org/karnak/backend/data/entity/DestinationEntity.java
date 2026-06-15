@@ -190,7 +190,6 @@ public class DestinationEntity implements Serializable {
 		this.desidentification = false;
 		this.issuerByDefault = "";
 		this.skipIssuerOfPatientId = false;
-		// TODO TELIMA-289: set by default pseudo service
 		this.pseudonymType = PseudonymType.CACHE_EXTID;
 		this.tag = null;
 		this.delimiter = null;

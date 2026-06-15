@@ -9,6 +9,8 @@
  */
 package org.karnak.profilepipe.option.datemanager;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +21,6 @@ import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.DateUtils;
 import org.junit.jupiter.api.Assertions;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;

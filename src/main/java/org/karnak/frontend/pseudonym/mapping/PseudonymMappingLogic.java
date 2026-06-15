@@ -75,8 +75,6 @@ public class PseudonymMappingLogic {
 		return externalIDCacheMapping;
 	}
 
-	// TODO TELIMA-289: retrieve patients in pseudonym-service
-
 	public PseudonymMappingView getMappingView() {
 		return pseudonymMappingView;
 	}

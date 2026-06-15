@@ -9,12 +9,13 @@
  */
 package org.karnak.backend.dicom;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import org.dcm4che3.data.UID;
 import org.dcm4che3.img.DicomOutputData;
 import org.dcm4che3.img.util.DicomUtils;
 import org.junit.jupiter.api.AfterEach;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;

@@ -9,6 +9,8 @@
  */
 package org.karnak.frontend.dicom.echo;
 
+import static org.karnak.frontend.dicom.mwl.DicomWorkListSelectionDialog.getDivConfigNodeComponentRenderer;
+
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.HasValue.ValueChangeEvent;
@@ -34,7 +36,6 @@ import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.util.DicomNodeUtil;
 import org.karnak.frontend.component.AbstractDialog;
-import static org.karnak.frontend.dicom.mwl.DicomWorkListSelectionDialog.getDivConfigNodeComponentRenderer;
 
 public class DicomEchoSelectionDialog extends AbstractDialog {
 

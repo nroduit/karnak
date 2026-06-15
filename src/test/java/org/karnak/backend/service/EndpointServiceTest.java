@@ -9,16 +9,17 @@
  */
 package org.karnak.backend.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
-import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
 
 public class EndpointServiceTest {
 

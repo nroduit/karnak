@@ -9,10 +9,11 @@
  */
 package org.karnak.backend.model.expression;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 class ExprConditionTest {
