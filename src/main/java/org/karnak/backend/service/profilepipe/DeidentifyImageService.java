@@ -10,6 +10,7 @@
 package org.karnak.backend.service.profilepipe;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
@@ -94,8 +96,12 @@ public class DeidentifyImageService {
 	 */
 	public DeidentifyImageService(@Value("${karnak.deidentify-image.url:http://localhost:8000}") String apiBaseUrl) {
 		this.apiBaseUrl = apiBaseUrl;
-		this.restClient = RestClient.builder().baseUrl(apiBaseUrl).build();
 		this.objectMapper = new ObjectMapper();
+
+		HttpClient jdkClient = HttpClient.newBuilder()
+			.version(HttpClient.Version.HTTP_1_1)
+			.build();
+		this.restClient = RestClient.builder().baseUrl(apiBaseUrl).requestFactory(new JdkClientHttpRequestFactory(jdkClient)).build();
 	}
 
 	/**
@@ -135,6 +141,7 @@ public class DeidentifyImageService {
 
 		// Send the POST request and get the JSON response
 		String jsonResponse;
+		log.info("multipartBody={}", multipartBody);
 		try {
 			jsonResponse = this.restClient.post()
 				.uri("/deidentify-image")
