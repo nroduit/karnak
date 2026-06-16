@@ -50,5 +50,4 @@ public class PseudonymInDicomTagComponent extends Div {
 		delimiter.clear();
 		position.clear();
 	}
-
 }
