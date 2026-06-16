@@ -9,11 +9,12 @@
  */
 package org.karnak.backend.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.dicom.DicomForwardDestination;

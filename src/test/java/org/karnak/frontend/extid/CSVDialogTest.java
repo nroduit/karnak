@@ -9,9 +9,10 @@
  */
 package org.karnak.frontend.extid;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ProjectEntity;
 

@@ -9,9 +9,10 @@
  */
 package org.karnak.backend.model.action;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 class ReplaceTest {

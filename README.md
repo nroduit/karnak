@@ -61,14 +61,14 @@ see [karnak-docker](https://github.com/OsiriX-Foundation/karnak-docker).
         - Mandatory:
             - `ENVIRONMENT=DEV`
         - Optional:
-            - `DB_PASSWORD=5!KAnN@%98%d`
+            - `DB_PASSWORD=karnak`
             - `DB_PORT=5433`
             - `DB_USER=karnak`
             - `DB_NAME=karnak`
             - `DB_HOST=localhost`
             - `DB_ENCRYPTION_KEY=fsGuSZRIEr$HwlTDPglZg*Vl7WtJCZz6RLvqoMKWSA!`
             - `KARNAK_ADMIN=admin`
-            - `KARNAK_PASSWORD=admin`
+            - `KARNAK_PASSWORD=karnak`
             - `KARNAK_LOGS_MAX_FILE_SIZE=100MB`
             - `KARNAK_LOGS_MIN_INDEX=1`
             - `KARNAK_LOGS_MAX_INDEX=10`

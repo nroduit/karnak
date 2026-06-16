@@ -9,14 +9,15 @@
  */
 package org.karnak.backend.model.profiles;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.HashSet;
 import java.util.Set;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.TagUtils;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;

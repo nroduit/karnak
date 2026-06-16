@@ -9,10 +9,13 @@
  */
 package org.karnak.backend.service;
 
-import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.TransferStatusEntity;
@@ -20,9 +23,7 @@ import org.karnak.backend.data.repo.TransferStatusRepo;
 import org.karnak.backend.data.repo.specification.TransferStatusSpecification;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
-import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.when;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;

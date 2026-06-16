@@ -9,11 +9,12 @@
  */
 package org.karnak.backend.model.editor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.DestinationEntity;

@@ -9,6 +9,10 @@
  */
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
+import static org.karnak.backend.enums.PseudonymType.CACHE_EXTID;
+import static org.karnak.backend.enums.PseudonymType.EXTID_API;
+import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
+
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
@@ -21,9 +25,6 @@ import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.karnak.backend.data.entity.DestinationEntity;
-import static org.karnak.backend.enums.PseudonymType.CACHE_EXTID;
-import static org.karnak.backend.enums.PseudonymType.EXTID_API;
-import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.util.UIS;
 

@@ -9,17 +9,18 @@
  */
 package org.karnak.backend.dicom;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.service.ForwardService;
-import static org.mockito.Mockito.mock;
 import org.springframework.context.ApplicationEventPublisher;
 import org.weasis.dicom.param.DicomNode;
 

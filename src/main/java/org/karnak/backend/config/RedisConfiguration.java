@@ -57,7 +57,6 @@ public class RedisConfiguration {
 
 	@Bean
 	public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-		// TODO TELIMA-289: set cache for pseudo service 15 min + create cache class as
 		// ExternalIDCache
 		return builder -> builder
 			.withCacheConfiguration("externalId.cache",

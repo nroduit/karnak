@@ -9,10 +9,11 @@
  */
 package org.karnak.frontend.dicom;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.model.dicom.WadoNode;
 import org.weasis.dicom.param.DicomNode;

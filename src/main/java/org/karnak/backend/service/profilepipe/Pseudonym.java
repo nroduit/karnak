@@ -114,11 +114,6 @@ public class Pseudonym {
 		if (pseudonymExtidInTag == null) {
 			throw new IllegalStateException("Cannot get a pseudonym in a DICOM tag");
 		}
-		// TODO TELIMA-289
-		// else {
-		// if (destinationEntity.getSavePseudonym().booleanValue()) {
-		// }
-		// }
 		return pseudonymExtidInTag;
 	}
 
@@ -130,8 +125,5 @@ public class Pseudonym {
 		}
 		return pseudonymCacheExtID;
 	}
-
-	// TODO TELIMA-289: methods to return pseudo for pseudo service or generate one (cf
-	// git history + PseudonymApi.class)
 
 }

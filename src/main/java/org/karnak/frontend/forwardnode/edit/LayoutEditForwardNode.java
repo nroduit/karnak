@@ -9,6 +9,9 @@
  */
 package org.karnak.frontend.forwardnode.edit;
 
+import static org.karnak.backend.enums.PseudonymType.EXTID_API;
+import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -26,8 +29,6 @@ import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.NodeEventType;
-import static org.karnak.backend.enums.PseudonymType.EXTID_API;
-import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
@@ -600,14 +601,6 @@ public class LayoutEditForwardNode extends VerticalLayout {
 				return true;
 			}, "A position must be defined, when a delimiter is present")
 			.bind(DestinationEntity::getPosition, DestinationEntity::setPosition);
-
-		// TODO TELIMA-289: to reactivate
-		/*
-		 * deIdentificationComponent.getDestinationBinder()
-		 * .forField(deIdentificationComponent.getPseudonymInDicomTagComponent().
-		 * getSavePseudonym()) .bind(DestinationEntity::getSavePseudonym,
-		 * DestinationEntity::setSavePseudonym);
-		 */
 	}
 
 	public void addBinderExtidFromApi(DeIdentificationComponent deIdentificationComponent) {

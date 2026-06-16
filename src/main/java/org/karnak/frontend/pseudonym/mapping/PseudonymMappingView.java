@@ -157,9 +157,6 @@ public class PseudonymMappingView extends HorizontalLayout {
 		}
 	}
 
-	// TODO TELIMA-289: find mapping in pseudonym service + make a service to call
-	// pseudonym service + refactor ?
-
 	/**
 	 * Build components
 	 */

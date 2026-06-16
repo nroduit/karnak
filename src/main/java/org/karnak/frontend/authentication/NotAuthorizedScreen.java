@@ -9,6 +9,9 @@
  */
 package org.karnak.frontend.authentication;
 
+import static org.karnak.frontend.authentication.LoginScreen.KARNAK_TITLE;
+import static org.karnak.frontend.authentication.LoginScreen.LOGO_SIZE;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -20,8 +23,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.karnak.backend.util.SecurityUtil;
-import static org.karnak.frontend.authentication.LoginScreen.KARNAK_TITLE;
-import static org.karnak.frontend.authentication.LoginScreen.LOGO_SIZE;
 import org.karnak.frontend.image.LogoKarnak;
 
 /**
