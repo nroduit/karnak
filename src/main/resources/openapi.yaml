@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: Deidentification API
+  description: API for deidentifying DICOM images using OCR and sensitive data detection.
+  version: 0.1.0
+  contact:
+    name: Noah Kaltenrieder
+    email: noah.kaltenrieder@hug.ch
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /deidentify-image:
+    post:
+      operationId: deidentifyImage
+      summary: Deidentify an image
+      description: |
+        Accepts an image file and a JSON list of sensitive data (DICOM tag values).
+        Runs OCR on the image, detects sensitive text, and returns mask rectangles
+        grouped by background color so the caller can erased them.
+
+        **Versioning** -- Use the Accept header to select the API version:
+        `Accept: application/json; version=1` (default).
+      parameters:
+        - in: header
+          name: Accept
+          schema:
+            type: string
+            default: "application/json; version=1"
+          description: >
+            API version via content negotiation.
+            Use `application/json; version=1`.
+            Defaults to version 1 when omitted.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - sensitive_data_list
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: >
+                    The image file to deidentify. Supported content types:
+                    image/jpeg, image/png, image/jp2, image/jpeg2000,
+                    image/x-raw, image/raw, application/octet-stream.
+                sensitive_data_list:
+                  type: string
+                  description: >
+                    A JSON string containing a flat object mapping DICOM tag names
+                    to their string values. Example:
+                    {"PatientID": "962738", "PatientName": "Doe^John"}.
+                    An empty object {} means no sensitive data to detect.
+                sop_instance_uid:
+                  type: string
+                  nullable: true
+                  description: >
+                    DICOM SOP Instance UID (optional). Passed through to the
+                    response to ensure consistency with concurrent requests.
+                rows:
+                  type: integer
+                  nullable: true
+                  description: Image height in pixels (required for raw pixel data).
+                columns:
+                  type: integer
+                  nullable: true
+                  description: Image width in pixels (required for raw pixel data).
+                bits_allocated:
+                  type: integer
+                  nullable: true
+                  description: Bits per pixel component (required for raw pixel data).
+                samples_per_pixel:
+                  type: integer
+                  nullable: true
+                  description: Number of channels (required for raw pixel data).
+                rescale_slope:
+                  type: number
+                  format: double
+                  nullable: true
+                  description: Modality LUT rescale slope (optional, raw pixel data only).
+                rescale_intercept:
+                  type: number
+                  format: double
+                  nullable: true
+                  description: Modality LUT rescale intercept (optional, raw pixel data only).
+                window_center:
+                  type: number
+                  format: double
+                  nullable: true
+                  description: VOI LUT window center (optional, raw pixel data only).
+                window_width:
+                  type: number
+                  format: double
+                  nullable: true
+                  description: VOI LUT window width (optional, raw pixel data only).
+                is_monochrome1:
+                  type: boolean
+                  default: false
+                  description: >
+                    True if photometric interpretation is MONOCHROME1
+                    (optional, raw pixel data only).
+                palette_color_lut:
+                  type: string
+                  nullable: true
+                  description: >
+                    JSON string with "red", "green", "blue" keys, each an array
+                    of integer values (8-bit 0-255 or 16-bit 0-65535) for DICOM
+                    Palette Color LUT. When provided, pixel values are treated
+                    as indices into the palette tables (optional, raw pixel data only).
+                transfer_syntax_uid:
+                  type: string
+                  nullable: true
+                  description: >
+                    DICOM Transfer Syntax UID for compressed pixel data
+                    (e.g. 1.2.840.10008.1.2.4.70 for JPEG Lossless).
+                    When provided, enables direct decompression via pydicom.
+                photometric_interpretation:
+                  type: string
+                  nullable: true
+                  description: >
+                    DICOM Photometric Interpretation string
+                    (e.g. MONOCHROME1, MONOCHROME2, RGB, YBR_FULL_422).
+                    Used when decoding raw pixel data to determine color space
+                    handling (optional, raw pixel data only).
+      responses:
+        "200":
+          description: Deidentification result with mask rectangles grouped by color.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeidentificationResponse"
+              examples:
+                sensitiveDataDetected:
+                  summary: Sensitive data found
+                  value:
+                    masks:
+                      - stationName: "*"
+                        color: "14181a"
+                        rectangles:
+                          - "78 3 161 28"
+                          - "246 7 102 21"
+                    message: "3 sensitive data detected"
+                noSensitiveData:
+                  summary: No sensitive data found
+                  value:
+                    message: "No sensitive data detected"
+                withSopInstanceUid:
+                  summary: Response with SOP Instance UID
+                  value:
+                    message: "No sensitive data detected"
+                    sop_instance_uid: "1.2.840.113619.2.55.3.123456789"
+                emptySensitiveDataList:
+                  summary: Empty sensitive data list provided
+                  value:
+                    message: "No sensitive data list provided"
+        "400":
+          description: Bad request (unsupported file type, invalid JSON, or failed image decode).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                unsupportedFileType:
+                  summary: Unsupported file type
+                  value:
+                    detail: "Unsupported file type."
+                invalidJson:
+                  summary: Invalid JSON in sensitive data
+                  value:
+                    detail: "Invalid JSON format for the sensitive data."
+                sensitiveDataNotObject:
+                  summary: sensitive_data_list is not a JSON object
+                  value:
+                    detail: "sensitive_data_list must be a JSON object."
+                invalidPaletteJson:
+                  summary: Invalid JSON in palette_color_lut
+                  value:
+                    detail: "Invalid JSON format for palette_color_lut."
+                decodeFailure:
+                  summary: Failed to decode image
+                  value:
+                    detail: "Failed to decode image. Provide rows, columns, bits_allocated, samples_per_pixel, transfer_syntax_uid, and photometric_interpretation."
+        "406":
+          description: Unsupported API version requested.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                unsupportedVersion:
+                  summary: Unsupported version
+                  value:
+                    detail: "Unsupported API version 3. Supported: [1]"
+        "422":
+          description: Validation error (missing required fields).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "500":
+          description: Internal server error (unhandled exception).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                internalError:
+                  summary: Unhandled server error
+                  value:
+                    detail: "Internal server error."
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Liveness probe returning the service status.
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+              examples:
+                ok:
+                  summary: Healthy
+                  value:
+                    status: "ok"
+
+components:
+  schemas:
+    DeidentificationResponse:
+      type: object
+      required:
+        - message
+      properties:
+        masks:
+          type: array
+          description: >
+            List of mask groups, each with a background color and rectangles.
+            Absent when no sensitive data is detected.
+          items:
+            $ref: "#/components/schemas/MaskGroup"
+        message:
+          type: string
+          description: Human-readable summary of the result.
+          example: "3 sensitive data detected"
+        sop_instance_uid:
+          type: string
+          description: >
+            Echoed back when provided in the request.
+          example: "1.2.840.113619.2.55.3.123456789"
+
+    MaskGroup:
+      type: object
+      required:
+        - stationName
+        - color
+        - rectangles
+      properties:
+        stationName:
+          type: string
+          description: Station name filter. Always "*" for this API.
+          example: "*"
+        color:
+          type: string
+          description: >
+            Background color as a 6-character hex string (RRGGBB, no leading #).
+          pattern: "^[0-9a-fA-F]{6}$"
+          example: "14181a"
+        rectangles:
+          type: array
+          description: >
+            List of rectangles in "x y width height" format (space-separated integers).
+          items:
+            type: string
+            pattern: "^\\d+ \\d+ \\d+ \\d+$"
+            example: "78 3 161 28"
+
+    SensitiveDataList:
+      type: object
+      description: >
+        Flat object mapping DICOM tag names to their string values.
+        Values can be empty strings. An empty object means no sensitive data.
+      additionalProperties:
+        type: string
+      example:
+        PatientID: "962738"
+        PatientName: "Doe^John"
+        InstitutionName: "HUG Cardiologie"
+        AccessionNumber: "CAR-000022748499"
+        PatientBirthDate: "19280303"
+        StudyDate: "20181023"
+        PatientAge: "090Y"
+        PerformingPhysicianName: "Dos Santos, S."
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message.
+
+    ValidationErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  oneOf:
+                    - type: string
+                    - type: integer
+              msg:
+                type: string
+              type:
+                type: string
