@@ -320,44 +320,38 @@ public class Profile {
 		if (this.deidentifyImageService == null) {
 			return Collections.emptyList();
 		}
-		try {
-			Map<String, String> sensitiveData = SensitiveTagDefinition.extractSensitiveData(dcmCopy);
+		Map<String, String> sensitiveData = SensitiveTagDefinition.extractSensitiveData(dcmCopy);
 
-			List<MaskBody> masks = this.deidentifyImageService.callDeidentifyImageApi(dcmCopy, sensitiveData, tsuid);
+		List<MaskBody> masks = this.deidentifyImageService.callDeidentifyImageApi(dcmCopy, sensitiveData, tsuid);
 
-			if (masks.isEmpty()) {
-				return Collections.emptyList();
-			}
-
-			// Convert each MaskBody into a MaskArea.
-			// Each one becomes a separate MaskArea so different colors are preserved.
-			List<MaskArea> maskAreas = new ArrayList<>();
-			for (MaskBody maskBody : masks) {
-				Color color = null;
-				if (StringUtil.hasText(maskBody.getColor())) {
-					color = ActionTags.hexadecimal2Color(maskBody.getColor());
-				}
-				List<Shape> shapeList = new ArrayList<>();
-				if (maskBody.getRectangles() != null) {
-					for (String rectStr : maskBody.getRectangles()) {
-						Rectangle rect = RectangleListConverter.stringToRectangle(rectStr);
-						if (rect != null) {
-							shapeList.add(rect);
-						}
-					}
-				}
-				if (!shapeList.isEmpty()) {
-					maskAreas.add(new MaskArea(shapeList, color));
-				}
-			}
-
-			log.debug("De-identification image API returned {} mask area(s)", maskAreas.size());
-			return maskAreas;
-		}
-		catch (Exception e) {
-			log.warn("De-identification image API call failed — falling back to static mask: {}", e.getMessage());
+		if (masks.isEmpty()) {
 			return Collections.emptyList();
 		}
+
+		// Convert each MaskBody into a MaskArea.
+		// Each one becomes a separate MaskArea so different colors are preserved.
+		List<MaskArea> maskAreas = new ArrayList<>();
+		for (MaskBody maskBody : masks) {
+			Color color = null;
+			if (StringUtil.hasText(maskBody.getColor())) {
+				color = ActionTags.hexadecimal2Color(maskBody.getColor());
+			}
+			List<Shape> shapeList = new ArrayList<>();
+			if (maskBody.getRectangles() != null) {
+				for (String rectStr : maskBody.getRectangles()) {
+					Rectangle rect = RectangleListConverter.stringToRectangle(rectStr);
+					if (rect != null) {
+						shapeList.add(rect);
+					}
+				}
+			}
+			if (!shapeList.isEmpty()) {
+				maskAreas.add(new MaskArea(shapeList, color));
+			}
+		}
+
+		log.debug("De-identification image API returned {} mask area(s)", maskAreas.size());
+		return maskAreas;
 	}
 
 	/**

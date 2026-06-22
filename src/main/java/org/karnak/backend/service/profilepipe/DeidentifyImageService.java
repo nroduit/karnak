@@ -113,6 +113,7 @@ public class DeidentifyImageService {
 	 * have no {@code masks} field. In that case, this method returns an empty list.
 	 * @param dcmAttributes the DICOM attributes of the instance
 	 * @param sensitiveData a map of tag name → tag value for sensitive information
+	 * @throws DeidentifyImageException if there is a problem when calling the deidentification API
 	 * @return a list of {@link MaskBody} extracted from the API response, or an empty
 	 * list if no masks were found or an error occurred
 	 */
@@ -153,24 +154,24 @@ public class DeidentifyImageService {
 		}
 		catch (HttpClientErrorException ex) {
 			// Errors 4xx
-			log.error("Client error {} from de-identification image API — check the request format: {}",
-					ex.getStatusCode(), ex.getMessage());
-			return Collections.emptyList();
+			throw new DeidentifyImageException(String.format(
+					"Client error %s from de-identification image API — check the request format: %s",
+					ex.getStatusCode(), ex.getMessage()), ex);
 		}
 		catch (HttpServerErrorException ex) {
 			// Errors 5xx
-			log.warn("Server error {} from de-identification image API — service may be temporarily unavailable",
-					ex.getStatusCode());
-			return Collections.emptyList();
+			throw new DeidentifyImageException(String.format(
+					"Server error %s from de-identification image API — service may be temporarily unavailable",
+					ex.getStatusCode()), ex);
 		}
 		catch (ResourceAccessException ex) {
-			log.warn("Cannot reach de-identification image API at {} — service is unavailable: {}", this.apiBaseUrl,
-					ex.getMessage());
-			return Collections.emptyList();
+			throw new DeidentifyImageException(String.format(
+					"Cannot reach de-identification image API at %s — service is unavailable: %s", this.apiBaseUrl,
+					ex.getMessage()), ex);
 		}
 		catch (Exception ex) {
-			log.error("Unexpected error calling de-identification image API", ex);
-			return Collections.emptyList();
+			throw new DeidentifyImageException("Unexpected error calling de-identification image API: " + ex.getMessage(),
+					ex);
 		}
 
 		// Parse the JSON response
