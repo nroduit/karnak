@@ -25,6 +25,21 @@ generate_db_password() {
   export DB_FILE_PWD
 }
 
+start_deidentify() {
+  if [[ "${DEIDENTIFY_IMAGE_ENABLED:-true}" != "true" ]]; then
+    log "De-identification image service disabled (DEIDENTIFY_IMAGE_ENABLED)"
+    return
+  fi
+  local bin="$APP_DIR/deidentify-karnak/deidentify-karnak"
+  if [[ ! -x "$bin" ]]; then
+    log "De-identification binary not found at '$bin' — skipping"
+    return
+  fi
+  log "Starting de-identification image service..."
+  "$bin" &
+  DEIDENT_PID=$!
+}
+
 # Default values
 CONFIG_FILE="./run.cfg"
 # Seconds to wait for a graceful shutdown before sending SIGKILL
@@ -82,6 +97,9 @@ else
 fi
 [[ ! -e "$KARNAK_BIN" ]] && die "Karnak executable not found at '$KARNAK_BIN'"
 
+# Start the de-identification sidecar now that APP_DIR and the config are loaded
+start_deidentify
+
 # Cleanup function
 SHUTTING_DOWN=0
 cleanup() {
@@ -89,6 +107,13 @@ cleanup() {
   [[ "$SHUTTING_DOWN" == 1 ]] && return
   SHUTTING_DOWN=1
   trap - EXIT INT TERM
+
+  # Stop the de-identification sidecar if running
+    if [[ -n "${DEIDENT_PID:-}" ]] && kill -0 "$DEIDENT_PID" 2>/dev/null; then
+      log "Stopping de-identification service (PID: $DEIDENT_PID)"
+      kill -TERM "$DEIDENT_PID" 2>/dev/null || true
+      wait "$DEIDENT_PID" 2>/dev/null || true
+    fi
 
   # Stop Karnak if still running
   if [[ -n "${KARNAK_PID:-}" ]] && kill -0 "$KARNAK_PID" 2>/dev/null; then

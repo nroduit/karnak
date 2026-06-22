@@ -43,6 +43,14 @@ if exist "%CONFIG_FILE%" (
 rem Validate environment
 if not exist "%KARNAK_BIN%" (echo ERROR: Karnak executable not found & exit /b 1)
 
+rem Start de-identification image service (optional)
+if /i "%DEIDENTIFY_IMAGE_ENABLED%"=="true" (
+  if exist "%APP_DIR%deidentification\deidentify-karnak.exe" (
+    echo [run.bat] Starting de-identification image service...
+    start "Deidentify" /min "%APP_DIR%deidentification\deidentify-karnak.exe"
+  )
+)
+
 rem Start Karnak
 echo [run.bat] Starting Karnak from '%KARNAK_BIN%'
 start "Karnak" "%KARNAK_BIN%"

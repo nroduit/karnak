@@ -242,11 +242,16 @@ else
   declare -a consoleArgs=()
 fi
 
+if [ ! -d "$JDK_PATH_UNIX/jmods" ]; then
+  die "The JDK at '$JDK_PATH_UNIX' has no 'jmods' directory (packaged modules) required by jpackage/jlink.\nUse a full JDK >= ${REQUIRED_TEXT_VERSION} that ships jmods."
+fi
+
 $JPKGCMD --type app-image --input "$INPUT_DIR" --dest "$OUTPUT_PATH" --name "$NAME" \
 --main-jar karnak-"${KARNAK_VERSION}".jar --main-class org.springframework.boot.loader.launch.JarLauncher \
 --module-path "$JDK_PATH_UNIX/jmods" --add-modules ALL-MODULE-PATH \
 --resource-dir "$RES" --app-version "$KARNAK_CLEAN_VERSION" \
-"${tmpArgs[@]}" --verbose "${signArgs[@]}" "${commonOptions[@]}" "${consoleArgs[@]}"
+"${tmpArgs[@]}" --verbose "${signArgs[@]}" "${commonOptions[@]}" "${consoleArgs[@]}" \
+  || die "jpackage failed to build the app image. See the output above."
 
 # MacOS code signing
 if [ "$machine" = "macosx" ] ; then
