@@ -4,26 +4,36 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
+
+  <!-- Pom Parent -->
+  <parent>
+    <groupId>ch.hug.spring</groupId>
+    <artifactId>spring-boot-starter-microservice-webmvc</artifactId>
+    <version>4.0.5-2025.1.0-1.0-SNAPSHOT</version>
+    <relativePath/> <!-- lookup parent from repository -->
+  </parent>
+
   <groupId>org.karnak</groupId>
   <artifactId>karnak</artifactId>
   <name>${project.artifactId}</name>
-  <version>1.2.0</version>
+  <version>${revision}</version>
   <description>Karnak</description>
   <packaging>jar</packaging>
 
   <properties>
+    <revision>SNAPSHOT</revision>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>25</java.version>
     <enforcer.jdk-version>[${java.version},)</enforcer.jdk-version>
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
 
-    <springframework.version>4.1.0</springframework.version>
-    <springdoc.version>1.8.0</springdoc.version>
     <vaadin.version>25.1.8</vaadin.version>
     <org.json.version>20260522</org.json.version>
+    <gson.version>2.10.1</gson.version>
     <opencsv.version>5.12.0</opencsv.version>
-
+    <node.version>v22.13.0</node.version>
     <weasis-dicom-tools.version>5.34.3</weasis-dicom-tools.version>
     <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
 
@@ -31,9 +41,6 @@
     <mockito.version>5.23.0</mockito.version>
     <swagger.version>2.2.52</swagger.version>
 
-    <sonar.organization>osirix-foundation-1</sonar.organization>
-    <sonar.projectKey>karnak</sonar.projectKey>
-    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.language>java</sonar.language>
     <sonar.java.source>${java.version}</sonar.java.source>
     <sonar.test.exclusions>src/test/**/*</sonar.test.exclusions>
@@ -43,7 +50,7 @@
 
     <bash.executable>bash</bash.executable>
     <!-- Tests require the native library and can only be run on Linux, Windows and macOS-->
-    <argLine>-Djava.library.path=${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</argLine>
+<!--    <argLine>-Djava.library.path=${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</argLine>-->
 
     <!-- JUnit tag filtering. By default the slow "performance" tests are skipped; run them
          with -Pperformance. -->
@@ -66,11 +73,18 @@
 
   <repositories>
     <repository>
-      <id>central</id>
+      <id>HUG_Nexus3</id>
+      <name>Nexus3-hug</name>
+      <url>https://nxrm.hisaas.hcuge.ch/repository/maven-public/</url>
+      <layout>default</layout>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
       </snapshots>
-      <url>https://repo.maven.apache.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </releases>
     </repository>
     <repository>
       <id>vaadin-addons</id>
@@ -78,7 +92,7 @@
     </repository>
     <repository>
       <id>mvn-repo-master</id>
-      <url>https://raw.githubusercontent.com/nroduit/mvn-repo/master/</url>
+      <url>https://raw.github.com/nroduit/mvn-repo/master/</url>
     </repository>
     <repository>
       <id>www.dcm4che.org</id>
@@ -88,167 +102,27 @@
   </repositories>
 
   <build>
+    <defaultGoal>spring-boot:run</defaultGoal>
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.15.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>3.1.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.5.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.5.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <version>6.0.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.11.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.6</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>3.4.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.6.3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.5.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>4.0.0-M16</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.6.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.15</version>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>3.0.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
 
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>min-requirement</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireMavenVersion>
-                  <version>${enforcer.maven-version}</version>
-                </requireMavenVersion>
-                <requireJavaVersion>
-                  <version>${enforcer.jdk-version}</version>
-                </requireJavaVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <release>${java.version}</release>
-          <annotationProcessorPaths>
-            <path>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-            </path>
-          </annotationProcessorPaths>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <phase>generate-test-resources</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.weasis.thirdparty.org.opencv</groupId>
-                  <artifactId>${lib-file-name}</artifactId>
-                  <version>${weasis.opencv.native.version}</version>
-                  <type>${lib-file-ext}</type>
-                  <classifier>${os-name}-${cpu-name}</classifier>
-                  <overWrite>false</overWrite>
-                  <outputDirectory>${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</outputDirectory>
-                  <destFileName>${lib-file-name}.${lib-file-ext}</destFileName>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <version>${springframework.version}</version>
         <configuration>
-          <jvmArguments>
-            -Djava.library.path="${java.io.tmpdir}/dicom-opencv-${weasis.opencv.native.version}"
-          </jvmArguments>
-          <!-- Clean build and startup time for Vaadin apps sometimes may exceed the default Spring Boot's 30sec timeout.  -->
-          <layers>
-            <enabled>true</enabled>
-          </layers>
-          <maxAttempts>240</maxAttempts>
-          <wait>500</wait>
+          <image>
+            <!-- TODO to create -->
+            <runImage>${docker-registry}/vna-docker-base-image:5.0.0</runImage>
+          </image>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <!-- Take care of synchronizing java dependencies and imports in package.json and main.js files. It also creates webpack.config.js
@@ -264,11 +138,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>io.spring.javaformat</groupId>
-        <artifactId>spring-javaformat-maven-plugin</artifactId>
-        <version>0.0.47</version>
       </plugin>
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
@@ -302,37 +171,37 @@
           </java>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
-          <parallel>all</parallel>
-          <groups>${karnak.test.groups}</groups>
-          <excludedGroups>${karnak.test.excludedGroups}</excludedGroups>
-        </configuration>
-      </plugin>
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-surefire-plugin</artifactId>-->
+<!--        <configuration>-->
+<!--          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>-->
+<!--          <parallel>all</parallel>-->
+<!--          <groups>${karnak.test.groups}</groups>-->
+<!--          <excludedGroups>${karnak.test.excludedGroups}</excludedGroups>-->
+<!--        </configuration>-->
+<!--      </plugin>-->
     </plugins>
 
-    <resources>
-      <resource>
-        <filtering>true</filtering>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**/application*.yml</include>
-          <include>**/application*.yaml</include>
-          <include>**/application*.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <exclude>**/application*.yml</exclude>
-          <exclude>**/application*.yaml</exclude>
-          <exclude>**/application*.properties</exclude>
-        </excludes>
-      </resource>
-    </resources>
+<!--    <resources>-->
+<!--      <resource>-->
+<!--        <filtering>true</filtering>-->
+<!--        <directory>src/main/resources</directory>-->
+<!--        <includes>-->
+<!--          <include>**/application*.yml</include>-->
+<!--          <include>**/application*.yaml</include>-->
+<!--          <include>**/application*.properties</include>-->
+<!--        </includes>-->
+<!--      </resource>-->
+<!--      <resource>-->
+<!--        <directory>src/main/resources</directory>-->
+<!--        <excludes>-->
+<!--          <exclude>**/application*.yml</exclude>-->
+<!--          <exclude>**/application*.yaml</exclude>-->
+<!--          <exclude>**/application*.properties</exclude>-->
+<!--        </excludes>-->
+<!--      </resource>-->
+<!--    </resources>-->
 
   </build>
 
@@ -341,10 +210,8 @@
     <dependencies>
       <dependency>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${springframework.version}</version>
-        <scope>import</scope>
-        <type>pom</type>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>${springboot.version}</version>
       </dependency>
       <dependency>
         <groupId>com.vaadin</groupId>
@@ -356,17 +223,21 @@
     </dependencies>
   </dependencyManagement>
 
+  <!-- Distribution management for releases/snapshots -->
+  <distributionManagement>
+    <repository>
+      <id>dsi-releases</id>
+      <name>Nexus3-hug - release</name>
+      <url>http://nxrm.hcuge.ch:8091/repository/maven-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>dsi-snapshots</id>
+      <name>Nexus3-hug - snapshot</name>
+      <url>http://nxrm.hcuge.ch:8091/repository/maven-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <dependencies>
-    <dependency>
-      <artifactId>spring-boot-starter</artifactId>
-      <groupId>org.springframework.boot</groupId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.vaadin.external.google</groupId>
-          <artifactId>android-json</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <artifactId>spring-boot-starter-web</artifactId>
       <groupId>org.springframework.boot</groupId>
@@ -388,10 +259,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
     <dependency>
@@ -453,7 +320,30 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
-      <version>${springframework.version}</version>
+    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.springframework.boot</groupId>-->
+<!--      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>-->
+<!--    </dependency>-->
+
+    <!-- Eureka -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.cloud</groupId>
+          <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework.cloud</groupId>
+          <artifactId>spring-cloud-netflix-ribbon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.netflix.ribbon</groupId>
+          <artifactId>ribbon-eureka</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Swagger -->
@@ -505,6 +395,7 @@
     <dependency>
       <groupId>com.vaadin</groupId>
       <artifactId>vaadin-spring-boot-starter</artifactId>
+      <version>${vaadin.version}</version>
       <exclusions>
         <!-- Excluding so that webjars are not included. -->
         <exclusion>
@@ -521,7 +412,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.6.0-jre</version>
+      <version>33.5.0-jre</version>
     </dependency>
 
     <dependency>
@@ -617,21 +508,18 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <groupId>org.springframework.boot</groupId>
       <scope>test</scope>
-      <version>${springframework.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jdbc-test</artifactId>
       <scope>test</scope>
-      <version>${springframework.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa-test</artifactId>
       <scope>test</scope>
-      <version>${springframework.version}</version>
     </dependency>
 
     <!-- Mockito inline -->
@@ -657,6 +545,48 @@
   </dependencies>
 
   <profiles>
+    <!--  For Unit test: no need to rebuild front as in pipeline it is done before  -->
+    <profile>
+      <id>unit-test</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>build-frontend</goal>
+                </goals>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--  For Integration test: no need to rebuild front as in pipeline it is done before  -->
+    <profile>
+      <id>integration-test</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>build-frontend</goal>
+                </goals>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <!-- Profile: performance — also runs the @Tag("performance") gateway throughput/saturation
          tests, which are skipped by default. Use: mvn test -Pperformance -->
     <profile>
@@ -700,91 +630,9 @@
             </executions>
             <configuration>
               <pnpmEnable>true</pnpmEnable>
+              <nodeVersion>${node.version}</nodeVersion>
             </configuration>
           </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>linux-x86_64</id>
-      <activation>
-        <os>
-          <name>linux</name>
-          <arch>amd64</arch>
-        </os>
-      </activation>
-      <properties>
-        <os-name>linux</os-name>
-        <cpu-name>x86-64</cpu-name>
-        <lib-file-name>libopencv_java</lib-file-name>
-        <lib-file-ext>so</lib-file-ext>
-      </properties>
-    </profile>
-    <profile>
-      <id>linux-aarch64</id>
-      <activation>
-        <os>
-          <name>linux</name>
-          <arch>aarch64</arch>
-        </os>
-      </activation>
-      <properties>
-        <os-name>linux</os-name>
-        <cpu-name>aarch64</cpu-name>
-        <lib-file-name>libopencv_java</lib-file-name>
-        <lib-file-ext>so</lib-file-ext>
-      </properties>
-    </profile>
-    <profile>
-      <id>macosx-x86_64</id>
-      <activation>
-        <os>
-          <name>mac os x</name>
-          <arch>x86_64</arch>
-        </os>
-      </activation>
-      <properties>
-        <os-name>macosx</os-name>
-        <cpu-name>x86-64</cpu-name>
-        <lib-file-name>libopencv_java</lib-file-name>
-        <lib-file-ext>dylib</lib-file-ext>
-      </properties>
-    </profile>
-    <profile>
-      <id>macosx-aarch64</id>
-      <activation>
-        <os>
-          <name>mac os x</name>
-          <arch>aarch64</arch>
-        </os>
-      </activation>
-      <properties>
-        <os-name>macosx</os-name>
-        <cpu-name>aarch64</cpu-name>
-        <lib-file-name>libopencv_java</lib-file-name>
-        <lib-file-ext>dylib</lib-file-ext>
-      </properties>
-    </profile>
-    <profile>
-      <id>windows-x86_64</id>
-      <activation>
-        <os>
-          <family>windows</family>
-          <arch>amd64</arch>
-        </os>
-      </activation>
-      <properties>
-        <os-name>windows</os-name>
-        <cpu-name>x86-64</cpu-name>
-        <lib-file-name>opencv_java</lib-file-name>
-        <lib-file-ext>dll</lib-file-ext>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>coverage</id>
-      <build>
-        <plugins>
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
@@ -793,20 +641,6 @@
                 <exclude>org/karnak/frontend/**</exclude>
               </excludes>
             </configuration>
-            <executions>
-              <execution>
-                <id>prepare-agent</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>report</id>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>

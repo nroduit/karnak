@@ -48,4 +48,4 @@ monitoring:
 cache-api:
   ttl: 15
 mail:
-  sender: karnak@kehops.online
+  sender: no-reply@hcuge.ch

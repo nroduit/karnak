@@ -1,3 +1,6 @@
+application:
+  team: imagerie
+
 #  --------------------------------------------------------
 #  Karnak Application Profiles
 #  --------------------------------------------------------
@@ -28,6 +31,13 @@ logging:
           # fails behind TLS-inspecting proxies (PKIX path building failed). The call
           # is cosmetic, so silence its logger to drop the noisy stack trace.
           VersionReleaseNoteHandler: "OFF"
+        flow:
+          server:
+            communication:
+              # Suppress WARN  c.v.f.s.c.ReturnChannelHandler - Ignoring update for disabled return channel
+              rpc:
+                MapSyncRpcHandler: ERROR
+              ReturnChannelHandler: ERROR
 server:
   port: 8081
   servlet:
@@ -37,11 +47,18 @@ server:
 spring:
   application:
     name: karnak
+    version: '@project.version@'
+  cloud:
+    config:
+      #    Currently no cs configured in docker deploy/ vault
+      fail-fast: true
+      name: ${spring.application.name}
+      label: ${ENVIRONMENT}
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
   profiles:
-    active: redis
+    active: docker,redis,eureka
   datasource:
     url: 'jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:karnak}'
     driver-class-name: org.postgresql.Driver
@@ -77,6 +94,61 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+
+# - Info
+info:
+  component: Karnak
+  app:
+    name: Karnak
+    description: Karnak
+  environment: ${ENVIRONMENT}
+  tags:
+    eureka.datacenter: ${eureka.datacenter}
+    eureka.instance-id: ${eureka.instance.instance-id}
+management:
+  endpoint:
+    health:
+      show-details: always
+    # https://github.com/spring-projects/spring-boot/issues/20509
+    env:
+      post.enabled: true
+    #issue with spring cloud Hoxton.SR10 and sup
+    restart:
+      enabled: false
+    pause:
+      enabled: false
+    shutdown:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    enabled-by-default: true
+  health:
+    config:
+      enabled: false
+  server:
+    port: ${SERVER_MANAGEMENT_PORT:18089}
+  info:
+    env:
+      enabled: true #disabled by default in springboot 2.6
+  metrics:
+    distribution:
+      percentiles-histogram:
+        '[http.server.requests]': true
+      percentiles:
+        '[http.server.requests]': 0.5, 0.9, 0.95, 0.99, 0.999
+      slo:
+        '[http.server.requests]': 50ms, 150ms, 250ms, 400ms
+    tags:
+      application: ${spring.application.name}
+      instance: ${eureka.instance.instance-id}
+      team: ${application.team}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 monitoring:
   # Maximum number of days in the monitoring history
   max-history-days: 3
@@ -85,7 +157,7 @@ cache-api:
   ttl: 15
 
 mail:
-  sender: karnak@kheops.online
+  sender: no-reply@hug.ch
 
 conformance-report:
   # A study report is flushed and emailed when no new instance arrived for this period

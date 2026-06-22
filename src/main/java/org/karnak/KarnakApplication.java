@@ -18,6 +18,7 @@ import org.jspecify.annotations.Nullable;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.enums.ApplicationProfile;
 import org.karnak.backend.enums.EnvironmentVariable;
+import org.opencv.osgi.OpenCVNativeLoader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -56,6 +57,11 @@ public class KarnakApplication implements CommandLineRunner {
 	}
 
 	static void main(String[] args) {
+
+		// Load open cv library
+		log.info("Loading open cv native library");
+		loadOpenCvNativeLibrary();
+
 		SpringApplicationBuilder application = new SpringApplicationBuilder(KarnakApplication.class);
 
 		// If environment variable IDP has value "oidc", activate the application-oidc.yml
@@ -88,6 +94,15 @@ public class KarnakApplication implements CommandLineRunner {
 		catch (UnknownHostException e) {
 			log.info("Web UI available at: http://localhost:{}", serverPort);
 		}
+	}
+
+	/**
+	 * Load Open CV library
+	 */
+	private static void loadOpenCvNativeLibrary() {
+		OpenCVNativeLoader loader = new OpenCVNativeLoader();
+		loader.init();
+		log.info("Native OpenCV is activated");
 	}
 
 }

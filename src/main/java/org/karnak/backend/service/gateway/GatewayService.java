@@ -20,7 +20,6 @@ import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.dicom.GatewayParams;
 import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.service.DicomGatewayService;
-import org.karnak.backend.util.NativeLibraryManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -99,12 +98,13 @@ public class GatewayService implements ApplicationListener<ContextRefreshedEvent
 	@PostConstruct
 	public void init() {
 		log.info("Start the gateway manager running as a background process");
-		try {
-			NativeLibraryManager.initNativeLibs();
-		}
-		catch (Exception e) {
-			throw new IllegalStateException("Cannot register DICOM native libraries", e);
-		}
+		// DEACTIVATED for HUG
+//		try {
+//			NativeLibraryManager.initNativeLibs();
+//		}
+//		catch (Exception e) {
+//			throw new IllegalStateException("Cannot register DICOM native libraries", e);
+//		}
 		initGateway();
 	}
 
