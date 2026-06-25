@@ -12,6 +12,7 @@ package org.karnak.frontend.project;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -106,10 +107,14 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 	private void buildLayout() {
 		VerticalLayout layoutNewProject = new VerticalLayout(this.newProject, this.gridProject.createAddGroupButton(),
 				this.gridProject);
-		setWidthFull();
-		layoutNewProject.setWidth("40%");
-		this.editProject.setWidth("60%");
-		add(layoutNewProject, this.editProject);
+		setSizeFull();
+		layoutNewProject.setWidth("100%");
+		this.editProject.setWidth("100%");
+		SplitLayout splitLayout = new SplitLayout(layoutNewProject, this.editProject);
+		splitLayout.setSizeFull();
+		// Draggable splitter between the project list (left) and the edit panel (right).
+		splitLayout.setSplitterPosition(40);
+		add(splitLayout);
 	}
 
 	/**
@@ -142,17 +147,20 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 	}
 
 	/**
-	 * Add event on button New Project
+	 * Add event on the new-project popup confirm
 	 */
 	private void addEventButtonNewProject() {
-		newProject.getButtonAdd().addClickListener(event -> {
+		newProject.getDialog().setOnConfirm(() -> {
 			ProjectEntity newProjectEntity = new ProjectEntity();
 			if (newResearchBinder.writeBeanIfValid(newProjectEntity)) {
 				projectLogic.createProject(newProjectEntity, new SecretEntity(HMAC.generateRandomKey()));
 				newProject.clear();
 				gridProject.selectItem(newProjectEntity);
 				navigateProject(newProjectEntity);
+				return true;
 			}
+			// Keep the popup open so the validation errors stay visible.
+			return false;
 		});
 	}
 

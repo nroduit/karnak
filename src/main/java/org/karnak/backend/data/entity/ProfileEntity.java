@@ -141,7 +141,7 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonGetter("profileElements")
-	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	public Set<ProfileElementEntity> getProfileElementEntities() {
 		return profileElementEntities;
 	}

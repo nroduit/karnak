@@ -100,6 +100,16 @@ public class StandardDICOM {
 		return attributeDetails.getAttributeDetail(tag);
 	}
 
+	/** Search the standard attributes by keyword / name / tag (see AttributeDetails). */
+	public List<AttributeDetail> searchAttributes(String query, boolean includeRetired, int limit) {
+		return attributeDetails.search(query, includeRetired, limit);
+	}
+
+	/** The identifiers of every known module, sorted alphabetically. */
+	public List<String> getModuleIds() {
+		return moduleToAttributes.getModuleIds();
+	}
+
 	public List<AttributeDetail> getListAttributeDetail(List<String> tag) {
 		return attributeDetails.getListAttributeDetail(tag);
 	}

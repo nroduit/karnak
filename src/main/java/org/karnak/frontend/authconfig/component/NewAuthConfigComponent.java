@@ -10,84 +10,50 @@
 package org.karnak.frontend.authconfig.component;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
+import org.karnak.frontend.component.ButtonFactory;
+import org.karnak.frontend.component.NewItemDialog;
 import org.weasis.core.util.annotations.Generated;
 
+/**
+ * Toolbar entry that creates a new authentication config: a "New authentication config"
+ * button which opens a popup ({@link NewItemDialog}) where the identifier is entered.
+ * Mirrors the new-project / new-profile pattern.
+ */
 @Generated()
 public class NewAuthConfigComponent extends HorizontalLayout {
 
-	private final Button newAuthConfigBtn;
+	@Getter
+	private final Button buttonNewAuthConfig;
 
+	@Getter
+	private final NewItemDialog dialog;
+
+	@Getter
 	private final TextField newNameField;
-
-	private final Button saveAuthConfig;
-
-	private final Button cancelAuthConfig;
 
 	public NewAuthConfigComponent() {
 		newNameField = new TextField();
-		saveAuthConfig = new Button("Create");
-		cancelAuthConfig = new Button("Cancel");
-		newAuthConfigBtn = new Button("Create Authentication Config");
-		initView();
+		newNameField.setLabel("Identifier");
+		newNameField.setPlaceholder("Enter an identifier");
+		newNameField.setWidthFull();
+
+		dialog = new NewItemDialog("New authentication config", "Add", newNameField);
+
+		buttonNewAuthConfig = ButtonFactory.createAddButton("New authentication config");
+		buttonNewAuthConfig.addClickListener(click -> openDialog());
+
+		setPadding(false);
+		add(buttonNewAuthConfig);
 	}
 
-	private void initView() {
-		setNewNameField();
-		setSaveAuthConfig();
-		setCancelAuthConfig();
-		setNewAuthConfigBtn();
-		add(newAuthConfigBtn);
-	}
-
-	public void resetNewAuthConfigComponent() {
-		removeAll();
-		add(newAuthConfigBtn);
-	}
-
-	private void setNewNameField() {
-		newNameField.setPlaceholder("Identifier");
-	}
-
-	private void setSaveAuthConfig() {
-		saveAuthConfig.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		saveAuthConfig.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-	}
-
-	private void setCancelAuthConfig() {
-		cancelAuthConfig.addClickListener(click -> {
-			removeAll();
-			add(newAuthConfigBtn);
-		});
-	}
-
-	private void setNewAuthConfigBtn() {
-		newAuthConfigBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		newAuthConfigBtn.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-		newAuthConfigBtn.addClickListener(click -> {
-			removeAll();
-			newNameField.setValue("");
-			add(newNameField, saveAuthConfig, cancelAuthConfig);
-		});
-	}
-
-	public Button getNewAuthConfigBtn() {
-		return newAuthConfigBtn;
-	}
-
-	public TextField getNewNameField() {
-		return newNameField;
-	}
-
-	public Button getSaveAuthConfig() {
-		return saveAuthConfig;
-	}
-
-	public Button getCancelAuthConfig() {
-		return cancelAuthConfig;
+	private void openDialog() {
+		newNameField.clear();
+		newNameField.setInvalid(false);
+		dialog.open();
+		newNameField.focus();
 	}
 
 }

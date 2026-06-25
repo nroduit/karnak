@@ -10,6 +10,7 @@
 package org.karnak.backend.model.standard;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.karnak.backend.exception.ModuleNotFoundException;
@@ -42,6 +43,11 @@ public class ModuleToAttributes {
 
 	public Map<String, ModuleAttribute> getAttributesByModule(String moduleID) {
 		return HMapModuleAttributes.get(moduleID);
+	}
+
+	/** The identifiers of every known module, sorted alphabetically. */
+	public List<String> getModuleIds() {
+		return HMapModuleAttributes.keySet().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
 	}
 
 	public Map<String, ModuleAttribute> getModuleAttributesByType(String moduleID, String type)

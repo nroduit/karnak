@@ -25,19 +25,19 @@ jobs:
           - { os: ubuntu-latest, platform: x64, wsystem: linux, warc: x86-64 }
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
       - name: Set up JDK
-        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
         with:
           distribution: 'temurin'
           java-version: '25'
           cache: 'maven'
 
       - name: Import Developer Certificate
-        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7.0.0
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466
         if: matrix.wsystem == 'macosx'
         id: cert
         with:
@@ -45,7 +45,7 @@ jobs:
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PWD }}
 
       - name: Import Installer Certificate
-        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7.0.0
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466
         if: matrix.wsystem == 'macosx'
         with:
           create-keychain: "false"
@@ -96,7 +96,7 @@ jobs:
           rm "target/${{ env.APP_PACKAGE_FOLDER }}/Karnak.zip"
 
       - name: Upload the packaged artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ env.APP_PACKAGE_FOLDER }}
           path: target/${{ env.APP_PACKAGE_FOLDER }}

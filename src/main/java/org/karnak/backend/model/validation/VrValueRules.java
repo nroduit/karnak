@@ -68,9 +68,11 @@ final class VrValueRules {
 	private static final Pattern TM = Pattern.compile("\\d{2}(\\d{2}(\\d{2}(\\.\\d{1,6})?)?)?");
 
 	// PS3.5: YYYY[MM[DD[HH[MM[SS[.FFFFFF]]]]]] body, with an optional &ZZXX offset
-	// checked apart
-	private static final Pattern DT = Pattern
-		.compile("\\d{4}(\\d{2}(\\d{2}(\\d{2}(\\d{2}(\\d{2}(\\.\\d{1,6})?)?)?)?)?)?");
+	// checked apart. A fractional second is only valid on a full 14-digit datetime,
+	// enforced separately so the pattern itself stays flat.
+	private static final Pattern DT = Pattern.compile("\\d{4}(\\d{2}){0,5}(\\.\\d{1,6})?");
+
+	private static final int DT_FULL_DIGITS = 14;
 
 	private static final Pattern DT_OFFSET = Pattern.compile("[+-]\\d{4}");
 
@@ -89,10 +91,10 @@ final class VrValueRules {
 	private static final Pattern AS = Pattern.compile("\\d{3}[DWMY]");
 
 	// PS3.5 §9.1: dot-separated digit components; a component must not start with 0
-	// unless
-	// it is a single 0 (registration authorities' leading zeros must be stripped on
-	// encoding)
-	private static final Pattern UI = Pattern.compile("(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))*");
+	// unless it is a single 0 (registration authorities' leading zeros must be
+	// stripped on encoding). Matched per-component to avoid the backtracking of a
+	// repeated group.
+	private static final Pattern UI_COMPONENT = Pattern.compile("0|[1-9]\\d*");
 
 	private VrValueRules() {
 	}
@@ -139,7 +141,7 @@ final class VrValueRules {
 			case DS -> DS.matcher(value).matches() ? null : "a decimal number";
 			case CS -> CS.matcher(value).matches() ? null : "uppercase letters, digits, space or underscore";
 			case AS -> AS.matcher(value).matches() ? null : "nnn followed by D, W, M or Y";
-			case UI -> UI.matcher(value).matches() ? null
+			case UI -> isValidUid(value) ? null
 					: "dot-separated digit components, none with a leading zero (unless a single 0)";
 			case PN -> pnStructureExpectation(value);
 			default -> null;
@@ -147,21 +149,21 @@ final class VrValueRules {
 	}
 
 	private static String daExpectation(String value) {
-		if (!DA.matcher(value).matches() || !inRange(value, 4, 6, 1, 12) || !inRange(value, 6, 8, 1, 31)) {
+		if (!DA.matcher(value).matches() || outOfRange(value, 4, 6, 1, 12) || outOfRange(value, 6, 8, 1, 31)) {
 			return DA_FORMAT;
 		}
 		return null;
 	}
 
 	private static String tmExpectation(String value) {
-		if (!TM.matcher(value).matches() || !inRange(value, 0, 2, 0, 23)) {
+		if (!TM.matcher(value).matches() || outOfRange(value, 0, 2, 0, 23)) {
 			return TM_FORMAT;
 		}
 		// MM and SS are validated only when present (right-truncation is allowed)
-		if (value.length() >= 4 && !inRange(value, 2, 4, 0, 59)) {
+		if (value.length() >= 4 && outOfRange(value, 2, 4, 0, 59)) {
 			return TM_FORMAT;
 		}
-		if (value.length() >= 6 && !inRange(value, 4, 6, 0, 60)) {
+		if (value.length() >= 6 && outOfRange(value, 4, 6, 0, 60)) {
 			return TM_FORMAT;
 		}
 		return null;
@@ -170,10 +172,10 @@ final class VrValueRules {
 	private static String dtExpectation(String value) {
 		String body = value;
 		// A trailing &ZZXX UTC offset is validated and stripped before the body checks
-		if (value.length() >= 5 && DT_OFFSET.matcher(value.substring(value.length() - 5)).matches()) {
-			String offset = value.substring(value.length() - 5);
+		String tail = value.length() >= 5 ? value.substring(value.length() - 5) : "";
+		if (DT_OFFSET.matcher(tail).matches()) {
 			body = value.substring(0, value.length() - 5);
-			if (!inRange(offset, 1, 3, 0, 23) || !inRange(offset, 3, 5, 0, 59)) {
+			if (outOfRange(tail, 1, 3, 0, 23) || outOfRange(tail, 3, 5, 0, 59)) {
 				return DT_FORMAT;
 			}
 		}
@@ -182,29 +184,38 @@ final class VrValueRules {
 		}
 		int dot = body.indexOf('.');
 		String digits = dot < 0 ? body : body.substring(0, dot);
-		// YYYY is always present; the rest are validated only when present
-		if (digits.length() >= 6 && !inRange(digits, 4, 6, 1, 12)) {
+		// A fractional second is only valid on a full YYYYMMDDHHMMSS datetime
+		if (dot >= 0 && digits.length() != DT_FULL_DIGITS) {
 			return DT_FORMAT;
 		}
-		if (digits.length() >= 8 && !inRange(digits, 6, 8, 1, 31)) {
-			return DT_FORMAT;
-		}
-		if (digits.length() >= 10 && !inRange(digits, 8, 10, 0, 23)) {
-			return DT_FORMAT;
-		}
-		if (digits.length() >= 12 && !inRange(digits, 10, 12, 0, 59)) {
-			return DT_FORMAT;
-		}
-		if (digits.length() >= 14 && !inRange(digits, 12, 14, 0, 60)) {
-			return DT_FORMAT;
-		}
-		return null;
+		return dtDigitsInRange(digits) ? null : DT_FORMAT;
 	}
 
-	/** True when the two-digit field {@code value[from:to]} is within [min, max]. */
-	private static boolean inRange(String value, int from, int to, int min, int max) {
+	/** YYYY is always present; the remaining fields are validated only when present. */
+	private static boolean dtDigitsInRange(String digits) {
+		return !(digits.length() >= 6 && outOfRange(digits, 4, 6, 1, 12))
+				&& !(digits.length() >= 8 && outOfRange(digits, 6, 8, 1, 31))
+				&& !(digits.length() >= 10 && outOfRange(digits, 8, 10, 0, 23))
+				&& !(digits.length() >= 12 && outOfRange(digits, 10, 12, 0, 59))
+				&& !(digits.length() >= DT_FULL_DIGITS && outOfRange(digits, 12, 14, 0, 60));
+	}
+
+	/** True when the two-digit field {@code value[from:to]} is outside [min, max]. */
+	private static boolean outOfRange(String value, int from, int to, int min, int max) {
 		int parsed = Integer.parseInt(value.substring(from, to));
-		return parsed >= min && parsed <= max;
+		return parsed < min || parsed > max;
+	}
+
+	private static boolean isValidUid(String value) {
+		if (value.isEmpty()) {
+			return false;
+		}
+		for (String component : value.split("\\.", -1)) {
+			if (!UI_COMPONENT.matcher(component).matches()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static boolean isValidIntegerString(String value) {
@@ -215,7 +226,7 @@ final class VrValueRules {
 			long parsed = Long.parseLong(value);
 			return parsed >= Integer.MIN_VALUE && parsed <= Integer.MAX_VALUE;
 		}
-		catch (NumberFormatException e) {
+		catch (NumberFormatException _) {
 			return false;
 		}
 	}

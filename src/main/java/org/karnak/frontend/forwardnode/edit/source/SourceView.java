@@ -15,6 +15,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import lombok.Getter;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
@@ -87,6 +88,10 @@ public class SourceView extends VerticalLayout {
 
 	private void setTextFieldFilter() {
 		filter.setPlaceholder(PLACEHOLDER_FILTER);
+		// Built-in clear button inside the field, like the monitoring UID filters
+		filter.setClearButtonVisible(true);
+		// Filter as the user types (no need to press Enter), like the monitoring filters
+		filter.setValueChangeMode(ValueChangeMode.LAZY);
 		// Apply the filter to grid's data provider. TextField value is never null
 		filter.addValueChangeListener(event -> sourceLogic.setFilter(event.getValue()));
 	}

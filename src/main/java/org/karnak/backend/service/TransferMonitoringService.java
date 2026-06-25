@@ -20,106 +20,110 @@ import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.karnak.backend.data.entity.TransferStatusEntity;
-import org.karnak.backend.data.repo.TransferStatusRepo;
-import org.karnak.backend.data.repo.specification.TransferStatusSpecification;
+import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
+import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
+import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
+import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
+import org.karnak.backend.data.repo.specification.TransferSeriesSpecification;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
+import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.karnak.frontend.monitoring.component.ExportSettings;
 import org.karnak.frontend.monitoring.component.MonitoringCsvMappingStrategy;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
- * Handle transfer monitoring
+ * Handle transfer monitoring: folds transfer outcomes into the aggregated
+ * {@code transfer_series_status} table (one row per series), purges old rows and exports
+ * a per-series CSV.
  */
 @Service
 @Slf4j
 public class TransferMonitoringService {
 
+	/** Retries for the first-event-of-a-series insert race on the unique key. */
+	private static final int MAX_UPSERT_ATTEMPTS = 3;
+
+	private static final String REASON_JOIN = "; ";
+
 	@Value("${monitoring.max-history-days:7}")
 	private int maxHistoryDays;
 
-	// Repositories
-	private final TransferStatusRepo transferStatusRepo;
+	private final TransferSeriesStatusRepo seriesRepo;
+
+	private final TransferSeriesReasonRepo reasonRepo;
+
+	private final MonitoringWriteService monitoringWriteService;
 
 	@Autowired
-	public TransferMonitoringService(final TransferStatusRepo transferStatusRepo) {
-		this.transferStatusRepo = transferStatusRepo;
+	public TransferMonitoringService(final TransferSeriesStatusRepo seriesRepo,
+			final TransferSeriesReasonRepo reasonRepo, final MonitoringWriteService monitoringWriteService) {
+		this.seriesRepo = seriesRepo;
+		this.reasonRepo = reasonRepo;
+		this.monitoringWriteService = monitoringWriteService;
 	}
 
 	/**
-	 * Listener on TransferMonitoringEvent: event is saved when received
-	 * @param transferMonitoringEvent TransferMonitoringEvent to save
+	 * Listener on TransferMonitoringEvent: fold the outcome into the series aggregate,
+	 * retrying the first-insert race for a brand-new series.
 	 */
 	@Async
 	@EventListener
 	public void onTransferMonitoringEvent(TransferMonitoringEvent transferMonitoringEvent) {
-		TransferStatusEntity transferStatusEntity = (TransferStatusEntity) transferMonitoringEvent.getSource();
-		transferStatusRepo.save(transferStatusEntity);
+		MonitoringEntry entry = transferMonitoringEvent.getEntry();
+		for (int attempt = 1; attempt <= MAX_UPSERT_ATTEMPTS; attempt++) {
+			try {
+				monitoringWriteService.upsert(entry);
+				return;
+			}
+			catch (DataIntegrityViolationException e) {
+				// Concurrent creation of the same series: retry, the row now exists
+				if (attempt == MAX_UPSERT_ATTEMPTS) {
+					log.warn("Could not record monitoring entry for series {} after {} attempts",
+							entry.serieUidOriginal(), MAX_UPSERT_ATTEMPTS, e);
+				}
+			}
+		}
 	}
 
 	/**
-	 * Occurs every hour: clean transfer_status table if over a certain number of days:
-	 * Clean oldest records
+	 * Occurs every hour: clean the series aggregate table over a certain number of days
+	 * (reason rows cascade).
 	 */
 	@Scheduled(cron = "0 0 * * * *")
 	public void cleanupOldRecords() {
-		transferStatusRepo.deleteOlderThan(LocalDateTime.now(ZoneId.of("CET")).minusDays(this.maxHistoryDays));
+		seriesRepo.deleteOlderThan(LocalDateTime.now(ZoneId.of("CET")).minusDays(this.maxHistoryDays));
 	}
 
-	/**
-	 * Retrieve transfer status depending on filter and pageable
-	 * @param filter Filter to evaluate
-	 * @param pageable Pageable to evaluate
-	 * @return Transfer status entities found
-	 */
-	public Page<TransferStatusEntity> retrieveTransferStatusPageable(TransferStatusFilter filter, Pageable pageable) {
-		return filter.hasFilter() ? transferStatusRepo.findAll(new TransferStatusSpecification(filter), pageable)
-				: transferStatusRepo.findAll(pageable);
-	}
-
-	/**
-	 * Retrieve transfer status depending on filter
-	 * @param filter Filter to evaluate
-	 * @return Transfer status entities found
-	 */
-	public List<TransferStatusEntity> retrieveTransferStatus(TransferStatusFilter filter) {
-		return filter.hasFilter() ? transferStatusRepo.findAll(new TransferStatusSpecification(filter))
-				: transferStatusRepo.findAll();
-	}
-
-	/**
-	 * Count transfer status depending on filter
-	 * @param filter Filter to evaluate
-	 * @return Count of Transfer status entities found
-	 */
-	public int countTransferStatus(TransferStatusFilter filter) {
-		return (int) (filter.hasFilter() ? transferStatusRepo.count(new TransferStatusSpecification(filter))
-				: transferStatusRepo.count());
-	}
-
-	/**
-	 * Delete all transfer status records
-	 */
+	/** Delete all monitoring records. */
 	public void deleteAllTransferStatus() {
-		transferStatusRepo.deleteAll();
+		reasonRepo.deleteAllInBatch();
+		seriesRepo.deleteAllInBatch();
+	}
+
+	/** Retrieve the series rows matching the filter. */
+	public List<TransferSeriesStatusEntity> retrieveSeries(TransferStatusFilter filter) {
+		return filter.hasFilter() ? seriesRepo.findAll(new TransferSeriesSpecification(filter)) : seriesRepo.findAll();
 	}
 
 	/**
-	 * Build a transfer status csv file depending on filters
-	 * @param filter Filters
-	 * @param exportSettings Export settings
+	 * Build a per-series CSV for the matching rows (one row per destination/study/series,
+	 * with counts and the joined error reasons).
 	 */
 	public byte[] buildCsv(TransferStatusFilter filter, ExportSettings exportSettings)
 			throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IOException {
+		List<TransferSeriesStatusEntity> rows = retrieveSeries(filter);
+		populateReasons(rows);
+
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		OutputStreamWriter streamWriter = new OutputStreamWriter(stream);
 		CSVWriter writer = new CSVWriter(streamWriter,
@@ -129,13 +133,27 @@ public class TransferMonitoringService {
 						: CSVWriter.DEFAULT_QUOTE_CHARACTER,
 				CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
 
-		StatefulBeanToCsv<TransferStatusEntity> beanToCsv = new StatefulBeanToCsvBuilder<TransferStatusEntity>(writer)
+		StatefulBeanToCsv<TransferSeriesStatusEntity> beanToCsv = new StatefulBeanToCsvBuilder<TransferSeriesStatusEntity>(
+				writer)
 			.withMappingStrategy(new MonitoringCsvMappingStrategy<>())
 			.build();
-		beanToCsv.write(retrieveTransferStatus(filter));
+		beanToCsv.write(rows);
 
 		streamWriter.flush();
 		return stream.toByteArray();
+	}
+
+	/** Fills each row's transient {@code reasons} with its distinct error reasons. */
+	private void populateReasons(List<TransferSeriesStatusEntity> rows) {
+		if (rows.isEmpty()) {
+			return;
+		}
+		List<Long> ids = rows.stream().map(TransferSeriesStatusEntity::getId).toList();
+		Map<Long, String> reasonsById = reasonRepo.findBySeriesStatusIdIn(ids)
+			.stream()
+			.collect(Collectors.groupingBy(TransferSeriesReasonEntity::getSeriesStatusId,
+					Collectors.mapping(TransferSeriesReasonEntity::getReason, Collectors.joining(REASON_JOIN))));
+		rows.forEach(row -> row.setReasons(reasonsById.getOrDefault(row.getId(), "")));
 	}
 
 }

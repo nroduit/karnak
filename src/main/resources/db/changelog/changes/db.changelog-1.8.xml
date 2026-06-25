@@ -1,0 +1,55 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Indexes supporting the monitoring aggregation (date-range filtering and
+       grouping by destination / forward node / series). -->
+
+  <changeSet author="karnak" id="1.8-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_status_transfer_date"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_status_transfer_date" tableName="transfer_status">
+      <column name="transfer_date"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.8-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_status_destination_date"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_status_destination_date" tableName="transfer_status">
+      <column name="destination_id"/>
+      <column name="transfer_date"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.8-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_status_forward_node_date"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_status_forward_node_date" tableName="transfer_status">
+      <column name="forward_node_id"/>
+      <column name="transfer_date"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.8-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_status_serie_uid_original"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_status_serie_uid_original" tableName="transfer_status">
+      <column name="serie_uid_original"/>
+    </createIndex>
+  </changeSet>
+
+</databaseChangeLog>

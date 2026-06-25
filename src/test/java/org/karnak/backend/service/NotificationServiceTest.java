@@ -20,9 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
-import org.karnak.backend.data.entity.TransferStatusEntity;
+import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
-import org.karnak.backend.data.repo.TransferStatusRepo;
+import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
+import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
 import org.karnak.backend.model.notification.TransferMonitoringNotification;
 import org.mockito.Mockito;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -38,7 +39,9 @@ class NotificationServiceTest {
 	// Repositories
 	private final DestinationRepo destinationRepositoryMock = Mockito.mock(DestinationRepo.class);
 
-	private final TransferStatusRepo transferStatusRepoMock = Mockito.mock(TransferStatusRepo.class);
+	private final TransferSeriesStatusRepo transferSeriesStatusRepoMock = Mockito.mock(TransferSeriesStatusRepo.class);
+
+	private final TransferSeriesReasonRepo transferSeriesReasonRepoMock = Mockito.mock(TransferSeriesReasonRepo.class);
 
 	// Service
 	private NotificationService notificationService;
@@ -53,30 +56,32 @@ class NotificationServiceTest {
 		destinationEntity.setActivateNotification(true);
 		when(destinationRepositoryMock.findAll()).thenReturn(Arrays.asList(destinationEntity));
 
-		// Mock transfer status
-		TransferStatusEntity transferStatusEntity = new TransferStatusEntity();
-		transferStatusEntity.setPatientIdToSend("patientIdToSend");
-		transferStatusEntity.setPatientIdOriginal("patientIdOriginal");
-		transferStatusEntity.setSent(true);
-		transferStatusEntity.setDestinationEntity(destinationEntity);
-		transferStatusEntity.setForwardNodeId(2L);
-		transferStatusEntity.setStudyUidOriginal("studyUidOriginal");
-		transferStatusEntity.setStudyUidToSend("studyUidToSend");
-		transferStatusEntity.setSerieUidOriginal("serieUidOriginal");
-		transferStatusEntity.setStudyDescriptionToSend("studyDescriptionToSend");
-		transferStatusEntity.setStudyDateToSend(LocalDateTime.MIN);
-		transferStatusEntity.setSerieUidToSend("serieUidToSend");
-		transferStatusEntity.setSerieDescriptionToSend("serieDescriptionToSend");
-		transferStatusEntity.setSerieDateToSend(LocalDateTime.MIN);
-		transferStatusEntity.setSopClassUid("sopClassUid");
-		transferStatusEntity.setModality("modality");
+		// Mock the aggregated series row for this destination
+		TransferSeriesStatusEntity series = new TransferSeriesStatusEntity();
+		series.setPatientIdToSend("patientIdToSend");
+		series.setPatientIdOriginal("patientIdOriginal");
+		series.setInstances(1);
+		series.setSent(1);
+		series.setErrors(0);
+		series.setDestinationEntity(destinationEntity);
+		series.setForwardNodeId(2L);
+		series.setStudyUidOriginal("studyUidOriginal");
+		series.setStudyUidToSend("studyUidToSend");
+		series.setSerieUidOriginal("serieUidOriginal");
+		series.setStudyDescriptionToSend("studyDescriptionToSend");
+		series.setStudyDateToSend(LocalDateTime.MIN);
+		series.setSerieUidToSend("serieUidToSend");
+		series.setSerieDescriptionToSend("serieDescriptionToSend");
+		series.setSerieDateToSend(LocalDateTime.MIN);
+		series.setSopClassUids("sopClassUid");
+		series.setModality("modality");
 		ForwardNodeEntity forwardNodeEntity = new ForwardNodeEntity();
-		transferStatusEntity.setForwardNodeEntity(forwardNodeEntity);
-		when(transferStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(transferStatusEntity));
+		series.setForwardNodeEntity(forwardNodeEntity);
+		when(transferSeriesStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(series));
 
 		// Build mocked service
-		notificationService = new NotificationService(templateEngineMock, javaMailSenderMock, transferStatusRepoMock,
-				destinationRepositoryMock);
+		notificationService = new NotificationService(templateEngineMock, javaMailSenderMock,
+				transferSeriesStatusRepoMock, transferSeriesReasonRepoMock, destinationRepositoryMock);
 	}
 
 	@Test

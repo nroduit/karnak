@@ -1,0 +1,202 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Aggregate monitoring events at the series level: one row per
+       (forward node, destination, series) plus a per-reason error breakdown,
+       replacing the per-SOP-instance transfer_status table. -->
+
+  <changeSet author="karnak" id="1.9-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <sequenceExists sequenceName="transfer_series_status_sequence"/>
+      </not>
+    </preConditions>
+    <createSequence cacheSize="1" cycle="false" incrementBy="1" maxValue="9223372036854775807"
+      minValue="1" sequenceName="transfer_series_status_sequence" startValue="1"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <sequenceExists sequenceName="transfer_series_reason_sequence"/>
+      </not>
+    </preConditions>
+    <createSequence cacheSize="1" cycle="false" incrementBy="1" maxValue="9223372036854775807"
+      minValue="1" sequenceName="transfer_series_reason_sequence" startValue="1"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="transfer_series_status"/>
+      </not>
+    </preConditions>
+    <createTable tableName="transfer_series_status">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="transfer_series_status_pkey"/>
+      </column>
+      <column name="forward_node_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="destination_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="patient_id_original" type="VARCHAR(255)"/>
+      <column name="patient_id_to_send" type="VARCHAR(255)"/>
+      <column name="accession_number_original" type="VARCHAR(255)"/>
+      <column name="accession_number_to_send" type="VARCHAR(255)"/>
+      <column name="study_description_original" type="VARCHAR(255)"/>
+      <column name="study_description_to_send" type="VARCHAR(255)"/>
+      <column name="study_date_original" type="TIMESTAMP"/>
+      <column name="study_date_to_send" type="TIMESTAMP"/>
+      <column name="study_uid_original" type="VARCHAR(255)"/>
+      <column name="study_uid_to_send" type="VARCHAR(255)"/>
+      <column name="serie_description_original" type="VARCHAR(255)"/>
+      <column name="serie_description_to_send" type="VARCHAR(255)"/>
+      <column name="serie_date_original" type="TIMESTAMP"/>
+      <column name="serie_date_to_send" type="TIMESTAMP"/>
+      <column name="serie_uid_original" type="VARCHAR(255)"/>
+      <column name="serie_uid_to_send" type="VARCHAR(255)"/>
+      <column name="modality" type="VARCHAR(255)"/>
+      <column name="sop_class_uids" type="VARCHAR(1024)"/>
+      <column name="instances" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+      <column name="sent" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+      <column name="errors" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+      <column name="first_seen" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="last_seen" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="transfer_series_reason"/>
+      </not>
+    </preConditions>
+    <createTable tableName="transfer_series_reason">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="transfer_series_reason_pkey"/>
+      </column>
+      <column name="series_status_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="reason" type="VARCHAR(1024)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="count" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <!-- Liquibase has no uniqueConstraintExists precondition; these run once (tracked in
+       DATABASECHANGELOG) against the tables just created above. -->
+  <changeSet author="karnak" id="1.9-5">
+    <addUniqueConstraint tableName="transfer_series_status"
+      columnNames="forward_node_id, destination_id, serie_uid_original"
+      constraintName="uq_transfer_series_status_key"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-6">
+    <addUniqueConstraint tableName="transfer_series_reason" columnNames="series_status_id, reason"
+      constraintName="uq_transfer_series_reason_key"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-7">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_transfer_series_reason_status"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="series_status_id" baseTableName="transfer_series_reason"
+      constraintName="fk_transfer_series_reason_status" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id"
+      referencedTableName="transfer_series_status" validate="true"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-8">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_transfer_series_status_destination"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="destination_id" baseTableName="transfer_series_status"
+      constraintName="fk_transfer_series_status_destination" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id"
+      referencedTableName="destination" validate="true"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-9">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_series_destination_last_seen"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_series_destination_last_seen" tableName="transfer_series_status">
+      <column name="destination_id"/>
+      <column name="last_seen"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-10">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_series_forward_node_last_seen"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_series_forward_node_last_seen" tableName="transfer_series_status">
+      <column name="forward_node_id"/>
+      <column name="last_seen"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-11">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_series_last_seen"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_series_last_seen" tableName="transfer_series_status">
+      <column name="last_seen"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-12">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_transfer_series_study_uid_original"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_transfer_series_study_uid_original" tableName="transfer_series_status">
+      <column name="study_uid_original"/>
+    </createIndex>
+  </changeSet>
+
+  <!-- Drop the obsolete per-instance table and its sequence (monitoring data is ephemeral). -->
+  <changeSet author="karnak" id="1.9-13">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="transfer_status"/>
+    </preConditions>
+    <dropTable tableName="transfer_status"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.9-14">
+    <preConditions onFail="MARK_RAN">
+      <sequenceExists sequenceName="transfer_status_sequence"/>
+    </preConditions>
+    <dropSequence sequenceName="transfer_status_sequence"/>
+  </changeSet>
+
+</databaseChangeLog>

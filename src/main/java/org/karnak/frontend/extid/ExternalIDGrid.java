@@ -248,7 +248,9 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		TextField filterField = new TextField();
 		filterField.setRequired(required);
 		filterField.addValueChangeListener(event -> checkAndUpdateAllFilters());
+		// Filters live as the user types (EAGER, no Enter) with the built-in clear button
 		filterField.setValueChangeMode(ValueChangeMode.EAGER);
+		filterField.setClearButtonVisible(true);
 		filterField.setSizeFull();
 		filterField.setPlaceholder(LABEL_FILTER);
 		filterRow.getCell(column).setComponent(filterField);

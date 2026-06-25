@@ -27,6 +27,7 @@ import org.karnak.backend.data.entity.NamedGroupEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
+import org.karnak.backend.service.DicomStandardService;
 import org.karnak.backend.service.profilepipe.ProfilePipeService;
 import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.karnak.frontend.util.GroupTreeController;
@@ -48,16 +49,22 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	private ProfileView profileView;
 
 	// services
+	@Getter
 	private final transient ProfilePipeService profilePipeService;
+
+	@Getter
+	private final transient DicomStandardService dicomStandardService;
 
 	/**
 	 * Autowired constructor
 	 * @param profilePipeService Profile Pipe Service
+	 * @param dicomStandardService DICOM standard dictionary access (tag search / browse)
 	 */
 	@Autowired
-	public ProfileLogic(final ProfilePipeService profilePipeService) {
+	public ProfileLogic(final ProfilePipeService profilePipeService, final DicomStandardService dicomStandardService) {
 		super(new ArrayList<>());
 		this.profilePipeService = profilePipeService;
+		this.dicomStandardService = dicomStandardService;
 		this.profileView = null;
 		initDataProvider();
 	}
@@ -152,6 +159,43 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 		refreshAll();
 		profileView.getProfileGrid().selectRow(profileUpdate);
 		return profileEntity;
+	}
+
+	/**
+	 * Create a new, empty editable profile and navigate to it.
+	 * @param name profile name
+	 * @param version profile version
+	 * @param minimumKarnakVersion minimum Karnak version
+	 */
+	public void createProfile(String name, String version, String minimumKarnakVersion) {
+		ProfileEntity profileEntity = profilePipeService.createEmptyProfile(name, version, minimumKarnakVersion);
+		refreshAll();
+		if (profileView != null) {
+			profileView.getProfileGrid().reload();
+			profileView.navigateProfile(profileEntity);
+		}
+	}
+
+	/** Reorder a profile's elements and refresh the edited profile panels. */
+	public void reorderElements(Long profileId, List<Long> orderedElementIds) {
+		profilePipeService.reorderElements(profileId, orderedElementIds);
+		refreshProfile(profileId);
+	}
+
+	/** Delete an element and refresh the edited profile panels. */
+	public void deleteElement(Long profileId, Long elementId) {
+		profilePipeService.deleteElement(profileId, elementId);
+		refreshProfile(profileId);
+	}
+
+	/** Reload the given profile from the database and refresh the editor panels. */
+	public void refreshProfile(Long profileId) {
+		ProfileEntity profileEntity = retrieveProfile(profileId);
+		if (profileView != null) {
+			profileView.getProfileComponent().setProfile(profileEntity);
+			profileView.getProfileElementMainView().setProfile(profileEntity);
+			profileView.getProfileGrid().selectRow(profileEntity);
+		}
 	}
 
 	private ProfilePipeBody readProfileYaml(InputStream stream) {

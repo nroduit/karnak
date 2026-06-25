@@ -10,6 +10,7 @@
 package org.karnak.backend.service.profilepipe;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,28 +106,165 @@ public class ProfilePipeService {
 		ProfileEntity newProfileEntity = createNewProfile(profilePipeYml, false);
 		ArrayList<ProfileError> profileErrors = new ArrayList<>();
 		for (ProfileElementEntity profileElementEntity : newProfileEntity.getProfileElementEntities()) {
-			ProfileError profileError = new ProfileError(profileElementEntity);
-			profileErrors.add(profileError);
-			ProfileItemType t = ProfileItemType.getType(profileElementEntity.getCodename());
-			if (t == null) {
-				profileError.setError("Cannot find the profile codename: " + profileElementEntity.getCodename());
-			}
-			else {
-				try {
-					t.getProfileClass().getConstructor(ProfileElementEntity.class).newInstance(profileElementEntity);
-				}
-				catch (Exception e) {
-					profileError.setError(e.getCause().getMessage());
-					continue;
-				}
-			}
+			profileErrors.add(validateElement(profileElementEntity));
 		}
 		return profileErrors;
+	}
+
+	/**
+	 * Validate a single profile element by instantiating its {@link ProfileItemType}
+	 * profile class (the canonical way: the constructor runs {@code profileValidation}).
+	 * @param profileElementEntity the element to validate (its tags/arguments must
+	 * back-reference it)
+	 * @return a {@link ProfileError} whose {@code error} is {@code null} when the element
+	 * is valid, or the validation message otherwise
+	 */
+	public ProfileError validateElement(ProfileElementEntity profileElementEntity) {
+		ProfileError profileError = new ProfileError(profileElementEntity);
+		ProfileItemType t = ProfileItemType.getType(profileElementEntity.getCodename());
+		if (t == null) {
+			profileError.setError("Cannot find the profile codename: " + profileElementEntity.getCodename());
+		}
+		else {
+			try {
+				t.getProfileClass().getConstructor(ProfileElementEntity.class).newInstance(profileElementEntity);
+			}
+			catch (Exception e) {
+				Throwable cause = e.getCause() != null ? e.getCause() : e;
+				profileError.setError(cause.getMessage());
+			}
+		}
+		return profileError;
 	}
 
 	public ProfileEntity saveProfilePipe(ProfilePipeBody profilePipeYml, Boolean byDefault) {
 		ProfileEntity newProfileEntity = createNewProfile(profilePipeYml, byDefault);
 		return profileRepo.saveAndFlush(newProfileEntity);
+	}
+
+	/** Create and persist a new, empty (no element) editable profile. */
+	public ProfileEntity createEmptyProfile(String name, String version, String minimumKarnakVersion) {
+		return profileRepo.saveAndFlush(new ProfileEntity(name, version, minimumKarnakVersion, null, false));
+	}
+
+	/**
+	 * Add a new element (when {@code element.getId() == null}) or replace an existing one
+	 * (matched by id) in the given profile, then persist. The element keeps its position
+	 * when edited, or is appended at the end when added. Default profiles are left
+	 * untouched.
+	 * @param profileId the profile to mutate
+	 * @param element the element to save (its tags/arguments back-references are fixed
+	 * here)
+	 * @return the reloaded, persisted profile (or the unchanged profile when it is a
+	 * default one or no longer exists)
+	 */
+	public ProfileEntity saveElement(Long profileId, ProfileElementEntity element) {
+		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
+		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
+			return profile;
+		}
+		// A unique type (basic.dicom.profile, clean.pixel.data, defacing) may appear
+		// once.
+		if (ProfileItemType.isUnique(element.getCodename()) && profile.getProfileElementEntities()
+			.stream()
+			.anyMatch(e -> element.getCodename().equals(e.getCodename())
+					&& !Objects.equals(e.getId(), element.getId()))) {
+			return profile;
+		}
+		int position = profile.getProfileElementEntities().size();
+		if (element.getId() != null) {
+			ProfileElementEntity existing = findElement(profile, element.getId());
+			if (existing != null) {
+				position = existing.getPosition();
+				// orphanRemoval deletes the previous element (and its tags/arguments)
+				profile.getProfileElementEntities().remove(existing);
+			}
+		}
+		attachElement(profile, element, position);
+		profile.addProfilePipe(element);
+		enforceBasicProfileLast(profile);
+		return profileRepo.saveAndFlush(profile);
+	}
+
+	/** Delete an element from a profile and re-index the remaining positions (0..n-1). */
+	public ProfileEntity deleteElement(Long profileId, Long elementId) {
+		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
+		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
+			return profile;
+		}
+		profile.getProfileElementEntities().removeIf(e -> Objects.equals(e.getId(), elementId));
+		enforceBasicProfileLast(profile);
+		return profileRepo.saveAndFlush(profile);
+	}
+
+	/**
+	 * Reorder a profile's elements: each element's position is set to its index in the
+	 * given id list (which must contain all of the profile's element ids). The Basic
+	 * DICOM confidentiality profile is always forced back to the last position.
+	 */
+	public ProfileEntity reorderElements(Long profileId, List<Long> orderedElementIds) {
+		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
+		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
+			return profile;
+		}
+		for (int i = 0; i < orderedElementIds.size(); i++) {
+			int position = i;
+			ProfileElementEntity element = findElement(profile, orderedElementIds.get(i));
+			if (element != null) {
+				element.setPosition(position);
+			}
+		}
+		enforceBasicProfileLast(profile);
+		return profileRepo.saveAndFlush(profile);
+	}
+
+	private static ProfileElementEntity findElement(ProfileEntity profile, Long elementId) {
+		return profile.getProfileElementEntities()
+			.stream()
+			.filter(e -> Objects.equals(e.getId(), elementId))
+			.findFirst()
+			.orElse(null);
+	}
+
+	/** Make {@code element} a fresh child of {@code profile} at the given position. */
+	private static void attachElement(ProfileEntity profile, ProfileElementEntity element, int position) {
+		element.setId(null);
+		element.setPosition(position);
+		element.setProfileEntity(profile);
+		element.getIncludedTagEntities().forEach(t -> {
+			t.setId(null);
+			t.setProfileElementEntity(element);
+		});
+		element.getExcludedTagEntities().forEach(t -> {
+			t.setId(null);
+			t.setProfileElementEntity(element);
+		});
+		element.getArgumentEntities().forEach(a -> {
+			a.setId(null);
+			a.setProfileElementEntity(element);
+		});
+	}
+
+	/**
+	 * Re-index positions to a contiguous 0..n-1 sequence following the current order,
+	 * while forcing the Basic DICOM confidentiality profile (if present) to the last
+	 * position: a de-identification baseline must be applied after every other element.
+	 */
+	private static void enforceBasicProfileLast(ProfileEntity profile) {
+		List<ProfileElementEntity> ordered = new ArrayList<>(profile.getProfileElementEntities());
+		ordered.sort(Comparator.comparing(ProfileElementEntity::getPosition,
+				Comparator.nullsLast(Comparator.naturalOrder())));
+		ordered.stream()
+			.filter(e -> ProfileItemType.BASIC_DICOM_ALIAS.equals(e.getCodename()))
+			.findFirst()
+			.ifPresent(basic -> {
+				ordered.remove(basic);
+				ordered.add(basic);
+			});
+		int position = 0;
+		for (ProfileElementEntity element : ordered) {
+			element.setPosition(position++);
+		}
 	}
 
 	private ProfileEntity createNewProfile(ProfilePipeBody profilePipeYml, Boolean byDefault) {

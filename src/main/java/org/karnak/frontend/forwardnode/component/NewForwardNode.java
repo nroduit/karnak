@@ -12,13 +12,17 @@ package org.karnak.frontend.forwardnode.component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import lombok.Getter;
+import org.karnak.frontend.component.ButtonFactory;
+import org.karnak.frontend.component.NewItemDialog;
 import org.weasis.core.util.annotations.Generated;
 
+/**
+ * Toolbar entry that creates a new forward node: a "New forward node" button which opens
+ * a popup ({@link NewItemDialog}) where the forward AETitle is entered.
+ */
 @Getter
 @Generated()
 public class NewForwardNode extends HorizontalLayout {
@@ -27,60 +31,28 @@ public class NewForwardNode extends HorizontalLayout {
 
 	private final TextField newAETitleForwardNode;
 
-	private final Button addNewForwardNode;
-
-	private final Button cancelNewForwardNode;
+	private final NewItemDialog dialog;
 
 	public NewForwardNode() {
-		newAETitleForwardNode = new TextField();
-		addNewForwardNode = new Button("Add");
-		cancelNewForwardNode = new Button("Cancel");
-		newForwardNodeBtn = new Button("New forward node");
-		initView();
-	}
+		newAETitleForwardNode = new TextField("Forward AETitle");
+		newAETitleForwardNode.setPlaceholder("Forward AETitle");
+		newAETitleForwardNode.setWidthFull();
 
-	private void initView() {
-		setNewAETitleForwardNode();
-		setAddNewForwardNode();
-		setCancelNewForwardNode();
-		setNewForwardNode();
+		dialog = new NewItemDialog("New forward node", "Add", newAETitleForwardNode);
+
+		newForwardNodeBtn = ButtonFactory.createAddButton("New forward node");
+		newForwardNodeBtn.addClickListener(click -> openDialog());
+		// CTRL+N will create a new window which is unavoidable
+		newForwardNodeBtn.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+
+		setPadding(false);
 		add(newForwardNodeBtn);
 	}
 
-	private void setNewAETitleForwardNode() {
-		newAETitleForwardNode.setPlaceholder("Forward AETitle");
-		newAETitleForwardNode.addKeyDownListener(Key.ENTER, keyDownEvent -> {
-			removeAll();
-			add(newForwardNodeBtn);
-		});
-	}
-
-	private void setAddNewForwardNode() {
-		addNewForwardNode.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		addNewForwardNode.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-		addNewForwardNode.addClickListener(click -> {
-			removeAll();
-			add(newForwardNodeBtn);
-		});
-	}
-
-	private void setCancelNewForwardNode() {
-		cancelNewForwardNode.addClickListener(click -> {
-			removeAll();
-			add(newForwardNodeBtn);
-		});
-	}
-
-	private void setNewForwardNode() {
-		newForwardNodeBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		newForwardNodeBtn.setIcon(VaadinIcon.PLUS_CIRCLE.create());
-		newForwardNodeBtn.addClickListener(click -> {
-			removeAll();
-			newAETitleForwardNode.setValue("");
-			add(newAETitleForwardNode, addNewForwardNode, cancelNewForwardNode);
-		});
-		// CTRL+N will create a new window which is unavoidable
-		newForwardNodeBtn.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+	private void openDialog() {
+		newAETitleForwardNode.clear();
+		dialog.open();
+		newAETitleForwardNode.focus();
 	}
 
 }

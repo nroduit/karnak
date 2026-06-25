@@ -17,14 +17,18 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.frontend.profile.ProfileLogic;
+import org.mockito.Mockito;
 
 class ProfileElementMainViewTest {
+
+	private final ProfileLogic profileLogic = Mockito.mock(ProfileLogic.class);
 
 	@Test
 	void should_create_profile_element_main_view() {
 
 		// Call constructor
-		ProfileElementMainView profileElementMainView = new ProfileElementMainView();
+		ProfileElementMainView profileElementMainView = new ProfileElementMainView(profileLogic);
 
 		// Test results
 		assertNotNull(profileElementMainView);
@@ -34,7 +38,7 @@ class ProfileElementMainViewTest {
 	void should_set_profile_and_enable() {
 
 		// Call constructor
-		ProfileElementMainView profileElementMainView = new ProfileElementMainView();
+		ProfileElementMainView profileElementMainView = new ProfileElementMainView(profileLogic);
 
 		// Init data
 		ProfileEntity profileEntity = new ProfileEntity();

@@ -14,6 +14,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -26,6 +28,8 @@ import java.io.InputStream;
 import lombok.Getter;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.frontend.MainLayout;
+import org.karnak.frontend.component.ButtonFactory;
+import org.karnak.frontend.component.NewItemDialog;
 import org.karnak.frontend.profile.component.ProfileGrid;
 import org.karnak.frontend.profile.component.editprofile.ProfileComponent;
 import org.karnak.frontend.profile.component.editprofile.ProfileElementMainView;
@@ -60,7 +64,7 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 	private VerticalLayout barAndGridLayout;
 
 	@Getter
-	private final HorizontalLayout profileHorizontalLayout;
+	private final SplitLayout profileHorizontalLayout;
 
 	private Upload uploadProfile;
 
@@ -73,9 +77,9 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 
 		profileGrid = new ProfileGrid();
 		profileComponent = new ProfileComponent(profileLogic);
-		profileElementMainView = new ProfileElementMainView();
+		profileElementMainView = new ProfileElementMainView(profileLogic);
 		profileErrorView = new ProfileErrorView();
-		profileHorizontalLayout = new HorizontalLayout(profileComponent, profileElementMainView);
+		profileHorizontalLayout = new SplitLayout(profileComponent, profileElementMainView);
 
 		initComponents();
 		buildLayout();
@@ -104,17 +108,23 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 
 	private void buildLayout() {
 		setSizeFull();
-		profileComponent.setWidth("45%");
-		profileElementMainView.setWidth("55%");
+		profileComponent.setWidth("100%");
+		profileElementMainView.setWidth("100%");
 		profileErrorView.setWidth("75%");
 		profileHorizontalLayout.setWidth("75%");
-		profileHorizontalLayout.getStyle().set("overflow-y", "auto");
+		profileHorizontalLayout.setHeightFull();
+		// Draggable splitter; give the Profile element(s) panel the larger share.
+		profileHorizontalLayout.setSplitterPosition(35);
 
+		Button newProfileButton = ButtonFactory.createAddButton("New profile");
+		newProfileButton.addClickListener(event -> openNewProfileDialog());
 		Button addGroupButton = profileGrid.createAddGroupButton();
 		barAndGridLayout = new VerticalLayout();
+		barAndGridLayout.add(newProfileButton);
 		barAndGridLayout.add(uploadProfile);
 		barAndGridLayout.add(addGroupButton);
 		barAndGridLayout.add(profileGrid);
+		barAndGridLayout.setFlexGrow(0, newProfileButton);
 		barAndGridLayout.setFlexGrow(0, uploadProfile);
 		barAndGridLayout.setFlexGrow(0, addGroupButton);
 		barAndGridLayout.setFlexGrow(1, profileGrid);
@@ -134,6 +144,26 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 			}
 		});
 		uploadProfile.setDropLabel(new Span("Drag and drop your profile here"));
+	}
+
+	private void openNewProfileDialog() {
+		TextField name = new TextField("Name");
+		TextField version = new TextField("Version");
+		TextField minVersion = new TextField("Min Karnak version");
+		name.setWidthFull();
+		version.setWidthFull();
+		minVersion.setWidthFull();
+		NewItemDialog dialog = new NewItemDialog("New profile", "Create", name, version, minVersion);
+		dialog.setOnConfirm(() -> {
+			if (name.getValue() == null || name.getValue().isBlank()) {
+				name.setInvalid(true);
+				name.setErrorMessage("A name is required");
+				return false;
+			}
+			profileLogic.createProfile(name.getValue().trim(), version.getValue(), minVersion.getValue());
+			return true;
+		});
+		dialog.open();
 	}
 
 	/**

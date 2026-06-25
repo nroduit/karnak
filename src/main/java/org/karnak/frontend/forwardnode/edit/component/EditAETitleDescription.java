@@ -9,12 +9,14 @@
  */
 package org.karnak.frontend.forwardnode.edit.component;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import java.nio.file.Files;
@@ -33,7 +35,7 @@ import org.weasis.dicom.op.CStore;
 import org.weasis.dicom.param.DicomNode;
 
 @Generated()
-public class EditAETitleDescription extends HorizontalLayout {
+public class EditAETitleDescription extends VerticalLayout {
 
 	private final TextField textFieldAETitle;
 
@@ -41,11 +43,16 @@ public class EditAETitleDescription extends HorizontalLayout {
 
 	private final Button selectFolderButton;
 
+	private final HorizontalLayout fieldsRow;
+
 	private final Binder<ForwardNodeEntity> binder;
 
 	public EditAETitleDescription(Binder<ForwardNodeEntity> binder, ForwardNodeLogic forwardNodeLogic,
 			Environment environment) {
 		this.binder = binder;
+		setPadding(false);
+		setSpacing(false);
+
 		this.textFieldAETitle = new TextField("Forward AETitle");
 		this.textFieldDescription = new TextField("Description");
 		this.selectFolderButton = new Button("Upload local folder", VaadinIcon.FOLDER_OPEN.create());
@@ -67,17 +74,42 @@ public class EditAETitleDescription extends HorizontalLayout {
 			}
 		});
 
-		setVerticalComponentAlignment(Alignment.BASELINE, textFieldAETitle, textFieldDescription);
-
+		// AE title and description are edited inline on the same row; action buttons
+		// (added
+		// via setActionButtons) sit on the same row and align with the fields.
 		textFieldAETitle.setWidth("30%");
-		textFieldDescription.setWidth("70%");
-		add(textFieldAETitle, textFieldDescription);
+		textFieldDescription.setWidthFull();
+		fieldsRow = new HorizontalLayout(textFieldAETitle, textFieldDescription);
+		fieldsRow.setWidthFull();
+		fieldsRow.expand(textFieldDescription);
+		fieldsRow.setAlignItems(Alignment.BASELINE);
+		add(fieldsRow);
 
 		if (environment.acceptsProfiles(Profiles.of("portable"))) {
-			setVerticalComponentAlignment(Alignment.END, selectFolderButton);
-			add(selectFolderButton);
+			add(buildUploadFolderRow());
 		}
 		setBinder();
+	}
+
+	/**
+	 * Place the forward-node action buttons on the fields row, aligned with the fields.
+	 */
+	public void setActionButtons(Component actions) {
+		fieldsRow.add(actions);
+		fieldsRow.setVerticalComponentAlignment(Alignment.BASELINE, actions);
+	}
+
+	/** The local-folder upload sits on its own line with a short explanation. */
+	private HorizontalLayout buildUploadFolderRow() {
+		Span explanation = new Span(
+				"Send DICOM files from a local folder to the active destinations of this forward node.");
+		explanation.getStyle()
+			.set("color", "var(--lumo-secondary-text-color)")
+			.set("font-size", "var(--lumo-font-size-s)");
+		HorizontalLayout uploadRow = new HorizontalLayout(selectFolderButton, explanation);
+		uploadRow.setVerticalComponentAlignment(Alignment.CENTER, selectFolderButton, explanation);
+		uploadRow.getStyle().set("margin-top", "var(--lumo-space-s)");
+		return uploadRow;
 	}
 
 	private void selectFolder() {

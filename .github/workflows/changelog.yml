@@ -19,26 +19,26 @@ jobs:
       pull-requests: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - name: Changelog Generator from github issues
         id: generate_changelog_file
-        uses: heinrichreimer/github-changelog-generator-action@e60b5a2bd9fcd88dadf6345ff8327863fb8b490f # v2.4
+        uses: heinrichreimer/github-changelog-generator-action@e60b5a2bd9fcd88dadf6345ff8327863fb8b490f
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           compareLink: true
           # Get config from .github_changelog_generator file
       - name: Git Auto Commit
         id: commit
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
         with:
           branch: master
           commit_message: "Automatic changelog update"
           file_pattern: "CHANGELOG.md"
       - name: Extract release notes
         id: extract-release-notes
-        uses: ffurrer2/extract-release-notes@273da39a24fb7db106a35526c8162815faffd31d # v3.1.0
+        uses: ffurrer2/extract-release-notes@273da39a24fb7db106a35526c8162815faffd31d
       - name: Create release
-        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd
         with:
           tag: ${{ github.ref }}
           name: ${{ github.ref }}

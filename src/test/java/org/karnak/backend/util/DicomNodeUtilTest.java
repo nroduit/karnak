@@ -11,6 +11,7 @@ package org.karnak.backend.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.backend.service.DicomNodeConfigService;
@@ -36,21 +39,48 @@ class DicomNodeUtilTest {
 	@Mock
 	private DicomNodeConfigService dicomNodeConfigService;
 
+	@Mock
+	private DestinationRepo destinationRepo;
+
 	@InjectMocks
 	private DicomNodeUtil dicomNodeUtil;
 
 	@Test
-	void returns_all_dicom_node_types_from_service() {
+	void returns_gateway_destinations_group_first_then_service_node_types() {
 		var workstations = new DicomNodeList("Workstations");
 		var pacsWeb = new DicomNodeList("PACS Public WEB");
+		when(destinationRepo.findAll()).thenReturn(List.of());
 		when(dicomNodeConfigService.getAllDicomNodeTypes()).thenReturn(List.of(workstations, pacsWeb));
 
 		var result = dicomNodeUtil.getAllDicomNodeTypes();
 
 		assertNotNull(result);
+		assertEquals(3, result.size());
+		assertEquals("Gateway destinations", result.get(0).getName());
+		assertEquals("Workstations", result.get(1).getName());
+		assertEquals("PACS Public WEB", result.get(2).getName());
+	}
+
+	@Test
+	void gateway_destinations_group_lists_dicom_destinations_read_only_and_deduplicated() {
+		var pacs = DestinationEntity.ofDicom("Main PACS", "PACS_AE", "pacs.host", 11112, false);
+		var pacsDuplicate = DestinationEntity.ofDicom("PACS copy", "PACS_AE", "pacs.host", 11112, false);
+		var viewer = DestinationEntity.ofDicom("Viewer", "VIEWER_AE", "viewer.host", 104, false);
+		var stow = DestinationEntity.ofStow("Cloud", "https://stow.example/dicomweb", "");
+		when(destinationRepo.findAll()).thenReturn(List.of(pacs, pacsDuplicate, viewer, stow));
+
+		var result = dicomNodeUtil.getGatewayDestinationNodes();
+
+		assertEquals("Gateway destinations", result.getName());
 		assertEquals(2, result.size());
-		assertEquals("Workstations", result.get(0).getName());
-		assertEquals("PACS Public WEB", result.get(1).getName());
+
+		ConfigNode first = result.getFirst();
+		assertEquals("Main PACS", first.getName());
+		assertEquals("PACS_AE", first.getAet());
+		assertEquals("pacs.host", first.getHostname());
+		assertEquals(11112, first.getPort());
+		assertNull(first.getId());
+		assertEquals("Gateway destinations", first.getNodeType());
 	}
 
 	@Test

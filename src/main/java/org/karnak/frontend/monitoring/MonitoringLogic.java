@@ -15,17 +15,21 @@ import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import java.io.IOException;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.karnak.backend.data.entity.TransferStatusEntity;
+import org.karnak.backend.model.monitoring.DestinationActivity;
+import org.karnak.backend.model.monitoring.ErrorBreakdown;
+import org.karnak.backend.model.monitoring.NodeActivity;
+import org.karnak.backend.model.monitoring.SeriesActivity;
+import org.karnak.backend.model.monitoring.StudyActivity;
+import org.karnak.backend.service.MonitoringAggregationService;
 import org.karnak.backend.service.TransferMonitoringService;
 import org.karnak.frontend.monitoring.component.ExportSettings;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.karnak.frontend.util.NotificationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.weasis.core.util.annotations.Generated;
 
 /**
@@ -46,30 +50,41 @@ public class MonitoringLogic {
 	// Services
 	private final transient TransferMonitoringService transferMonitoringService;
 
+	private final transient MonitoringAggregationService monitoringAggregationService;
+
 	@Autowired
-	public MonitoringLogic(final TransferMonitoringService transferMonitoringService) {
+	public MonitoringLogic(final TransferMonitoringService transferMonitoringService,
+			final MonitoringAggregationService monitoringAggregationService) {
 		this.transferMonitoringService = transferMonitoringService;
+		this.monitoringAggregationService = monitoringAggregationService;
 		this.monitoringView = null;
 	}
 
-	/**
-	 * Retrieve transfer status
-	 * @param filter Filter to apply
-	 * @param pageable Pageable
-	 * @return Page of trnasfer entities
-	 */
-	public Page<TransferStatusEntity> retrieveTransferStatus(TransferStatusFilter filter, Pageable pageable) {
-		return transferMonitoringService.retrieveTransferStatusPageable(filter, pageable);
+	// --- Hierarchy aggregation (Destination / Study / Series / errors) ---------------
+
+	public List<DestinationActivity> listDestinations(TransferStatusFilter filter) {
+		return monitoringAggregationService.listDestinations(filter);
 	}
 
-	/**
-	 * Count number of transfer status
-	 * @param filter Filter to apply
-	 * @return number of transfer status
-	 */
-	public int countTransferStatus(TransferStatusFilter filter) {
-		return transferMonitoringService.countTransferStatus(filter);
+	public List<StudyActivity> listStudies(TransferStatusFilter filter, Long destinationId) {
+		return monitoringAggregationService.listStudies(filter, destinationId);
 	}
+
+	public List<SeriesActivity> listSeries(TransferStatusFilter filter, Long destinationId, String studyUid) {
+		return monitoringAggregationService.listSeries(filter, destinationId, studyUid);
+	}
+
+	public List<ErrorBreakdown> listErrors(TransferStatusFilter filter, Long destinationId, String serieUid) {
+		return monitoringAggregationService.listErrors(filter, destinationId, serieUid);
+	}
+
+	// --- Forward node dashboard ------------------------------------------------------
+
+	public List<NodeActivity> listNodeActivity(TransferStatusFilter filter) {
+		return monitoringAggregationService.listNodeActivity(filter);
+	}
+
+	// --- Maintenance & export --------------------------------------------------------
 
 	/**
 	 * Delete all transfer status records
@@ -79,14 +94,14 @@ public class MonitoringLogic {
 	}
 
 	/**
-	 * Build monitoring export in CSV format
+	 * Build monitoring export in CSV format for the matching rows
+	 * @param filter the current filter
 	 * @param exportSettings Export settings
 	 */
-	public byte[] buildCsv(ExportSettings exportSettings) {
+	public byte[] buildCsv(TransferStatusFilter filter, ExportSettings exportSettings) {
 		byte[] csvBuilt = new byte[0];
 		try {
-			csvBuilt = transferMonitoringService
-				.buildCsv(monitoringView.getTransferStatusGrid().getTransferStatusFilter(), exportSettings);
+			csvBuilt = transferMonitoringService.buildCsv(filter, exportSettings);
 		}
 		catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException | IOException e) {
 			String message = "Error when creating monitoring export CSV file";

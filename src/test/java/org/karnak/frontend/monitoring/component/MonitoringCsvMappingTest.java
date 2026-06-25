@@ -55,9 +55,9 @@ class MonitoringCsvMappingTest {
 		}
 
 		@Test
-		void reason_is_last_column() {
+		void last_seen_is_last_column() {
 			var values = MonitoringCsvMapping.values();
-			assertEquals(MonitoringCsvMapping.REASON, values[values.length - 1]);
+			assertEquals(MonitoringCsvMapping.LAST_SEEN, values[values.length - 1]);
 		}
 
 	}
@@ -81,7 +81,7 @@ class MonitoringCsvMappingTest {
 			var allMappings = MonitoringCsvMapping.values();
 			assertEquals(allMappings.length, headers.length);
 			assertEquals("Forward aeTitle", headers[0]);
-			assertEquals("Reason", headers[headers.length - 1]);
+			assertEquals("Last Seen", headers[headers.length - 1]);
 		}
 
 	}

@@ -1,0 +1,59 @@
+name: Docker publish
+permissions:
+  contents: read
+# Publishing only ever happens for the canonical history: pushes to master and
+# version tags. Pull requests and feature branches never build or push an image.
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  publish:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Setup NODE
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+      - name: Set up JDK for compilation
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+      - name: Build the spring app
+        shell: bash
+        run: mvn -B clean install -P production -Dmaven.test.skip=true
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9
+        with:
+          images: osirixfoundation/karnak
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - name: Login to DockerHub
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
+        with:
+          context: .
+          file: src/main/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -210,13 +210,21 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 		// Set editable form in order to retrieve save button to enable/disable it
 		destinationView.setNewUpdateDestination(newUpdateDestination);
+
+		// Place the Save/Delete/Cancel buttons on the AE title / description row so they
+		// align with the two text fields.
+		editAETitleDescription.setActionButtons(buttonForwardNodeSaveDeleteCancel);
 	}
 
 	public void setEditView() {
 		removeAll();
+		// Save/Delete/Cancel act on the forward node (AE title / description) and sit on
+		// the
+		// same row as those fields (see initComponents). Sources and destinations have
+		// their
+		// own save/delete in their forms below.
 		add(UIS.setWidthFull(this.editAETitleDescription), UIS.setWidthFull(this.tabSourcesDestination),
-				UIS.setWidthFull(this.layoutDestinationsSources),
-				UIS.setWidthFull(this.buttonForwardNodeSaveDeleteCancel));
+				UIS.setWidthFull(this.layoutDestinationsSources));
 	}
 
 	public void load(ForwardNodeEntity forwardNodeEntity) {
@@ -306,8 +314,14 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	private void setEventBinderForwardNode() {
 		this.binderForwardNode.addStatusChangeListener(event -> {
 			boolean isValid = !event.hasValidationErrors();
-			boolean hasChanges = this.binderForwardNode.hasChanges();
-			this.buttonForwardNodeSaveDeleteCancel.getSave().setEnabled(hasChanges && isValid);
+			// The forward-node binder uses setBean (write-through): a valid edit is
+			// written
+			// to the bean immediately, so hasChanges() turns false and would wrongly
+			// disable
+			// Save right after typing. Keep Save enabled whenever a node is loaded and
+			// valid.
+			boolean nodeLoaded = this.currentForwardNodeEntity != null;
+			this.buttonForwardNodeSaveDeleteCancel.getSave().setEnabled(nodeLoaded && isValid);
 		});
 	}
 

@@ -10,25 +10,84 @@
 package org.karnak.backend.util;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
+import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.backend.service.DicomNodeConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.weasis.core.util.StringUtil;
+import org.weasis.dicom.param.DicomNode;
 
 @Component
 public class DicomNodeUtil {
 
+	/**
+	 * Display name of the dynamic group listing every DICOM destination configured in the
+	 * gateway. This group is computed on the fly and is therefore read-only (its nodes
+	 * cannot be edited or deleted as DICOM node configurations, and the group itself
+	 * cannot be renamed or removed).
+	 */
+	public static final String GATEWAY_DESTINATIONS_GROUP_NAME = "Gateway destinations";
+
 	private final DicomNodeConfigService dicomNodeConfigService;
 
+	private final DestinationRepo destinationRepo;
+
 	@Autowired
-	public DicomNodeUtil(DicomNodeConfigService dicomNodeConfigService) {
+	public DicomNodeUtil(DicomNodeConfigService dicomNodeConfigService, DestinationRepo destinationRepo) {
 		this.dicomNodeConfigService = dicomNodeConfigService;
+		this.destinationRepo = destinationRepo;
 	}
 
+	/**
+	 * @return the dynamic gateway destinations group first, followed by every
+	 * user-defined DICOM node group (the reserved worklist group is excluded)
+	 */
 	public List<DicomNodeList> getAllDicomNodeTypes() {
-		return dicomNodeConfigService.getAllDicomNodeTypes();
+		var nodeLists = new ArrayList<DicomNodeList>();
+		nodeLists.add(getGatewayDestinationNodes());
+		nodeLists.addAll(dicomNodeConfigService.getAllDicomNodeTypes());
+		return nodeLists;
+	}
+
+	/**
+	 * Build the dynamic group of all DICOM destinations configured in the gateway.
+	 * STOW-RS destinations have no AE Title / host / port and are skipped, and
+	 * destinations sharing the same AE Title, host and port are reported once. The
+	 * returned nodes carry no configuration id so they are treated as read-only by the
+	 * DICOM node management UI.
+	 * @return the gateway destinations group, possibly empty
+	 */
+	public DicomNodeList getGatewayDestinationNodes() {
+		var nodeList = new DicomNodeList(GATEWAY_DESTINATIONS_GROUP_NAME);
+		Set<String> seen = new HashSet<>();
+		for (DestinationEntity destination : destinationRepo.findAll()) {
+			if (destination.getDestinationType() != DestinationType.dicom) {
+				continue;
+			}
+			String aeTitle = destination.getAeTitle();
+			String hostname = destination.getHostname();
+			Integer port = destination.getPort();
+			if (!StringUtil.hasText(aeTitle) || !StringUtil.hasText(hostname) || port == null || port <= 0) {
+				continue;
+			}
+			if (!seen.add(aeTitle + '\\' + hostname + '\\' + port)) {
+				continue;
+			}
+			String description = StringUtil.hasText(destination.getDescription()) ? destination.getDescription()
+					: aeTitle;
+			var node = new ConfigNode(description, new DicomNode(aeTitle, hostname, port));
+			node.setNodeType(GATEWAY_DESTINATIONS_GROUP_NAME);
+			nodeList.add(node);
+		}
+		return nodeList;
 	}
 
 	public DicomNodeList getWorkListNodes() {

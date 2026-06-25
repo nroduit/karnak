@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.enums;
 
+import java.util.Set;
 import lombok.Getter;
 import org.karnak.backend.model.profiles.ActionDates;
 import org.karnak.backend.model.profiles.ActionTags;
@@ -39,6 +40,9 @@ public enum ProfileItemType {
 	ADD_PRIVATE_TAG(AddPrivateTag.class, "action.add.private.tag", null, null),
 	REPLACE_API(ReplaceApi.class, "action.replace.api", null, null);
 
+	/** Alias of the Basic DICOM confidentiality profile, which must run last. */
+	public static final String BASIC_DICOM_ALIAS = "basic.dicom.profile";
+
 	@Getter
 	private final Class<? extends ProfileItem> profileClass;
 
@@ -54,6 +58,20 @@ public enum ProfileItemType {
 		this.classAlias = alias;
 		this.codeValue = codeValue;
 		this.codeMeaning = codeMeaning;
+	}
+
+	/** Types that may appear at most once in a pipeline (and need no specific name). */
+	private static final Set<ProfileItemType> UNIQUE_TYPES = Set.of(BASIC_DICOM, CLEAN_PIXEL_DATA, DEFACING);
+
+	/** Whether this type may appear at most once in a profile. */
+	public boolean isUnique() {
+		return UNIQUE_TYPES.contains(this);
+	}
+
+	/** Whether the type with this alias may appear at most once in a profile. */
+	public static boolean isUnique(String alias) {
+		ProfileItemType type = getType(alias);
+		return type != null && type.isUnique();
 	}
 
 	public static ProfileItemType getType(String alias) {

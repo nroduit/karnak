@@ -150,7 +150,8 @@ public class ProfileElementEntity implements Serializable {
 	}
 
 	@JsonGetter("arguments")
-	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+			orphanRemoval = true)
 	@JsonSerialize(converter = ArgumentToMapConverter.class)
 	public List<ArgumentEntity> getArgumentEntities() {
 		return argumentEntities;
@@ -182,7 +183,8 @@ public class ProfileElementEntity implements Serializable {
 	}
 
 	@JsonGetter("tags")
-	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+			orphanRemoval = true)
 	@JsonSerialize(converter = TagListToStringListConverter.class)
 	public List<IncludedTagEntity> getIncludedTagEntities() {
 		return includedTagEntities;
@@ -194,7 +196,8 @@ public class ProfileElementEntity implements Serializable {
 	}
 
 	@JsonGetter("excludedTags")
-	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+			orphanRemoval = true)
 	@JsonSerialize(converter = TagListToStringListConverter.class)
 	public List<ExcludedTagEntity> getExcludedTagEntities() {
 		return excludedTagEntities;

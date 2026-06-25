@@ -416,14 +416,17 @@ public class DicomEchoSelectionDialog extends AbstractDialog {
 
 	private void onGroupSelected(DicomNodeList group) {
 		boolean hasGroup = group != null;
+		// The dynamic gateway destinations group is computed on the fly and cannot be
+		// renamed or deleted.
+		boolean editable = hasGroup && !DicomNodeUtil.GATEWAY_DESTINATIONS_GROUP_NAME.equals(group.getName());
 		if (hasGroup && groupNameFld != null) {
 			groupNameFld.setValue(group.getName());
 		}
 		if (renameGroupBtn != null) {
-			renameGroupBtn.setEnabled(hasGroup);
+			renameGroupBtn.setEnabled(editable);
 		}
 		if (deleteGroupBtn != null) {
-			deleteGroupBtn.setEnabled(hasGroup);
+			deleteGroupBtn.setEnabled(editable);
 		}
 	}
 

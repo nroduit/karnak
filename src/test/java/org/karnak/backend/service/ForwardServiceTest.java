@@ -40,13 +40,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
-import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
 import org.karnak.backend.dicom.Params;
 import org.karnak.backend.dicom.WebForwardDestination;
 import org.karnak.backend.exception.AbortException;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
+import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.weasis.dicom.param.AttributeEditor;
@@ -118,9 +118,9 @@ class ForwardServiceTest {
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
 		verify(scu).cstore(eq(CUID), eq(IUID), anyInt(), any(), eq(TS));
-		TransferStatusEntity event = captureSingleEvent();
-		assertTrue(event.isSent());
-		assertFalse(event.isError());
+		MonitoringEntry event = captureSingleEvent();
+		assertTrue(event.sent());
+		assertFalse(event.error());
 	}
 
 	@Test
@@ -133,10 +133,10 @@ class ForwardServiceTest {
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
 		verify(scu, never()).cstore(anyString(), anyString(), anyInt(), any(), anyString());
-		TransferStatusEntity event = captureSingleEvent();
-		assertFalse(event.isSent());
-		assertFalse(event.isError());
-		assertEquals("blocked", event.getReason());
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertFalse(event.error());
+		assertEquals("blocked", event.reason());
 	}
 
 	@Test
@@ -160,9 +160,9 @@ class ForwardServiceTest {
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
 		verify(scu, never()).cstore(anyString(), anyString(), anyInt(), any(), anyString());
-		TransferStatusEntity event = captureSingleEvent();
-		assertFalse(event.isSent());
-		assertTrue(event.isError());
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertTrue(event.error());
 	}
 
 	@Test
@@ -174,7 +174,7 @@ class ForwardServiceTest {
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
 		verify(scu).cstore(eq(CUID), eq(IUID), anyInt(), any(), eq(TS));
-		assertTrue(captureSingleEvent().isSent());
+		assertTrue(captureSingleEvent().sent());
 	}
 
 	// --- DICOMWeb transferOther
@@ -191,7 +191,7 @@ class ForwardServiceTest {
 		forwardService.transferOther(fwdNode, dest, copy, params(null));
 
 		verify(stow).uploadDicom(eq(copy), eq(TS));
-		assertTrue(captureSingleEvent().isSent());
+		assertTrue(captureSingleEvent().sent());
 	}
 
 	@Test
@@ -204,7 +204,7 @@ class ForwardServiceTest {
 		// 409 means the object is already stored: success, no exception.
 		forwardService.transferOther(fwdNode, dest, dataset(), params(null));
 
-		assertTrue(captureSingleEvent().isSent());
+		assertTrue(captureSingleEvent().sent());
 	}
 
 	@Test
@@ -216,8 +216,8 @@ class ForwardServiceTest {
 		forwardService.transferOther(fwdNode, dest, dataset(), params(null));
 
 		verify(stow, never()).uploadDicom(any(Attributes.class), anyString());
-		TransferStatusEntity event = captureSingleEvent();
-		assertFalse(event.isSent());
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
 	}
 
 	// --- DICOMWeb transfer (first destination, parses the incoming stream)
@@ -232,7 +232,7 @@ class ForwardServiceTest {
 		forwardService.transfer(fwdNode, dest, null, p);
 
 		verify(stow).uploadDicom(any(InputStream.class), any(Attributes.class));
-		assertTrue(captureSingleEvent().isSent());
+		assertTrue(captureSingleEvent().sent());
 	}
 
 	// --- storeMultipleDestination fan-out
@@ -257,8 +257,8 @@ class ForwardServiceTest {
 		verify(publisher, times(2)).publishEvent(captor.capture());
 		assertTrue(captor.getAllValues()
 			.stream()
-			.map(e -> (TransferStatusEntity) e.getSource())
-			.allMatch(TransferStatusEntity::isSent));
+			.map(e -> (MonitoringEntry) e.getSource())
+			.allMatch(MonitoringEntry::sent));
 	}
 
 	// --- fixtures & helpers
@@ -328,10 +328,10 @@ class ForwardServiceTest {
 		return new WebForwardDestination(2L, fwdNode, stow, null, editors);
 	}
 
-	private TransferStatusEntity captureSingleEvent() {
+	private MonitoringEntry captureSingleEvent() {
 		ArgumentCaptor<TransferMonitoringEvent> captor = ArgumentCaptor.forClass(TransferMonitoringEvent.class);
 		verify(publisher).publishEvent(captor.capture());
-		return (TransferStatusEntity) captor.getValue().getSource();
+		return (MonitoringEntry) captor.getValue().getSource();
 	}
 
 }

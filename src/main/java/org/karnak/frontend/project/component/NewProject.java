@@ -15,9 +15,16 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import lombok.Getter;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.frontend.component.ButtonFactory;
+import org.karnak.frontend.component.NewItemDialog;
 import org.karnak.frontend.component.ProfileDropDown;
 import org.weasis.core.util.annotations.Generated;
 
+/**
+ * Toolbar entry that creates a new project: a "New project" button which opens a popup
+ * ({@link NewItemDialog}) where the project name and de-identification profile are
+ * chosen.
+ */
 @Generated()
 public class NewProject extends HorizontalLayout {
 
@@ -25,7 +32,10 @@ public class NewProject extends HorizontalLayout {
 	private final Binder<ProjectEntity> binder;
 
 	@Getter
-	private final Button buttonAdd;
+	private final Button buttonNewProject;
+
+	@Getter
+	private final NewItemDialog dialog;
 
 	private final TextField textResearchName;
 
@@ -35,22 +45,34 @@ public class NewProject extends HorizontalLayout {
 	public NewProject() {
 
 		TextFieldsBindProject textFieldsBindProject = new TextFieldsBindProject();
-		setWidthFull();
 		this.binder = textFieldsBindProject.getBinder();
-		this.buttonAdd = new Button("Add");
 		this.textResearchName = textFieldsBindProject.getTextResearchName();
 		this.profileDropDown = textFieldsBindProject.getProfileDropDown();
 		setElements();
-		add(this.textResearchName, this.profileDropDown, this.buttonAdd);
+
+		this.dialog = new NewItemDialog("New project", "Add", this.textResearchName, this.profileDropDown);
+
+		this.buttonNewProject = ButtonFactory.createAddButton("New project");
+		this.buttonNewProject.addClickListener(click -> openDialog());
+
+		setPadding(false);
+		add(this.buttonNewProject);
+
 		this.binder.removeBinding(textFieldsBindProject.getSecretComboBox());
 		this.binder.bindInstanceFields(this);
 	}
 
 	private void setElements() {
-
-		textResearchName.setWidth("20%");
-		textResearchName.getStyle().set("padding-right", "10px");
+		textResearchName.setLabel("Name");
 		textResearchName.setPlaceholder("Enter Name");
+		textResearchName.setWidthFull();
+		profileDropDown.setWidthFull();
+	}
+
+	private void openDialog() {
+		clear();
+		dialog.open();
+		textResearchName.focus();
 	}
 
 	public void clear() {

@@ -42,6 +42,36 @@ public class AttributeDetails {
 		return mapAttributeDetail.get(id);
 	}
 
+	/**
+	 * Search the standard attributes by keyword, name or tag (case-insensitive,
+	 * substring). An empty query returns the first {@code limit} attributes so the UI can
+	 * show a starting list.
+	 * @param query the text to match against keyword / name / tag
+	 * @param includeRetired when {@code false}, retired attributes are excluded
+	 * @param limit the maximum number of results
+	 * @return the matching attributes, sorted by keyword
+	 */
+	public List<AttributeDetail> search(String query, boolean includeRetired, int limit) {
+		String q = query == null ? "" : query.trim().toLowerCase();
+		String qTag = q.replaceAll("[^0-9a-fx]", "");
+		return mapAttributeDetail.values()
+			.stream()
+			.filter(a -> includeRetired || !"Y".equalsIgnoreCase(a.retired()))
+			.filter(a -> q.isEmpty() || contains(a.keyword(), q) || contains(a.name(), q) || contains(a.tag(), q)
+					|| (!qTag.isEmpty() && contains(a.id(), qTag)))
+			.sorted((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(safe(a.keyword()), safe(b.keyword())))
+			.limit(limit)
+			.toList();
+	}
+
+	private static boolean contains(String value, String lowerCaseQuery) {
+		return value != null && value.toLowerCase().contains(lowerCaseQuery);
+	}
+
+	private static String safe(String value) {
+		return value == null ? "" : value;
+	}
+
 	public List<AttributeDetail> getListAttributeDetail(List<String> listId) {
 		return mapAttributeDetail.entrySet()
 			.stream()

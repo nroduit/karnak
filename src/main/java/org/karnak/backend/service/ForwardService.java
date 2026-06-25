@@ -42,7 +42,6 @@ import org.dcm4che3.net.DataWriterAdapter;
 import org.dcm4che3.net.InputStreamDataWriter;
 import org.dcm4che3.net.PDVInputStream;
 import org.dcm4che3.net.Status;
-import org.karnak.backend.data.entity.TransferStatusEntity;
 import org.karnak.backend.dicom.Defacer;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.DicomForwardDestination.ScuLease;
@@ -54,6 +53,7 @@ import org.karnak.backend.exception.AbortException;
 import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.image.TransformedPlanarImage;
+import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.karnak.backend.model.validation.InstanceConformanceData;
 import org.karnak.backend.model.validation.MetadataSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -784,9 +784,9 @@ public class ForwardService {
 	private void monitor(ForwardDicomNode sourceNode, ForwardDestination destination, Attributes attributesOriginal,
 			Attributes attributesToSend, boolean sent, boolean error, String reason, String modality,
 			String sopClassUid, String tsuidSent) {
-		applicationEventPublisher.publishEvent(new TransferMonitoringEvent(
-				TransferStatusEntity.buildTransferStatusEntity(sourceNode.getId(), destination.getId(),
-						attributesOriginal, attributesToSend, sent, error, reason, modality, sopClassUid)));
+		applicationEventPublisher
+			.publishEvent(new TransferMonitoringEvent(MonitoringEntry.of(sourceNode.getId(), destination.getId(),
+					attributesOriginal, attributesToSend, sent, error, reason, modality, sopClassUid)));
 		if (destination.isBuildConformanceReport() && attributesToSend.containsValue(Tag.SOPClassUID)) {
 			// The snapshot must be built synchronously: bulk data references become
 			// invalid once the temporary files are cleaned. When deep-sequence validation

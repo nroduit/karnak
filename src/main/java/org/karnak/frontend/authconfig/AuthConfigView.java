@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.authconfig;
 
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.grid.Grid;
@@ -118,25 +117,29 @@ public class AuthConfigView extends HorizontalLayout {
 	}
 
 	private void addEventCreateAuthConfig() {
-		newAuthConfigComponent.getSaveAuthConfig().addClickListener(buttonClickEvent -> validateIdentifier());
-		newAuthConfigComponent.getNewNameField().addKeyDownListener(Key.ENTER, keyDownEvent -> validateIdentifier());
+		newAuthConfigComponent.getDialog().setOnConfirm(this::validateIdentifier);
 	}
 
-	private void validateIdentifier() {
+	/**
+	 * Validate the identifier entered in the new-auth-config popup.
+	 * @return {@code true} when the identifier is valid (the popup closes and the empty
+	 * form is shown), {@code false} to keep the popup open with the error message
+	 */
+	private boolean validateIdentifier() {
 		String name = newAuthConfigComponent.getNewNameField().getValue();
 		if (name == null || name.isEmpty()) {
 			newAuthConfigComponent.getNewNameField().setInvalid(true);
 			newAuthConfigComponent.getNewNameField().setErrorMessage("Identifier is required");
+			return false;
 		}
 		else if (authConfigLogic.contains(name)) {
 			newAuthConfigComponent.getNewNameField().setInvalid(true);
 			newAuthConfigComponent.getNewNameField().setErrorMessage("This identifier already exists");
+			return false;
 		}
-		else {
-			newAuthConfigComponent.getNewNameField().setInvalid(false);
-			authConfigComponent.displayEmptyForm(name);
-			newAuthConfigComponent.resetNewAuthConfigComponent();
-		}
+		newAuthConfigComponent.getNewNameField().setInvalid(false);
+		authConfigComponent.displayEmptyForm(name);
+		return true;
 	}
 
 	private void addEventSaveAuthConfig() {

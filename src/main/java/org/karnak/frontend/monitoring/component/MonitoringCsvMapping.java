@@ -10,9 +10,9 @@
 package org.karnak.frontend.monitoring.component;
 
 /**
- * Mapping for the monitoring CSV export Handle order of the columns and mapping to fields
- * of the entities. Order of the enum will determine the order of the columns in the CSV
- * file
+ * Mapping for the per-series monitoring CSV export. Handles the order of the columns and
+ * the mapping to fields of {@code TransferSeriesStatusEntity} (and the recursed forward
+ * node / destination). The order of the enum determines the column order in the CSV file.
  */
 public enum MonitoringCsvMapping {
 
@@ -31,14 +31,14 @@ public enum MonitoringCsvMapping {
 	STUDY_DATE_ORIGINAL("studyDateOriginal", "Study Date Original"),
 	STUDY_DATE_TO_SEND("studyDateToSend", "Study Date To Send"),
 	SERIE_UID_ORIGINAL("serieUidOriginal", "Serie Uid Original"),
-	SERIE_UID_TO_SEND("studyUidToSend", "Study Uid To Send"),
+	SERIE_UID_TO_SEND("serieUidToSend", "Serie Uid To Send"),
 	SERIE_DESCRIPTION_ORIGINAL("serieDescriptionOriginal", "Serie Description Original"),
 	SERIE_DESCRIPTION_TO_SEND("serieDescriptionToSend", "Serie Description To Send"),
 	SERIE_DATE_ORIGINAL("serieDateOriginal", "Serie Date Original"),
-	SERIE_DATE_TO_SEND("serieDateToSend", "Serie Date To Send"),
-	SOP_INSTANCE_UID_ORIGINAL("sopInstanceUidOriginal", "SopInstance Uid Original"),
-	SOP_INSTANCE_UID_TO_SEND("sopInstanceUidToSend", "SopInstance Uid To Send"),
-	TRANSFER_DATE("transferDate", "Transfer Date"), SENT("sent", "Sent"), REASON("reason", "Reason");
+	SERIE_DATE_TO_SEND("serieDateToSend", "Serie Date To Send"), MODALITY("modality", "Modality"),
+	SOP_CLASS_UIDS("sopClassUids", "Sop Class Uids"), INSTANCES("instances", "Instances"), SENT("sent", "Sent"),
+	ERRORS("errors", "Errors"), REASONS("reasons", "Reasons"), FIRST_SEEN("firstSeen", "First Seen"),
+	LAST_SEEN("lastSeen", "Last Seen");
 
 	// Name of the field of the entity
 	private final String nameFieldEntity;
