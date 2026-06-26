@@ -25,6 +25,7 @@ jobs:
           node-version: 24
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
+          fetch-depth: 0  # full history is handed to Sonar for blame / new-code relevancy
           persist-credentials: false
       - name: Set up JDK for compilation
         uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
@@ -34,9 +35,14 @@ jobs:
           cache: 'maven'
       - name: Build and test
         run: mvn -Pcoverage -B verify
-      # Sonar analysis runs in a separate workflow_run-triggered workflow (sonar.yml) so it
-      # has access to P_SONAR_TOKEN even for pull requests from forks and Dependabot (where
-      # secrets are withheld from the triggering workflow) and never exposes secrets to PR code.
+      # Sonar analysis runs in a separate workflow_run-triggered workflow (sonar.yml) so it has
+      # access to P_SONAR_TOKEN even for pull requests from forks and Dependabot (where secrets
+      # are withheld from the triggering workflow). To keep that privileged job from ever
+      # executing untrusted fork code, ALL building happens here (this job has no secrets) and
+      # only the prebuilt analysis inputs below are handed over; the Sonar job runs the
+      # standalone scanner on them and never builds the PR head.
+      - name: Collect dependency jars for Sonar (sonar.java.libraries)
+        run: mvn -B dependency:copy-dependencies -DincludeScope=test -DoutputDirectory=target/sonar-libs
       - name: Save PR context for Sonar analysis
         if: github.event_name == 'pull_request'
         run: |
@@ -44,12 +50,20 @@ jobs:
           echo "${{ github.event.pull_request.number }}" > pr-context/pr_number
           echo "${{ github.event.pull_request.head.ref }}" > pr-context/head_ref
           echo "${{ github.event.pull_request.base.ref }}" > pr-context/base_ref
-      - name: Upload PR context
-        if: github.event_name == 'pull_request'
+      # A single tarball keeps .git (and other dotfiles) intact regardless of the upload
+      # action's hidden-file handling, and is faster to move than thousands of class files.
+      - name: Package Sonar analysis input
+        run: |
+          tar czf sonar-input.tgz \
+            .git pom.xml src/main/java src/test/java \
+            target/classes target/test-classes target/surefire-reports \
+            target/site/jacoco/jacoco.xml target/sonar-libs \
+            $([ -d pr-context ] && echo pr-context)
+      - name: Upload Sonar analysis input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: pr-context
-          path: pr-context/
+          name: sonar-input
+          path: sonar-input.tgz
           retention-days: 1
       # Docker image build and push lives in docker-publish.yml, which runs only on
       # pushes to master and version tags (never on pull requests or other branches).

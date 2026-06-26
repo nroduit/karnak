@@ -2,6 +2,12 @@ name: Sonar
 # Runs after the "Build" workflow completes. Using workflow_run means this job executes in the
 # base-repository context, so P_SONAR_TOKEN is available even for pull requests from forks and
 # Dependabot (where secrets are withheld from the triggering workflow).
+#
+# SECURITY: this privileged job must never execute untrusted fork code. It therefore does NOT
+# check out the PR head and does NOT run Maven (which would evaluate the fork's pom.xml and
+# tests). The Build workflow already compiled, tested and produced coverage in the unprivileged
+# fork context; here we only download those prebuilt outputs and run the standalone SonarScanner
+# CLI, which merely reads source and report files — it never runs the project's build.
 on:
   workflow_run:
     workflows: [ "Build" ]
@@ -15,14 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Download PR context
-        if: github.event.workflow_run.event == 'pull_request'
+      - name: Download analysis input
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: pr-context
-          path: pr-context
+          name: sonar-input
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Unpack analysis input
+        run: tar xzf sonar-input.tgz
       - name: Resolve analysis parameters
         id: ctx
         run: |
@@ -30,35 +36,41 @@ jobs:
             pr=$(cat pr-context/pr_number)
             head=$(cat pr-context/head_ref)
             base=$(cat pr-context/base_ref)
-            echo "checkout_ref=refs/pull/${pr}/head" >> "$GITHUB_OUTPUT"
             echo "sonar_args=-Dsonar.pullrequest.key=${pr} -Dsonar.pullrequest.branch=${head} -Dsonar.pullrequest.base=${base}" >> "$GITHUB_OUTPUT"
           else
-            echo "checkout_ref=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
             echo "sonar_args=-Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
           fi
-      - name: Setup NODE
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: 24
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        with:
-          ref: ${{ steps.ctx.outputs.checkout_ref }}
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-          persist-credentials: false
-      - name: Set up JDK for compilation
-        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
       - name: Cache SonarCloud packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-      - name: Build and analyze
+      - name: Install SonarScanner CLI
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SCANNER_VERSION: 8.0.1.6346
+          SCANNER_SHA256: 4bd40bf8411ed104853e94a3746ec92bc92845fde2b27dbf5c33fb5cfa8ecbe9
+        run: |
+          curl -sSLo scanner.zip "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SCANNER_VERSION}-linux-x64.zip"
+          echo "${SCANNER_SHA256}  scanner.zip" | sha256sum -c -
+          unzip -q scanner.zip
+          echo "${PWD}/sonar-scanner-${SCANNER_VERSION}-linux-x64/bin" >> "$GITHUB_PATH"
+      - name: Analyze
+        env:
           SONAR_TOKEN: ${{ secrets.P_SONAR_TOKEN }}
-        run: mvn -Pcoverage -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar ${{ steps.ctx.outputs.sonar_args }}
+        run: |
+          sonar-scanner \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=osirix-foundation-1 \
+            -Dsonar.projectKey=karnak \
+            -Dsonar.java.source=25 \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.test.exclusions='src/test/**/*' \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.java.test.binaries=target/test-classes \
+            -Dsonar.java.libraries='target/sonar-libs/*.jar' \
+            -Dsonar.junit.reportPaths=target/surefire-reports \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.coverage.exclusions='**/org/karnak/frontend/**/*' \
+            ${{ steps.ctx.outputs.sonar_args }}

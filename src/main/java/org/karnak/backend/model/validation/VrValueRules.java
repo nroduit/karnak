@@ -84,7 +84,7 @@ final class VrValueRules {
 
 	private static final Pattern IS = Pattern.compile("[+-]?\\d+");
 
-	private static final Pattern DS = Pattern.compile("[+-]?(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?");
+	private static final Pattern DS = Pattern.compile("[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?");
 
 	private static final Pattern CS = Pattern.compile("[A-Z0-9 _]*");
 

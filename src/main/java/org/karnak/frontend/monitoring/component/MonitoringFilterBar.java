@@ -12,13 +12,14 @@ package org.karnak.frontend.monitoring.component;
 import com.vaadin.componentfactory.DateRange;
 import com.vaadin.componentfactory.EnhancedDateRangePicker;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.enums.TransferStatusType;
@@ -138,7 +139,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 	}
 
 	private void applyPreset(RangePreset preset) {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("CET"));
 		LocalDateTime start;
 		LocalDateTime end;
 		switch (preset) {
@@ -172,12 +173,12 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			}
 		}
 		updating = true;
-		if (start == null && end == null) {
+		if (start == null) {
 			rangePicker.clear();
 		}
 		else {
 			rangePicker.setValue(
-					new DateRange(start == null ? null : start.toLocalDate(), end == null ? null : end.toLocalDate()));
+					new DateRange(start.toLocalDate(), end.toLocalDate()));
 		}
 		updating = false;
 		filter.setStart(start);
