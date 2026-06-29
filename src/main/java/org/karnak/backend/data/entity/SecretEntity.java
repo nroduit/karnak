@@ -21,9 +21,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity
 @Table(name = "secret")
+@NullUnmarked
 public class SecretEntity implements Serializable {
 
 	private Long id;

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -85,7 +86,7 @@ public abstract class AbstractProfileItem implements ProfileItem {
 	}
 
 	@Override
-	public ActionItem put(int tag, ActionItem action) {
+	public @Nullable ActionItem put(int tag, ActionItem action) {
 		Objects.requireNonNull(action);
 		return tagMap.put(tag, action);
 	}
@@ -107,7 +108,7 @@ public abstract class AbstractProfileItem implements ProfileItem {
 	 * Maps each included tag (and each excluded tag when {@code excluded} is non-null) to
 	 * the action.
 	 */
-	protected void mapTagsToAction(TagActionMap included, TagActionMap excluded, ActionItem action) {
+	protected void mapTagsToAction(TagActionMap included, @Nullable TagActionMap excluded, ActionItem action) {
 		if (tagEntities != null) {
 			tagEntities.forEach(tag -> included.put(tag.getTagValue(), action));
 		}

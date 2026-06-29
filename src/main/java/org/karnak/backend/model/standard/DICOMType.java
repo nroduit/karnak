@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.exception.StandardDICOMException;
 import org.karnak.backend.util.MetadataDICOMObject;
@@ -23,7 +24,7 @@ public class DICOMType {
 	private DICOMType() {
 	}
 
-	public static String getBySOP(Attributes dcm, int tag) {
+	public static @Nullable String getBySOP(Attributes dcm, int tag) {
 		final StandardDICOM standardDICOM = AppConfig.getInstance().getStandardDICOM();
 		final String sopUID = MetadataDICOMObject.getValue(dcm, Tag.SOPClassUID);
 		final String tagPath = MetadataDICOMObject.getTagPath(dcm, tag);

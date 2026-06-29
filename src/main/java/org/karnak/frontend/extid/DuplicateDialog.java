@@ -14,10 +14,12 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import java.util.Collection;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.Patient;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
+@NullUnmarked
 public class DuplicateDialog extends Dialog {
 
 	private final Collection<Patient> duplicateList;

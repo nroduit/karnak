@@ -10,6 +10,7 @@
 package org.karnak.backend.exception;
 
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
 
 @Getter
@@ -28,7 +29,7 @@ public final class AbortException extends IllegalStateException {
 	}
 
 	@Override
-	public String toString() {
+	public @Nullable String toString() {
 		return getMessage();
 	}
 

@@ -10,6 +10,7 @@
 package org.karnak.backend.model.profiles;
 
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.Remove;
@@ -24,12 +25,12 @@ public class UpdateUIDsProfile extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		return tagMap.get(tag);
 	}
 
 	@Override
-	public ActionItem put(int tag, ActionItem action) {
+	public @Nullable ActionItem put(int tag, ActionItem action) {
 		if (!(action instanceof UID) && !(action instanceof Remove) && !(action instanceof ReplaceNull)) {
 			throw new IllegalStateException(String.format("The action %s is not consistent !", action));
 		}

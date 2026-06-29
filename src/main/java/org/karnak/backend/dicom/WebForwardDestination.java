@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 import org.weasis.core.util.StreamUtil;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomProgress;
@@ -33,23 +34,24 @@ public class WebForwardDestination extends ForwardDestination {
 		this(fwdNode, requestURL, null);
 	}
 
-	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL, List<AttributeEditor> editors) {
+	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL, @Nullable List<AttributeEditor> editors) {
 		this(fwdNode, requestURL, null, editors);
 	}
 
-	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL, DicomProgress progress,
-			List<AttributeEditor> editors) {
+	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL, @Nullable DicomProgress progress,
+			@Nullable List<AttributeEditor> editors) {
 		this(fwdNode, requestURL, null, progress, editors);
 	}
 
-	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL, Map<String, String> headers,
-			DicomProgress progress, List<AttributeEditor> editors) {
+	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL, @Nullable Map<String, String> headers,
+			@Nullable DicomProgress progress, @Nullable List<AttributeEditor> editors) {
 		this(null, fwdNode, requestURL, headers, progress, editors, null, true, HttpClient.Version.HTTP_1_1);
 	}
 
-	public WebForwardDestination(Long id, ForwardDicomNode fwdNode, String requestURL, Map<String, String> headers,
-			DicomProgress progress, List<AttributeEditor> editors, String outputTransferSyntax,
-			boolean transcodeOnlyUncompressed, HttpClient.Version httpVersion) {
+	public WebForwardDestination(@Nullable Long id, ForwardDicomNode fwdNode, String requestURL,
+			@Nullable Map<String, String> headers, @Nullable DicomProgress progress,
+			@Nullable List<AttributeEditor> editors, @Nullable String outputTransferSyntax,
+			boolean transcodeOnlyUncompressed, HttpClient.@Nullable Version httpVersion) {
 		super(id, editors);
 		this.callingNode = fwdNode;
 		this.state = new DicomState(progress == null ? new DicomProgress() : progress);
@@ -66,13 +68,13 @@ public class WebForwardDestination extends ForwardDestination {
 		setTranscodeOnlyUncompressed(transcodeOnlyUncompressed);
 	}
 
-	public WebForwardDestination(ForwardDicomNode fwdNode, DicomStowRS uploadManager, DicomProgress progress,
-			List<AttributeEditor> editors) {
+	public WebForwardDestination(ForwardDicomNode fwdNode, DicomStowRS uploadManager, @Nullable DicomProgress progress,
+			@Nullable List<AttributeEditor> editors) {
 		this(null, fwdNode, uploadManager, progress, editors);
 	}
 
-	public WebForwardDestination(Long id, ForwardDicomNode fwdNode, DicomStowRS uploadManager, DicomProgress progress,
-			List<AttributeEditor> editors) {
+	public WebForwardDestination(@Nullable Long id, ForwardDicomNode fwdNode, DicomStowRS uploadManager,
+			@Nullable DicomProgress progress, @Nullable List<AttributeEditor> editors) {
 		super(id, editors);
 		this.callingNode = fwdNode;
 		this.state = new DicomState(progress == null ? new DicomProgress() : progress);

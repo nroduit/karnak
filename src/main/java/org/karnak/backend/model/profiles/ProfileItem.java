@@ -11,6 +11,7 @@ package org.karnak.backend.model.profiles;
 
 import java.util.List;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
@@ -18,9 +19,9 @@ import org.karnak.backend.model.profilepipe.HMAC;
 
 public interface ProfileItem {
 
-	ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac);
+	@Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac);
 
-	ActionItem put(int tag, ActionItem action);
+	@Nullable ActionItem put(int tag, ActionItem action);
 
 	ActionItem remove(int tag);
 

@@ -55,7 +55,7 @@ public class TransferMonitoringService {
 
 	private static final String REASON_JOIN = "; ";
 
-	@Value("${monitoring.max-history-days:7}")
+	@Value("${monitoring.max-history-days:30}")
 	private int maxHistoryDays;
 
 	private final TransferSeriesStatusRepo seriesRepo;

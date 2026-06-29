@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.AttributeEditor;
@@ -23,6 +24,7 @@ import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.util.StoreFromStreamSCU;
 
 @Generated()
+@NullUnmarked
 public class DicomForwardDestination extends ForwardDestination {
 
 	/**

@@ -10,51 +10,53 @@
 package org.karnak.backend.service.profilepipe;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public class MaskStationCondition {
 
-	private String stationName;
+	private @Nullable String stationName;
 
-	private Long imageWidth;
+	private @Nullable Long imageWidth;
 
-	private Long imageHeight;
+	private @Nullable Long imageHeight;
 
-	public MaskStationCondition(String stationName, Long imageWidth, Long imageHeight) {
+	public MaskStationCondition(@Nullable String stationName, @Nullable Long imageWidth, @Nullable Long imageHeight) {
 		this.stationName = stationName;
 		this.imageWidth = imageWidth;
 		this.imageHeight = imageHeight;
 	}
 
-	public MaskStationCondition(String stationName, String imageWidth, String imageHeight) {
+	public MaskStationCondition(@Nullable String stationName, @Nullable String imageWidth,
+			@Nullable String imageHeight) {
 		this(stationName, imageWidth != null ? Long.valueOf(imageWidth) : null,
 				imageHeight != null ? Long.valueOf(imageHeight) : null);
 	}
 
-	public MaskStationCondition(String stationName) {
+	public MaskStationCondition(@Nullable String stationName) {
 		this(stationName, (Long) null, null);
 	}
 
-	public String getStationName() {
+	public @Nullable String getStationName() {
 		return stationName;
 	}
 
-	public void setStationName(String stationName) {
+	public void setStationName(@Nullable String stationName) {
 		this.stationName = stationName;
 	}
 
-	public Long getImageWidth() {
+	public @Nullable Long getImageWidth() {
 		return imageWidth;
 	}
 
-	public void setImageWidth(Long imageWidth) {
+	public void setImageWidth(@Nullable Long imageWidth) {
 		this.imageWidth = imageWidth;
 	}
 
-	public Long getImageHeight() {
+	public @Nullable Long getImageHeight() {
 		return imageHeight;
 	}
 
-	public void setImageHeight(Long imageHeight) {
+	public void setImageHeight(@Nullable Long imageHeight) {
 		this.imageHeight = imageHeight;
 	}
 

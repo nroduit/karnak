@@ -10,11 +10,13 @@
 package org.karnak.backend.enums;
 
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Enum for the transfer status
  */
 @Getter
+@NullUnmarked
 public enum TransferStatusType {
 
 	ALL(null, null, "All"), SENT(true, false, "Sent"), NOT_SENT(false, null, "Not Sent"),

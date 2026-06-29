@@ -12,10 +12,12 @@ package org.karnak.backend.model.image;
 import lombok.Getter;
 import lombok.Setter;
 import org.dcm4che3.img.util.Editable;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.opencv.data.PlanarImage;
 
 @Setter
 @Getter
+@NullUnmarked
 public class TransformedPlanarImage {
 
 	private Editable<PlanarImage> editablePlanarImage;

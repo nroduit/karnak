@@ -42,7 +42,9 @@ public class SecurityConfiguration {
 			// Turns on/off authorizations
 			.authorizeHttpRequests(authorize -> authorize
 				// Application static resources - no authentication required
-				.requestMatchers("/img/**", "/icons/**")
+				// (/sw.js is the tombstone service worker that unregisters any stale
+				// PWA worker left over from older builds)
+				.requestMatchers("/img/**", "/sw.js")
 				.permitAll()
 				// Deny the shutdown endpoint before permitting the other actuator
 				// endpoints
@@ -78,7 +80,7 @@ public class SecurityConfiguration {
 	public WebSecurityCustomizer webSecurityCustomizer() {
 		// Access to static resources, bypassing Spring security.
 		return web -> web.ignoring()
-			.requestMatchers("/VAADIN/**", "/img/**", "/icons/**", "/sw.js", "/favicon.ico", "/manifest.webmanifest",
+			.requestMatchers("/VAADIN/**", "/img/**", "/sw.js", "/favicon.ico", "/manifest.webmanifest",
 					"/offline.html", "/sw-runtime-resources-precache.js");
 	}
 

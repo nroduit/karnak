@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.validation.StudyConformanceAccumulator.SeriesData;
 
 /**
@@ -21,6 +22,7 @@ import org.karnak.backend.model.validation.StudyConformanceAccumulator.SeriesDat
  * uniformity across the instances/series, SOP Class / Modality coherence and transfer
  * syntax acceptability.
  */
+@NullUnmarked
 final class StudyConsistencyChecker {
 
 	private StudyConsistencyChecker() {

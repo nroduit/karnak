@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 public class Series {
 
@@ -32,7 +33,7 @@ public class Series {
 
 	@Getter
 	@Setter
-	private LocalDateTime seriesDate;
+	private @Nullable LocalDateTime seriesDate;
 
 	public Series(String seriesInstanceUID) {
 		this.seriesInstanceUID = Objects.requireNonNull(seriesInstanceUID, "seriesInstanceUID is null");
@@ -44,11 +45,11 @@ public class Series {
 		SopInstance.addSopInstance(sopInstanceMap, s);
 	}
 
-	public SopInstance removeSopInstance(String sopUID) {
+	public @Nullable SopInstance removeSopInstance(String sopUID) {
 		return SopInstance.removeSopInstance(sopInstanceMap, sopUID);
 	}
 
-	public SopInstance getSopInstance(String sopUID) {
+	public @Nullable SopInstance getSopInstance(String sopUID) {
 		return SopInstance.getSopInstance(sopInstanceMap, sopUID);
 	}
 

@@ -14,6 +14,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
@@ -28,17 +29,18 @@ import java.util.WeakHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.cache.PatientClient;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.component.WarningConfirmDialog;
-import org.vaadin.klaudeta.PaginatedGrid;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
-public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
+@NullUnmarked
+public class ExternalIDGrid extends Grid<Patient> {
 
 	private static final String ERROR_MESSAGE_PATIENT = "Length must be between 1 and 50.";
 
@@ -49,6 +51,10 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 	private static final String LABEL_FILTER = "Filter";
 
 	private final Binder<Patient> binder;
+
+	private final PatientFilter patientFilter = new PatientFilter();
+
+	private GridListDataView<Patient> dataView;
 
 	@Getter
 	@Setter
@@ -113,21 +119,16 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 	public ExternalIDGrid() {
 		binder = new Binder<>(Patient.class);
-		List<Patient> patientList = new ArrayList<>();
 		this.externalIDCache = AppConfig.getInstance().getExternalIDCache();
-		// TODO: to use instead of the current multiple filters..
-		PatientFilter patientFilter = new PatientFilter();
 
 		setSelectionMode(Grid.SelectionMode.MULTI);
-
-		setPageSize(10);
-		setPaginatorSize(2);
-
 		setSizeFull();
 		getElement().addEventListener("keyup", event -> editor.cancel())
 			.setFilter("event.key === 'Escape' || event.key === 'Esc'");
 
-		setItems(patientList);
+		// In-memory data view filtered live through the PatientFilter predicate
+		dataView = setItems(patientsListInCache);
+		dataView.setFilter(this::matchesFilter);
 		setElements();
 		setBinder();
 		readAllCacheValue();
@@ -292,17 +293,15 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 	public void readAllCacheValue() {
 		if (externalIDCache != null) {
-			Collection<Patient> patients = externalIDCache.getAll();
-			patientsListInCache = new ArrayList<>();
-			for (final Patient patient : patients) {
+			patientsListInCache.clear();
+			for (final Patient patient : externalIDCache.getAll()) {
 				if (projectEntity != null && patient.getProjectID() != null
 						&& patient.getProjectID().equals(projectEntity.getId())) {
 					patientsListInCache.add(patient);
 				}
 			}
-			setItems(patientsListInCache);
 		}
-		refreshPaginator();
+		dataView.refreshAll();
 	}
 
 	public void addPatient(Patient newPatient) {
@@ -327,44 +326,24 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 	}
 
 	public void checkAndUpdateAllFilters() {
-		// TODO: replace by PatientFilter which will contains all filters and remove
-		// extidFilter, patientIdFilter, patientFirstNameFilter, patientLastNameFilter,
-		// issuerOfPatientIDFilter
-		List<Patient> filterList = patientsListInCache.stream().toList();
+		patientFilter.setExtidFilter(extidFilter.getValue());
+		patientFilter.setPatientIdFilter(patientIdFilter.getValue());
+		patientFilter.setPatientFirstNameFilter(patientFirstNameFilter.getValue());
+		patientFilter.setPatientLastNameFilter(patientLastNameFilter.getValue());
+		patientFilter.setIssuerOfPatientIDFilter(issuerOfPatientIDFilter.getValue());
+		dataView.refreshAll();
+	}
 
-		if (!extidFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPseudonym().contains(extidFilter.getValue()))
-				.toList();
-		}
+	private boolean matchesFilter(Patient patient) {
+		return matches(patient.getPseudonym(), patientFilter.getExtidFilter())
+				&& matches(patient.getPatientId(), patientFilter.getPatientIdFilter())
+				&& matches(patient.getPatientFirstName(), patientFilter.getPatientFirstNameFilter())
+				&& matches(patient.getPatientLastName(), patientFilter.getPatientLastNameFilter())
+				&& matches(patient.getIssuerOfPatientId(), patientFilter.getIssuerOfPatientIDFilter());
+	}
 
-		if (!patientIdFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPatientId().contains(patientIdFilter.getValue()))
-				.toList();
-		}
-
-		if (!patientFirstNameFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPatientFirstName()
-					.contains(patientFirstNameFilter.getValue()))
-				.toList();
-		}
-
-		if (!patientLastNameFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPatientLastName().contains(patientLastNameFilter.getValue()))
-				.toList();
-		}
-
-		if (!issuerOfPatientIDFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getIssuerOfPatientId()
-					.contains(issuerOfPatientIDFilter.getValue()))
-				.toList();
-		}
-
-		setItems(filterList);
+	private static boolean matches(String value, String filter) {
+		return StringUtils.isEmpty(filter) || (value != null && value.contains(filter));
 	}
 
 	public void setEnabledDeleteSelectedPatientsButton(Boolean value) {

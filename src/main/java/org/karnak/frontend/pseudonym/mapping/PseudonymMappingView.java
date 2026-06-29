@@ -20,6 +20,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.Patient;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.pseudonym.mapping.component.MappingInputComponent;
@@ -32,6 +33,7 @@ import org.weasis.core.util.annotations.Generated;
 @Tag("mapping-pseudonym-view")
 @RolesAllowed("investigator")
 @Generated()
+@NullUnmarked
 public class PseudonymMappingView extends HorizontalLayout {
 
 	public static final String VIEW_NAME = "Pseudonym mapping ";

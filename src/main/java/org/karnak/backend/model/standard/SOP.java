@@ -11,8 +11,10 @@ package org.karnak.backend.model.standard;
 
 import java.util.List;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 
 @Getter
+@NullUnmarked
 public class SOP {
 
 	private final String UID;

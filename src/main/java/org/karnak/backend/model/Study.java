@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 public class Study {
 
@@ -32,19 +33,19 @@ public class Study {
 
 	@Setter
 	@Getter
-	private String[] otherPatientIDs;
+	private String @Nullable [] otherPatientIDs;
 
 	@Setter
 	@Getter
-	private String studyDescription;
+	private @Nullable String studyDescription;
 
 	@Setter
 	@Getter
-	private String accessionNumber;
+	private @Nullable String accessionNumber;
 
 	@Setter
 	@Getter
-	private LocalDateTime studyDate;
+	private @Nullable LocalDateTime studyDate;
 
 	@Setter
 	@Getter
@@ -63,7 +64,7 @@ public class Study {
 		}
 	}
 
-	public Series removeSeries(String seriesUID) {
+	public @Nullable Series removeSeries(String seriesUID) {
 		return seriesMap.remove(seriesUID);
 	}
 
@@ -71,7 +72,7 @@ public class Study {
 		return seriesMap.values().stream().allMatch(Series::isEmpty);
 	}
 
-	public Series getSeries(String seriesUID) {
+	public @Nullable Series getSeries(String seriesUID) {
 		return seriesMap.get(seriesUID);
 	}
 

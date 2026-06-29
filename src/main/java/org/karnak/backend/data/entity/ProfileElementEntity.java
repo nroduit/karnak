@@ -28,12 +28,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.converter.ArgumentToMapConverter;
 import org.karnak.backend.data.converter.TagListToStringListConverter;
 
 @Entity(name = "ProfileElement")
 @Table(name = "profile_element")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@NullUnmarked
 public class ProfileElementEntity implements Serializable {
 
 	private static final long serialVersionUID = 818925943276758147L;

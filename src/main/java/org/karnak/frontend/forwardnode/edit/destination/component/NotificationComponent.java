@@ -20,6 +20,7 @@ import com.vaadin.flow.data.binder.ValidationResult;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.constant.Notification;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.converter.HStringToIntegerConverter;
@@ -30,6 +31,7 @@ import org.weasis.core.util.annotations.Generated;
  * Create a notification component
  */
 @Generated()
+@NullUnmarked
 public class NotificationComponent extends VerticalLayout {
 
 	// Components

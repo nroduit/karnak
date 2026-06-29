@@ -10,11 +10,13 @@
 package org.karnak.backend.model.profilepipe;
 
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.dicom.util.Hmac;
 
 /**
  * De-identification HMAC adding a {@link HashContext} on top of the weasis {@link Hmac}.
  */
+@NullUnmarked
 public class HMAC extends Hmac {
 
 	@Getter

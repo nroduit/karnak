@@ -11,17 +11,18 @@ package org.karnak.backend.model.action;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilepipe.HMAC;
 
 public class Add extends AbstractAction {
 
-	private String privateCreator;
+	private @Nullable String privateCreator;
 
 	public Add(String symbol, int newTag, VR vr, String dummyValue) {
 		super(symbol, newTag, vr, dummyValue);
 	}
 
-	public Add(String symbol, int newTag, VR vr, String dummyValue, String privateCreator) {
+	public Add(String symbol, int newTag, @Nullable VR vr, String dummyValue, @Nullable String privateCreator) {
 		super(symbol, newTag, vr, dummyValue);
 		this.privateCreator = privateCreator;
 	}

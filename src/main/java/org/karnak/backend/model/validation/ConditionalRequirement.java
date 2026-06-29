@@ -9,6 +9,8 @@
  */
 package org.karnak.backend.model.validation;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A curated machine-evaluable form of a DICOM Type 1C/2C "Required if …" condition, keyed
  * in the curated rules file by {@code moduleId/tagPath}. When {@link #getRequiredWhen()}
@@ -19,9 +21,9 @@ package org.karnak.backend.model.validation;
  */
 public class ConditionalRequirement {
 
-	private Condition requiredWhen;
+	private @Nullable Condition requiredWhen;
 
-	public Condition getRequiredWhen() {
+	public @Nullable Condition getRequiredWhen() {
 		return requiredWhen;
 	}
 

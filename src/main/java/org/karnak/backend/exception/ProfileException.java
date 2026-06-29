@@ -10,11 +10,12 @@
 package org.karnak.backend.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 
 @Slf4j
 public class ProfileException extends RuntimeException {
 
-	public ProfileException(String message) {
+	public ProfileException(@Nullable String message) {
 		super(message);
 		log.error(message);
 	}

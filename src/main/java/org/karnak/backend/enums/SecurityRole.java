@@ -11,6 +11,7 @@ package org.karnak.backend.enums;
 
 import java.util.Arrays;
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 public enum SecurityRole {
@@ -32,7 +33,7 @@ public enum SecurityRole {
 	 * @param role Role of the enum
 	 * @return SecurityRole found
 	 */
-	public static SecurityRole fromCode(final String role) {
+	public static @Nullable SecurityRole fromCode(final String role) {
 		if (role != null) {
 			return Arrays.stream(SecurityRole.values())
 				.filter(r -> role.trim().equalsIgnoreCase(r.getRole()))
@@ -47,7 +48,7 @@ public enum SecurityRole {
 	 * @param type Type of the enum
 	 * @return SecurityRole found
 	 */
-	public static SecurityRole fromType(final String type) {
+	public static @Nullable SecurityRole fromType(final String type) {
 		if (type != null) {
 			return Arrays.stream(SecurityRole.values())
 				.filter(r -> type.trim().equalsIgnoreCase(r.getType()))

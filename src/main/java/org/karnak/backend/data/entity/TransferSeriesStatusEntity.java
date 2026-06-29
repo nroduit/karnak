@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.util.DateFormat;
 
 /**
@@ -34,6 +35,7 @@ import org.karnak.backend.util.DateFormat;
  * transferred; the study/series context is captured once on first occurrence. The
  * per-reason error breakdown lives in {@link TransferSeriesReasonEntity}.
  */
+@NullUnmarked
 @Entity(name = "TransferSeriesStatus")
 @Table(name = "transfer_series_status")
 public class TransferSeriesStatusEntity implements Serializable {

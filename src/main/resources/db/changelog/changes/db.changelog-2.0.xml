@@ -1,0 +1,90 @@
+
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Virtual (report-only) destinations -->
+  <changeSet author="karnak" id="2.0-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="virtual_destination"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="virtual_destination" type="BOOLEAN" defaultValue='false'>
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <!--
+    DICOM Tools rework: two-level DICOM node grouping (node_type = purpose, node_group =
+    organizational group) and a persisted store for DICOMweb endpoints.
+  -->
+
+  <!-- Organizational group for a DICOM node (orthogonal to node_type, which is now the purpose) -->
+  <changeSet author="karnak" id="2.0-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="dicom_node_config" columnName="node_group"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="dicom_node_config">
+      <column name="node_group" type="VARCHAR(50)"/>
+    </addColumn>
+  </changeSet>
+
+  <!--
+    Existing custom node types were really group labels: move them to node_group and reset the
+    purpose to WORKSTATION. WORKSTATION and WORKLIST keep their meaning (no group).
+  -->
+  <changeSet author="karnak" id="2.0-3">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="dicom_node_config" columnName="node_group"/>
+    </preConditions>
+    <sql>UPDATE dicom_node_config SET node_group = node_type, node_type = 'WORKSTATION' WHERE node_type NOT IN ('WORKSTATION', 'WORKLIST')</sql>
+  </changeSet>
+
+  <!-- Groups are now implicit (distinct node_group values); the explicit group table is obsolete -->
+  <changeSet author="karnak" id="2.0-4">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="dicom_node_group"/>
+    </preConditions>
+    <dropTable tableName="dicom_node_group"/>
+  </changeSet>
+
+  <!-- Persisted DICOMweb endpoints: a base URL and the DICOMweb services to probe (empty = all) -->
+  <changeSet author="karnak" id="2.0-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="web_destination"/>
+      </not>
+    </preConditions>
+    <createTable tableName="web_destination">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="web_destination_pkey"/>
+      </column>
+      <column name="description" type="VARCHAR(255)"/>
+      <column name="url" type="VARCHAR(1024)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="services" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="group_name" type="VARCHAR(50)"/>
+    </createTable>
+  </changeSet>
+
+  <!--
+    "Ignore the Issuer of Patient ID" (cache lookup) is now active by default. Flip the
+    existing destinations to true so they behave like newly created ones.
+  -->
+  <changeSet author="karnak" id="2.0-6">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="destination" columnName="skip_issuer_of_patient_id"/>
+    </preConditions>
+    <sql>UPDATE destination SET skip_issuer_of_patient_id = true WHERE skip_issuer_of_patient_id = false</sql>
+  </changeSet>
+
+</databaseChangeLog>

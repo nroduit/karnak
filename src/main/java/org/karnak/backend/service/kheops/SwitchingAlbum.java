@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.json.JSONObject;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.api.KheopsApi;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.KheopsAlbumsEntity;
@@ -49,7 +50,7 @@ public class SwitchingAlbum {
 		kheopsAPI = new KheopsApi();
 	}
 
-	private static HMAC generateHMAC(DestinationEntity destinationEntity) {
+	private static @Nullable HMAC generateHMAC(DestinationEntity destinationEntity) {
 		if (destinationEntity.isDesidentification()) {
 			ProjectEntity projectEntity = destinationEntity.getDeIdentificationProjectEntity();
 			SecretEntity secretEntity = projectEntity.retrieveActiveSecret();
@@ -58,8 +59,8 @@ public class SwitchingAlbum {
 		return null;
 	}
 
-	private static String hashUIDonDeidentification(DestinationEntity destinationEntity, String inputUID, HMAC hmac,
-			int tag) {
+	private static String hashUIDonDeidentification(DestinationEntity destinationEntity, String inputUID,
+			@Nullable HMAC hmac, int tag) {
 		return destinationEntity.isDesidentification() && hmac != null
 				&& getAction(destinationEntity, tag) instanceof UID ? hmac.uidHash(inputUID) : inputUID;
 	}
@@ -77,7 +78,7 @@ public class SwitchingAlbum {
 		return validMinScope.stream().allMatch(scope::contains);
 	}
 
-	public static ActionItem getAction(DestinationEntity destinationEntity, int tag) {
+	public static @Nullable ActionItem getAction(DestinationEntity destinationEntity, int tag) {
 		if (destinationEntity.getDeIdentificationProjectEntity() != null
 				&& destinationEntity.getDeIdentificationProjectEntity().getProfileEntity() != null) {
 			List<ProfileItem> profileItems = Profile
@@ -155,6 +156,9 @@ public class SwitchingAlbum {
 		String urlAPI = kheopsAlbumsEntity.getUrlAPI();
 
 		List<MetadataSwitching> metadataToDo = switchingAlbumToDo.get(id);
+		if (metadataToDo == null) {
+			return;
+		}
 		metadataToDo.forEach(metadataSwitching -> {
 			if (metadataSwitching.getSopInstanceUID().equals(sopInstanceUID) && !metadataSwitching.isApplied()) {
 				int status = shareSerie(urlAPI, metadataSwitching.getStudyInstanceUID(),

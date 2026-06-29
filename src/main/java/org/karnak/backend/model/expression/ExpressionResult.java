@@ -11,6 +11,7 @@ package org.karnak.backend.model.expression;
 
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.Nullable;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -30,7 +31,8 @@ public class ExpressionResult {
 			context.setVariable("VR", VR.class);
 			context.setVariable("Tag", Tag.class);
 			final Expression exp = parser.parseExpression(condition);
-			return exp.getValue(context, typeOfReturn);
+			@Nullable Object result = exp.getValue(context, typeOfReturn);
+			return result != null ? result : "";
 		}
 		catch (final Exception e) {
 			throw new IllegalStateException(

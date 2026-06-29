@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -37,6 +38,7 @@ import org.karnak.frontend.profile.component.errorprofile.ProfileError;
  * element through {@link ProfilePipeService#validateElement} before persisting it. Tags
  * are filled with the {@link TagPickerField} (search / browse the DICOM dictionary).
  */
+@NullUnmarked
 public class ProfileElementEditor extends Dialog {
 
 	/** The element types that can be created / edited from the UI. */

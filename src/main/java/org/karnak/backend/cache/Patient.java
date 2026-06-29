@@ -12,7 +12,9 @@ package org.karnak.backend.cache;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import org.jspecify.annotations.NullUnmarked;
 
+@NullUnmarked
 public class Patient implements Serializable {
 
 	@Serial

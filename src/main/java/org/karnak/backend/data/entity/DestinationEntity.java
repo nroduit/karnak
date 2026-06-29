@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.group.GroupSequenceProvider;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider.DestinationDicomGroup;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider.DestinationStowGroup;
@@ -49,6 +50,7 @@ import org.karnak.backend.enums.PseudonymType;
 @GroupSequenceProvider(value = DestinationGroupSequenceProvider.class)
 @Entity(name = "Destination")
 @Table(name = "destination")
+@NullUnmarked
 public class DestinationEntity implements Serializable {
 
 	@Serial
@@ -120,6 +122,13 @@ public class DestinationEntity implements Serializable {
 	// enhanced multiframe functional groups, …) instead of only the first one.
 	// Off by default: deeper recursion enlarges the snapshot kept in memory.
 	private boolean deepSequenceValidation;
+
+	// When true, this destination is a virtual "report-only" destination: the
+	// de-identified / tag-morphed dataset is validated and a conformance report is
+	// emailed, but nothing is forwarded to a real node (the DICOM is routed to
+	// devnull). Delivery settings (AETitle/host/port or URL, transfer syntax,
+	// notification, …) are therefore irrelevant and disabled in the UI.
+	private boolean virtualDestination;
 
 	// list of emails (comma separated) the conformance report is sent to. When
 	// blank, the notification email list (notify) is used as a fallback.
@@ -209,7 +218,7 @@ public class DestinationEntity implements Serializable {
 		this.description = "";
 		this.desidentification = false;
 		this.issuerByDefault = "";
-		this.skipIssuerOfPatientId = false;
+		this.skipIssuerOfPatientId = true;
 		this.pseudonymType = PseudonymType.CACHE_EXTID;
 		this.tag = null;
 		this.delimiter = null;
@@ -610,6 +619,14 @@ public class DestinationEntity implements Serializable {
 
 	public void setDeepSequenceValidation(boolean deepSequenceValidation) {
 		this.deepSequenceValidation = deepSequenceValidation;
+	}
+
+	public boolean isVirtualDestination() {
+		return virtualDestination;
+	}
+
+	public void setVirtualDestination(boolean virtualDestination) {
+		this.virtualDestination = virtualDestination;
 	}
 
 	public String getConformanceReportNotify() {

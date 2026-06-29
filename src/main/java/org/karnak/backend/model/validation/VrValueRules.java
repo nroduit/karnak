@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Value-content rules per Value Representation (DICOM PS3.5 §6.2, Table 6.2-1): maximum
@@ -26,6 +27,7 @@ import org.dcm4che3.data.VR;
  * Values are expected to be already stripped of DICOM trailing padding. Range-matching
  * forms (used in queries, not stored objects) are not accepted.
  */
+@NullUnmarked
 final class VrValueRules {
 
 	/** Maximum length in characters, per value, for the bounded string VRs. */

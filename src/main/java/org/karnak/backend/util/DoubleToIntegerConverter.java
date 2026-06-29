@@ -12,7 +12,9 @@ package org.karnak.backend.util;
 import com.vaadin.flow.data.binder.Result;
 import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.converter.Converter;
+import org.jspecify.annotations.NullUnmarked;
 
+@NullUnmarked
 public class DoubleToIntegerConverter implements Converter<Double, Integer> {
 
 	@Override

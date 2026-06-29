@@ -14,9 +14,11 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 
 @Getter
 @Setter
+@NullUnmarked
 public class ProfileElementBody {
 
 	private String name;

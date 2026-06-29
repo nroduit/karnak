@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.exception.SOPNotFoundException;
 import org.karnak.backend.model.dicominnolitics.JsonCIOD;
 import org.karnak.backend.model.dicominnolitics.JsonCIODtoModule;
@@ -77,7 +79,7 @@ public class SOPS {
 		return new ArrayList<>(sopByUid.keySet());
 	}
 
-	public SOP getSOP(String uid) {
+	public @Nullable SOP getSOP(String uid) {
 		return sopByUid.get(uid);
 	}
 

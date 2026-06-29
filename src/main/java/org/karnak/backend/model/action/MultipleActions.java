@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.exception.StandardDICOMException;
 import org.karnak.backend.model.profilepipe.HMAC;
@@ -84,7 +85,10 @@ public class MultipleActions extends AbstractAction {
 			.toList();
 	}
 
-	private ActionItem chooseAction(String sopUID, String currentType) {
+	private ActionItem chooseAction(String sopUID, @Nullable String currentType) {
+		if (currentType == null) {
+			return defaultAction();
+		}
 		return switch (symbol) {
 			case "Z/D" -> dummyOrReplaceNull(currentType);
 			case "X/D" -> dummyOrRemove(currentType);

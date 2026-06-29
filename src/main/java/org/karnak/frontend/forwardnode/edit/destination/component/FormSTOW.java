@@ -19,6 +19,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.dom.Style;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.BoxShadowComponent;
 import org.karnak.frontend.extid.WarningDialog;
@@ -28,6 +29,7 @@ import org.karnak.frontend.util.UIS;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
+@NullUnmarked
 public class FormSTOW extends VerticalLayout {
 
 	private Binder<DestinationEntity> binder;
@@ -130,6 +132,41 @@ public class FormSTOW extends VerticalLayout {
 		setElements();
 		setBinder();
 		configureGenerateHeadersButton();
+
+		// When the destination becomes virtual (report-only) the delivery fields are
+		// irrelevant: disable them. Re-validate on user toggle so a stale mandatory-URL
+		// error clears once the field no longer applies.
+		conformanceReportComponent.getVirtualDestination().addValueChangeListener(event -> {
+			updateVirtualState();
+			if (event.isFromClient()) {
+				binder.validate();
+			}
+		});
+	}
+
+	/**
+	 * Enable or disable the delivery-related fields depending on whether the destination
+	 * is virtual (report-only). Kept package-visible so the parent view can re-apply it
+	 * after reading a bean.
+	 */
+	public void updateVirtualState() {
+		boolean delivery = !isVirtual();
+		url.setEnabled(delivery);
+		headers.setEnabled(delivery);
+		generateAuthorizationHeaderButton.setEnabled(delivery);
+		http2.setEnabled(delivery);
+		switchingAlbumsView.setEnabled(delivery);
+		transferSyntaxComponent.setEnabled(delivery);
+		notificationComponent.setEnabled(delivery);
+		if (!delivery) {
+			// Transcode is otherwise driven by the selected transfer syntax; only force
+			// it off for a virtual destination.
+			transcodeOnlyUncompressedComponent.setEnabled(false);
+		}
+	}
+
+	private boolean isVirtual() {
+		return Boolean.TRUE.equals(conformanceReportComponent.getVirtualDestination().getValue());
 	}
 
 	private void configureGenerateHeadersButton() {
@@ -168,8 +205,10 @@ public class FormSTOW extends VerticalLayout {
 
 	private void setBinder() {
 		binder.forField(description).bind(DestinationEntity::getDescription, DestinationEntity::setDescription);
+		// A virtual (report-only) destination forwards nothing, so the URL is not
+		// mandatory while "virtual" is checked.
 		binder.forField(url)
-			.withValidator(StringUtils::isNotBlank, "URL is mandatory")
+			.withValidator(value -> isVirtual() || StringUtils.isNotBlank(value), "URL is mandatory")
 			.bind(DestinationEntity::getUrl, DestinationEntity::setUrl);
 
 		binder.forField(headers).bind(DestinationEntity::getHeaders, DestinationEntity::setHeaders);

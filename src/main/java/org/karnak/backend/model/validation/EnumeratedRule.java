@@ -10,6 +10,7 @@
 package org.karnak.backend.model.validation;
 
 import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * The curated allowed-value set for an attribute. {@code closed} distinguishes a DICOM
@@ -18,6 +19,7 @@ import java.util.List;
  * are permitted, so an unexpected one is only worth a WARNING). The fields are populated
  * by Gson reflection.
  */
+@NullUnmarked
 public class EnumeratedRule {
 
 	private List<String> values;

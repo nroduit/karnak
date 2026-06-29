@@ -25,9 +25,11 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "ForwardNode")
 @Table(name = "forward_node")
+@NullUnmarked
 public class ForwardNodeEntity implements Serializable {
 
 	private static final long serialVersionUID = 2095439136652046994L;

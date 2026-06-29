@@ -11,6 +11,7 @@ package org.karnak.backend.model.validation;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Parsed DICOM Value Multiplicity specification, e.g. {@code 1}, {@code 1-n},
@@ -21,6 +22,7 @@ import java.util.regex.Pattern;
  * @param factor the value count must be a multiple of this factor (e.g. 2 for
  * {@code 2-2n}), 1 when unconstrained
  */
+@NullUnmarked
 public record VmSpec(int min, int max, int factor) {
 
 	// "1", "16", "1-2", "1-99", "1-n", "2-2n", "3-3n"

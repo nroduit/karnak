@@ -10,10 +10,12 @@
 package org.karnak.backend.util;
 
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.cache.PatientClient;
 import org.karnak.backend.model.profilepipe.PatientMetadata;
 
+@NullUnmarked
 public class PatientClientUtil {
 
 	private PatientClientUtil() {

@@ -11,6 +11,7 @@ package org.karnak.backend.config;
 
 import java.util.Objects;
 import java.util.Properties;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.util.SystemPropertyUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,22 +24,26 @@ public class EmailConfig {
 
 	@Bean
 	public JavaMailSender getJavaMailSender() {
-		String mailSmtpPort = SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_PORT", "0");
-		String mailSmtpUser = SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_USER", null);
-		String mailAuthType = SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_TYPE", null);
+		String mailSmtpPort = Objects
+			.requireNonNullElse(SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_PORT", "0"), "0");
+		@Nullable String mailSmtpUser = SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_USER", null);
+		@Nullable String mailAuthType = SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_TYPE", null);
 
 		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-		mailSender.setHost(SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_HOST", null));
+		mailSender
+			.setHost(Objects.requireNonNullElse(SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_HOST", null), ""));
 		mailSender.setPort(Integer.parseInt(mailSmtpPort));
-		mailSender.setUsername(mailSmtpUser);
-		mailSender.setPassword(SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_SECRET", null));
+		mailSender.setUsername(Objects.requireNonNullElse(mailSmtpUser, ""));
+		mailSender.setPassword(
+				Objects.requireNonNullElse(SystemPropertyUtil.retrieveSystemProperty("MAIL_SMTP_SECRET", null), ""));
 		mailSender.setDefaultEncoding("utf-8");
 
 		Properties props = mailSender.getJavaMailProperties();
 		props.put("mail.transport.protocol", "smtp");
 		// Authentication value should be "SSL" or "STARTTLS"
 		if (StringUtil.hasText(mailAuthType)) {
-			configureAuthentication(props, mailAuthType, mailSmtpPort, mailSmtpUser);
+			configureAuthentication(props, Objects.requireNonNullElse(mailAuthType, ""), mailSmtpPort,
+					Objects.requireNonNullElse(mailSmtpUser, ""));
 		}
 		return mailSender;
 	}

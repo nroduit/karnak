@@ -14,6 +14,7 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import java.util.HashSet;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.model.event.NodeEvent;
@@ -27,6 +28,7 @@ import org.weasis.core.util.annotations.Generated;
 @SpringComponent
 @UIScope
 @Generated()
+@NullUnmarked
 public class SourceLogic extends ListDataProvider<DicomSourceNodeEntity> {
 
 	// View

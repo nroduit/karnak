@@ -11,6 +11,7 @@ package org.karnak.backend.service;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.ProjectGroupEntity;
 import org.karnak.backend.data.repo.ProjectGroupRepo;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
  * Project service
  */
 @Service
+@NullUnmarked
 public class ProjectService {
 
 	// Repositories

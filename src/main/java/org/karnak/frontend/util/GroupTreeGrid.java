@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.NamedGroupEntity;
 import org.karnak.frontend.component.ConfirmDialog;
 import org.karnak.frontend.util.GroupTreeNode.GroupNode;
@@ -51,6 +52,7 @@ import org.karnak.frontend.util.GroupTreeNode.ItemNode;
  *
  * @param <T> the feature item type
  */
+@NullUnmarked
 public abstract class GroupTreeGrid<T> extends TreeGrid<GroupTreeNode<T>> {
 
 	private transient GroupTreeController<T> controller;

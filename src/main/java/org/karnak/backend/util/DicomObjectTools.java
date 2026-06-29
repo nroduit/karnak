@@ -18,8 +18,10 @@ import org.dcm4che3.data.ElementDictionary;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.core.util.StringUtil;
 
+@NullUnmarked
 public class DicomObjectTools {
 
 	private DicomObjectTools() {

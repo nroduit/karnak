@@ -10,6 +10,7 @@
 package org.karnak.backend.enums;
 
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The de-identification actions that can be applied to a tag, as a stable mapping between
@@ -34,7 +35,7 @@ public enum DeidActionType {
 	}
 
 	/** Resolve the action matching the given symbol, or {@code null} when unknown. */
-	public static DeidActionType fromSymbol(String symbol) {
+	public static @Nullable DeidActionType fromSymbol(String symbol) {
 		if (symbol == null) {
 			return null;
 		}

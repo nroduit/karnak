@@ -12,6 +12,8 @@ package org.karnak.backend.model.standard;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.dicominnolitics.JsonAttributes;
 import org.karnak.backend.model.dicominnolitics.StandardAttributes;
 
@@ -38,7 +40,7 @@ public class AttributeDetails {
 		return mapAttribute;
 	}
 
-	public AttributeDetail getAttributeDetail(String id) {
+	public @Nullable AttributeDetail getAttributeDetail(String id) {
 		return mapAttributeDetail.get(id);
 	}
 

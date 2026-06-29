@@ -11,6 +11,7 @@ package org.karnak.backend.model.profiles;
 
 import java.util.List;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.model.action.ActionItem;
@@ -32,7 +33,7 @@ public class BasicProfile extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		ActionItem action = actionMap.get(tag);
 		if (action == null) {
 			for (ProfileItem p : listProfiles) {

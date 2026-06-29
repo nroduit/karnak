@@ -10,12 +10,11 @@
 package org.karnak.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,9 +27,7 @@ import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.karnak.backend.data.entity.DicomNodeConfigEntity;
-import org.karnak.backend.data.entity.DicomNodeGroupEntity;
 import org.karnak.backend.data.repo.DicomNodeConfigRepo;
-import org.karnak.backend.data.repo.DicomNodeGroupRepo;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -43,100 +40,96 @@ class DicomNodeConfigServiceTest {
 	@Mock
 	private DicomNodeConfigRepo dicomNodeConfigRepo;
 
-	@Mock
-	private DicomNodeGroupRepo dicomNodeGroupRepo;
-
 	@InjectMocks
 	private DicomNodeConfigService dicomNodeConfigService;
 
-	@Test
-	void returns_one_list_per_group_named_after_the_group() {
-		when(dicomNodeGroupRepo.findAllByOrderByNameAsc())
-			.thenReturn(List.of(new DicomNodeGroupEntity("PACS_WEB"), new DicomNodeGroupEntity("WORKSTATION")));
-		var workstation = new DicomNodeConfigEntity("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION");
-		var pacsNode = new DicomNodeConfigEntity("Public dicomserver", "DICOMSERVER", "dicomserver.co.uk", 11112,
-				"PACS_WEB");
+	private static DicomNodeConfigEntity node(String description, String aet, String host, int port, String type,
+			String group) {
+		return new DicomNodeConfigEntity(description, aet, host, port, type, group);
+	}
 
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of(workstation));
-		when(dicomNodeConfigRepo.findByNodeType("PACS_WEB")).thenReturn(List.of(pacsNode));
+	@Test
+	void groups_managed_nodes_by_node_group_ordered_with_ungrouped_under_workstation() {
+		var ungrouped = node("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION", null);
+		var pacs = node("Public", "DICOMSERVER", "dicomserver.co.uk", 11112, "WORKSTATION", "PACS_WEB");
+		when(dicomNodeConfigRepo.findByNodeTypeNot("WORKLIST")).thenReturn(List.of(ungrouped, pacs));
 
 		var result = dicomNodeConfigService.getAllDicomNodeTypes();
 
-		// ordered by group name and named after the group (no more fixed display names)
 		assertEquals(2, result.size());
 		assertEquals("PACS_WEB", result.get(0).getName());
 		assertEquals("WORKSTATION", result.get(1).getName());
-		assertEquals(1, result.get(1).size());
-		assertEquals("Karnak", result.get(1).getFirst().getName());
 		assertEquals("KARNAK-GATEWAY", result.get(1).getFirst().getAet());
 	}
 
 	@Test
-	void returns_empty_lists_when_groups_have_no_nodes() {
-		when(dicomNodeGroupRepo.findAllByOrderByNameAsc())
-			.thenReturn(List.of(new DicomNodeGroupEntity("PACS_WEB"), new DicomNodeGroupEntity("WORKSTATION")));
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of());
-		when(dicomNodeConfigRepo.findByNodeType("PACS_WEB")).thenReturn(List.of());
+	void exposes_id_and_node_type_on_loaded_nodes() {
+		var workstation = node("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION", null);
+		workstation.setId(42L);
+		when(dicomNodeConfigRepo.findByNodeTypeNot("WORKLIST")).thenReturn(List.of(workstation));
 
-		var result = dicomNodeConfigService.getAllDicomNodeTypes();
+		var configNode = dicomNodeConfigService.getAllDicomNodeTypes().get(0).getFirst();
+
+		assertEquals(42L, configNode.getId());
+		assertEquals("WORKSTATION", configNode.getNodeType());
+	}
+
+	@Test
+	void groups_worklist_nodes_by_node_group_with_ungrouped_under_worklists() {
+		var ungrouped = node("Public", "ADVT", "dicomserver.co.uk", 104, "WORKLIST", null);
+		var grouped = node("Site", "SITE-MWL", "mwl.host", 105, "WORKLIST", "SiteA");
+		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of(ungrouped, grouped));
+
+		var result = dicomNodeConfigService.getWorkListNodeTypes();
 
 		assertEquals(2, result.size());
-		assertTrue(result.get(0).isEmpty());
-		assertTrue(result.get(1).isEmpty());
+		assertEquals("SiteA", result.get(0).getName());
+		assertEquals("SITE-MWL", result.get(0).getFirst().getAet());
+		assertEquals("Worklists", result.get(1).getName());
+		assertEquals("ADVT", result.get(1).getFirst().getAet());
 	}
 
 	@Test
-	void returns_worklist_nodes() {
-		var worklist = new DicomNodeConfigEntity("Public dicomserver", "ADVT", "dicomserver.co.uk", 104, "WORKLIST");
+	void known_groups_are_the_distinct_node_groups() {
+		when(dicomNodeConfigRepo.findDistinctNodeGroups()).thenReturn(List.of("PACS_WEB", "SiteA"));
 
-		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of(worklist));
-
-		var result = dicomNodeConfigService.getWorkListNodes();
-
-		assertNotNull(result);
-		assertEquals("Worklists", result.getName());
-		assertEquals(1, result.size());
-		assertEquals("ADVT", result.getFirst().getAet());
-		assertEquals("dicomserver.co.uk", result.getFirst().getHostname());
-		assertEquals(104, result.getFirst().getPort());
+		assertEquals(List.of("PACS_WEB", "SiteA"), dicomNodeConfigService.getKnownGroups());
 	}
 
 	@Test
-	void exposes_id_and_node_type_on_loaded_nodes() {
-		var workstation = new DicomNodeConfigEntity("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION");
-		workstation.setId(42L);
+	void node_types_include_workstation_and_worklist_plus_custom_types() {
+		when(dicomNodeConfigRepo.findDistinctNodeTypes()).thenReturn(List.of("PACS"));
 
-		when(dicomNodeGroupRepo.findAllByOrderByNameAsc()).thenReturn(List.of(new DicomNodeGroupEntity("WORKSTATION")));
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of(workstation));
-
-		var node = dicomNodeConfigService.getAllDicomNodeTypes().get(0).getFirst();
-
-		assertEquals(42L, node.getId());
-		assertEquals("WORKSTATION", node.getNodeType());
+		assertEquals(List.of("PACS", "WORKLIST", "WORKSTATION"), dicomNodeConfigService.getNodeTypes());
 	}
 
 	@Test
-	void save_node_persists_entity_and_returns_config_node() {
+	void save_node_persists_type_and_group() {
 		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class))).thenAnswer(invocation -> {
 			DicomNodeConfigEntity entity = invocation.getArgument(0);
 			entity.setId(7L);
 			return entity;
 		});
 
-		var saved = dicomNodeConfigService.saveNode("My PACS", "PACS", "pacs.host", 104, "WORKSTATION");
+		var saved = dicomNodeConfigService.saveNode("My PACS", "PACS", "pacs.host", 104, "PACS", "SiteA");
 
 		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
 		verify(dicomNodeConfigRepo).save(captor.capture());
-		var persisted = captor.getValue();
-		assertEquals("My PACS", persisted.getDescription());
-		assertEquals("PACS", persisted.getAeTitle());
-		assertEquals("pacs.host", persisted.getHostname());
-		assertEquals(104, persisted.getPort());
-		assertEquals("WORKSTATION", persisted.getNodeType());
-
+		assertEquals("PACS", captor.getValue().getNodeType());
+		assertEquals("SiteA", captor.getValue().getNodeGroup());
 		assertEquals(7L, saved.getId());
-		assertEquals("My PACS", saved.getName());
-		assertEquals("WORKSTATION", saved.getNodeType());
+	}
+
+	@Test
+	void save_node_quick_overload_uses_no_group() {
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		dicomNodeConfigService.saveNode("Karnak", "KARNAK", "localhost", 11112, "WORKSTATION");
+
+		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
+		verify(dicomNodeConfigRepo).save(captor.capture());
+		assertNull(captor.getValue().getNodeGroup());
 	}
 
 	@Test
@@ -144,28 +137,59 @@ class DicomNodeConfigServiceTest {
 		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
 			.thenAnswer(invocation -> invocation.getArgument(0));
 
-		var saved = dicomNodeConfigService.saveNode("  ", "PACS", "pacs.host", 104, "WORKSTATION");
+		var saved = dicomNodeConfigService.saveNode("  ", "PACS", "pacs.host", 104, "WORKSTATION", null);
 
 		assertEquals("PACS", saved.getName());
 	}
 
 	@Test
-	void update_node_mutates_existing_entity() {
-		var existing = new DicomNodeConfigEntity("Old", "OLD", "old.host", 100, "WORKLIST");
-		existing.setId(5L);
+	void save_node_rejects_only_the_dynamic_gateway_destinations_group() {
+		assertThrows(IllegalArgumentException.class,
+				() -> dicomNodeConfigService.saveNode("n", "AET", "h", 104, "WORKSTATION", "Gateway destinations"));
+		verify(dicomNodeConfigRepo, never()).save(any(DicomNodeConfigEntity.class));
+	}
 
+	@Test
+	void save_node_allows_grouping_a_worklist_node() {
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		dicomNodeConfigService.saveNode("MWL", "SITE-MWL", "mwl.host", 105, "WORKLIST", "SiteA");
+
+		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
+		verify(dicomNodeConfigRepo).save(captor.capture());
+		assertEquals("WORKLIST", captor.getValue().getNodeType());
+		assertEquals("SiteA", captor.getValue().getNodeGroup());
+	}
+
+	@Test
+	void update_node_mutates_type_and_group() {
+		var existing = node("Old", "OLD", "old.host", 100, "WORKSTATION", "SiteA");
+		existing.setId(5L);
 		when(dicomNodeConfigRepo.findById(5L)).thenReturn(Optional.of(existing));
 		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
 			.thenAnswer(invocation -> invocation.getArgument(0));
 
-		var updated = dicomNodeConfigService.updateNode(5L, "New", "NEW", "new.host", 200);
+		var updated = dicomNodeConfigService.updateNode(5L, "New", "NEW", "new.host", 200, "PACS", "SiteB");
 
-		assertEquals("New", updated.getName());
 		assertEquals("NEW", updated.getAet());
-		assertEquals("new.host", updated.getHostname());
+		assertEquals("PACS", existing.getNodeType());
+		assertEquals("SiteB", existing.getNodeGroup());
 		assertEquals(200, updated.getPort());
-		// node type is preserved
-		assertEquals("WORKLIST", updated.getNodeType());
+	}
+
+	@Test
+	void update_node_quick_overload_preserves_type_and_group() {
+		var existing = node("Old", "OLD", "old.host", 100, "WORKLIST", "SiteA");
+		existing.setId(5L);
+		when(dicomNodeConfigRepo.findById(5L)).thenReturn(Optional.of(existing));
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		dicomNodeConfigService.updateNode(5L, "New", "NEW", "new.host", 200);
+
+		assertEquals("WORKLIST", existing.getNodeType());
+		assertEquals("SiteA", existing.getNodeGroup());
 	}
 
 	@Test
@@ -173,7 +197,7 @@ class DicomNodeConfigServiceTest {
 		when(dicomNodeConfigRepo.findById(99L)).thenReturn(Optional.empty());
 
 		assertThrows(IllegalArgumentException.class,
-				() -> dicomNodeConfigService.updateNode(99L, "New", "NEW", "new.host", 200));
+				() -> dicomNodeConfigService.updateNode(99L, "New", "NEW", "new.host", 200, "PACS", null));
 	}
 
 	@Test
@@ -184,215 +208,174 @@ class DicomNodeConfigServiceTest {
 	}
 
 	@Test
-	void exports_nodes_to_csv_with_header_and_rows() {
-		var workstation = new DicomNodeConfigEntity("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION");
+	void rename_group_moves_its_nodes_and_returns_the_count() {
+		var node = node("n", "AET", "h", 11112, "WORKSTATION", "OLD");
+		when(dicomNodeConfigRepo.findByNodeGroup("OLD")).thenReturn(List.of(node));
 
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of(workstation));
-		when(dicomNodeConfigRepo.findByNodeType("PACS_WEB")).thenReturn(List.of());
+		int moved = dicomNodeConfigService.renameGroup("OLD", "NEW");
 
-		var csv = new String(dicomNodeConfigService.exportNodesToCsv(List.of("WORKSTATION", "PACS_WEB")),
-				StandardCharsets.UTF_8);
-
-		assertTrue(csv.contains("\"description\",\"aetitle\",\"hostname\",\"port\",\"nodeType\""));
-		assertTrue(csv.contains("\"Karnak\",\"KARNAK-GATEWAY\",\"localhost\",\"11112\",\"WORKSTATION\""));
-	}
-
-	@Test
-	void imports_nodes_with_node_type_column_and_persists_them() {
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of());
-		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
-			.thenAnswer(invocation -> invocation.getArgument(0));
-
-		var csv = """
-				description,aetitle,hostname,port,nodeType
-				Karnak,KARNAK-GATEWAY,localhost,11112,WORKSTATION
-				""";
-
-		int imported = dicomNodeConfigService
-			.importNodesFromCsv(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)), "WORKSTATION", ',');
-
-		assertEquals(1, imported);
-		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
-		verify(dicomNodeConfigRepo).save(captor.capture());
-		var saved = captor.getValue();
-		assertEquals("KARNAK-GATEWAY", saved.getAeTitle());
-		assertEquals(11112, saved.getPort());
-		assertEquals("WORKSTATION", saved.getNodeType());
-	}
-
-	@Test
-	void imports_legacy_four_column_files_using_default_node_type() {
-		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of());
-		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
-			.thenAnswer(invocation -> invocation.getArgument(0));
-
-		// previous-version format: name,aet,hostname,port (with a comment line)
-		var csv = """
-				# legacy worklist export
-				Public dicomserver,ADVT,dicomserver.co.uk,104
-				""";
-
-		int imported = dicomNodeConfigService
-			.importNodesFromCsv(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)), "WORKLIST", ',');
-
-		assertEquals(1, imported);
-		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
-		verify(dicomNodeConfigRepo).save(captor.capture());
-		assertEquals("WORKLIST", captor.getValue().getNodeType());
-		assertEquals("ADVT", captor.getValue().getAeTitle());
-	}
-
-	@Test
-	void import_skips_duplicates_already_present_in_database() {
-		var existing = new DicomNodeConfigEntity("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION");
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of(existing));
-
-		var csv = """
-				description,aetitle,hostname,port,nodeType
-				Karnak,KARNAK-GATEWAY,localhost,11112,WORKSTATION
-				""";
-
-		int imported = dicomNodeConfigService
-			.importNodesFromCsv(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)), "WORKSTATION", ',');
-
-		assertEquals(0, imported);
-		verify(dicomNodeConfigRepo, never()).save(any(DicomNodeConfigEntity.class));
-	}
-
-	@Test
-	void export_dicom_nodes_includes_every_non_worklist_node() {
-		var workstation = new DicomNodeConfigEntity("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION");
-		var pacsNode = new DicomNodeConfigEntity("Public", "DICOMSERVER", "dicomserver.co.uk", 11112, "PACS_WEB");
-		when(dicomNodeConfigRepo.findByNodeTypeNot("WORKLIST")).thenReturn(List.of(workstation, pacsNode));
-
-		var csv = new String(dicomNodeConfigService.exportDicomNodes(), StandardCharsets.UTF_8);
-
-		assertTrue(csv.contains("\"KARNAK-GATEWAY\",\"localhost\",\"11112\",\"WORKSTATION\""));
-		assertTrue(csv.contains("\"DICOMSERVER\",\"dicomserver.co.uk\",\"11112\",\"PACS_WEB\""));
-	}
-
-	@Test
-	void export_worklist_nodes_includes_every_worklist_node() {
-		var worklist = new DicomNodeConfigEntity("Public", "ADVT", "dicomserver.co.uk", 104, "WORKLIST");
-		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of(worklist));
-
-		var csv = new String(dicomNodeConfigService.exportWorkListNodes(), StandardCharsets.UTF_8);
-
-		assertTrue(csv.contains("\"ADVT\",\"dicomserver.co.uk\",\"104\",\"WORKLIST\""));
-	}
-
-	@Test
-	void import_dicom_nodes_dispatches_each_row_to_its_group() {
-		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of());
-		when(dicomNodeConfigRepo.findByNodeType("PACS_WEB")).thenReturn(List.of());
-		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
-			.thenAnswer(invocation -> invocation.getArgument(0));
-
-		// one legacy row (no type -> default WORKSTATION) and one row carrying its own
-		// group
-		var csv = """
-				Legacy,LEG,leg.host,104
-				Public,DICOMSERVER,dicomserver.co.uk,11112,PACS_WEB
-				""";
-
-		int imported = dicomNodeConfigService
-			.importDicomNodes(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)), ',');
-
-		assertEquals(2, imported);
-		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
-		verify(dicomNodeConfigRepo, times(2)).save(captor.capture());
-		var types = captor.getAllValues().stream().map(DicomNodeConfigEntity::getNodeType).toList();
-		assertTrue(types.contains("WORKSTATION"));
-		assertTrue(types.contains("PACS_WEB"));
-	}
-
-	@Test
-	void import_worklist_nodes_forces_every_row_to_the_worklist_group() {
-		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of());
-		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
-			.thenAnswer(invocation -> invocation.getArgument(0));
-
-		// the row carries a WORKSTATION type but must still land in the worklist group
-		var csv = """
-				description,aetitle,hostname,port,nodeType
-				Mislabelled,ADVT,dicomserver.co.uk,104,WORKSTATION
-				""";
-
-		int imported = dicomNodeConfigService
-			.importWorkListNodes(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)), ',');
-
-		assertEquals(1, imported);
-		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
-		verify(dicomNodeConfigRepo).save(captor.capture());
-		assertEquals("WORKLIST", captor.getValue().getNodeType());
-	}
-
-	@Test
-	void get_groups_returns_group_names_in_order() {
-		when(dicomNodeGroupRepo.findAllByOrderByNameAsc())
-			.thenReturn(List.of(new DicomNodeGroupEntity("PACS_WEB"), new DicomNodeGroupEntity("WORKSTATION")));
-
-		assertEquals(List.of("PACS_WEB", "WORKSTATION"), dicomNodeConfigService.getGroups());
-	}
-
-	@Test
-	void create_group_persists_a_new_group() {
-		when(dicomNodeGroupRepo.existsByName("Workstations")).thenReturn(false);
-
-		dicomNodeConfigService.createGroup("Workstations");
-
-		var captor = ArgumentCaptor.forClass(DicomNodeGroupEntity.class);
-		verify(dicomNodeGroupRepo).save(captor.capture());
-		assertEquals("Workstations", captor.getValue().getName());
-	}
-
-	@Test
-	void create_group_rejects_a_duplicate_name() {
-		when(dicomNodeGroupRepo.existsByName("PACS_WEB")).thenReturn(true);
-
-		assertThrows(IllegalArgumentException.class, () -> dicomNodeConfigService.createGroup("PACS_WEB"));
-		verify(dicomNodeGroupRepo, never()).save(any(DicomNodeGroupEntity.class));
-	}
-
-	@Test
-	void create_group_rejects_the_reserved_worklist_name() {
-		assertThrows(IllegalArgumentException.class, () -> dicomNodeConfigService.createGroup("worklist"));
-		verify(dicomNodeGroupRepo, never()).save(any(DicomNodeGroupEntity.class));
-	}
-
-	@Test
-	void rename_group_moves_its_nodes_and_updates_the_group() {
-		var group = new DicomNodeGroupEntity("OLD");
-		var node = new DicomNodeConfigEntity("n", "AET", "h", 11112, "OLD");
-		when(dicomNodeGroupRepo.findByName("OLD")).thenReturn(Optional.of(group));
-		when(dicomNodeGroupRepo.existsByName("NEW")).thenReturn(false);
-		when(dicomNodeConfigRepo.findByNodeType("OLD")).thenReturn(List.of(node));
-
-		dicomNodeConfigService.renameGroup("OLD", "NEW");
-
-		assertEquals("NEW", node.getNodeType());
-		assertEquals("NEW", group.getName());
+		assertEquals(1, moved);
+		assertEquals("NEW", node.getNodeGroup());
 		verify(dicomNodeConfigRepo).save(node);
-		verify(dicomNodeGroupRepo).save(group);
 	}
 
 	@Test
-	void delete_group_removes_the_group_and_its_nodes() {
-		var group = new DicomNodeGroupEntity("PACS_WEB");
-		var node = new DicomNodeConfigEntity("n", "AET", "h", 11112, "PACS_WEB");
-		when(dicomNodeGroupRepo.findByName("PACS_WEB")).thenReturn(Optional.of(group));
-		when(dicomNodeConfigRepo.findByNodeType("PACS_WEB")).thenReturn(List.of(node));
+	void delete_group_removes_its_nodes_and_returns_the_count() {
+		var node = node("n", "AET", "h", 11112, "WORKSTATION", "PACS_WEB");
+		when(dicomNodeConfigRepo.findByNodeGroup("PACS_WEB")).thenReturn(List.of(node));
 
 		int removed = dicomNodeConfigService.deleteGroup("PACS_WEB");
 
 		assertEquals(1, removed);
 		verify(dicomNodeConfigRepo).deleteAll(List.of(node));
-		verify(dicomNodeGroupRepo).delete(group);
 	}
 
 	@Test
-	void delete_group_rejects_the_reserved_worklist_group() {
-		assertThrows(IllegalArgumentException.class, () -> dicomNodeConfigService.deleteGroup("WORKLIST"));
+	void delete_group_rejects_only_the_dynamic_gateway_destinations_group() {
+		assertThrows(IllegalArgumentException.class, () -> dicomNodeConfigService.deleteGroup("Gateway destinations"));
+	}
+
+	@Test
+	void import_forces_every_row_into_the_target_group() {
+		when(dicomNodeConfigRepo.findByNodeGroup("SiteA")).thenReturn(List.of());
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		var csv = """
+				description,aetitle,hostname,port,nodeType,nodeGroup
+				Public,DICOMSERVER,dicomserver.co.uk,11112,WORKSTATION,Ignored
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', "SiteA", false);
+
+		assertEquals(1, report.imported());
+		assertTrue(report.errors().isEmpty());
+		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
+		verify(dicomNodeConfigRepo).save(captor.capture());
+		assertEquals("SiteA", captor.getValue().getNodeGroup());
+	}
+
+	@Test
+	void import_replace_clears_the_target_group_first() {
+		var existing = node("Existing", "OLD", "old.host", 104, "WORKSTATION", "SiteA");
+		when(dicomNodeConfigRepo.findByNodeGroup("SiteA")).thenReturn(List.of(existing));
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		var csv = """
+				description,aetitle,hostname,port,nodeType,nodeGroup
+				New,NEW,new.host,11112,WORKSTATION,SiteA
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', "SiteA", true);
+
+		assertEquals(1, report.imported());
+		assertEquals(1, report.removed());
+		verify(dicomNodeConfigRepo).deleteAll(List.of(existing));
+	}
+
+	@Test
+	void import_maps_legacy_fifth_column_to_the_group() {
+		when(dicomNodeConfigRepo.findByNodeGroup("PACS_WEB")).thenReturn(List.of());
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		// legacy 5-column export: the fifth column held the group
+		var csv = """
+				Public,DICOMSERVER,dicomserver.co.uk,11112,PACS_WEB
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', null, false);
+
+		assertEquals(1, report.imported());
+		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
+		verify(dicomNodeConfigRepo).save(captor.capture());
+		assertEquals("WORKSTATION", captor.getValue().getNodeType());
+		assertEquals("PACS_WEB", captor.getValue().getNodeGroup());
+	}
+
+	@Test
+	void import_legacy_four_column_file_leaves_the_node_ungrouped() {
+		when(dicomNodeConfigRepo.findByNodeGroupIsNull()).thenReturn(List.of());
+		when(dicomNodeConfigRepo.save(any(DicomNodeConfigEntity.class)))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		var csv = """
+				# legacy export
+				Legacy,LEG,leg.host,104
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', null, false);
+
+		assertEquals(1, report.imported());
+		var captor = ArgumentCaptor.forClass(DicomNodeConfigEntity.class);
+		verify(dicomNodeConfigRepo).save(captor.capture());
+		assertNull(captor.getValue().getNodeGroup());
+		assertEquals("WORKSTATION", captor.getValue().getNodeType());
+	}
+
+	@Test
+	void import_skips_duplicates_already_present_in_the_group() {
+		var existing = node("Karnak", "KARNAK", "localhost", 11112, "WORKSTATION", null);
+		when(dicomNodeConfigRepo.findByNodeGroupIsNull()).thenReturn(List.of(existing));
+
+		var csv = """
+				Karnak,KARNAK,localhost,11112
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', null, false);
+
+		assertEquals(0, report.imported());
+		verify(dicomNodeConfigRepo, never()).save(any(DicomNodeConfigEntity.class));
+	}
+
+	@Test
+	void import_skips_a_worklist_duplicate_already_present_in_the_group() {
+		var existing = node("Existing", "ADVT", "dicomserver.co.uk", 104, "WORKLIST", null);
+		when(dicomNodeConfigRepo.findByNodeGroupIsNull()).thenReturn(List.of(existing));
+
+		var csv = """
+				Public,ADVT,dicomserver.co.uk,104,WORKLIST
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', null, false);
+
+		assertEquals(0, report.imported());
+		verify(dicomNodeConfigRepo, never()).save(any(DicomNodeConfigEntity.class));
+	}
+
+	@Test
+	void import_reports_invalid_rows_without_aborting() {
+		var csv = """
+				Bad,BAD,bad.host,notaport
+				""";
+
+		var report = dicomNodeConfigService.importCsv(stream(csv), ',', null, false);
+
+		assertEquals(0, report.imported());
+		assertEquals(1, report.errors().size());
+		assertTrue(report.errors().getFirst().contains("port"));
+	}
+
+	@Test
+	void import_rejects_the_dynamic_group_as_a_target() {
+		assertThrows(IllegalArgumentException.class,
+				() -> dicomNodeConfigService.importCsv(stream(""), ',', "Gateway destinations", false));
+	}
+
+	@Test
+	void export_writes_the_six_column_header_and_rows() {
+		var node = node("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION", "SiteA");
+		when(dicomNodeConfigRepo.findAll()).thenReturn(List.of(node));
+
+		var csv = new String(dicomNodeConfigService.exportCsv(null), StandardCharsets.UTF_8);
+
+		assertTrue(csv.contains("\"description\",\"aetitle\",\"hostname\",\"port\",\"nodeType\",\"nodeGroup\""));
+		assertTrue(csv.contains("\"KARNAK-GATEWAY\",\"localhost\",\"11112\",\"WORKSTATION\",\"SiteA\""));
+	}
+
+	private static ByteArrayInputStream stream(String csv) {
+		return new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 	}
 
 }

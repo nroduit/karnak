@@ -14,6 +14,7 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -47,7 +48,7 @@ public class AddTag extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		if (!tagAdded) {
 			IncludedTagEntity t = tagEntities.getFirst();
 			String tagValue = StandardDICOM.cleanTagPath(t.getTagValue());
@@ -55,7 +56,12 @@ public class AddTag extends AbstractProfileItem {
 			if (!standardDICOM.getAttributesBySOP(dcm.getString(Tag.SOPClassUID), tagValue).isEmpty()) {
 
 				String value = "";
-				VR vr = VR.valueOf(standardDICOM.getAttributeDetail(tagValue).valueRepresentation());
+				@Nullable AttributeDetail detail = standardDICOM.getAttributeDetail(tagValue);
+				if (detail == null) {
+					tagAdded = true;
+					return null;
+				}
+				VR vr = VR.valueOf(detail.valueRepresentation());
 				for (ArgumentEntity ae : argumentEntities) {
 					if ("value".equals(ae.getArgumentKey())) {
 						value = ae.getArgumentValue();

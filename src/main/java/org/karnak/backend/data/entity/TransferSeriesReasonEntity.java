@@ -18,11 +18,13 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Per-reason error breakdown for a {@link TransferSeriesStatusEntity}: how many instances
  * of the series failed with a given reason. Replaces the per-instance error rows.
  */
+@NullUnmarked
 @Entity(name = "TransferSeriesReason")
 @Table(name = "transfer_series_reason")
 public class TransferSeriesReasonEntity implements Serializable {

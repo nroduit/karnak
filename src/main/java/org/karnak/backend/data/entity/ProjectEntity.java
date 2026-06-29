@@ -23,11 +23,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.util.DateFormat;
 
 @Entity(name = "Project")
 @Table(name = "project")
+@NullUnmarked
 public class ProjectEntity implements Serializable {
 
 	private static final long serialVersionUID = 8809562914582842501L;
@@ -110,7 +114,7 @@ public class ProjectEntity implements Serializable {
 	 * Retrieve the active secret of the project
 	 * @return active secret to be used
 	 */
-	public SecretEntity retrieveActiveSecret() {
+	public @Nullable SecretEntity retrieveActiveSecret() {
 		return secretEntities.stream().filter(SecretEntity::isActive).findFirst().orElse(null);
 	}
 

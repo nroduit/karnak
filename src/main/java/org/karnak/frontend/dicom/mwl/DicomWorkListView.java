@@ -9,11 +9,10 @@
  */
 package org.karnak.frontend.dicom.mwl;
 
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.ItemClickEvent;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -32,15 +31,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.enums.Modality;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.WorkListQueryData;
-import org.karnak.backend.service.DicomNodeConfigService;
 import org.karnak.backend.util.DicomNodeUtil;
+import org.karnak.frontend.dicom.AETField;
 import org.karnak.frontend.dicom.AbstractView;
+import org.karnak.frontend.dicom.DicomNodeSelectionDialog;
+import org.karnak.frontend.dicom.DicomNodeSelectionDialog.SelectDicomNodeEvent;
 import org.karnak.frontend.dicom.PortField;
 import org.weasis.core.util.annotations.Generated;
 
@@ -48,6 +50,7 @@ import org.weasis.core.util.annotations.Generated;
  * Calling Order 1) constructor 2) setParameter 3) beforeEnter
  */
 @Generated()
+@NullUnmarked
 public class DicomWorkListView extends AbstractView implements HasUrlParameter<String> {
 
 	private static final String PARAMETER_CALLING_AET = "callingAET";
@@ -107,8 +110,6 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	private Button clearBtn;
 
 	private Button selectWorkListBtn;
-
-	private Button saveWorkListBtn;
 
 	private Button queryBtn;
 
@@ -191,12 +192,15 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		mainLayout = new VerticalLayout();
 		mainLayout.setPadding(true);
 		mainLayout.setSpacing(true);
-		mainLayout.setWidthFull();
+		mainLayout.setSizeFull();
 
 		buildWlConfigurationLayout();
 		buildQueryResultLayout();
 
 		mainLayout.add(wlConfigurationAndQueryLayout, queryResultLayout);
+		// Let the result section take the remaining height so its grid can scroll
+		// internally.
+		mainLayout.setFlexGrow(1, queryResultLayout);
 	}
 
 	private void buildWlConfigurationLayout() {
@@ -220,7 +224,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildWlConfigurationTitle() {
-		wlConfigurationTitle = new H6("Worklist Configuration");
+		wlConfigurationTitle = new H6("Worklist Node Configuration");
 		wlConfigurationTitle.getStyle().set("margin-top", "0px");
 	}
 
@@ -239,15 +243,15 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildCallingAETitleFld() {
-		callingAetFld = new TextField();
-		callingAetFld.setLabel("Calling AETitle");
+		callingAetFld = new AETField();
+		callingAetFld.setLabel("Calling AE Title");
 		callingAetFld.setRequired(true);
 		callingAetFld.setRequiredIndicatorVisible(true);
 		callingAetFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
 	private void buildWlAetFld() {
-		workListAetFld = new TextField("Worklist AET");
+		workListAetFld = new AETField("Worklist AE Title");
 		workListAetFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
@@ -263,25 +267,25 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildSelectWorkListBtn() {
-		selectWorkListBtn = new Button("Select Worklist");
+		selectWorkListBtn = new Button("Select Worklist Node");
 		selectWorkListBtn.getStyle().set("cursor", "pointer");
 
 		selectWorkListBtn.addClickListener(e -> openDicomWorklistSelectionDialog());
 	}
 
 	private void openDicomWorklistSelectionDialog() {
-		// DIALOGS
-		DicomWorkListSelectionDialog dicomWorklistSelectionDialog = new DicomWorkListSelectionDialog(dicomNodeUtil);
+		DicomNodeSelectionDialog dialog = new DicomNodeSelectionDialog(dicomNodeUtil.getWorkListNodeTypes(),
+				"Select Worklist Node", "Worklist node");
 
-		dicomWorklistSelectionDialog.addWorkListSelectionListener(e -> {
-			ConfigNode selectedWorkList = e.getSelectedWorkList();
+		dialog.addSelectDicomNodeListener((SelectDicomNodeEvent event) -> {
+			ConfigNode selectedWorkList = event.getSelectedDicomNode();
 
 			workListAetFld.setValue(selectedWorkList.getAet());
 			workListHostnameFld.setValue(selectedWorkList.getHostname());
 			workListPortFld.setValue(selectedWorkList.getPort());
 		});
 
-		dicomWorklistSelectionDialog.open();
+		dialog.open();
 	}
 
 	private void buildWlQueryTitle() {
@@ -307,7 +311,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildScheduledStationAetFld() {
-		scheduledStationAetFld = new TextField("Scheduled Station AET");
+		scheduledStationAetFld = new AETField("Scheduled Station AE Title");
 	}
 
 	private void buildScheduledModalitySelector() {
@@ -326,11 +330,11 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildScheduledFromFld() {
-		scheduledFromFld = new DatePicker("Scheduled from");
+		scheduledFromFld = new DatePicker("Scheduled From");
 	}
 
 	private void buildScheduledToFld() {
-		scheduledToFld = new DatePicker("Scheduled to");
+		scheduledToFld = new DatePicker("Scheduled To");
 	}
 
 	private void buildPatientNameFld() {
@@ -348,51 +352,23 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 		buildClearBtn();
 		buildSelectWorkListBtn();
-		buildSaveWorkListBtn();
 		buildQueryBtn();
 
-		buttonBar.add(clearBtn, selectWorkListBtn, saveWorkListBtn, queryBtn);
-	}
-
-	private void buildSaveWorkListBtn() {
-		saveWorkListBtn = new Button("Save Worklist");
-		saveWorkListBtn.getStyle().set("cursor", "pointer");
-
-		saveWorkListBtn.addClickListener(e -> saveCurrentWorkListNode());
-	}
-
-	private void saveCurrentWorkListNode() {
-		if (workListAetFld.isEmpty() || workListHostnameFld.isEmpty() || workListPortFld.isEmpty()) {
-			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT,
-					"Worklist AET, Hostname and Port are required to save a worklist"));
-			return;
-		}
-
-		String aet = workListAetFld.getValue();
-		try {
-			dicomNodeUtil.saveDicomNode(aet, aet, workListHostnameFld.getValue(), workListPortFld.getValue(),
-					DicomNodeConfigService.NODE_TYPE_WORKLIST);
-			displayMessage(new Message(MessageLevel.INFO, MessageFormat.TEXT,
-					"Worklist \"" + aet + "\" saved to the configuration"));
-		}
-		catch (Exception ex) {
-			displayMessage(new Message(MessageLevel.ERROR, MessageFormat.TEXT,
-					"Cannot save the worklist: " + ex.getMessage()));
-		}
+		buttonBar.add(clearBtn, selectWorkListBtn, queryBtn);
 	}
 
 	private void buildClearBtn() {
-		clearBtn = new Button("Clear");
+		clearBtn = new Button("Reset Form");
 		clearBtn.getStyle().set("cursor", "pointer");
 
 		clearBtn.addClickListener(e -> binderForWorkListQuery.readBean(workListQueryData));
 	}
 
 	private void buildQueryBtn() {
-		queryBtn = new Button("Query");
+		queryBtn = new Button("Run Query");
 		queryBtn.getStyle().set("cursor", "pointer");
 		queryBtn.setEnabled(false);
-		queryBtn.addClassName("stroked-button");
+		queryBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
 		queryBtn.addClickListener(e -> executeQuery());
 	}
@@ -412,6 +388,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		buildGrid();
 
 		queryResultLayout.add(queryResultTitle, queryResultGrid);
+		queryResultLayout.setFlexGrow(1, queryResultGrid);
 	}
 
 	private void buildQueryResultTitleBar() {
@@ -422,12 +399,12 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private void buildGrid() {
 		queryResultGrid = new DicomWorkListGrid();
-		queryResultGrid.setWidthFull();
+		queryResultGrid.setSizeFull();
 
+		// Clicking a row expands its inline details (with a "View DICOM Details" action);
+		// no
+		// modal is opened on selection anymore.
 		queryResultGrid.setDataProvider(dataProviderForAttributes);
-
-		queryResultGrid.addItemClickListener(
-				(ComponentEventListener<ItemClickEvent<Attributes>>) event -> logic.itemSelected(event.getItem()));
 	}
 
 	private void bindFields() {

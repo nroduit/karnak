@@ -16,12 +16,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.swing.filechooser.FileFilter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * The Class FileFormatFilter.
  *
  * @author Nicolas Roduit
  */
+@NullUnmarked
 public class FileFormatFilter extends FileFilter {
 
 	private final Map<String, FileFormatFilter> fExtensions;

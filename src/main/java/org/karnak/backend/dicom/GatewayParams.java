@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import org.weasis.dicom.param.AbstractListenerParams;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.DicomNode;
@@ -32,7 +33,8 @@ public class GatewayParams extends AbstractListenerParams {
 		super(params, bindCallingAet, transferCapabilityFile, acceptedCallingAETitles);
 	}
 
-	public static String[] getAcceptedCallingAETitles(Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
+	public static String @Nullable [] getAcceptedCallingAETitles(
+			Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
 		Set<ForwardDicomNode> set = destinations.keySet();
 		if (set.stream().anyMatch(s -> s.getAcceptedSourceNodes().isEmpty())) {
 			return null;

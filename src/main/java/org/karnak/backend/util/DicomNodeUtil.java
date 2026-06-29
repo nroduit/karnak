@@ -9,7 +9,6 @@
  */
 package org.karnak.backend.util;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,11 +18,13 @@ import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomNodeList;
+import org.karnak.backend.model.dicom.WebDestinationNode;
 import org.karnak.backend.service.DicomNodeConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.DicomNode;
+import org.weasis.dicom.param.DicomNodeSource;
 
 @Component
 public class DicomNodeUtil {
@@ -40,58 +41,94 @@ public class DicomNodeUtil {
 
 	private final DestinationRepo destinationRepo;
 
+	private final List<DicomNodeSource> dicomNodeSources;
+
 	@Autowired
-	public DicomNodeUtil(DicomNodeConfigService dicomNodeConfigService, DestinationRepo destinationRepo) {
+	public DicomNodeUtil(DicomNodeConfigService dicomNodeConfigService, DestinationRepo destinationRepo,
+			List<DicomNodeSource> dicomNodeSources) {
 		this.dicomNodeConfigService = dicomNodeConfigService;
 		this.destinationRepo = destinationRepo;
+		this.dicomNodeSources = dicomNodeSources;
 	}
 
 	/**
-	 * @return the dynamic gateway destinations group first, followed by every
-	 * user-defined DICOM node group (the reserved worklist group is excluded)
+	 * @return the dynamic source groups first (e.g. the Gateway destinations), followed
+	 * by every user-defined DICOM node group (the reserved worklist group is excluded)
 	 */
 	public List<DicomNodeList> getAllDicomNodeTypes() {
-		var nodeLists = new ArrayList<DicomNodeList>();
-		nodeLists.add(getGatewayDestinationNodes());
+		var nodeLists = getDynamicNodeGroups();
 		nodeLists.addAll(dicomNodeConfigService.getAllDicomNodeTypes());
 		return nodeLists;
 	}
 
 	/**
-	 * Build the dynamic group of all DICOM destinations configured in the gateway.
-	 * STOW-RS destinations have no AE Title / host / port and are skipped, and
-	 * destinations sharing the same AE Title, host and port are reported once. The
-	 * returned nodes carry no configuration id so they are treated as read-only by the
-	 * DICOM node management UI.
-	 * @return the gateway destinations group, possibly empty
+	 * Build the read-only groups exposed by the registered {@link DicomNodeSource}s (the
+	 * Gateway destinations, plus any source contributed by another module). The nodes
+	 * carry no configuration id, so they are treated as read-only by the DICOM node
+	 * management UI.
+	 * @return one group per source, in source order, each possibly empty
 	 */
-	public DicomNodeList getGatewayDestinationNodes() {
-		var nodeList = new DicomNodeList(GATEWAY_DESTINATIONS_GROUP_NAME);
-		Set<String> seen = new HashSet<>();
-		for (DestinationEntity destination : destinationRepo.findAll()) {
-			if (destination.getDestinationType() != DestinationType.dicom) {
-				continue;
-			}
-			String aeTitle = destination.getAeTitle();
-			String hostname = destination.getHostname();
-			Integer port = destination.getPort();
-			if (!StringUtil.hasText(aeTitle) || !StringUtil.hasText(hostname) || port == null || port <= 0) {
-				continue;
-			}
-			if (!seen.add(aeTitle + '\\' + hostname + '\\' + port)) {
-				continue;
-			}
-			String description = StringUtil.hasText(destination.getDescription()) ? destination.getDescription()
-					: aeTitle;
-			var node = new ConfigNode(description, new DicomNode(aeTitle, hostname, port));
-			node.setNodeType(GATEWAY_DESTINATIONS_GROUP_NAME);
-			nodeList.add(node);
+	public List<DicomNodeList> getDynamicNodeGroups() {
+		var groups = new ArrayList<DicomNodeList>();
+		for (DicomNodeSource source : dicomNodeSources) {
+			groups.add(toNodeList(source));
+		}
+		return groups;
+	}
+
+	private static DicomNodeList toNodeList(DicomNodeSource source) {
+		var nodeList = new DicomNodeList(source.getGroupName());
+		for (DicomNode node : source.getNodes()) {
+			String name = StringUtil.hasText(node.getDescription()) ? node.getDescription() : node.getAet();
+			var configNode = new ConfigNode(name, node);
+			configNode.setNodeType(source.getGroupName());
+			nodeList.add(configNode);
 		}
 		return nodeList;
 	}
 
-	public DicomNodeList getWorkListNodes() {
-		return dicomNodeConfigService.getWorkListNodes();
+	/**
+	 * Build the dynamic list of all DICOMweb (STOW-RS) destinations configured in the
+	 * gateway. Destinations without a request URL are skipped and destinations sharing
+	 * the same URL are reported once.
+	 * @return the gateway DICOMweb destinations, possibly empty
+	 */
+	public List<WebDestinationNode> getGatewayStowDestinations() {
+		var destinations = new ArrayList<WebDestinationNode>();
+		Set<String> seen = new HashSet<>();
+		for (DestinationEntity destination : destinationRepo.findAll()) {
+			if (destination.getDestinationType() != DestinationType.stow) {
+				continue;
+			}
+			String url = destination.getUrl();
+			if (!StringUtil.hasText(url) || !seen.add(url)) {
+				continue;
+			}
+			String description = StringUtil.hasText(destination.getDescription()) ? destination.getDescription() : url;
+			String authConfig = StringUtil.hasText(destination.getAuthConfig()) ? destination.getAuthConfig() : null;
+			destinations.add(new WebDestinationNode(description, url, authConfig));
+		}
+		return destinations;
+	}
+
+	/**
+	 * @return one list per organizational group of worklist nodes (the ungrouped worklist
+	 * nodes under the "Worklists" label), mirroring {@link #getAllDicomNodeTypes()}
+	 */
+	public List<DicomNodeList> getWorkListNodeTypes() {
+		return dicomNodeConfigService.getWorkListNodeTypes();
+	}
+
+	/**
+	 * @return {@link #getAllDicomNodeTypes()} followed by the worklist groups.
+	 * Connectivity tools (echo, monitor) check any DICOM node, worklist SCPs included:
+	 * C-ECHO and the capabilities probe are type-agnostic, so worklist nodes are offered
+	 * alongside every other node rather than being filtered out by their reserved type.
+	 */
+	public List<DicomNodeList> getAllNodeTypesIncludingWorklist() {
+		var nodeLists = getAllDicomNodeTypes();
+		nodeLists.addAll(dicomNodeConfigService.getWorkListNodeTypes());
+		return nodeLists;
 	}
 
 	public ConfigNode saveDicomNode(String description, String aeTitle, String hostname, Integer port,
@@ -105,42 +142,6 @@ public class DicomNodeUtil {
 
 	public void deleteDicomNode(Long id) {
 		dicomNodeConfigService.deleteNode(id);
-	}
-
-	/** Export every DICOM node from every group (worklists excluded) as CSV. */
-	public byte[] exportDicomNodes() {
-		return dicomNodeConfigService.exportDicomNodes();
-	}
-
-	/** Export every worklist node as CSV. */
-	public byte[] exportWorkListNodes() {
-		return dicomNodeConfigService.exportWorkListNodes();
-	}
-
-	/** Import DICOM nodes from CSV, dispatching each row to its group. */
-	public int importDicomNodes(InputStream inputStream, char separator) {
-		return dicomNodeConfigService.importDicomNodes(inputStream, separator);
-	}
-
-	/** Import worklist nodes from CSV, storing every row as a worklist node. */
-	public int importWorkListNodes(InputStream inputStream, char separator) {
-		return dicomNodeConfigService.importWorkListNodes(inputStream, separator);
-	}
-
-	public List<String> getGroups() {
-		return dicomNodeConfigService.getGroups();
-	}
-
-	public void createGroup(String name) {
-		dicomNodeConfigService.createGroup(name);
-	}
-
-	public void renameGroup(String oldName, String newName) {
-		dicomNodeConfigService.renameGroup(oldName, newName);
-	}
-
-	public int deleteGroup(String name) {
-		return dicomNodeConfigService.deleteGroup(name);
 	}
 
 }

@@ -11,8 +11,10 @@ package org.karnak.backend.enums;
 
 import java.util.Arrays;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 
 @Getter
+@NullUnmarked
 public enum UIDType {
 
 	EXPLICIT_VR_LITTLE_ENDIAN("1.2.840.10008.1.2.1", "Explicit VR - Little Endian"),

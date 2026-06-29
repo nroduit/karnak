@@ -23,11 +23,13 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.AuthConfigEntity;
 import org.weasis.core.util.annotations.Generated;
 
 @Uses(PasswordField.class)
 @Generated()
+@NullUnmarked
 public class AuthConfigComponent extends VerticalLayout {
 
 	private TextField url;

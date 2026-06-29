@@ -10,8 +10,10 @@
 package org.karnak.backend.model.dicominnolitics;
 
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 
 @Getter
+@NullUnmarked
 public class JsonCIODtoModule {
 
 	private String ciodId;

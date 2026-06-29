@@ -42,12 +42,15 @@ import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
+import org.karnak.backend.dicom.NullForwardDestination;
 import org.karnak.backend.dicom.Params;
 import org.karnak.backend.dicom.WebForwardDestination;
 import org.karnak.backend.exception.AbortException;
+import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
@@ -235,6 +238,58 @@ class ForwardServiceTest {
 		assertTrue(captureSingleEvent().sent());
 	}
 
+	// --- Virtual (report-only) destination
+	// ---------------------------------------------------
+
+	@Test
+	void virtual_transfer_discards_dicom_and_monitors_success() throws Exception {
+		NullForwardDestination dest = nullDestination(List.of());
+		Params p = new Params(IUID, CUID, TS, 0, new ByteArrayInputStream(serializeRaw(dataset())), null);
+
+		forwardService.transferVirtual(fwdNode, dest, null, p);
+
+		MonitoringEntry event = captureSingleEvent();
+		assertTrue(event.sent());
+		assertFalse(event.error());
+	}
+
+	@Test
+	void virtual_transfer_applies_editors_before_reporting() throws Exception {
+		AttributeEditor anonymizer = (dcm, ctx) -> dcm.setString(Tag.PatientID, VR.LO, "ANON");
+		NullForwardDestination dest = nullDestination(List.of(anonymizer));
+		Params p = new Params(IUID, CUID, TS, 0, new ByteArrayInputStream(serializeRaw(dataset())), null);
+
+		forwardService.transferVirtual(fwdNode, dest, null, p);
+
+		assertTrue(captureSingleEvent().sent());
+	}
+
+	@Test
+	void virtual_transfer_file_exception_is_swallowed_and_nothing_sent() throws Exception {
+		AttributeEditor blocker = (dcm, ctx) -> ctx.setAbort(Abort.FILE_EXCEPTION, "blocked");
+		NullForwardDestination dest = nullDestination(List.of(blocker));
+		Params p = new Params(IUID, CUID, TS, 0, new ByteArrayInputStream(serializeRaw(dataset())), null);
+
+		forwardService.transferVirtual(fwdNode, dest, null, p);
+
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertEquals("blocked", event.reason());
+	}
+
+	@Test
+	void virtual_transfer_publishes_conformance_event_when_report_enabled() throws Exception {
+		NullForwardDestination dest = nullDestination(List.of());
+		dest.setBuildConformanceReport(true);
+		Params p = new Params(IUID, CUID, TS, 0, new ByteArrayInputStream(serializeRaw(dataset())), null);
+
+		forwardService.transferVirtual(fwdNode, dest, null, p);
+
+		ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor.forClass(ApplicationEvent.class);
+		verify(publisher, times(2)).publishEvent(captor.capture());
+		assertTrue(captor.getAllValues().stream().anyMatch(ConformanceCollectEvent.class::isInstance));
+	}
+
 	// --- storeMultipleDestination fan-out
 	// ---------------------------------------------------
 
@@ -326,6 +381,10 @@ class ForwardServiceTest {
 
 	private WebForwardDestination webDestination(DicomStowRS stow, List<AttributeEditor> editors) {
 		return new WebForwardDestination(2L, fwdNode, stow, null, editors);
+	}
+
+	private NullForwardDestination nullDestination(List<AttributeEditor> editors) {
+		return new NullForwardDestination(2L, fwdNode, editors);
 	}
 
 	private MonitoringEntry captureSingleEvent() {

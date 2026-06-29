@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.constant.Notification;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
@@ -52,6 +53,7 @@ import org.weasis.core.util.StringUtil;
  */
 @Service
 @Slf4j
+@NullUnmarked
 public class NotificationService {
 
 	// Maximum length of a single reason rendered in the email summary

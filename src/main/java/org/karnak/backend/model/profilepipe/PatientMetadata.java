@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.cache.Patient;
 import org.weasis.core.util.StringUtil;
 
@@ -87,7 +88,7 @@ public class PatientMetadata {
 		return parts.length > 1 ? parts[1] : "";
 	}
 
-	public LocalDate getLocalDatePatientBirthDate() {
+	public @Nullable LocalDate getLocalDatePatientBirthDate() {
 		if (StringUtil.hasText(patientBirthDate)) {
 			return DateTimeUtils.parseDA(patientBirthDate);
 		}

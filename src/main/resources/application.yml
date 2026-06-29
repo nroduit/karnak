@@ -27,9 +27,9 @@ logging:
     com:
       vaadin:
         copilot:
-          # Dev-mode Copilot has no enable/disable flag and its release-note fetch
-          # fails behind TLS-inspecting proxies (PKIX path building failed). The call
-          # is cosmetic, so silence its logger to drop the noisy stack trace.
+          # Copilot's release-note fetch fails behind TLS-inspecting proxies (PKIX
+          # path building failed). The call is cosmetic, so silence its logger to
+          # drop the noisy stack trace.
           VersionReleaseNoteHandler: "OFF"
         flow:
           server:
@@ -38,6 +38,16 @@ logging:
               rpc:
                 MapSyncRpcHandler: ERROR
               ReturnChannelHandler: ERROR
+# Dev-mode Copilot (Vaadin dev tools). Disabled: a browser tab still holding a
+# Copilot connection after a server restart sends a copilot-* push message for
+# which the server has no CopilotSession, so Copilot.handleMessage throws
+# CopilotException ("No CopilotSession found for the current VaadinSession"),
+# surfaced as a WARN by Atmosphere's DefaultWebSocketProcessor. Turning Copilot
+# off makes handleConnect/handleMessage return early so the message is never
+# handled. Copilot is a dev-only tool and unused here.
+vaadin:
+  copilot:
+    enable: false
 server:
   port: 8081
   servlet:
@@ -151,7 +161,7 @@ management:
 
 monitoring:
   # Maximum number of days in the monitoring history
-  max-history-days: 3
+  max-history-days: 30
 cache-api:
   # Cache Time to leave in minutes for API calls
   ttl: 15
@@ -164,3 +174,19 @@ conformance-report:
   idle-timeout-seconds: 300
   # Safety cap: a study trickling in for longer than this is flushed anyway
   max-study-lifetime-seconds: 14400
+
+dicom-tools:
+  # Timeouts used by the DICOM Tools Echo and Monitor views (milliseconds)
+  echo:
+    # C-ECHO TCP connection timeout
+    connect-timeout-ms: 3000
+    # C-ECHO association acceptance timeout
+    accept-timeout-ms: 5000
+  network:
+    # Per-reply timeout passed to the ping command
+    ping-timeout-ms: 3000
+    # TCP timeout for the DICOM port reachability probe
+    port-timeout-ms: 3000
+  web:
+    # Connect / TLS / HTTP timeout for the DICOMweb (STOW-RS) reachability probe
+    timeout-ms: 5000

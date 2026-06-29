@@ -19,6 +19,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.monitoring.DestinationActivity;
 import org.karnak.backend.model.monitoring.ErrorBreakdown;
 import org.karnak.backend.model.monitoring.NodeActivity;
@@ -40,6 +41,7 @@ import org.weasis.core.util.annotations.Generated;
 @UIScope
 @Slf4j
 @Generated()
+@NullUnmarked
 public class MonitoringLogic {
 
 	// View

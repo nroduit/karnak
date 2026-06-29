@@ -10,6 +10,7 @@
 package org.karnak.backend.model.dicominnolitics;
 
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.DefaultDummy;
 import org.karnak.backend.model.action.Keep;
@@ -19,6 +20,7 @@ import org.karnak.backend.model.action.Replace;
 import org.karnak.backend.model.action.ReplaceNull;
 import org.karnak.backend.model.action.UID;
 
+@NullUnmarked
 public class JsonConfidentialityProfiles {
 
 	@Getter

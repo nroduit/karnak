@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.AbortException;
@@ -39,13 +40,13 @@ public class ReplaceApi extends AbstractProfileItem {
 
 	private final TagActionMap exceptedTagsAction;
 
-	private EndpointService endpointService;
+	private @Nullable EndpointService endpointService;
 
 	/**
 	 * Endpoint call configuration extracted from the profile {@code argumentEntities}.
 	 */
-	private record ApiArguments(String url, String responsePath, String method, String body, String authConfig,
-			String defaultValue) {
+	private record ApiArguments(@Nullable String url, @Nullable String responsePath, String method,
+			@Nullable String body, @Nullable String authConfig, @Nullable String defaultValue) {
 	}
 
 	public ReplaceApi(ProfileElementEntity profileElementEntity) throws ProfileException {
@@ -58,7 +59,7 @@ public class ReplaceApi extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		if (!tagsAction.isEmpty() && tagsAction.get(tag) == null) {
 			return null;
 		}
@@ -111,7 +112,7 @@ public class ReplaceApi extends AbstractProfileItem {
 	}
 
 	// Returns the resolved value, or null to fall back to the configured default value.
-	private String fetchValue(ApiArguments args) {
+	private @Nullable String fetchValue(ApiArguments args) {
 		if (endpointService == null) {
 			endpointService = ApplicationContextProvider.bean(EndpointService.class);
 		}

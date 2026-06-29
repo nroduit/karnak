@@ -12,6 +12,7 @@ package org.karnak.backend.data.repo;
 import java.util.List;
 import org.karnak.backend.data.entity.DicomNodeConfigEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -20,5 +21,17 @@ public interface DicomNodeConfigRepo extends JpaRepository<DicomNodeConfigEntity
 	List<DicomNodeConfigEntity> findByNodeType(String nodeType);
 
 	List<DicomNodeConfigEntity> findByNodeTypeNot(String nodeType);
+
+	List<DicomNodeConfigEntity> findByNodeGroup(String nodeGroup);
+
+	List<DicomNodeConfigEntity> findByNodeGroupIsNull();
+
+	void deleteByNodeGroup(String nodeGroup);
+
+	@Query("select distinct n.nodeGroup from DicomNodeConfig n where n.nodeGroup is not null order by n.nodeGroup")
+	List<String> findDistinctNodeGroups();
+
+	@Query("select distinct n.nodeType from DicomNodeConfig n order by n.nodeType")
+	List<String> findDistinctNodeTypes();
 
 }

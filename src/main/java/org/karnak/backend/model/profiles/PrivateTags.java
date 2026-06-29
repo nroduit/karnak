@@ -11,6 +11,7 @@ package org.karnak.backend.model.profiles;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.AbstractAction;
@@ -36,7 +37,7 @@ public class PrivateTags extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		if (TagUtils.isPrivateGroup(tag)) {
 			if (!tagsAction.isEmpty() && exceptedTagsAction.isEmpty()) {
 				return tagsAction.get(tag);

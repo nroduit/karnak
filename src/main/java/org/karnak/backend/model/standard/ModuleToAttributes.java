@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.exception.ModuleNotFoundException;
 import org.karnak.backend.model.dicominnolitics.JsonModuleToAttribute;
 import org.karnak.backend.model.dicominnolitics.StandardModuleToAttributes;
@@ -41,7 +43,7 @@ public class ModuleToAttributes {
 		return HMapModuleAttributes;
 	}
 
-	public Map<String, ModuleAttribute> getAttributesByModule(String moduleID) {
+	public @Nullable Map<String, ModuleAttribute> getAttributesByModule(String moduleID) {
 		return HMapModuleAttributes.get(moduleID);
 	}
 

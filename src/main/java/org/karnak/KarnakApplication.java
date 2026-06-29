@@ -56,7 +56,7 @@ public class KarnakApplication implements CommandLineRunner {
 		this.serverPort = serverPort;
 	}
 
-	static void main(String[] args) {
+	public static void main(String[] args) {
 
 		// Load open cv library
 		log.info("Loading open cv native library");

@@ -46,7 +46,9 @@ public class SecurityInMemoryConfig {
 			// Turns on/off authorizations
 			.authorizeHttpRequests(authorize -> authorize
 				// Application static resources - no authentication required
-				.requestMatchers("/img/**", "/icons/**")
+				// (/sw.js is the tombstone service worker that unregisters any stale
+				// PWA worker left over from older builds)
+				.requestMatchers("/img/**", "/sw.js")
 				.permitAll()
 				// Deny the shutdown endpoint before permitting the other actuator
 				// endpoints

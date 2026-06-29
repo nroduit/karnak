@@ -13,6 +13,7 @@ import java.time.DateTimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
@@ -62,7 +63,7 @@ public class ActionDates extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		final VR vr = dcm.getVR(tag);
 
 		if (vr == VR.AS || vr == VR.DA || vr == VR.DT || vr == VR.TM) {
@@ -90,7 +91,7 @@ public class ActionDates extends AbstractProfileItem {
 		return null;
 	}
 
-	private String applyOption(Attributes dcmCopy, int tag, HMAC hmac) throws DateTimeException {
+	private @Nullable String applyOption(Attributes dcmCopy, int tag, HMAC hmac) throws DateTimeException {
 		return switch (option) {
 			case "shift" -> ShiftDate.shift(dcmCopy, tag, argumentEntities);
 			case "shift_range" -> ShiftRangeDate.shift(dcmCopy, tag, argumentEntities, hmac);

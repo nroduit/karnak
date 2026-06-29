@@ -16,9 +16,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Version")
 @Table(name = "version")
+@NullUnmarked
 public class VersionEntity implements Serializable {
 
 	private Long id;

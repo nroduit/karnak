@@ -15,12 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 
 @Slf4j
+@NullUnmarked
 public abstract class AbstractAction implements ActionItem {
 
 	private static final Marker CLINICAL_MARKER = MarkerFactory.getMarker("CLINICAL");

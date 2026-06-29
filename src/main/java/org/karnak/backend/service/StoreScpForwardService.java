@@ -27,6 +27,7 @@ import org.dcm4che3.net.TransferCapability;
 import org.dcm4che3.net.service.BasicCEchoSCP;
 import org.dcm4che3.net.service.DicomServiceRegistry;
 import org.dcm4che3.tool.common.CLIUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
@@ -40,6 +41,7 @@ import org.weasis.dicom.param.DicomNode;
 @Service
 @Slf4j
 @Generated()
+@NullUnmarked
 public class StoreScpForwardService {
 
 	@Getter

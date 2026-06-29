@@ -10,6 +10,7 @@
 package org.karnak.backend.model.validation;
 
 import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * A single node of the conditional-requirement predicate DSL, deserialized from the
@@ -26,6 +27,7 @@ import java.util.List;
  * <li>{@code notIn} — the tag holds none of these values.</li>
  * </ul>
  */
+@NullUnmarked
 public class Condition {
 
 	private String tag;

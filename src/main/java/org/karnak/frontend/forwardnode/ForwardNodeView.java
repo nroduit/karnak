@@ -18,6 +18,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import jakarta.annotation.security.RolesAllowed;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.ConfirmDialog;
@@ -36,6 +37,7 @@ import org.weasis.core.util.annotations.Generated;
 @PageTitle("Karnak - Forward node")
 @RolesAllowed("admin")
 @Generated()
+@NullUnmarked
 public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Gateway";

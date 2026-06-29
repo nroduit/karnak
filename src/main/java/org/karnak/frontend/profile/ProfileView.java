@@ -26,6 +26,7 @@ import com.vaadin.flow.server.streams.UploadHandler;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.InputStream;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.ButtonFactory;
@@ -41,6 +42,7 @@ import org.weasis.core.util.annotations.Generated;
 @PageTitle("Karnak - Profiles")
 @RolesAllowed("admin")
 @Generated()
+@NullUnmarked
 public class ProfileView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Profiles";
@@ -149,7 +151,7 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 	private void openNewProfileDialog() {
 		TextField name = new TextField("Name");
 		TextField version = new TextField("Version");
-		TextField minVersion = new TextField("Min Karnak version");
+		TextField minVersion = new TextField("Min Karnak version (optional)");
 		name.setWidthFull();
 		version.setWidthFull();
 		minVersion.setWidthFull();

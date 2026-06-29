@@ -12,8 +12,10 @@ package org.karnak.backend.model.dicom;
 import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.Modality;
 
+@NullUnmarked
 @Setter
 @Getter
 public class WorkListQueryData {

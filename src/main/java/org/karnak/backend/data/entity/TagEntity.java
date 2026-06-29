@@ -22,6 +22,7 @@ import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Objects;
 import org.hibernate.annotations.DiscriminatorOptions;
+import org.jspecify.annotations.NullUnmarked;
 
 /*https://stackoverflow.com/questions/14810287/hibernate-inheritance-and-relationship-mapping-generics/14919535*/
 /*https://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/annotations/DiscriminatorOptions.html*/
@@ -30,6 +31,7 @@ import org.hibernate.annotations.DiscriminatorOptions;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tag_type")
 @DiscriminatorOptions(force = true)
+@NullUnmarked
 public abstract class TagEntity implements Serializable {
 
 	private static final long serialVersionUID = -1172918773653197764L;

@@ -12,10 +12,12 @@ package org.karnak.frontend.monitoring.component;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.TransferStatusType;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
+@NullUnmarked
 public class TransferStatusFilter {
 
 	private String studyUid;

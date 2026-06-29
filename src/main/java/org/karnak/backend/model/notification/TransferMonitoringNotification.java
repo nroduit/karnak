@@ -14,6 +14,7 @@ import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Model used to build transfer monitoring notification
@@ -21,6 +22,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @EqualsAndHashCode
+@NullUnmarked
 public class TransferMonitoringNotification {
 
 	private String subject;

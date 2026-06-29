@@ -12,9 +12,12 @@ package org.karnak.backend.config;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
 import java.net.URL;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.PatientClient;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
@@ -40,10 +43,11 @@ import org.yaml.snakeyaml.constructor.Constructor;
 @ConfigurationProperties
 @EnableCaching
 @Slf4j
+@NullUnmarked
 public class AppConfig {
 
 	@Getter
-	private static AppConfig instance;
+	@NonNull private static AppConfig instance;
 
 	@Getter
 	@Setter

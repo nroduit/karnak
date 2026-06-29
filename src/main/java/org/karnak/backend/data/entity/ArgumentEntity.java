@@ -20,9 +20,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Arguments")
 @Table(name = "arguments")
+@NullUnmarked
 public class ArgumentEntity implements Serializable {
 
 	private static final long serialVersionUID = -839421871919135822L;

@@ -20,9 +20,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "DicomSourceNode")
 @Table(name = "dicom_source_node")
+@NullUnmarked
 public class DicomSourceNodeEntity implements Serializable {
 
 	private static final long serialVersionUID = -4917273057619947934L;

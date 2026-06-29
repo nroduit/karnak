@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.exception.ModuleNotFoundException;
 import org.karnak.backend.exception.SOPNotFoundException;
 
@@ -83,12 +84,16 @@ public class StandardDICOM {
 		return moduleAttributes;
 	}
 
-	public Map<String, ModuleAttribute> getAttributesByModule(String moduleId) {
+	public @Nullable Map<String, ModuleAttribute> getAttributesByModule(String moduleId) {
 		return moduleToAttributes.getAttributesByModule(moduleId);
 	}
 
 	public List<ModuleAttribute> getAttributeListByModule(String moduleId) {
-		return new ArrayList<>(moduleToAttributes.getAttributesByModule(moduleId).values());
+		Map<String, ModuleAttribute> attributesByModule = moduleToAttributes.getAttributesByModule(moduleId);
+		if (attributesByModule != null && !attributesByModule.isEmpty()) {
+			return new ArrayList<>(attributesByModule.values());
+		}
+		return List.of();
 	}
 
 	public Map<String, ModuleAttribute> getModuleAttributesByType(String moduleId, String type)
@@ -96,7 +101,7 @@ public class StandardDICOM {
 		return moduleToAttributes.getModuleAttributesByType(moduleId, type);
 	}
 
-	public AttributeDetail getAttributeDetail(String tag) {
+	public @Nullable AttributeDetail getAttributeDetail(String tag) {
 		return attributeDetails.getAttributeDetail(tag);
 	}
 

@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.enums.SecurityRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -80,7 +81,7 @@ public class OidcRoleAuthoritiesMapper implements GrantedAuthoritiesMapper {
 	/**
 	 * Returns the role names of the "karnak" entry of the "resource_access" claim.
 	 */
-	private static Collection<String> retrieveRoles(Object accessClaim) {
+	private static Collection<String> retrieveRoles(@Nullable Object accessClaim) {
 		if (accessClaim instanceof Map<?, ?> access && access.get(ROLES_CLAIM) instanceof Collection<?> roles) {
 			return roles.stream().filter(String.class::isInstance).map(String.class::cast).toList();
 		}

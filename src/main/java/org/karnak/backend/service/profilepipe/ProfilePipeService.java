@@ -14,6 +14,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -131,7 +133,7 @@ public class ProfilePipeService {
 			}
 			catch (Exception e) {
 				Throwable cause = e.getCause() != null ? e.getCause() : e;
-				profileError.setError(cause.getMessage());
+				profileError.setError(cause != null && cause.getMessage() != null ? cause.getMessage() : "");
 			}
 		}
 		return profileError;
@@ -158,7 +160,7 @@ public class ProfilePipeService {
 	 * @return the reloaded, persisted profile (or the unchanged profile when it is a
 	 * default one or no longer exists)
 	 */
-	public ProfileEntity saveElement(Long profileId, ProfileElementEntity element) {
+	public @Nullable ProfileEntity saveElement(Long profileId, ProfileElementEntity element) {
 		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
 		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
 			return profile;
@@ -187,7 +189,7 @@ public class ProfilePipeService {
 	}
 
 	/** Delete an element from a profile and re-index the remaining positions (0..n-1). */
-	public ProfileEntity deleteElement(Long profileId, Long elementId) {
+	public @Nullable ProfileEntity deleteElement(Long profileId, Long elementId) {
 		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
 		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
 			return profile;
@@ -202,7 +204,7 @@ public class ProfilePipeService {
 	 * given id list (which must contain all of the profile's element ids). The Basic
 	 * DICOM confidentiality profile is always forced back to the last position.
 	 */
-	public ProfileEntity reorderElements(Long profileId, List<Long> orderedElementIds) {
+	public @Nullable ProfileEntity reorderElements(Long profileId, List<Long> orderedElementIds) {
 		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
 		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
 			return profile;
@@ -218,7 +220,7 @@ public class ProfilePipeService {
 		return profileRepo.saveAndFlush(profile);
 	}
 
-	private static ProfileElementEntity findElement(ProfileEntity profile, Long elementId) {
+	private static @Nullable ProfileElementEntity findElement(ProfileEntity profile, Long elementId) {
 		return profile.getProfileElementEntities()
 			.stream()
 			.filter(e -> Objects.equals(e.getId(), elementId))

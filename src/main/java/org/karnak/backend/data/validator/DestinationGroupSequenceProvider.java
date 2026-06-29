@@ -34,6 +34,12 @@ public class DestinationGroupSequenceProvider implements DefaultGroupSequencePro
 		if (type == null) {
 			return DEFAULT_GROUPS;
 		}
+		// A virtual (report-only) destination never forwards anything, so the delivery
+		// fields (AETitle/host/port or URL) are irrelevant: skip the type-specific
+		// mandatory-field groups and keep only the default constraints.
+		if (destinationEntity.isVirtualDestination()) {
+			return DEFAULT_GROUPS;
+		}
 		return switch (type) {
 			case dicom -> TYPE_DICOM_GROUPS;
 			case stow -> TYPE_STOW_GROUPS;

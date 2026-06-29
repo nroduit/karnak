@@ -16,6 +16,8 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.img.util.DicomUtils;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.ExcludeInstance;
 import org.karnak.backend.model.action.Keep;
@@ -26,6 +28,7 @@ import org.karnak.backend.model.action.UID;
 import org.karnak.backend.util.DicomObjectTools;
 import org.weasis.core.util.StringUtil;
 
+@NullUnmarked
 public class ExprAction implements ExpressionItem {
 
 	@Setter
@@ -40,7 +43,7 @@ public class ExprAction implements ExpressionItem {
 	@Getter
 	private String stringValue;
 
-	private Attributes dcmCopy;
+	private @Nullable Attributes dcmCopy;
 
 	public ExprAction(int tag, VR vr, Attributes dcmCopy) {
 		this.tag = tag;
@@ -96,7 +99,10 @@ public class ExprAction implements ExpressionItem {
 
 	public ActionItem ComputePatientAge() {
 		ActionItem replace = new Replace("D");
-		replace.setDummyValue(DicomUtils.getPatientAgeInPeriod(this.dcmCopy, Tag.PatientAge, false));
+		Attributes localCopy = dcmCopy;
+		if (localCopy != null) {
+			replace.setDummyValue(DicomUtils.getPatientAgeInPeriod(localCopy, Tag.PatientAge, false));
+		}
 		return replace;
 	}
 

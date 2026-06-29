@@ -9,6 +9,8 @@
  */
 package org.karnak.backend.service;
 
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -18,14 +20,14 @@ import org.weasis.core.util.annotations.Generated;
 @Generated()
 public class ApplicationContextProvider implements ApplicationContextAware {
 
-	private static ApplicationContext context;
+	private static @Nullable ApplicationContext context;
 
 	public static <T> T bean(Class<T> beanType) {
-		return context.getBean(beanType);
+		return Objects.requireNonNull(context).getBean(beanType);
 	}
 
 	public static Object bean(String name) {
-		return context.getBean(name);
+		return Objects.requireNonNull(context).getBean(name);
 	}
 
 	@Override

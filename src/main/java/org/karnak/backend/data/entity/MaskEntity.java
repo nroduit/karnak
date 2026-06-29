@@ -24,11 +24,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.converter.RectangleListConverter;
 import org.karnak.backend.data.converter.RectangleListToStringListConverter;
 
 @Entity(name = "Masks")
 @Table(name = "masks")
+@NullUnmarked
 public class MaskEntity implements Serializable {
 
 	private static final long serialVersionUID = 1833858684629178458L;

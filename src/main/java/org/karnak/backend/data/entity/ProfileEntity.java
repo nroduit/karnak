@@ -31,12 +31,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Profile")
 @Table(name = "profile")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({ "name", "version", "minimumKarnakVersion", "defaultIssuerOfPatientID", "profileElementEntities",
 		"maskEntities" })
+@NullUnmarked
 public class ProfileEntity implements Serializable {
 
 	private static final long serialVersionUID = -7178858361090900170L;

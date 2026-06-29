@@ -20,6 +20,7 @@ import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
@@ -37,6 +38,7 @@ import org.weasis.core.util.annotations.Generated;
 @PageTitle("Karnak - Projects")
 @RolesAllowed("admin")
 @Generated()
+@NullUnmarked
 public class ProjectView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Projects";

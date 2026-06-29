@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Organizational group for {@link ProjectEntity}. A project may belong to zero or one
@@ -24,6 +25,7 @@ import java.util.Objects;
  */
 @Entity(name = "ProjectGroup")
 @Table(name = "project_group")
+@NullUnmarked
 public class ProjectGroupEntity implements NamedGroupEntity, Serializable {
 
 	private static final long serialVersionUID = 1L;

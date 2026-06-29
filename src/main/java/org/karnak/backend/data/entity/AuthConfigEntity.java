@@ -20,10 +20,12 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 import org.hibernate.annotations.ColumnTransformer;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.AuthConfigType;
 
 @Entity(name = "AuthConfig")
 @Table(name = "auth_config")
+@NullUnmarked
 public class AuthConfigEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;

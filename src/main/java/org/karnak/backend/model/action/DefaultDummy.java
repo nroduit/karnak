@@ -37,7 +37,8 @@ public class DefaultDummy extends AbstractAction {
 			case UI -> hmac.uidHash(dcm.getString(tag));
 			default -> null;
 		};
-		ActionItem replace = new Replace(symbol, defaultDummyValue);
+		Replace replace = new Replace(symbol);
+		replace.setDummyValue(defaultDummyValue);
 		replace.execute(dcm, tag, hmac);
 	}
 

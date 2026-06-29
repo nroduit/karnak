@@ -18,9 +18,11 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import java.util.Base64;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
+@NullUnmarked
 public class AuthHeadersGenerationDialog extends Dialog {
 
 	public static final String AUTHORIZATION_TAG = "<key>Authorization</key>";

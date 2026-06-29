@@ -14,6 +14,7 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
 import org.dcm4che3.net.Status;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.enums.Modality;
@@ -27,6 +28,7 @@ import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.tool.ModalityWorklist;
 
 @Generated()
+@NullUnmarked
 public class DicomWorkListLogic {
 
 	// PAGE

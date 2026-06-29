@@ -10,23 +10,18 @@
 package org.karnak.frontend.image;
 
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.flow.server.streams.DownloadResponse;
-import java.io.InputStream;
-import org.karnak.frontend.forwardnode.edit.destination.component.LoadingImage;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
 public class LogoKarnak extends Image {
 
-	private static final String LOGO_PATH = "karnak.png";
+	// Served statically from src/main/resources/META-INF/resources/img/ (relative to the
+	// app base href), like LoadingImage. A plain static src avoids the overhead of a
+	// per-instance DownloadHandler stream for a fixed asset.
+	private static final String LOGO_SRC = "img/karnak.png";
 
 	public LogoKarnak(String alt, String maxSize) {
-		setAlt(alt);
-		setSrc(DownloadHandler.fromInputStream(event -> {
-			InputStream stream = LoadingImage.class.getResourceAsStream("/META-INF/resources/img/" + LOGO_PATH);
-			return new DownloadResponse(stream, LOGO_PATH, "image/png", -1);
-		}));
+		super(LOGO_SRC, alt);
 		setMaxHeight(maxSize);
 		setMaxWidth(maxSize);
 	}

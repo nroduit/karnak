@@ -3,9 +3,15 @@
 Karnak can validate the DICOM data it forwards against the DICOM standard and
 email you a **conformance report** for each study. The report tells you whether
 the de-identified data actually leaving Karnak still conforms to the DICOM
-standard (mandatory attributes present, correct encoding, consistent
-identifiers), so you can catch problems introduced by acquisition devices or by
-the de-identification / tag-morphing pipeline before they reach the destination.
+standard — mandatory attributes present, correct encoding, plausible values and
+geometry, valid codes, consistent identifiers, and no direct identifier left
+behind — so you can catch problems introduced by acquisition devices or by the
+de-identification / tag-morphing pipeline before they reach the destination.
+
+The checks mirror the validations performed by David Clunie's widely used
+`dciodvfy` IOD verifier (from `dicom3tools`), adapted to run inline on the
+de-identified stream. See [Categories of checks performed](#categories-of-checks-performed)
+for the full list.
 
 > The report validates the **de-identified data actually sent** to the
 > destination — not the original images Karnak received. This is intentional:
@@ -143,6 +149,37 @@ count. Each row has:
 | **Found** | What was actually present. |
 | **Instances** | How many instances of that SOP Class had this finding. |
 
+### Categories of checks performed
+
+The validator runs the following families of checks on every instance. Severity
+is the default; a few checks are **optional** (value-conformity option) or
+**deep-only** (deep-sequence option) as noted.
+
+| Family | Checks | Severity |
+|---|---|---|
+| **IOD presence & structure** | Mandatory module missing; Type 1 missing/empty; Type 2 missing; Type 1C/2C evaluated where the condition is curated; standard attribute not part of this IOD (*Standard Extended SOP Class*); unknown / retired SOP Class. | ERROR / WARNING / INFO |
+| **Encoding (VR / VM)** | Value Representation does not match the dictionary; value multiplicity out of range. | ERROR (VR `UN` → INFO) |
+| **Value content** *(optional)* | Value too long for its VR; malformed date/time, Code String, UID, numbers, Person Name. Enabled only with **Check value content conformity**. | ERROR / WARNING |
+| **Enumerated values** | Value outside a closed Enumerated Values set (e.g. Patient Sex); unexpected Defined Term. | ERROR / WARNING |
+| **Plausible values** | Zero where illegal — structural counts & geometry (Rows, Columns, Bits Allocated/Stored, Samples per Pixel, Number of Frames, Pixel/Imager Spacing, Slice Thickness, Rescale Slope) → ERROR; zero where implausible — acquisition/physics parameters (KVP, X-Ray Tube Current, Exposure(s), distances, Echo/Repetition Time, Magnetic Field Strength, Flip Angle, Patient Weight/Size…) → WARNING; negative Spacing Between Slices → ERROR (Nuclear Medicine exempt). | ERROR / WARNING |
+| **Pixel geometry** | Pixel Aspect Ratio present with a 1:1 ratio (must be omitted); Pixel Spacing differs from Imager / Nominal Scanned Pixel Spacing without a Pixel Spacing Calibration Type. | ERROR / WARNING |
+| **Image geometry** | Image Orientation (Patient) row/column are not unit vectors, or not mutually orthogonal. | ERROR |
+| **Patient orientation** | Illegal direction code, opposing directions in one value (A/P, H/F, L/R), or identical row and column directions (biped; quadruped skipped). | ERROR |
+| **Laterality** | A paired (non-midline) Body Part Examined carries no Laterality (skipped when another laterality is conveyed, or for segmentation / specimen / waveform objects). | WARNING |
+| **Codes** | Code Value uses characters not allowed by its Coding Scheme Designator (SNOMED / DICOM); code denotes the "Unknown" concept. | WARNING |
+| **Identifiers & consistency** | The SOP Instance / Series / Study / Frame of Reference UIDs reuse one another's value; (study-level) more than one Study UID, Patient identity, or Frame of Reference; Modality ↔ SOP Class coherence; retired transfer syntax. | ERROR / WARNING |
+| **Privacy (de-identification verification)** | A direct identifier (e.g. Patient's Telephone Numbers, Address, Other Patient Names, Institution / physician names, Occupation, Patient Comments) is still present after de-identification. | WARNING |
+| **Private blocks** | A private attribute is not covered by a non-empty Private Creator (orphan or empty private block). | WARNING |
+| **Enhanced multi-frame** | Per-frame Functional Groups item count ≠ Number of Frames; *(deep)* Dimension Index Values count ≠ Dimension Index Sequence; *(deep)* a functional group present in both the Shared and a Per-frame Functional Groups item. | ERROR |
+| **Segmentation** | Segment Numbers do not increase monotonically from one by one (LABELMAP segmentations exempt). | ERROR |
+| **Retired usage** | A retired attribute, SOP Class or transfer syntax is in use. | INFO / WARNING |
+
+> **Note on the privacy check.** It is *not* part of `dciodvfy` (which is a pure
+> IOD verifier); it is a Karnak addition for the de-identification use case, and
+> its attribute list mirrors the identifiers removed by `dciodvfy`'s companion
+> de-identifier, `dcanon`. It is most useful on a **de-identifying destination**,
+> where a residual identifier indicates a gap in the profile.
+
 ### Study consistency
 
 Cross-dataset checks that only make sense across the whole study: a single
@@ -159,13 +196,14 @@ Every email ends with a legend explaining the severities and issue colors.
 
 | Severity | Meaning | Examples |
 |---|---|---|
-| **ERROR** | A violation of the DICOM standard. The data is non-conformant. | Missing or empty **Type 1** attribute, missing **mandatory module**, wrong **VR**, wrong **VM**, a value outside a **closed enumerated set** (e.g. Patient Sex), an **over-long value in a small/structured field** (when value-conformity is enabled), two different Study UIDs in one study, mismatched Patient identity. |
-| **WARNING** | A deviation from recommended practice — usually accepted by receivers, but worth reviewing. | Missing **Type 2** attribute, an unexpected **defined term** value, Modality not matching the SOP Class, a **retired SOP Class** or **retired transfer syntax**. |
-| **INFO** | Informational only, no action required. | A **retired attribute** is still in use, an **unknown VR (UN)**. |
+| **ERROR** | A violation of the DICOM standard. The data is non-conformant. | Missing or empty **Type 1** attribute, missing **mandatory module**, wrong **VR**, wrong **VM**, a value outside a **closed enumerated set** (e.g. Patient Sex), a **zero in a structural/geometry field** (Rows, Columns, Pixel Spacing…), a **1:1 Pixel Aspect Ratio**, **non-unit or non-orthogonal Image Orientation**, an illegal **Patient Orientation**, a **reused UID** across entity levels, a **per-frame group count ≠ Number of Frames**, **non-monotonic Segment Numbers**, an **over-long value in a small/structured field** (when value-conformity is enabled), two different Study UIDs in one study, mismatched Patient identity. |
+| **WARNING** | A deviation from recommended practice — usually accepted by receivers, but worth reviewing. | Missing **Type 2** attribute, an unexpected **defined term** value, a **zero in an acquisition/physics field** (KVP, exposure…), a **paired body part without a laterality**, an **invalid or "Unknown" code**, a **residual direct identifier** still present after de-identification, Modality not matching the SOP Class, a **retired SOP Class** or **retired transfer syntax**. |
+| **INFO** | Informational only, no action required. | A **retired attribute** is still in use, an **unknown VR (UN)**, a **standard attribute outside this IOD** (Standard Extended SOP Class). |
 
-The issue color groups checks into categories: **presence** (red/orange),
-**encoding — VR/VM** (purple), **value constraints** (teal), **consistency**
-(blue), **retired usage** (gray).
+The issue color groups checks into categories: **presence & privacy**
+(red/orange), **encoding — VR/VM, multi-frame & segmentation** (purple),
+**value, geometry & code constraints** (teal), **identifiers & consistency**
+(blue), **retired / unknown usage** (gray).
 
 ---
 
@@ -224,9 +262,16 @@ mechanically. Keep these limits in mind when interpreting a PASSED verdict:
   structure, optional value-conformity) through every sequence level, up to
   `conformance-report.max-sequence-depth` (default 8). This covers, for example,
   the **Structured Report** `ContentSequence` tree and enhanced multiframe
-  functional groups. Note it validates the *encoding* of the nested attributes —
-  it does **not** check SR-specific semantics (template/TID conformance, content
-  item value-type rules, parent/child relationships), which remain out of scope.
+  functional groups. Two **enhanced multi-frame** consistency checks also require
+  this option, because they read per-frame functional groups: *Dimension Index
+  Values count* and *functional group present in both Shared and Per-frame*. The
+  lighter multi-frame and segmentation checks (per-frame item count vs Number of
+  Frames, Segment Number monotonicity) run regardless of the option. Deep
+  validation still checks the *encoding* and the specific structural rules listed
+  in [Categories of checks performed](#categories-of-checks-performed); it does
+  **not** check SR-specific semantics (template/TID conformance, content-item
+  value-type rules, parent/child relationships) or whole-slide/SR-reference
+  relationships, which remain out of scope.
 - **VR is not checked for Implicit VR Little Endian** datasets (the VR would be
   inferred from the dictionary, making the check meaningless).
 
@@ -243,7 +288,10 @@ destination:
 
 - **De-identifying destination** — the values shown are the pseudonymized ones
   produced by your profile (Patient ID/name, UIDs, dates as transformed). Safe to
-  share with the report's recipients.
+  share with the report's recipients. The report additionally **flags any direct
+  identifier still present** after de-identification (see the *Privacy* row in
+  [Categories of checks performed](#categories-of-checks-performed)), so a gap in
+  the profile shows up as a `WARNING` rather than silently leaking.
 - **Non-de-identifying destination** (de-identification is off) — the values are
   real. To limit exposure, Karnak **omits the Patient Name** from such reports
   (the header shows *"(hidden — destination not de-identified)"* and the name is

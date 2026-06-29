@@ -29,6 +29,7 @@ import com.vaadin.flow.server.streams.UploadHandler;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
@@ -42,6 +43,7 @@ import org.weasis.core.util.annotations.Generated;
 @Tag("extid-view")
 @RolesAllowed({ "user", "admin" })
 @Generated()
+@NullUnmarked
 public class ExternalIDView extends HorizontalLayout {
 
 	public static final String VIEW_NAME = "External pseudonym";

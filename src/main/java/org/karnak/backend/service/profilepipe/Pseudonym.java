@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.cache.PatientClient;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -33,7 +34,7 @@ public class Pseudonym {
 
 	private final PatientClient externalIdCache;
 
-	private EndpointService endpointService;
+	private @Nullable EndpointService endpointService;
 
 	public Pseudonym() {
 		this.externalIdCache = AppConfig.getInstance().getExternalIDCache();

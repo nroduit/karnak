@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.cache;
 
+import java.util.Objects;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,7 +24,8 @@ public class ExternalIDCache extends PatientClient {
 	private static final String NAME = "externalId.cache";
 
 	public ExternalIDCache(RedisCacheManager redisCacheManager, RedisTemplate<String, Patient> redisTemplate) {
-		super(redisCacheManager.getCache(NAME), redisTemplate, NAME);
+		super(Objects.requireNonNull(redisCacheManager.getCache(NAME), "Redis cache '" + NAME + "' not found"),
+				redisTemplate, NAME);
 	}
 
 }

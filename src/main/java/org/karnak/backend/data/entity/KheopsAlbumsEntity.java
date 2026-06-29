@@ -18,9 +18,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "KheopsAlbums")
 @Table(name = "kheops_albums")
+@NullUnmarked
 public class KheopsAlbumsEntity implements Serializable {
 
 	private static final long serialVersionUID = -3315720301354286325L;

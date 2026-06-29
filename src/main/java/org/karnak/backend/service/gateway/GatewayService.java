@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.dicom.GatewayParams;
@@ -32,6 +33,7 @@ import org.weasis.core.util.annotations.Generated;
 @Service
 @Slf4j
 @Generated()
+@NullUnmarked
 public class GatewayService implements ApplicationListener<ContextRefreshedEvent> {
 
 	private final GatewaySetUpService gatewaySetUpService;

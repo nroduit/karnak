@@ -12,8 +12,10 @@ package org.karnak.backend.dicom;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.dicom.param.DicomNode;
 
+@NullUnmarked
 public class ForwardDicomNode extends DicomNode {
 
 	@Getter

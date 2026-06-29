@@ -39,6 +39,30 @@ public enum CheckKind {
 
 	VALUE_FORMAT("Value format", "#0e6655"),
 
+	PIXEL_GEOMETRY("Pixel geometry", "#117a65"),
+
+	LATERALITY("Laterality", "#117a65"),
+
+	IMPLAUSIBLE_VALUE("Implausible value", "#16a085"),
+
+	CODE_VALUE_INVALID("Invalid code value", "#0e6655"),
+
+	CODE_UNKNOWN_CONCEPT("Unknown concept code", "#7f8c8d"),
+
+	IMAGE_ORIENTATION("Image orientation", "#117a65"),
+
+	PATIENT_ORIENTATION("Patient orientation", "#16a085"),
+
+	UID_REUSE("UID reuse", "#2980b9"),
+
+	MULTIFRAME("Multi-frame consistency", "#8e44ad"),
+
+	SEGMENTATION("Segmentation", "#8e44ad"),
+
+	NON_STANDARD_ATTRIBUTE("Non-standard attribute", "#2980b9"),
+
+	PRIVACY_RISK("Residual identifier", "#c0392b"),
+
 	PRIVATE_CREATOR_MISSING("Private creator missing", "#a04000"),
 
 	PRIVATE_CREATOR_INVALID("Private creator invalid", "#a04000"),

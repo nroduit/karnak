@@ -12,9 +12,11 @@ package org.karnak.backend.model.profilebody;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 
 @Getter
 @Setter
+@NullUnmarked
 public class MaskBody {
 
 	private String stationName;

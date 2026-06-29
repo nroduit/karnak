@@ -13,11 +13,15 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 @Getter
+@NullUnmarked
 public class SopInstance {
 
-	private final String sopInstanceUID;
+	@NonNull private final String sopInstanceUID;
 
 	@Setter
 	private Integer instanceNumber;
@@ -38,14 +42,14 @@ public class SopInstance {
 		}
 	}
 
-	public static SopInstance removeSopInstance(Map<String, SopInstance> sopInstanceMap, String sopUID) {
+	public static @Nullable SopInstance removeSopInstance(Map<String, SopInstance> sopInstanceMap, String sopUID) {
 		if (sopUID == null || sopInstanceMap == null) {
 			return null;
 		}
 		return sopInstanceMap.remove(sopUID);
 	}
 
-	public static SopInstance getSopInstance(Map<String, SopInstance> sopInstanceMap, String sopUID) {
+	public static @Nullable SopInstance getSopInstance(Map<String, SopInstance> sopInstanceMap, String sopUID) {
 		if (sopUID == null || sopInstanceMap == null) {
 			return null;
 		}

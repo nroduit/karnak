@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.util;
 
+import org.jspecify.annotations.Nullable;
 import org.weasis.core.util.StringUtil;
 
 public class SystemPropertyUtil {
@@ -22,7 +23,7 @@ public class SystemPropertyUtil {
 	 * @param defaultValue default value
 	 * @return property found
 	 */
-	public static String retrieveSystemProperty(String key, String defaultValue) {
+	public static @Nullable String retrieveSystemProperty(String key, @Nullable String defaultValue) {
 		String val = System.getProperty(key);
 		if (!StringUtil.hasText(val)) {
 			val = System.getenv(key);

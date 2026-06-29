@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.dcm4che3.net.Connection;
 import org.dcm4che3.net.TransferCapability;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import org.weasis.dicom.param.DicomNode;
 
 @Service
 @Generated()
+@NullUnmarked
 public class DicomGatewayService {
 
 	private final StoreScpForwardService storeScpForwardService;

@@ -11,6 +11,7 @@ package org.karnak.backend.model.validation;
 
 import java.util.List;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Evaluates a {@link Condition} predicate against a dataset using three-valued logic.
@@ -126,7 +127,7 @@ public final class ConditionEvaluator {
 		return Ternary.FALSE;
 	}
 
-	private static Integer parseTag(String hexTag) {
+	private static @Nullable Integer parseTag(String hexTag) {
 		if (hexTag == null) {
 			return null;
 		}

@@ -12,6 +12,7 @@ package org.karnak.backend.model.profiles;
 import java.awt.Color;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.AbstractAction;
@@ -58,7 +59,7 @@ public class ActionTags extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		if (exceptedTagsAction.get(tag) == null) {
 			return tagsAction.get(tag);
 		}

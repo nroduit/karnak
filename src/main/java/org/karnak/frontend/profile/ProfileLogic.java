@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.NamedGroupEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
@@ -42,6 +43,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 @UIScope
 @Slf4j
 @Generated()
+@NullUnmarked
 public class ProfileLogic extends ListDataProvider<ProfileEntity> implements GroupTreeController<ProfileEntity> {
 
 	@Getter

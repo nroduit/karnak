@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.standard.AttributeDetail;
 import org.karnak.backend.model.standard.ModuleAttribute;
 import org.karnak.backend.service.DicomStandardService;
@@ -35,6 +36,7 @@ import org.karnak.backend.service.DicomStandardService;
  * that drills into sequences. The selected tags are returned in the canonical
  * {@code (gggg,eeee)} form through the {@code onSelect} callback.
  */
+@NullUnmarked
 public class TagPickerDialog extends Dialog {
 
 	/** A row of the picker grid, normalised from either source (search or module). */

@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dcm4che3.data.UID;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.enums.DestinationType;
@@ -53,6 +54,7 @@ import org.thymeleaf.context.Context;
  */
 @Service
 @Slf4j
+@NullUnmarked
 public class ConformanceReportService {
 
 	public static final String TEMPLATE_THYMELEAF = "conformanceReportEmail";

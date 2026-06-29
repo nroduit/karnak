@@ -19,6 +19,7 @@ import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeGroupEntity;
 import org.karnak.backend.data.entity.NamedGroupEntity;
@@ -39,6 +40,7 @@ import org.weasis.core.util.annotations.Generated;
 @UIScope
 @Slf4j
 @Generated()
+@NullUnmarked
 public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
 		implements GroupTreeController<ForwardNodeEntity> {
 

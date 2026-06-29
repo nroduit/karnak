@@ -10,6 +10,7 @@
 package org.karnak.backend.config;
 
 import jakarta.annotation.PostConstruct;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -19,9 +20,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "dcmprofile")
 public class DcmProfileConfig {
 
-	private static DcmProfileConfig instance;
+	private static @Nullable DcmProfileConfig instance;
 
-	public static DcmProfileConfig getInstance() {
+	public static @Nullable DcmProfileConfig getInstance() {
 		return instance;
 	}
 

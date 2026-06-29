@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.action.ActionItem;
 import org.weasis.core.util.StringUtil;
 
@@ -61,7 +62,7 @@ public class TagActionMap {
 		}
 	}
 
-	public ActionItem get(Integer tag) {
+	public @Nullable ActionItem get(Integer tag) {
 		ActionItem action = tagAction.get(tag);
 		if (action == null) {
 			for (PatternAction pattern : tagPatternAction.values()) {

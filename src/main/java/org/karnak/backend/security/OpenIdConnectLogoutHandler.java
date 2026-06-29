@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -45,7 +46,7 @@ public class OpenIdConnectLogoutHandler extends SecurityContextLogoutHandler {
 
 	@Override
 	public void logout(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-			Authentication authentication) {
+			@Nullable Authentication authentication) {
 		super.logout(request, response, authentication);
 
 		if (authentication != null && authentication.getPrincipal() instanceof OidcUser oidcUser) {

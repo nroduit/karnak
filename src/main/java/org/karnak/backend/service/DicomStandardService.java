@@ -10,6 +10,7 @@
 package org.karnak.backend.service;
 
 import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.standard.AttributeDetail;
 import org.karnak.backend.model.standard.ModuleAttribute;
 import org.karnak.backend.model.standard.StandardDICOM;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
  * {@link StandardDICOM} bean.
  */
 @Service
+@NullUnmarked
 public class DicomStandardService {
 
 	/** Cap on the number of attributes returned by a single search. */

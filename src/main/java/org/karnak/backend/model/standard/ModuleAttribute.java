@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 public class ModuleAttribute {
@@ -34,7 +35,7 @@ public class ModuleAttribute {
 		this.tagPath = generateTagPath(moduleTagPath, moduleId);
 	}
 
-	public static String getStricterType(List<ModuleAttribute> moduleAttributes) {
+	public static @Nullable String getStricterType(List<ModuleAttribute> moduleAttributes) {
 		for (String stricterType : STRICTER_TYPES) {
 			if (moduleAttributes.stream().anyMatch(attribute -> stricterType.equals(attribute.getType()))) {
 				return stricterType;

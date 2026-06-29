@@ -478,11 +478,6 @@
       <groupId>com.vaadin.componentfactory</groupId>
       <version>4.2.0</version>
     </dependency>
-    <dependency>
-      <groupId>org.vaadin.klaudeta</groupId>
-      <artifactId>grid-pagination</artifactId>
-      <version>4.0.1</version>
-    </dependency>
     <!-- Single-calendar date-range picker for the monitoring filter (Vaadin 25, Apache-2.0) -->
     <dependency>
       <groupId>com.vaadin.componentfactory</groupId>

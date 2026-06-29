@@ -12,6 +12,7 @@ package org.karnak.backend.model.profiles;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
@@ -56,7 +57,7 @@ public class Expression extends AbstractProfileItem {
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
 		if (exceptedTagsAction.get(tag) == null && tagsAction.get(tag) != null) {
 			final String expr = argumentEntities.getFirst().getArgumentValue();
 			final ExprAction exprAction = new ExprAction(tag, dcm.getVR(tag), dcmCopy);

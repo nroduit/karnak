@@ -10,8 +10,8 @@
 package org.karnak.frontend.dicom.echo;
 
 import com.vaadin.flow.component.ComponentEventListener;
-import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H6;
@@ -28,16 +28,25 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomEchoQueryData;
 import org.karnak.backend.model.dicom.Message;
-import org.karnak.backend.service.DicomNodeConfigService;
+import org.karnak.backend.model.dicom.result.DicomCapabilitiesResult;
+import org.karnak.backend.model.dicom.result.DicomNodeCheckResult;
+import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckService;
 import org.karnak.backend.util.DicomNodeUtil;
+import org.karnak.frontend.dicom.AETField;
 import org.karnak.frontend.dicom.AbstractView;
+import org.karnak.frontend.dicom.DicomCapabilitiesPanel;
+import org.karnak.frontend.dicom.DicomNodeCheckResultGrid;
+import org.karnak.frontend.dicom.DicomNodeSelectionDialog;
+import org.karnak.frontend.dicom.DicomNodeSelectionDialog.SelectDicomNodeEvent;
 import org.karnak.frontend.dicom.PortField;
-import org.karnak.frontend.dicom.echo.DicomEchoSelectionDialog.DicomNodeSelectionEvent;
 import org.weasis.core.util.annotations.Generated;
 
 /**
@@ -45,6 +54,7 @@ import org.weasis.core.util.annotations.Generated;
  */
 
 @Generated()
+@NullUnmarked
 public class DicomEchoView extends AbstractView implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Dicom Echo";
@@ -64,7 +74,7 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	public static final String ERROR_MESSAGE = "This filed is mandatory";
 
 	// CONTROLLER
-	private final DicomEchoLogic logic = new DicomEchoLogic(this);
+	private final DicomEchoLogic logic;
 
 	// UI COMPONENTS
 	// Dicom Echo Query
@@ -88,12 +98,17 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 	private Button selectDicomNodeBtn;
 
-	private Button saveDicomNodeBtn;
-
 	private Button dicomEchoBtn;
 
-	// Dicom Echo Status
-	private Div dicomEchoStatusLayout;
+	// Dicom Echo Result
+	private VerticalLayout dicomEchoResultLayout;
+
+	private DicomNodeCheckResultGrid dicomEchoResultGrid;
+
+	// Dicom Capabilities
+	private VerticalLayout dicomCapabilitiesLayout;
+
+	private DicomCapabilitiesPanel dicomCapabilitiesPanel;
 
 	// DATA
 	private DicomEchoQueryData dicomEchoQueryData;
@@ -113,8 +128,10 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 	private final DicomNodeUtil dicomNodeUtil;
 
-	public DicomEchoView(DicomNodeUtil dicomNodeUtil) {
+	public DicomEchoView(DicomNodeUtil dicomNodeUtil, DicomNodeCheckService dicomNodeCheckService,
+			DicomCapabilitiesCheckService dicomCapabilitiesCheckService) {
 		this.dicomNodeUtil = dicomNodeUtil;
+		this.logic = new DicomEchoLogic(this, dicomNodeCheckService, dicomCapabilitiesCheckService);
 		init();
 		createView();
 		createMainLayout();
@@ -133,13 +150,14 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 		executeAction();
 	}
 
-	/*
-	 * https://vaadin.com/forum/thread/17072019/inject-an-html-into-a-flow-compoment
-	 */
-	public void displayStatus(String status) {
-		dicomEchoStatusLayout.removeAll();
-		dicomEchoStatusLayout.add(new Html("<span>" + status + "</span>"));
-		dicomEchoStatusLayout.setVisible(true);
+	public void displayResult(DicomNodeCheckResult result) {
+		dicomEchoResultGrid.setItems(List.of(result));
+		dicomEchoResultLayout.setVisible(true);
+	}
+
+	public void displayCapabilities(DicomCapabilitiesResult capabilities) {
+		dicomCapabilitiesPanel.display(capabilities);
+		dicomCapabilitiesLayout.setVisible(true);
 	}
 
 	private void init() {
@@ -158,9 +176,10 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 		mainLayout.setWidthFull();
 
 		buildDicomEchoQueryLayout();
-		buildDicomEchoStatusLayout();
+		buildDicomEchoResultLayout();
+		buildDicomCapabilitiesLayout();
 
-		mainLayout.add(dicomEchoQueryLayout, dicomEchoStatusLayout);
+		mainLayout.add(dicomEchoQueryLayout, dicomEchoResultLayout, dicomCapabilitiesLayout);
 	}
 
 	private void buildDicomEchoQueryLayout() {
@@ -199,15 +218,15 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	}
 
 	private void buildCallingAetFld() {
-		callingAetFld = new TextField();
-		callingAetFld.setLabel("Calling AETitle");
+		callingAetFld = new AETField();
+		callingAetFld.setLabel("Calling AE Title");
 		callingAetFld.setRequired(true);
 		callingAetFld.setRequiredIndicatorVisible(true);
 		callingAetFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
 	private void buildCalledAetFld() {
-		calledAetFld = new TextField("Called AET");
+		calledAetFld = new AETField("Called AE Title");
 		calledAetFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
@@ -231,87 +250,98 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 		buildClearBtn();
 		buildSelectDicomNodeBtn();
-		buildSaveDicomNodeBtn();
 		buildDicomEchoBtn();
 
-		buttonBar.add(clearBtn, selectDicomNodeBtn, saveDicomNodeBtn, dicomEchoBtn);
+		buttonBar.add(clearBtn, selectDicomNodeBtn, dicomEchoBtn);
 	}
 
 	private void buildClearBtn() {
-		clearBtn = new Button("Clear");
+		clearBtn = new Button("Reset Form");
 		clearBtn.getStyle().set("cursor", "pointer");
 
 		clearBtn.addClickListener(event -> binder.readBean(dicomEchoQueryData));
 	}
 
 	private void buildSelectDicomNodeBtn() {
-		selectDicomNodeBtn = new Button("Select Node");
+		selectDicomNodeBtn = new Button("Select DICOM Node");
 		selectDicomNodeBtn.getStyle().set("cursor", "pointer");
 
-		selectDicomNodeBtn.addClickListener(event -> openDicomEchoSelectionDialog());
+		selectDicomNodeBtn.addClickListener(event -> openDicomNodeSelectionDialog());
 	}
 
-	private void openDicomEchoSelectionDialog() {
-		DicomEchoSelectionDialog dicomEchoSelectionDialog = new DicomEchoSelectionDialog(dicomNodeUtil);
+	private void openDicomNodeSelectionDialog() {
+		DicomNodeSelectionDialog dialog = new DicomNodeSelectionDialog(dicomNodeUtil.getAllNodeTypesIncludingWorklist(),
+				"Select DICOM Node", "DICOM nodes");
 
-		dicomEchoSelectionDialog
-			.addDicomNodeSelectionListener((ComponentEventListener<DicomNodeSelectionEvent>) event -> {
-				ConfigNode selectedDicomNode = event.getSelectedDicomNode();
+		dialog.addSelectDicomNodeListener((ComponentEventListener<SelectDicomNodeEvent>) event -> {
+			ConfigNode selectedDicomNode = event.getSelectedDicomNode();
 
-				calledAetFld.setValue(selectedDicomNode.getAet());
-				calledHostnameFld.setValue(selectedDicomNode.getHostname());
-				calledPortFld.setValue(selectedDicomNode.getPort());
-			});
+			calledAetFld.setValue(selectedDicomNode.getAet());
+			calledHostnameFld.setValue(selectedDicomNode.getHostname());
+			calledPortFld.setValue(selectedDicomNode.getPort());
+		});
 
-		dicomEchoSelectionDialog.open();
-	}
-
-	private void buildSaveDicomNodeBtn() {
-		saveDicomNodeBtn = new Button("Save Node");
-		saveDicomNodeBtn.getStyle().set("cursor", "pointer");
-
-		saveDicomNodeBtn.addClickListener(event -> saveCurrentDicomNode());
-	}
-
-	private void saveCurrentDicomNode() {
-		if (calledAetFld.isEmpty() || calledHostnameFld.isEmpty() || calledPortFld.isEmpty()) {
-			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT,
-					"Called AET, Hostname and Port are required to save a DICOM node"));
-			return;
-		}
-
-		String aet = calledAetFld.getValue();
-		try {
-			dicomNodeUtil.saveDicomNode(aet, aet, calledHostnameFld.getValue(), calledPortFld.getValue(),
-					DicomNodeConfigService.NODE_TYPE_WORKSTATION);
-			displayMessage(new Message(MessageLevel.INFO, MessageFormat.TEXT,
-					"DICOM node \"" + aet + "\" saved to the configuration"));
-		}
-		catch (Exception e) {
-			displayMessage(new Message(MessageLevel.ERROR, MessageFormat.TEXT,
-					"Cannot save the DICOM node: " + e.getMessage()));
-		}
+		dialog.open();
 	}
 
 	private void buildDicomEchoBtn() {
-		dicomEchoBtn = new Button("Echo");
+		dicomEchoBtn = new Button("Check DICOM Node");
 		dicomEchoBtn.getStyle().set("cursor", "pointer");
-		dicomEchoBtn.addClassName("stroked-button");
+		dicomEchoBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		dicomEchoBtn.setEnabled(false);
 
 		dicomEchoBtn.addClickListener(event -> executeEcho());
 	}
 
-	private void buildDicomEchoStatusLayout() {
-		dicomEchoStatusLayout = new Div();
-		dicomEchoStatusLayout.setWidth("-webkit-fill-available");
-		dicomEchoStatusLayout.getStyle().set("padding", "1em");
-		dicomEchoStatusLayout.getStyle()
+	private void buildDicomEchoResultLayout() {
+		dicomEchoResultLayout = new VerticalLayout();
+		dicomEchoResultLayout.setWidthFull();
+		dicomEchoResultLayout.setPadding(true);
+		dicomEchoResultLayout.setSpacing(false);
+		dicomEchoResultLayout.getStyle()
 			.set("box-shadow",
 					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
-		dicomEchoStatusLayout.getStyle().set("border-radius", "4px");
+		dicomEchoResultLayout.getStyle().set("border-radius", "4px");
+		dicomEchoResultLayout.setVisible(false);
 
-		dicomEchoStatusLayout.setVisible(false);
+		H6 resultTitle = new H6("Result");
+		resultTitle.getStyle().set("margin-top", "0px");
+		resultTitle.getStyle().set("padding-bottom", "0px");
+
+		Div dicomEchoResultNote = new Div("Select the row to view the details");
+		dicomEchoResultNote.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+		dicomEchoResultNote.getStyle().set("font-style", "italic");
+
+		dicomEchoResultGrid = new DicomNodeCheckResultGrid();
+		dicomEchoResultGrid.setWidthFull();
+		dicomEchoResultGrid.setAllRowsVisible(true);
+
+		dicomEchoResultLayout.add(resultTitle, dicomEchoResultNote, dicomEchoResultGrid);
+	}
+
+	private void buildDicomCapabilitiesLayout() {
+		dicomCapabilitiesLayout = new VerticalLayout();
+		dicomCapabilitiesLayout.setWidthFull();
+		dicomCapabilitiesLayout.setPadding(true);
+		dicomCapabilitiesLayout.setSpacing(false);
+		dicomCapabilitiesLayout.getStyle()
+			.set("box-shadow",
+					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
+		dicomCapabilitiesLayout.getStyle().set("border-radius", "4px");
+		dicomCapabilitiesLayout.setVisible(false);
+
+		H6 capabilitiesTitle = new H6("DICOM Capabilities");
+		capabilitiesTitle.getStyle().set("margin-top", "0px");
+		capabilitiesTitle.getStyle().set("padding-bottom", "0px");
+
+		Div capabilitiesNote = new Div(
+				"Non-invasive probe: which SOP Classes and transfer syntaxes the node accepts (no data is sent)");
+		capabilitiesNote.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+		capabilitiesNote.getStyle().set("font-style", "italic");
+
+		dicomCapabilitiesPanel = new DicomCapabilitiesPanel();
+
+		dicomCapabilitiesLayout.add(capabilitiesTitle, capabilitiesNote, dicomCapabilitiesPanel);
 	}
 
 	private void bindFields() {
@@ -343,8 +373,8 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 				dicomEchoBtn.setEnabled(!event.hasValidationErrors());
 			}
 
-			dicomEchoStatusLayout.removeAll();
-			dicomEchoStatusLayout.setVisible(false);
+			dicomEchoResultLayout.setVisible(false);
+			dicomCapabilitiesLayout.setVisible(false);
 		});
 	}
 

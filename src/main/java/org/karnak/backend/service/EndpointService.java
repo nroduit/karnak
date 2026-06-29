@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.AuthConfigEntity;
 import org.karnak.backend.data.repo.AuthConfigRepo;
 import org.karnak.backend.model.action.ActionItem;
@@ -97,7 +98,11 @@ public class EndpointService {
 	}
 
 	@Cacheable(value = "endpoint.cache")
-	public String get(String authConfig, String url) throws IllegalArgumentException, HttpClientErrorException {
+	public @Nullable String get(@Nullable String authConfig, @Nullable String url)
+			throws IllegalArgumentException, HttpClientErrorException {
+		if (url == null) {
+			return null;
+		}
 		if (authConfig != null && !authConfig.isEmpty()) {
 			return getAuthConfiguredRestClient(authConfig).get()
 				.uri(url)
@@ -111,38 +116,48 @@ public class EndpointService {
 	}
 
 	@Cacheable(value = "endpoint.cache")
-	public String post(String authConfig, String url, String body) {
+	public @Nullable String post(@Nullable String authConfig, @Nullable String url, @Nullable String body) {
+		if (url == null) {
+			return null;
+		}
+		String safeBody = body != null ? body : "";
 		if (authConfig != null && !authConfig.isEmpty()) {
 			return getAuthConfiguredRestClient(authConfig).post()
 				.uri(url)
 				.attributes(clientRegistrationId(authConfig))
-				.body(body)
+				.body(safeBody)
 				.contentType(MediaType.APPLICATION_JSON)
 				.retrieve()
 				.body(String.class);
 		}
 		else {
-			return post(url, body);
+			return post(url, safeBody);
 		}
 	}
 
 	@Cacheable(value = "endpoint.cache")
-	public String get(String url) {
+	public @Nullable String get(@Nullable String url) {
+		if (url == null) {
+			return null;
+		}
 		return getNoAuthRestClient().get().uri(url).retrieve().body(String.class);
-
 	}
 
 	@Cacheable(value = "endpoint.cache")
-	public String post(String url, String body) {
+	public @Nullable String post(@Nullable String url, @Nullable String body) {
+		if (url == null) {
+			return null;
+		}
+		String safeBody = body != null ? body : "";
 		return getNoAuthRestClient().post()
 			.uri(url)
-			.body(body)
+			.body(safeBody)
 			.contentType(MediaType.APPLICATION_JSON)
 			.retrieve()
 			.body(String.class);
 	}
 
-	public static String evaluateStringWithExpression(String url, Attributes dcm) {
+	public static @Nullable String evaluateStringWithExpression(String url, Attributes dcm) {
 		if (url != null && !url.isEmpty()) {
 			Matcher m = EXPRESSION_PLACEHOLDER.matcher(url);
 			String replacedUrl = url;
@@ -155,7 +170,7 @@ public class EndpointService {
 		return null;
 	}
 
-	public static String validateStringWithExpression(String url) {
+	public static @Nullable String validateStringWithExpression(String url) {
 		if (url != null && !url.isEmpty()) {
 			Matcher m = EXPRESSION_PLACEHOLDER.matcher(url);
 			while (m.find()) {

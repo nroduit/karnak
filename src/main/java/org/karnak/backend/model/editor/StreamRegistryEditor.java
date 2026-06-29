@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DicomObjectUtil;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.Series;
 import org.karnak.backend.model.SopInstance;
 import org.karnak.backend.model.Study;
@@ -92,11 +93,11 @@ public class StreamRegistryEditor implements AttributeEditor {
 		}
 	}
 
-	public Study removeStudy(String studyUID) {
+	public @Nullable Study removeStudy(String studyUID) {
 		return studyMap.remove(studyUID);
 	}
 
-	public Study getStudy(String studyUID) {
+	public @Nullable Study getStudy(String studyUID) {
 		return studyMap.get(studyUID);
 	}
 

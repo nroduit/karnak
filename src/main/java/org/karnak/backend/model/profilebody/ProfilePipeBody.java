@@ -13,9 +13,11 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 
 @Getter
 @Setter
+@NullUnmarked
 public class ProfilePipeBody {
 
 	private String name;

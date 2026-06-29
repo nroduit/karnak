@@ -11,7 +11,9 @@ package org.karnak.backend.model.dicom;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 
+@NullUnmarked
 @Setter
 @Getter
 public class DicomEchoQueryData {

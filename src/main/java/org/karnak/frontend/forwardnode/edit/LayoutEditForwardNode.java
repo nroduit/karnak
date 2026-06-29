@@ -23,6 +23,7 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -58,6 +59,7 @@ import org.weasis.core.util.annotations.Generated;
  * Layout of the edit forward node
  */
 @Generated()
+@NullUnmarked
 public class LayoutEditForwardNode extends VerticalLayout {
 
 	// Services

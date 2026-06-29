@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Organizational group for {@link ProfileEntity}. A profile may belong to zero or one
@@ -24,6 +25,7 @@ import java.util.Objects;
  */
 @Entity(name = "ProfileGroup")
 @Table(name = "profile_group")
+@NullUnmarked
 public class ProfileGroupEntity implements NamedGroupEntity, Serializable {
 
 	private static final long serialVersionUID = 1L;

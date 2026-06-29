@@ -42,6 +42,7 @@ import org.dcm4che3.net.DataWriterAdapter;
 import org.dcm4che3.net.InputStreamDataWriter;
 import org.dcm4che3.net.PDVInputStream;
 import org.dcm4che3.net.Status;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.Defacer;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.DicomForwardDestination.ScuLease;
@@ -75,6 +76,7 @@ import org.weasis.opencv.data.PlanarImage;
 
 @Service
 @Slf4j
+@NullUnmarked
 public class ForwardService {
 
 	private static final String ERROR_WHEN_FORWARDING = "Error when forwarding to the final destination";
@@ -265,6 +267,20 @@ public class ForwardService {
 	private void prepareAndTransfer(ForwardDicomNode fwdNode, Params p, int index, ForwardDestination destination,
 			Attributes attributes, int nbDestinations, List<File> files) throws IOException {
 		Attributes attToApply = nbDestinations > 1 ? attributes : null;
+		if (destination.isVirtual()) {
+			// Report-only destination: never forward, route to devnull. Still apply the
+			// editors and publish the monitoring + conformance events.
+			if (index == 0) {
+				List<File> list = transferVirtual(fwdNode, destination, attToApply, p);
+				if (list != null) {
+					files.addAll(list);
+				}
+			}
+			else if (!attributes.isEmpty()) {
+				transferVirtualOther(fwdNode, destination, attributes, p);
+			}
+			return;
+		}
 		if (destination instanceof DicomForwardDestination dicomDestination) {
 			// Lease one association from the destination's pool for the whole transfer,
 			// so the same connection is used by prepareTransfer and the sending, then
@@ -701,6 +717,103 @@ public class ForwardService {
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, e.getMessage(),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			throw e;
+		}
+		catch (Exception e) {
+			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, e.getMessage(),
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+			log.error(ERROR_WHEN_FORWARDING, e);
+		}
+	}
+
+	/**
+	 * Transfer for a virtual (report-only) destination reading from the incoming stream.
+	 * The dataset is read and the destination editors are applied so the conformance
+	 * report reflects what would have been sent, then it is discarded (devnull) instead
+	 * of being forwarded. The monitoring and conformance events are still published.
+	 */
+	public List<File> transferVirtual(ForwardDicomNode fwdNode, ForwardDestination destination, Attributes copy,
+			Params p) throws IOException {
+		DicomInputStream in = null;
+		List<File> files;
+		Attributes attributesToSend = new Attributes();
+		Attributes attributesOriginal = new Attributes();
+		try {
+			List<AttributeEditor> editors = destination.getDicomEditors();
+			AttributeEditorContext context = new AttributeEditorContext(p.tsuid(), fwdNode, null);
+			in = new DicomInputStream(p.data(), p.tsuid());
+			in.setIncludeBulkData(IncludeBulkData.URI);
+			Attributes attributes = in.readDataset();
+			attributesToSend = attributes;
+			attributesOriginal.addAll(attributes);
+			if (copy != null) {
+				copy.addAll(attributes);
+			}
+			if (!editors.isEmpty()) {
+				editors.forEach(e -> e.apply(attributes, context));
+			}
+			abortIfRequested(context, p, true, "Virtual destination abort: ");
+			// No network send: the dataset is routed to devnull.
+			progressNotify(destination, p.iuid(), p.cuid(), false, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+		}
+		catch (AbortException e) {
+			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, false, e.getMessage(),
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+			if (e.getAbort() == Abort.CONNECTION_EXCEPTION) {
+				throw e;
+			}
+		}
+		catch (IOException e) {
+			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, e.getMessage(),
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+			throw e;
+		}
+		catch (Exception e) {
+			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, e.getMessage(),
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+			log.error(ERROR_WHEN_FORWARDING, e);
+		}
+		finally {
+			files = cleanOrGetBulkDataFiles(in, copy == null);
+		}
+		return files;
+	}
+
+	/**
+	 * Transfer for a virtual (report-only) destination served from the buffered dataset
+	 * copy (fan-out to destinations after the first one). Behaves like
+	 * {@link #transferVirtual} but does not consume the incoming stream.
+	 */
+	public void transferVirtualOther(ForwardDicomNode fwdNode, ForwardDestination destination, Attributes copy,
+			Params p) throws IOException {
+		Attributes attributesToSend = new Attributes();
+		Attributes attributesOriginal = new Attributes();
+		try {
+			List<AttributeEditor> editors = destination.getDicomEditors();
+			AttributeEditorContext context = new AttributeEditorContext(p.tsuid(), fwdNode, null);
+			Attributes attributes = new Attributes(copy);
+			attributesToSend = attributes;
+			attributesOriginal.addAll(attributes);
+			if (!editors.isEmpty()) {
+				editors.forEach(e -> e.apply(attributes, context));
+			}
+			abortIfRequested(context, p, false, "Virtual destination abort. ");
+			progressNotify(destination, p.iuid(), p.cuid(), false, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+		}
+		catch (AbortException e) {
+			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, false, e.getMessage(),
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+			if (e.getAbort() == Abort.CONNECTION_EXCEPTION) {
+				throw e;
+			}
 		}
 		catch (Exception e) {
 			progressNotify(destination, p.iuid(), p.cuid(), true, 0);

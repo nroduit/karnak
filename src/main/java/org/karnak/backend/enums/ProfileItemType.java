@@ -11,6 +11,7 @@ package org.karnak.backend.enums;
 
 import java.util.Set;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.profiles.ActionDates;
 import org.karnak.backend.model.profiles.ActionTags;
 import org.karnak.backend.model.profiles.AddPrivateTag;
@@ -24,6 +25,7 @@ import org.karnak.backend.model.profiles.ProfileItem;
 import org.karnak.backend.model.profiles.ReplaceApi;
 import org.karnak.backend.model.profiles.UpdateUIDsProfile;
 
+@NullUnmarked
 public enum ProfileItemType {
 
 	BASIC_DICOM(BasicProfile.class, "basic.dicom.profile", "113100", "Basic Application Confidentiality Profile"),

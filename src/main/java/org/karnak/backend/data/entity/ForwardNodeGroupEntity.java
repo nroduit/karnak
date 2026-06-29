@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Organizational group for {@link ForwardNodeEntity}. A forward node may belong to zero
@@ -24,6 +25,7 @@ import java.util.Objects;
  */
 @Entity(name = "ForwardNodeGroup")
 @Table(name = "forward_node_group")
+@NullUnmarked
 public class ForwardNodeGroupEntity implements NamedGroupEntity, Serializable {
 
 	private static final long serialVersionUID = 1L;

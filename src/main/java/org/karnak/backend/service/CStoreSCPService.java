@@ -31,6 +31,7 @@ import org.dcm4che3.net.Status;
 import org.dcm4che3.net.pdu.PresentationContext;
 import org.dcm4che3.net.service.BasicCStoreSCP;
 import org.dcm4che3.net.service.DicomServiceException;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
@@ -43,6 +44,7 @@ import org.weasis.dicom.param.DicomNode;
 @Service
 @Slf4j
 @Generated()
+@NullUnmarked
 public class CStoreSCPService extends BasicCStoreSCP {
 
 	// Service

@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
@@ -24,7 +26,7 @@ public abstract class PatientClient {
 
 	private final Cache cache;
 
-	private final RedisTemplate<String, Patient> redisTemplate;
+	private final @Nullable RedisTemplate<String, Patient> redisTemplate;
 
 	private static final String KEY_SEPARATOR = "::";
 
@@ -32,18 +34,18 @@ public abstract class PatientClient {
 
 	private final String patternSearchAllKeysCache;
 
-	public PatientClient(Cache cache, RedisTemplate<String, Patient> redisTemplate, String name) {
+	public PatientClient(Cache cache, @Nullable RedisTemplate<String, Patient> redisTemplate, String name) {
 		this.cache = cache;
 		this.redisTemplate = redisTemplate;
 		this.prefixKeySearchCache = "%s%s".formatted(name, KEY_SEPARATOR);
 		this.patternSearchAllKeysCache = "%s*".formatted(prefixKeySearchCache);
 	}
 
-	public Patient put(String key, Patient patient) {
+	public @Nullable Patient put(String key, Patient patient) {
 		return unwrap(cache.putIfAbsent(key, patient));
 	}
 
-	public Patient get(String key) {
+	public @Nullable Patient get(String key) {
 		return unwrap(cache.get(key));
 	}
 
@@ -80,7 +82,7 @@ public abstract class PatientClient {
 		}
 	}
 
-	private static Patient unwrap(ValueWrapper wrapper) {
+	private static @Nullable Patient unwrap(@Nullable ValueWrapper wrapper) {
 		return wrapper != null ? (Patient) wrapper.get() : null;
 	}
 
@@ -88,6 +90,9 @@ public abstract class PatientClient {
 	 * Streams the Redis cache keys matching the cache prefix, with the prefix stripped.
 	 */
 	private Stream<String> redisCacheKeys() {
+		if (redisTemplate == null) {
+			return Stream.empty();
+		}
 		return Objects.requireNonNull(redisTemplate.keys(patternSearchAllKeysCache))
 			.stream()
 			.filter(Objects::nonNull)

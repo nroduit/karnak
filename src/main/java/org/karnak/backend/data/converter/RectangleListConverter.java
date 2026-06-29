@@ -15,6 +15,7 @@ import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 
 @Converter
 public class RectangleListConverter implements AttributeConverter<List<Rectangle>, String> {
@@ -26,7 +27,7 @@ public class RectangleListConverter implements AttributeConverter<List<Rectangle
 				String.valueOf(rect.height));
 	}
 
-	public static Rectangle stringToRectangle(String rectangle) {
+	public static @Nullable Rectangle stringToRectangle(String rectangle) {
 		String[] vals = rectangle.trim().split("\\s+");
 		if (vals.length == 4) {
 			return new Rectangle(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]), Integer.parseInt(vals[2]),

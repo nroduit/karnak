@@ -17,12 +17,14 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.weasis.core.util.annotations.Generated;
 
 @Setter
 @Getter
 @Generated()
+@NullUnmarked
 public class GridDestination extends Grid<DestinationEntity> {
 
 	private static final Map<Long, Boolean> loadingState = new HashMap<>();

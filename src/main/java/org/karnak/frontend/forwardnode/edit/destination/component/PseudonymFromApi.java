@@ -17,12 +17,14 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import java.util.Objects;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.util.UIS;
 import org.weasis.core.util.annotations.Generated;
 
 @Getter
 @Generated()
+@NullUnmarked
 public class PseudonymFromApi extends Div {
 
 	private final Binder<DestinationEntity> destinationBinder;

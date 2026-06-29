@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
@@ -53,6 +54,7 @@ import org.springframework.transaction.annotation.Transactional;
  * are reused ({@link TransferSeriesPredicates}).
  */
 @Service
+@NullUnmarked
 public class MonitoringAggregationService {
 
 	@PersistenceContext

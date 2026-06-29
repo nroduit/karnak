@@ -32,6 +32,7 @@ import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
@@ -81,7 +82,7 @@ public class Profile {
 		this.tagProfiles = profiles.stream().filter(p -> !(p instanceof CleanPixelData)).toList();
 	}
 
-	public MaskArea getMask(MaskStationCondition key) {
+	public @Nullable MaskArea getMask(MaskStationCondition key) {
 		MaskArea mask = maskMap.get(key);
 		if (mask == null) {
 			// No exact match, remove image size information to match the station name
@@ -145,8 +146,9 @@ public class Profile {
 		return Collections.emptyList();
 	}
 
-	public void applyAction(Attributes dcm, Attributes dcmCopy, HMAC hmac, ProfileItem profilePassedInSequence,
-			ActionItem actionPassedInSequence, AttributeEditorContext context) {
+	public void applyAction(Attributes dcm, Attributes dcmCopy, HMAC hmac,
+			@Nullable ProfileItem profilePassedInSequence, @Nullable ActionItem actionPassedInSequence,
+			AttributeEditorContext context) {
 		for (int tag : dcm.tags()) {
 			VR vr = dcm.getVR(tag);
 			final ExprCondition exprCondition = new ExprCondition(dcmCopy);

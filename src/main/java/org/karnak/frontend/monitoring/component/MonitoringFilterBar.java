@@ -177,8 +177,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			rangePicker.clear();
 		}
 		else {
-			rangePicker.setValue(
-					new DateRange(start.toLocalDate(), end.toLocalDate()));
+			rangePicker.setValue(new DateRange(start.toLocalDate(), end != null ? end.toLocalDate() : LocalDate.now()));
 		}
 		updating = false;
 		filter.setStart(start);

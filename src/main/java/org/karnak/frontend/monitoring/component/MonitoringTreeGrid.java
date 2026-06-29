@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.frontend.monitoring.MonitoringLogic;
 import org.karnak.frontend.monitoring.component.MonitoringNode.DestinationNode;
 import org.karnak.frontend.monitoring.component.MonitoringNode.ErrorNode;
@@ -39,6 +40,7 @@ import org.weasis.core.util.annotations.Generated;
  * expanded.
  */
 @Generated()
+@NullUnmarked
 public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 
 	private final transient MonitoringTreeDataProvider dataProvider;
