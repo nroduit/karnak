@@ -86,7 +86,7 @@ public class DeidentifyImageServiceTest {
 				]
 			}
 			""";
-		String expectedUid = "1.2.840.114340.1762135411026254060.0.1.3.3.3";
+		String expectedUid = "2.25.251867431509614238946512793485716204981";
 
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 
@@ -115,10 +115,10 @@ public class DeidentifyImageServiceTest {
 					]
 				}
 				],
-			  "sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
+			  "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 			}
 			""";
-		String expectedUid = "1.2.840.114340.1762135411026254060.0.1.3.3.2";
+		String expectedUid = "2.25.251867431509614238946512793485716204980";
 
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 
@@ -130,10 +130,10 @@ public class DeidentifyImageServiceTest {
 		String responseJson = """
 			{
 				"message": "Test",
-				"sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
+				"sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 			}
 			""";
-		String expectedUid = "1.2.840.114340.1762135411026254060.0.1.3.3.3";
+		String expectedUid = "2.25.251867431509614238946512793485716204981";
 
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 
@@ -146,10 +146,10 @@ public class DeidentifyImageServiceTest {
 			{
 				"message": "Test",
 				"masks" : [],
-				"sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
+				"sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 			}
 			""";
-		String expectedUid = "1.2.840.114340.1762135411026254060.0.1.3.3.3";
+		String expectedUid = "2.25.251867431509614238946512793485716204981";
 
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 
@@ -178,10 +178,10 @@ public class DeidentifyImageServiceTest {
 					]
 				}
 				],
-			  "sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
+			  "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 			}
 			""";
-		String expectedUid = "1.2.840.114340.1762135411026254060.0.1.3.3.3";
+		String expectedUid = "2.25.251867431509614238946512793485716204981";
 
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 

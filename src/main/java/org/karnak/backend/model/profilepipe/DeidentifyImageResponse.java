@@ -40,7 +40,7 @@ import org.karnak.backend.model.profilebody.MaskBody;
  *       ]
  *     }
  *   ],
- *   "sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
+ *   "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
  * }
  * }</pre>
  *
@@ -49,7 +49,7 @@ import org.karnak.backend.model.profilebody.MaskBody;
  * <pre>{@code
  * {
  *   "message": "No sensitive data detected",
- *   "sop_instance_uid": "1.2.840.114340.1762135411026254060.0.1.3.3.3"
+ *   "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
  * }
  * }</pre>
  */

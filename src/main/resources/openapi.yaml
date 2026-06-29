@@ -154,7 +154,7 @@ paths:
                   summary: Response with SOP Instance UID
                   value:
                     message: "No sensitive data detected"
-                    sop_instance_uid: "1.2.840.113619.2.55.3.123456789"
+                    sop_instance_uid: "2.25.840.113619.2.55.3.123456789"
                 emptySensitiveDataList:
                   summary: Empty sensitive data list provided
                   value:
