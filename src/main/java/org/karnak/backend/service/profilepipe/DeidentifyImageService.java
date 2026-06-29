@@ -9,15 +9,14 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -26,7 +25,6 @@ import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -98,10 +96,11 @@ public class DeidentifyImageService {
 		this.apiBaseUrl = apiBaseUrl;
 		this.objectMapper = new ObjectMapper();
 
-		HttpClient jdkClient = HttpClient.newBuilder()
-			.version(HttpClient.Version.HTTP_1_1)
+		HttpClient jdkClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+		this.restClient = RestClient.builder()
+			.baseUrl(apiBaseUrl)
+			.requestFactory(new JdkClientHttpRequestFactory(jdkClient))
 			.build();
-		this.restClient = RestClient.builder().baseUrl(apiBaseUrl).requestFactory(new JdkClientHttpRequestFactory(jdkClient)).build();
 	}
 
 	/**
@@ -113,7 +112,8 @@ public class DeidentifyImageService {
 	 * have no {@code masks} field. In that case, this method returns an empty list.
 	 * @param dcmAttributes the DICOM attributes of the instance
 	 * @param sensitiveData a map of tag name → tag value for sensitive information
-	 * @throws DeidentifyImageException if there is a problem when calling the deidentification API
+	 * @throws DeidentifyImageException if there is a problem when calling the
+	 * deidentification API
 	 * @return a list of {@link MaskBody} extracted from the API response, or an empty
 	 * list if no masks were found or an error occurred
 	 */
@@ -154,9 +154,10 @@ public class DeidentifyImageService {
 		}
 		catch (HttpClientErrorException ex) {
 			// Errors 4xx
-			throw new DeidentifyImageException(String.format(
-					"Client error %s from de-identification image API — check the request format: %s",
-					ex.getStatusCode(), ex.getMessage()), ex);
+			throw new DeidentifyImageException(
+					String.format("Client error %s from de-identification image API — check the request format: %s",
+							ex.getStatusCode(), ex.getMessage()),
+					ex);
 		}
 		catch (HttpServerErrorException ex) {
 			// Errors 5xx
@@ -165,13 +166,14 @@ public class DeidentifyImageService {
 					ex.getStatusCode()), ex);
 		}
 		catch (ResourceAccessException ex) {
-			throw new DeidentifyImageException(String.format(
-					"Cannot reach de-identification image API at %s — service is unavailable: %s", this.apiBaseUrl,
-					ex.getMessage()), ex);
+			throw new DeidentifyImageException(
+					String.format("Cannot reach de-identification image API at %s — service is unavailable: %s",
+							this.apiBaseUrl, ex.getMessage()),
+					ex);
 		}
 		catch (Exception ex) {
-			throw new DeidentifyImageException("Unexpected error calling de-identification image API: " + ex.getMessage(),
-					ex);
+			throw new DeidentifyImageException(
+					"Unexpected error calling de-identification image API: " + ex.getMessage(), ex);
 		}
 
 		// Parse the JSON response
@@ -200,7 +202,8 @@ public class DeidentifyImageService {
 		this.addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
 		this.addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
 		this.addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
-		this.addTextPart(bodyBuilder, "photometric_interpretation", dcmAttributes.getString(Tag.PhotometricInterpretation));
+		this.addTextPart(bodyBuilder, "photometric_interpretation",
+				dcmAttributes.getString(Tag.PhotometricInterpretation));
 
 		if (mapping.filename().endsWith(".raw")) {
 			this.addRawPixelDataParts(bodyBuilder, dcmAttributes);
@@ -253,14 +256,14 @@ public class DeidentifyImageService {
 			}
 
 			if (!response.sopInstanceUid().equals(expectedSopInstanceUID)) {
-				log.error("The SOP Instance UID in the API response ({}) does not match the expected UID ({}) — skipping masks",
-					response.sopInstanceUid(), expectedSopInstanceUID);
+				log.error(
+						"The SOP Instance UID in the API response ({}) does not match the expected UID ({}) — skipping masks",
+						response.sopInstanceUid(), expectedSopInstanceUID);
 				return Collections.emptyList();
 			}
 
 			if (response.masks() == null || response.masks().isEmpty()) {
-				log.debug("No masks found in de-identification image API response (message: {})",
-						response.message());
+				log.debug("No masks found in de-identification image API response (message: {})", response.message());
 				return Collections.emptyList();
 			}
 

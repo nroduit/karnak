@@ -119,8 +119,8 @@ public class GatewaySetUpService {
 
 	@Autowired
 	public GatewaySetUpService(final ForwardNodeRepo forwardNodeRepo, final VersionRepo versionRepo,
-			final DestinationRepo destinationRepo,
-			final DeidentifyImageService deidentifyImageService) throws Exception {
+			final DestinationRepo destinationRepo, final DeidentifyImageService deidentifyImageService)
+			throws Exception {
 		this.forwardNodeRepo = forwardNodeRepo;
 		this.versionRepo = versionRepo;
 		this.destinationRepo = destinationRepo;

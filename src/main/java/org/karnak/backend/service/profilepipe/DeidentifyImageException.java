@@ -20,5 +20,3 @@ public class DeidentifyImageException extends RuntimeException {
 	}
 
 }
-
-

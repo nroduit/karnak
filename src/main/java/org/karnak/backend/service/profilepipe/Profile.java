@@ -9,6 +9,9 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
+
 import java.awt.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -19,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -59,9 +61,6 @@ import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
 
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
-
 @Slf4j
 public class Profile {
 
@@ -83,16 +82,16 @@ public class Profile {
 	/**
 	 * Property key used to store additional {@link MaskArea} objects in the
 	 * {@link AttributeEditorContext#getProperties()} map. The main (first) mask is set
-	 * via {@link AttributeEditorContext#setMaskArea(MaskArea)}, and any extra masks
-	 * (with potentially different colors) are stored here so that
-	 * {@code ForwardService} can draw them all sequentially.
+	 * via {@link AttributeEditorContext#setMaskArea(MaskArea)}, and any extra masks (with
+	 * potentially different colors) are stored here so that {@code ForwardService} can
+	 * draw them all sequentially.
 	 */
 	public static final String ADDITIONAL_MASK_AREAS_KEY = "additionalMaskAreas";
 
 	/**
 	 * @param profileEntity the profile configuration
 	 * @param deidentifyImageService the service that calls the external de-id image API;
-	 *   pass {@code null} to disable the API call
+	 * pass {@code null} to disable the API call
 	 */
 	public Profile(ProfileEntity profileEntity, DeidentifyImageService deidentifyImageService) {
 		this.maskMap = new HashMap<>();
@@ -105,7 +104,6 @@ public class Profile {
 	/**
 	 * Convenience constructor for tests and legacy callers that do not need the
 	 * de-identification image API.
-	 *
 	 * @param profileEntity the profile configuration
 	 */
 	public Profile(ProfileEntity profileEntity) {
@@ -259,8 +257,8 @@ public class Profile {
 
 	public void applyCleanPixelData(Attributes dcmCopy, AttributeEditorContext context, ProfileEntity profileEntity) {
 		Object pix = dcmCopy.getValue(Tag.PixelData);
-		if ((pix instanceof BulkData || pix instanceof Fragments) &&
-			this.profiles.stream().anyMatch(CleanPixelData.class::isInstance)) {
+		if ((pix instanceof BulkData || pix instanceof Fragments)
+				&& this.profiles.stream().anyMatch(CleanPixelData.class::isInstance)) {
 			String sopClassUID = dcmCopy.getString(Tag.SOPClassUID);
 			if (!StringUtil.hasText(sopClassUID)) {
 				throw new IllegalStateException("DICOM Object does not contain sopClassUID");
@@ -269,9 +267,9 @@ public class Profile {
 			MaskArea mask = null;
 
 			CleanPixelData cleanPixelDataItem = (CleanPixelData) this.profiles.stream()
-					.filter(CleanPixelData.class::isInstance)
-					.findFirst()
-					.orElse(null);
+				.filter(CleanPixelData.class::isInstance)
+				.findFirst()
+				.orElse(null);
 
 			if (cleanPixelDataItem != null && cleanPixelDataItem.isAutomaticMasksGeneration()) {
 				List<MaskArea> apiMasks = this.fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
@@ -280,15 +278,15 @@ public class Profile {
 					// and store the rest as "additional" masks in context.properties.
 					mask = apiMasks.getFirst();
 					if (apiMasks.size() > 1) {
-						context
-							.getProperties()
-							.put(ADDITIONAL_MASK_AREAS_KEY, apiMasks.subList(1, apiMasks.size()));
+						context.getProperties().put(ADDITIONAL_MASK_AREAS_KEY, apiMasks.subList(1, apiMasks.size()));
 					}
 				}
 			}
 			if (mask == null && (cleanPixelDataItem == null || !cleanPixelDataItem.isAutomaticMasksGeneration())) {
-				// Manual mask should be applied only if automatic mask generation is not enabled
-				// If the API doesn't return any mask (because of an internal error, unreachable, etc...)
+				// Manual mask should be applied only if automatic mask generation is not
+				// enabled
+				// If the API doesn't return any mask (because of an internal error,
+				// unreachable, etc...)
 				// then the data should not be sent
 				mask = this.getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
 						dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
@@ -310,9 +308,8 @@ public class Profile {
 	}
 
 	/**
-	 * Calls the external de-identification image API and converts the returned masks
-	 * into a list of {@link MaskArea}.
-	 *
+	 * Calls the external de-identification image API and converts the returned masks into
+	 * a list of {@link MaskArea}.
 	 * @param dcmCopy DICOM attributes (original copy, before de-identification)
 	 * @return a list of {@link MaskArea}, possibly empty but never {@code null}
 	 */
@@ -382,13 +379,16 @@ public class Profile {
 			// Evaluate the condition
 			ExprCondition exprCondition = new ExprCondition(dcmCopy);
 			conditionCleanPixelData = (Boolean) ExpressionResult.get(profileItemCleanPixelData.getCondition(),
-				exprCondition, Boolean.class);
+					exprCondition, Boolean.class);
 		}
 		return conditionCleanPixelData;
 	}
 
 	public void applyDefacing(Attributes dcmCopy, AttributeEditorContext context) {
-		ProfileItem profileItemDefacing = this.profiles.stream().filter(Defacing.class::isInstance).findFirst().orElse(null);
+		ProfileItem profileItemDefacing = this.profiles.stream()
+			.filter(Defacing.class::isInstance)
+			.findFirst()
+			.orElse(null);
 		if (profileItemDefacing != null && isCT(dcmCopy) && isAxial(dcmCopy)) {
 			if (profileItemDefacing.getCondition() == null) {
 				context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
@@ -396,7 +396,7 @@ public class Profile {
 			else {
 				ExprCondition exprCondition = new ExprCondition(dcmCopy);
 				boolean conditionIsOk = (Boolean) ExpressionResult.get(profileItemDefacing.getCondition(),
-					exprCondition, Boolean.class);
+						exprCondition, Boolean.class);
 				if (conditionIsOk) {
 					context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
 				}
@@ -458,7 +458,8 @@ public class Profile {
 		MDC.put(prefix + "SeriesInstanceUID", dcm.getString(Tag.SeriesInstanceUID));
 		MDC.put("ProjectName", projectName);
 		MDC.put("ProfileName", profileName);
-		MDC.put("ProfileCodenames", this.profiles.stream().map(ProfileItem::getCodeName).collect(Collectors.joining("-")));
+		MDC.put("ProfileCodenames",
+				this.profiles.stream().map(ProfileItem::getCodeName).collect(Collectors.joining("-")));
 		log.debug(CLINICAL_MARKER, "");
 		MDC.clear();
 	}

@@ -9,18 +9,17 @@
  */
 package org.karnak.backend.model.profilepipe;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import org.karnak.backend.model.profilebody.MaskBody;
 
 /**
- * Represents the JSON response returned by the external de-identification image API
- * (POST /desidentify-image).
+ * Represents the JSON response returned by the external de-identification image API (POST
+ * /desidentify-image).
  *
- * <p>Expected JSON structure:
- * <pre>{@code
+ * <p>
+ * Expected JSON structure: <pre>{@code
  * {
  *   "message": "Sensitive data detected",
  *   "masks": [
@@ -44,9 +43,9 @@ import org.karnak.backend.model.profilebody.MaskBody;
  * }
  * }</pre>
  *
- * <p>If no sensitive data is detected, the API returns a response with no {@code mask}
- * field:
- * <pre>{@code
+ * <p>
+ * If no sensitive data is detected, the API returns a response with no {@code mask}
+ * field: <pre>{@code
  * {
  *   "message": "No sensitive data detected",
  *   "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
@@ -55,6 +54,6 @@ import org.karnak.backend.model.profilebody.MaskBody;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DeidentifyImageResponse(String message, List<MaskBody> masks,
-                                      @JsonProperty("sop_instance_uid") String sopInstanceUid) {
+		@JsonProperty("sop_instance_uid") String sopInstanceUid) {
 
 }

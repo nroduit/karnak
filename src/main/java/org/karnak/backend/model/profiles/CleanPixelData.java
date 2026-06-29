@@ -23,10 +23,10 @@ public class CleanPixelData extends AbstractProfileItem {
 	public CleanPixelData(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 		this.automaticMasksGeneration = argumentEntities != null && argumentEntities.stream()
-				.filter(argument -> "automaticMasksGeneration".equals(argument.getArgumentKey()))
-				.map(argument -> Boolean.parseBoolean(argument.getArgumentValue()))
-				.findFirst()
-				.orElse(false);
+			.filter(argument -> "automaticMasksGeneration".equals(argument.getArgumentKey()))
+			.map(argument -> Boolean.parseBoolean(argument.getArgumentValue()))
+			.findFirst()
+			.orElse(false);
 		profileValidation();
 	}
 

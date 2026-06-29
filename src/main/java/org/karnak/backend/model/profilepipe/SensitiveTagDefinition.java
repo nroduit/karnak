@@ -20,6 +20,7 @@ import org.dcm4che3.data.Tag;
  * external de-identification image API.
  */
 public final class SensitiveTagDefinition {
+
 	/**
 	 * Simple record that pairs a human-readable tag name with its dcm4che integer tag.
 	 *
@@ -36,12 +37,9 @@ public final class SensitiveTagDefinition {
 	public static final List<SensitiveTag> SENSITIVE_TAGS = List.of(
 			new SensitiveTag("AccessionNumber", Tag.AccessionNumber),
 			new SensitiveTag("InstitutionName", Tag.InstitutionName),
-			new SensitiveTag("OperatorsName", Tag.OperatorsName),
-			new SensitiveTag("PatientAge", Tag.PatientAge),
-			new SensitiveTag("PatientBirthDate", Tag.PatientBirthDate),
-			new SensitiveTag("PatientID", Tag.PatientID),
-			new SensitiveTag("PatientName", Tag.PatientName),
-			new SensitiveTag("PatientSex", Tag.PatientSex),
+			new SensitiveTag("OperatorsName", Tag.OperatorsName), new SensitiveTag("PatientAge", Tag.PatientAge),
+			new SensitiveTag("PatientBirthDate", Tag.PatientBirthDate), new SensitiveTag("PatientID", Tag.PatientID),
+			new SensitiveTag("PatientName", Tag.PatientName), new SensitiveTag("PatientSex", Tag.PatientSex),
 			new SensitiveTag("PerformingPhysicianName", Tag.PerformingPhysicianName),
 			new SensitiveTag("PerformedProcedureStepID", Tag.PerformedProcedureStepID),
 			new SensitiveTag("ReferringPhysicianName", Tag.ReferringPhysicianName),
@@ -53,7 +51,6 @@ public final class SensitiveTagDefinition {
 	/**
 	 * Reads every sensitive tag value from the given DICOM attributes and returns them as
 	 * a name→value map.
-	 *
 	 * @param dcm the DICOM attributes to read from
 	 * @return an ordered map of tag name → tag value for all sensitive tags
 	 * @see #SENSITIVE_TAGS
@@ -70,4 +67,3 @@ public final class SensitiveTagDefinition {
 	}
 
 }
-
