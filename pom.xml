@@ -133,7 +133,6 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <image>
-            <!-- TODO to create -->
             <runImage>${docker-registry}/vna-docker-base-image:5.0.0</runImage>
           </image>
         </configuration>
