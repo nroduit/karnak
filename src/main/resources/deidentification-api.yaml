@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Deidentification API
   description: API for deidentifying DICOM images using OCR and sensitive data detection.
-  version: 0.2.0
+  version: 0.1.0
   contact:
     name: Noah Kaltenrieder
     email: noah.kaltenrieder@hug.ch
