@@ -76,7 +76,7 @@ public class MappingResultComponent extends VerticalLayout {
 	 */
 	public static void handleResultFindPatientPatientNotFound(String inputValue, String location) {
 		Span content = new Span(String.format("%s Pseudonym %s not found", location, inputValue));
-		content.getStyle().set("color", "var(--lumo-error-text-color)");
+		content.getStyle().set("color", "var(--aura-red-text)");
 		Notification notification = new Notification(content);
 		notification.setDuration(3000);
 		notification.setPosition(Position.TOP_CENTER);
@@ -137,8 +137,8 @@ public class MappingResultComponent extends VerticalLayout {
 		// Badge
 		BoxShadowComponent badgeTitle = new BoxShadowComponent(label);
 		badgeTitle.getStyle().set("font-size", "revert").set("font-weight", "bolder");
-		badgeTitle.getStyle().set("background-color", "var(--lumo-contrast-5pct)");
-		badgeTitle.getStyle().set("color", "var(--lumo-primary-text-color)");
+		badgeTitle.getStyle().set("background-color", "color-mix(in srgb, var(--vaadin-text-color) 5%, transparent)");
+		badgeTitle.getStyle().set("color", "var(--aura-accent-text-color)");
 
 		return badgeTitle;
 	}

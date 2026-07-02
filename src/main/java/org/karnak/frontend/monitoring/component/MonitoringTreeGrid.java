@@ -115,10 +115,10 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 			case ErrorNode e -> isBlank(e.reason()) ? "(no reason)" : e.reason();
 		};
 		Icon icon = iconType.create();
-		icon.setSize("var(--lumo-icon-size-s)");
+		icon.setSize("var(--aura-font-size-l)");
 		Span label = new Span(text);
 		if (node.hasErrors()) {
-			label.getStyle().set("color", "var(--lumo-error-text-color)");
+			label.getStyle().set("color", "var(--aura-red-text)");
 		}
 		HorizontalLayout layout = new HorizontalLayout(icon, label);
 		layout.setAlignItems(Alignment.CENTER);

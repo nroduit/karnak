@@ -130,7 +130,7 @@ public class MonitoringView extends VerticalLayout {
 		exportAnchor.add(exportButton);
 
 		Button deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
-		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteButton.addClickListener(event -> confirmDeleteAll());
 
 		HorizontalLayout buttonLayout = new HorizontalLayout(expandErrorsButton, exportSettingsButton, exportAnchor,

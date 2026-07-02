@@ -37,7 +37,7 @@ public class WebDestinationCheckResultGrid extends Grid<WebNodeCheckResult> {
 		setItemDetailsRenderer(createDetailsRenderer());
 		setEmptyStateText("No DICOMweb destinations found");
 		setSelectionMode(SelectionMode.NONE);
-		addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.WRAP_CELL_CONTENT);
+		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
 		addColumn(createDestinationRenderer()).setHeader("Destination");
 		addColumn(createStatusRenderer()).setHeader("Reachable");
@@ -51,7 +51,7 @@ public class WebDestinationCheckResultGrid extends Grid<WebNodeCheckResult> {
 			if (row != null) {
 				div.add(new Div(row.node().description()));
 				Div url = new Div(row.node().url());
-				url.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+				url.getStyle().set("font-size", "var(--aura-font-size-xs)");
 				div.add(url);
 			}
 			return div;
@@ -102,7 +102,7 @@ public class WebDestinationCheckResultGrid extends Grid<WebNodeCheckResult> {
 	private static ComponentRenderer<UnorderedList, WebNodeCheckResult> createDetailsRenderer() {
 		return new ComponentRenderer<>((row) -> {
 			UnorderedList list = new UnorderedList();
-			list.getStyle().set("font-size", "var(--lumo-font-size-s)");
+			list.getStyle().set("font-size", "var(--aura-font-size-s)");
 
 			if (row != null) {
 				WebDestinationCheckResult result = row.result();

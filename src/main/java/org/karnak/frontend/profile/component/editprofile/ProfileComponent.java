@@ -154,7 +154,7 @@ public class ProfileComponent extends VerticalLayout {
 
 	private void createDeleteButton(ProfileEntity profileEntity) {
 		deleteButton = new Button((new Icon(VaadinIcon.TRASH)));
-		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteButton.addClickListener(buttonClickEvent -> {
 			if (profileEntity.getProjectEntities() != null && !profileEntity.getProjectEntities().isEmpty()) {
 				dialogWarning.setText(profileEntity);

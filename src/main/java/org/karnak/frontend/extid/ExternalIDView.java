@@ -77,7 +77,7 @@ public class ExternalIDView extends HorizontalLayout {
 		VerticalLayout verticalLayout = new VerticalLayout();
 
 		NativeLabel labelDisclaimer = new NativeLabel(LABEL_DISCLAIMER_EXTID);
-		labelDisclaimer.getStyle().set("color", "var(--lumo-error-text-color)");
+		labelDisclaimer.getStyle().set("color", "var(--aura-red-text)");
 		labelDisclaimer.setMinWidth("75%");
 		labelDisclaimer.getStyle().set("right", "0px");
 
@@ -103,7 +103,7 @@ public class ExternalIDView extends HorizontalLayout {
 		setEnableAddPatient(!projectDropDown.isEmpty());
 		setEnableDeleteButtons(!projectDropDown.isEmpty());
 
-		deleteAllButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteAllButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteAllButton.addClickListener(e -> {
 			Div dialogContent = new Div();
 			dialogContent.add(new Text("You are about to delete all the patients below. Are you sure ?"));

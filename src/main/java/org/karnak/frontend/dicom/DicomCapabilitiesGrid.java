@@ -28,7 +28,7 @@ public class DicomCapabilitiesGrid extends Grid<SopClassCapability> {
 
 		setSelectionMode(SelectionMode.NONE);
 		setEmptyStateText("The peer accepted none of the proposed SOP Classes");
-		addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.WRAP_CELL_CONTENT);
+		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
 		addColumn(SopClassCapability::category).setHeader("Category").setAutoWidth(true).setFlexGrow(0);
 		addColumn(SopClassCapability::sopClassName).setHeader("SOP Class").setAutoWidth(true).setFlexGrow(0);

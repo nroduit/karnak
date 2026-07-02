@@ -62,7 +62,7 @@ public class WebDestinationManagementGrid extends Grid<WebDestinationConfigEntit
 	private void init() {
 		setEmptyStateText("No DICOMweb endpoints configured");
 		setSelectionMode(SelectionMode.NONE);
-		addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.WRAP_CELL_CONTENT);
+		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
 		addColumn(WebDestinationConfigEntity::getDescription).setHeader("Description")
 			.setAutoWidth(true)
@@ -89,12 +89,11 @@ public class WebDestinationManagementGrid extends Grid<WebDestinationConfigEntit
 			}
 
 			Button editBtn = new Button(VaadinIcon.EDIT.create(), event -> editHandler.accept(endpoint));
-			editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+			editBtn.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 			editBtn.setAriaLabel("Edit");
 
 			Button deleteBtn = new Button(VaadinIcon.TRASH.create(), event -> deleteHandler.accept(endpoint));
-			deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL,
-					ButtonVariant.LUMO_ERROR);
+			deleteBtn.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL, ButtonVariant.ERROR);
 			deleteBtn.setAriaLabel("Delete");
 
 			actions.add(editBtn, deleteBtn);

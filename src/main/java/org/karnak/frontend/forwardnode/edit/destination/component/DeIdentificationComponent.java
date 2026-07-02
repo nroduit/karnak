@@ -202,7 +202,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void buildDisclaimerLabel() {
 		disclaimerLabel = new NativeLabel(LABEL_DISCLAIMER_DEIDENTIFICATION);
-		disclaimerLabel.getStyle().set("color", "var(--lumo-error-text-color)");
+		disclaimerLabel.getStyle().set("color", "var(--aura-red-text)");
 		disclaimerLabel.setMinWidth("75%");
 		disclaimerLabel.getStyle().set("right", "0px");
 	}

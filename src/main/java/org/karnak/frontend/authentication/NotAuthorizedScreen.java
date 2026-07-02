@@ -120,7 +120,7 @@ public class NotAuthorizedScreen extends FlexLayout implements HasErrorParameter
 	private Button createLogoutButton() {
 		Button logoutButton = new Button(LOGOUT_LABEL, VaadinIcon.SIGN_OUT.create());
 		logoutButton.addClickListener(event -> SecurityUtil.signOut());
-		logoutButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_LARGE);
+		logoutButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.LARGE);
 		return logoutButton;
 	}
 

@@ -117,7 +117,7 @@ public class DicomWebView extends AbstractView {
 		savedEndpointFld.addValueChangeListener(event -> applyEndpoint(event.getValue()));
 
 		checkBtn = new Button("Check", (event) -> runCheck());
-		checkBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		checkBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		saveBtn = new Button("Save as endpoint", (event) -> saveAsEndpoint());
 

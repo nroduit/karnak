@@ -150,7 +150,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 			externalIDCache.put(PatientClientUtil.generateKey(patientEdit, projectEntity.getId()), patientEdit);
 			editor.save();
 		});
-		saveEditPatientButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveEditPatientButton.addThemeVariants(ButtonVariant.PRIMARY);
 
 		cancelEditPatientButton.addClickListener(e -> editor.cancel());
 	}
@@ -195,7 +195,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 		issuerOfPatientIDColumn.setEditorComponent(issuerOfPatientIdField);
 
 		deleteAllSelectedPatientsButton = new Button("Delete selected patients");
-		deleteAllSelectedPatientsButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteAllSelectedPatientsButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteAllSelectedPatientsButton.addClickListener(e -> {
 			if (selectedPatients != null && !selectedPatients.isEmpty()) {
 				Div dialogContent = new Div();
@@ -219,7 +219,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 
 		deleteColumn = addComponentColumn(patient -> {
 			deletePatientButton = new Button("Delete");
-			deletePatientButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+			deletePatientButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 			deletePatientButton.addClickListener(e -> {
 				externalIDCache.remove(PatientClientUtil.generateKey(patient, projectEntity.getId()));
 				readAllCacheValue();

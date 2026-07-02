@@ -168,7 +168,7 @@ public class AuthConfigComponent extends VerticalLayout {
 
 	private void initDeleteButton() {
 		deleteBtn = new Button((new Icon(VaadinIcon.TRASH)));
-		deleteBtn.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteBtn.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 	}
 
 	public String getAuthConfigCode() {

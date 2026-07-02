@@ -56,12 +56,12 @@ public class MonitoringDetailPanel extends VerticalLayout {
 	private transient String copyText = "";
 
 	public MonitoringDetailPanel() {
-		title.getStyle().set("font-weight", "600").set("font-size", "var(--lumo-font-size-l)");
-		copyButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+		title.getStyle().set("font-weight", "600").set("font-size", "var(--aura-font-size-l)");
+		copyButton.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 		copyButton.setEnabled(false);
 		copyButton.addClickListener(event -> copyToClipboard());
 
-		placeholder.getStyle().set("color", "var(--lumo-secondary-text-color)");
+		placeholder.getStyle().set("color", "var(--vaadin-text-color-secondary)");
 		form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
 		form.setWidthFull();
 
@@ -126,9 +126,9 @@ public class MonitoringDetailPanel extends VerticalLayout {
 		span.getStyle()
 			.set("font-weight", "600")
 			.set("text-transform", "uppercase")
-			.set("font-size", "var(--lumo-font-size-s)")
-			.set("color", "var(--lumo-secondary-text-color)")
-			.set("margin-top", "var(--lumo-space-s)");
+			.set("font-size", "var(--aura-font-size-s)")
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("margin-top", "var(--vaadin-gap-s)");
 		return span;
 	}
 
@@ -264,7 +264,7 @@ public class MonitoringDetailPanel extends VerticalLayout {
 	private void copyToClipboard() {
 		copyButton.getElement().executeJs("navigator.clipboard.writeText($0).then(() => {}, () => {})", copyText);
 		Notification notification = Notification.show("Details copied to clipboard");
-		notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+		notification.addThemeVariants(NotificationVariant.SUCCESS);
 		notification.setDuration(2000);
 		notification.setPosition(Position.MIDDLE);
 	}

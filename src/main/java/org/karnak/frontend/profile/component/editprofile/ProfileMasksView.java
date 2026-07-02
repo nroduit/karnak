@@ -66,7 +66,7 @@ public class ProfileMasksView extends VerticalLayout {
 		Div profileNameDiv = new Div();
 		profileNameDiv.add(new Text(value));
 		profileNameDiv.getStyle()
-			.set("color", "var(--lumo-secondary-text-color)")
+			.set("color", "var(--vaadin-text-color-secondary)")
 			.set("padding-left", "10px")
 			.set("margin-top", "5px");
 		return profileNameDiv;
@@ -75,7 +75,7 @@ public class ProfileMasksView extends VerticalLayout {
 	private VerticalLayout setMasksRectangles(List<Rectangle> rectangles) {
 		VerticalLayout verticalLayout = new VerticalLayout();
 		verticalLayout.getStyle()
-			.set("color", "var(--lumo-secondary-text-color)")
+			.set("color", "var(--vaadin-text-color-secondary)")
 			.set("padding-left", "10px")
 			.set("margin-top", "5px");
 		for (Rectangle rectangle : rectangles) {
@@ -83,7 +83,7 @@ public class ProfileMasksView extends VerticalLayout {
 			rectDiv.add(new Text(String.format("%d %d %d %d", (int) rectangle.getX(), (int) rectangle.getY(),
 					(int) rectangle.getWidth(), (int) rectangle.getHeight())));
 			rectDiv.getStyle()
-				.set("color", "var(--lumo-secondary-text-color)")
+				.set("color", "var(--vaadin-text-color-secondary)")
 				.set("padding-left", "15px")
 				.set("margin-top", "2px");
 			verticalLayout.add(rectDiv);

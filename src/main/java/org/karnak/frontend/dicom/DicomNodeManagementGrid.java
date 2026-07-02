@@ -58,7 +58,7 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 	private void init() {
 		setEmptyStateText("No DICOM nodes configured");
 		setSelectionMode(SelectionMode.NONE);
-		addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.WRAP_CELL_CONTENT);
+		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
 		addColumn(DicomNodeConfigEntity::getDescription).setHeader("Description").setAutoWidth(true).setSortable(true);
 		addColumn(DicomNodeConfigEntity::getAeTitle).setHeader("AE Title").setAutoWidth(true).setSortable(true);
@@ -79,12 +79,11 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 			}
 
 			Button editBtn = new Button(VaadinIcon.EDIT.create(), event -> editHandler.accept(node));
-			editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+			editBtn.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 			editBtn.setAriaLabel("Edit");
 
 			Button deleteBtn = new Button(VaadinIcon.TRASH.create(), event -> deleteHandler.accept(node));
-			deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL,
-					ButtonVariant.LUMO_ERROR);
+			deleteBtn.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL, ButtonVariant.ERROR);
 			deleteBtn.setAriaLabel("Delete");
 
 			actions.add(editBtn, deleteBtn);

@@ -560,8 +560,7 @@ public class DicomWebCheckService {
 	// read-only reachability/diagnostic probe (never uploads a study) whose purpose is to
 	// reach an endpoint despite an expired/self-signed certificate and report the
 	// certificate's validity and trust separately (see inspectTls / isTrusted), rather
-	// than
-	// failing the handshake the way a strict client would.
+	// than failing the handshake the way a strict client would.
 	@SuppressWarnings("java:S4830")
 	private static SSLContext permissiveContext() throws GeneralSecurityException {
 		TrustManager[] trustAll = { new X509TrustManager() {

@@ -44,7 +44,7 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private void setButtonSave() {
 		save.getStyle().setFlexGrow("1");
-		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		save.addThemeVariants(ButtonVariant.PRIMARY);
 	}
 
 	private void setButtonCancel() {
@@ -53,7 +53,7 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private void setButtonDelete() {
 		delete.getStyle().setFlexGrow("1");
-		delete.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		delete.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 	}
 
 	@Override

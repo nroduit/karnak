@@ -14,7 +14,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.theme.lumo.Lumo;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
@@ -23,6 +22,12 @@ public class ToggleButtonTheme extends HorizontalLayout {
 	private final ToggleButton toggleButton;
 
 	private static final String THEME_COLOR_KEY = "theme-variant";
+
+	// Aura selects light/dark via the CSS color-scheme property (light-dark()), not the
+	// Lumo "theme" attribute. These are the stored and applied color-scheme values.
+	private static final String DARK = "dark";
+
+	private static final String LIGHT = "light";
 
 	public ToggleButtonTheme() {
 		Icon moonIcon = new Icon(VaadinIcon.MOON_O);
@@ -34,25 +39,19 @@ public class ToggleButtonTheme extends HorizontalLayout {
 			.getPage()
 			.executeJs("return localStorage.getItem($0)", THEME_COLOR_KEY)
 			.then(String.class, themeColor -> {
-				if (themeColor != null) {
-					if (themeColor.equals(Lumo.DARK)) {
-						toggleButton.setValue(true);
-					}
-					else if (themeColor.equals(Lumo.LIGHT)) {
-						toggleButton.setValue(false);
-					}
+				if (DARK.equals(themeColor)) {
+					toggleButton.setValue(true);
+				}
+				else if (LIGHT.equals(themeColor)) {
+					toggleButton.setValue(false);
 				}
 			});
 
 		toggleButton.addValueChangeListener(toggleButtonBooleanComponentValueChangeEvent -> {
-			if (Boolean.TRUE.equals(toggleButtonBooleanComponentValueChangeEvent.getValue())) {
-				UI.getCurrent().getElement().setAttribute("theme", Lumo.DARK);
-				UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, Lumo.DARK);
-			}
-			else {
-				UI.getCurrent().getElement().setAttribute("theme", Lumo.LIGHT);
-				UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, Lumo.LIGHT);
-			}
+			String colorScheme = Boolean.TRUE.equals(toggleButtonBooleanComponentValueChangeEvent.getValue()) ? DARK
+					: LIGHT;
+			UI.getCurrent().getPage().executeJs("document.documentElement.style.colorScheme = $0", colorScheme);
+			UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, colorScheme);
 		});
 		add(sunIcon, toggleButton, moonIcon);
 	}

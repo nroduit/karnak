@@ -100,7 +100,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 				generateAuthHeaders(authTypeSelect.getValue());
 			}
 		});
-		generateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		generateButton.addThemeVariants(ButtonVariant.PRIMARY);
 		generateButton.setWidth(BUTTON_WIDTH);
 		cancelButton = new Button("Cancel", event -> close());
 		cancelButton.setWidth(BUTTON_WIDTH);

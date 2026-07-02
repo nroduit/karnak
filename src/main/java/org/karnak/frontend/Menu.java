@@ -54,7 +54,7 @@ public class Menu extends FlexLayout {
 			}
 		});
 		showMenu.setClassName("menu-button");
-		showMenu.addThemeVariants(ButtonVariant.LUMO_SMALL);
+		showMenu.addThemeVariants(ButtonVariant.SMALL);
 		showMenu.setIcon(new Icon(VaadinIcon.MENU));
 		add(showMenu);
 
@@ -74,7 +74,7 @@ public class Menu extends FlexLayout {
 		Button logoutButton = new Button("Logout", VaadinIcon.SIGN_OUT.create());
 		logoutButton.addClickListener(event -> SecurityUtil.signOut());
 
-		logoutButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		logoutButton.addThemeVariants(ButtonVariant.ERROR);
 		add(logoutButton);
 	}
 

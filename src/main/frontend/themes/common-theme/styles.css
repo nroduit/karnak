@@ -1,4 +1,4 @@
-/* Global application styles for the Karnak UI (Lumo-based common-theme). */
+/* Global application styles for the Karnak UI (Aura-based). */
 
 /* ===== Message box (see org.karnak.frontend.component.MessageBox) ===== */
 .stroked-button {
@@ -20,15 +20,15 @@
 }
 
 .message-box-layout.info {
-  border-color: var(--lumo-primary-color);
+  border-color: var(--aura-accent-color);
 }
 
 .message-box-layout.warn {
-  border-color: var(--lumo-warning-color);
+  border-color: var(--aura-orange);
 }
 
 .message-box-layout.error {
-  border-color: var(--lumo-error-color);
+  border-color: var(--aura-red);
 }
 
 .message-box-title {
@@ -38,23 +38,23 @@
 }
 
 .message-box-title.info {
-  background-color: var(--lumo-primary-color);
-  color: var(--lumo-primary-contrast-color);
+  background-color: var(--aura-accent-color);
+  color: var(--aura-accent-contrast-color);
 }
 
 .message-box-title.warn {
-  background-color: var(--lumo-warning-color);
-  color: var(--lumo-warning-contrast-color);
+  background-color: var(--aura-orange);
+  color: #fff;
 }
 
 .message-box-title.error {
-  background-color: var(--lumo-error-color);
-  color: var(--lumo-error-contrast-color);
+  background-color: var(--aura-red);
+  color: #fff;
 }
 
 .message-box-content {
-  color: var(--lumo-body-text-color);
-  background-color: var(--lumo-base-color);
+  color: var(--vaadin-text-color);
+  background-color: var(--aura-background-color);
   width: 100%;
   margin: 0;
   padding: 12px;
@@ -62,7 +62,7 @@
 
 /* ===== Layout, navigation menu and forms ===== */
 html {
-  font-size: var(--lumo-font-size-s);
+  font-size: var(--aura-font-size-s);
 }
 
 /* Stack login-screen vertically on narrow screen */
@@ -85,13 +85,13 @@ label[disabled] {
   flex-direction: row;
 
   /* Used by the menu and form overlays */
-  --overlay-box-shadow: 0 0 3px 2px var(--lumo-contrast-10pct);
+  --overlay-box-shadow: 0 0 3px 2px color-mix(in srgb, var(--vaadin-text-color) 10%, transparent);
 }
 
 .menu-bar {
   flex-direction: column;
   flex-shrink: 0;
-  background: var(--lumo-base-color);
+  background: var(--aura-background-color);
   box-shadow: var(--overlay-box-shadow);
 }
 
@@ -124,13 +124,13 @@ label[disabled] {
 .forwardnode-form {
   height: 100%;
   width: 300%;
-  background: var(--lumo-base-color);
+  background: var(--aura-background-color);
 }
 
 .inputsourcenode-form {
   height: 100%;
   width: 250%;
-  background: var(--lumo-base-color);
+  background: var(--aura-background-color);
 }
 
 /* On narrow screens, move the side bar to the top,
@@ -161,7 +161,7 @@ label[disabled] {
     height: calc(100% - var(--top-bar-height));
     z-index: 100;
     box-shadow: var(--overlay-box-shadow);
-    background: var(--lumo-base-color);
+    background: var(--aura-background-color);
   }
 
   .menu-bar .show-tabs {

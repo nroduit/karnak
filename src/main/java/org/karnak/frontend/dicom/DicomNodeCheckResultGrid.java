@@ -59,7 +59,7 @@ public class DicomNodeCheckResultGrid extends Grid<DicomNodeCheckResult> {
 
 	private Button createCapabilityButton(DicomNodeCheckResult result) {
 		Button button = new Button("Probe", (event) -> capabilityProbeAction.accept(result));
-		button.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+		button.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
 		return button;
 	}
 
@@ -75,7 +75,7 @@ public class DicomNodeCheckResultGrid extends Grid<DicomNodeCheckResult> {
 		setSelectionMode(SelectionMode.NONE);
 
 		// Styling grid
-		addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.WRAP_CELL_CONTENT);
+		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
 		addColumns();
 	}
@@ -179,7 +179,7 @@ public class DicomNodeCheckResultGrid extends Grid<DicomNodeCheckResult> {
 			layout.setMargin(false);
 			layout.setPadding(false);
 			layout.setSpacing(true);
-			layout.getStyle().set("font-size", "var(--lumo-font-size-s)");
+			layout.getStyle().set("font-size", "var(--aura-font-size-s)");
 
 			if (dicomNodeCheckResult != null) {
 				layout.add(createDicomStatusLayout(dicomNodeCheckResult.getDicomEchoResult()));

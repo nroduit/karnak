@@ -86,7 +86,7 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 			edit.setEnabled(!editor.isOpen());
 
 			Button remove = new Button("Remove");
-			remove.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+			remove.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 			remove.addClickListener(e -> {
 				dataProvider.getItems().remove(kheopsAlbums);
 				dataProvider.refreshAll();
@@ -114,7 +114,7 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 				else {
 					// Show a notification
 					Span content = new Span("Already existing");
-					content.getStyle().set("color", "var(--lumo-error-text-color)");
+					content.getStyle().set("color", "var(--aura-red-text)");
 					Notification notification = new Notification(content);
 					notification.setDuration(3000);
 					notification.setPosition(Position.BOTTOM_END);
@@ -122,7 +122,7 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 				}
 			}
 		});
-		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		save.addThemeVariants(ButtonVariant.PRIMARY);
 
 		Button cancel = new Button("Cancel", e -> editor.cancel());
 

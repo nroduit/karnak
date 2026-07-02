@@ -111,7 +111,7 @@ public class DicomNodeSelectionDialog extends Dialog {
 			}
 			close();
 		});
-		selectBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		selectBtn.addThemeVariants(ButtonVariant.PRIMARY);
 		// No node is selected by default, so the confirm button starts disabled and is
 		// enabled by the node selector's value-change listener once the user picks one.
 		selectBtn.setEnabled(nodeSelector != null && nodeSelector.getValue() != null);

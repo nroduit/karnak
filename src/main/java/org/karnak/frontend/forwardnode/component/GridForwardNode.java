@@ -61,7 +61,7 @@ public class GridForwardNode extends GroupTreeGrid<ForwardNodeEntity> {
 
 	private Button createCopyButton(ForwardNodeEntity forwardNode) {
 		Button copyButton = new Button(VaadinIcon.COPY.create());
-		copyButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+		copyButton.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 		copyButton.getElement().setAttribute("aria-label", "Copy DICOM configuration");
 
 		copyButton.addClickListener(event -> {
@@ -69,7 +69,7 @@ public class GridForwardNode extends GroupTreeGrid<ForwardNodeEntity> {
 			copyButton.getElement().executeJs("navigator.clipboard.writeText($0).then(() => {}, () => {})", config);
 
 			Notification notification = Notification.show("DICOM configuration copied to clipboard");
-			notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			notification.addThemeVariants(NotificationVariant.SUCCESS);
 			notification.setDuration(2000);
 			notification.setPosition(Position.MIDDLE);
 		});

@@ -199,7 +199,7 @@ public class NotificationComponent extends VerticalLayout {
 	private void buildNotifyInterval() {
 		notifyInterval = new TextField(String.format("Notif.: interval (Default: %s)", Notification.DEFAULT_INTERVAL));
 		notifyInterval.setWidth("32%");
-		notifyInterval.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+		notifyInterval.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
 		UIS.setTooltip(notifyInterval, String.format(
 				"Interval in seconds for sending a notification (when no new image is arrived in the archive folder). Default value: %s",
 				Notification.DEFAULT_INTERVAL));

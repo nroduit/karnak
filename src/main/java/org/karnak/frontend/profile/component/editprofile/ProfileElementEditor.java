@@ -114,7 +114,7 @@ public class ProfileElementEditor extends Dialog {
 		dynamicSection.setSpacing(true);
 		dateArgsSection.setPadding(false);
 		dateArgsSection.setSpacing(false);
-		errorLabel.getStyle().set("color", "var(--lumo-error-text-color)");
+		errorLabel.getStyle().set("color", "var(--aura-red-text)");
 
 		VerticalLayout body = new VerticalLayout(nameField, typeComboBox, dynamicSection, conditionField, errorLabel);
 		body.setPadding(false);

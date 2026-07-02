@@ -104,11 +104,11 @@ public class EditAETitleDescription extends VerticalLayout {
 		Span explanation = new Span(
 				"Send DICOM files from a local folder to the active destinations of this forward node.");
 		explanation.getStyle()
-			.set("color", "var(--lumo-secondary-text-color)")
-			.set("font-size", "var(--lumo-font-size-s)");
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("font-size", "var(--aura-font-size-s)");
 		HorizontalLayout uploadRow = new HorizontalLayout(selectFolderButton, explanation);
 		uploadRow.setVerticalComponentAlignment(Alignment.CENTER, selectFolderButton, explanation);
-		uploadRow.getStyle().set("margin-top", "var(--lumo-space-s)");
+		uploadRow.getStyle().set("margin-top", "var(--vaadin-gap-s)");
 		return uploadRow;
 	}
 
@@ -121,7 +121,7 @@ public class EditAETitleDescription extends VerticalLayout {
 		pathField.setWidthFull();
 
 		Span errorMessage = new Span();
-		errorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
+		errorMessage.getStyle().set("color", "var(--aura-red-text)");
 		errorMessage.setVisible(false);
 
 		Button confirmButton = new Button("Confirm", e -> {

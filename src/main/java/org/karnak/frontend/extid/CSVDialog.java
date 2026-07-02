@@ -122,7 +122,7 @@ public class CSVDialog extends Dialog {
 		errorMsg.getStyle()
 			.set("font-weight", "bolder")
 			.set("padding-bottom", "10px")
-			.set("color", "var(--lumo-error-text-color)");
+			.set("color", "var(--aura-red-text)");
 
 		fromLineField = new NumberField("From line ");
 		fromLineField.setValue(1d);
@@ -140,7 +140,7 @@ public class CSVDialog extends Dialog {
 				close();
 			}
 		});
-		readCSVButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		readCSVButton.addThemeVariants(ButtonVariant.PRIMARY);
 		readCSVButton.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 
 		cancelButton = new Button("Cancel", event -> close());

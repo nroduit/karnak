@@ -181,7 +181,7 @@ public abstract class GroupTreeGrid<T> extends TreeGrid<GroupTreeNode<T>> {
 	/** A ready-made "Add group" button that views can place in their toolbar. */
 	public Button createAddGroupButton() {
 		Button button = new Button("Add group", VaadinIcon.FOLDER_ADD.create());
-		button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		button.addThemeVariants(ButtonVariant.TERTIARY);
 		button.addClickListener(
 				event -> promptName("New group", "", name -> runAndReload(() -> controller.createGroup(name))));
 		return button;
@@ -247,7 +247,7 @@ public abstract class GroupTreeGrid<T> extends TreeGrid<GroupTreeNode<T>> {
 
 	private Component groupHeader(NamedGroupEntity group) {
 		Icon icon = VaadinIcon.FOLDER_O.create();
-		icon.setSize("var(--lumo-icon-size-s)");
+		icon.setSize("var(--aura-font-size-l)");
 		Span name = new Span(group.getName());
 		name.getStyle().set("font-weight", "600");
 		HorizontalLayout layout = new HorizontalLayout(icon, name);
@@ -330,7 +330,7 @@ public abstract class GroupTreeGrid<T> extends TreeGrid<GroupTreeNode<T>> {
 				dialog.close();
 			}
 		});
-		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		save.addThemeVariants(ButtonVariant.PRIMARY);
 		Button cancel = new Button("Cancel", event -> dialog.close());
 		dialog.add(field);
 		dialog.getFooter().add(cancel, save);

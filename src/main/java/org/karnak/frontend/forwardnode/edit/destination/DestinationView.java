@@ -144,19 +144,19 @@ public class DestinationView extends VerticalLayout {
 	private void setButtonNewLocalDICOM() {
 		newLocalDICOM = new Button(LABEL_NEW_LOCAL_DICOM);
 		newLocalDICOM.getElement().setAttribute("title", "New local folder destination");
-		newLocalDICOM.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newLocalDICOM.addThemeVariants(ButtonVariant.PRIMARY);
 		newLocalDICOM.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 
 	private void setButtonNewDestinationDICOM() {
 		newDestinationDICOM.getElement().setAttribute("title", "New destination of type dicom");
-		newDestinationDICOM.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newDestinationDICOM.addThemeVariants(ButtonVariant.PRIMARY);
 		newDestinationDICOM.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 
 	private void setButtonNewDestinationSTOW() {
 		newDestinationSTOW.getElement().setAttribute("title", "New destination of type stow");
-		newDestinationSTOW.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newDestinationSTOW.addThemeVariants(ButtonVariant.PRIMARY);
 		newDestinationSTOW.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 

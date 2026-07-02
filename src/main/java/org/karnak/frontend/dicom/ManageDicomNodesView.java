@@ -87,7 +87,7 @@ public class ManageDicomNodesView extends AbstractView {
 		title.getStyle().set("margin-top", "0px");
 
 		Button addBtn = new Button("Add Node", VaadinIcon.PLUS.create(), event -> openEditor(null));
-		addBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		Button importExportBtn = new Button("Import / Export", VaadinIcon.EXCHANGE.create(),
 				event -> openImportExportDialog());
@@ -292,7 +292,7 @@ public class ManageDicomNodesView extends AbstractView {
 			dialog.close();
 			onConfirm.run();
 		});
-		confirm.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+		confirm.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.ERROR);
 
 		dialog.getFooter().add(cancel, confirm);
 		dialog.open();

@@ -80,22 +80,24 @@ public class NodeActivityDashboard extends VerticalLayout {
 
 	private Component card(String label, long value, boolean errorEmphasis) {
 		Span number = new Span(Long.toString(value));
-		number.getStyle().set("font-size", "var(--lumo-font-size-xxl)").set("font-weight", "700");
+		number.getStyle().set("font-size", "var(--aura-font-size-xl)").set("font-weight", "700");
 		if (errorEmphasis && value > 0) {
-			number.getStyle().set("color", "var(--lumo-error-text-color)");
+			number.getStyle().set("color", "var(--aura-red-text)");
 		}
 		Span caption = new Span(label);
-		caption.getStyle().set("color", "var(--lumo-secondary-text-color)").set("font-size", "var(--lumo-font-size-s)");
+		caption.getStyle()
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("font-size", "var(--aura-font-size-s)");
 
 		Div card = new Div(number, caption);
 		card.getStyle()
 			.set("display", "flex")
 			.set("flex-direction", "column")
 			.set("min-width", "120px")
-			.set("padding", "var(--lumo-space-m)")
-			.set("margin", "var(--lumo-space-xs)")
-			.set("border", "1px solid var(--lumo-contrast-10pct)")
-			.set("border-radius", "var(--lumo-border-radius-l)");
+			.set("padding", "var(--vaadin-gap-m)")
+			.set("margin", "var(--vaadin-gap-xs)")
+			.set("border", "1px solid color-mix(in srgb, var(--vaadin-text-color) 10%, transparent)")
+			.set("border-radius", "var(--vaadin-radius-l)");
 		return card;
 	}
 

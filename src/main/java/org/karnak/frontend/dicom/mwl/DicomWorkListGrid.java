@@ -62,7 +62,7 @@ public class DicomWorkListGrid extends Grid<Attributes> {
 			layout.setMargin(false);
 			layout.setPadding(true);
 			layout.setSpacing(false);
-			layout.getStyle().set("font-size", "var(--lumo-font-size-s)");
+			layout.getStyle().set("font-size", "var(--aura-font-size-s)");
 
 			H6 title = new H6("Details");
 			title.getStyle().set("margin-top", "0px");
@@ -83,7 +83,7 @@ public class DicomWorkListGrid extends Grid<Attributes> {
 
 	private HorizontalLayout buildActions(Attributes attributes) {
 		Button viewBtn = new Button("View DICOM Details", event -> new DicomPane(attributes).open());
-		viewBtn.addThemeVariants(ButtonVariant.LUMO_SMALL);
+		viewBtn.addThemeVariants(ButtonVariant.SMALL);
 
 		Anchor textDownload = downloadAnchor("Download as Text",
 				DownloadHandler
@@ -109,7 +109,7 @@ public class DicomWorkListGrid extends Grid<Attributes> {
 
 	private static Anchor downloadAnchor(String text, DownloadHandler handler) {
 		Button button = new Button(text);
-		button.addThemeVariants(ButtonVariant.LUMO_SMALL);
+		button.addThemeVariants(ButtonVariant.SMALL);
 
 		Anchor anchor = new Anchor();
 		anchor.setHref(handler);

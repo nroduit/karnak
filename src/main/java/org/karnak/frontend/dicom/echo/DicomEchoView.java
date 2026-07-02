@@ -287,7 +287,7 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	private void buildDicomEchoBtn() {
 		dicomEchoBtn = new Button("Check DICOM Node");
 		dicomEchoBtn.getStyle().set("cursor", "pointer");
-		dicomEchoBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		dicomEchoBtn.addThemeVariants(ButtonVariant.PRIMARY);
 		dicomEchoBtn.setEnabled(false);
 
 		dicomEchoBtn.addClickListener(event -> executeEcho());
@@ -309,7 +309,7 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 		resultTitle.getStyle().set("padding-bottom", "0px");
 
 		Div dicomEchoResultNote = new Div("Select the row to view the details");
-		dicomEchoResultNote.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+		dicomEchoResultNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
 		dicomEchoResultNote.getStyle().set("font-style", "italic");
 
 		dicomEchoResultGrid = new DicomNodeCheckResultGrid();
@@ -336,7 +336,7 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 		Div capabilitiesNote = new Div(
 				"Non-invasive probe: which SOP Classes and transfer syntaxes the node accepts (no data is sent)");
-		capabilitiesNote.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+		capabilitiesNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
 		capabilitiesNote.getStyle().set("font-style", "italic");
 
 		dicomCapabilitiesPanel = new DicomCapabilitiesPanel();

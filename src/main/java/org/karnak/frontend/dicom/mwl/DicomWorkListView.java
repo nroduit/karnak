@@ -368,7 +368,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		queryBtn = new Button("Run Query");
 		queryBtn.getStyle().set("cursor", "pointer");
 		queryBtn.setEnabled(false);
-		queryBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		queryBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		queryBtn.addClickListener(e -> executeQuery());
 	}
@@ -394,7 +394,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	private void buildQueryResultTitleBar() {
 		queryResultTitle = new H6("Query Result");
 		queryResultTitle.getStyle().set("margin-top", "0px");
-		queryResultTitle.getStyle().set("padding-bottom", "var(--lumo-space-m)");
+		queryResultTitle.getStyle().set("padding-bottom", "var(--vaadin-gap-m)");
 	}
 
 	private void buildGrid() {

@@ -85,7 +85,7 @@ public class ProfileErrorView extends VerticalLayout {
 	private Div setProfileError(String error) {
 		Div profileErrorDiv = new Div();
 		profileErrorDiv.add(new Text(error));
-		profileErrorDiv.getStyle().set("color", "var(--lumo-error-text-color)").set("margin-top", "5px");
+		profileErrorDiv.getStyle().set("color", "var(--aura-red-text)").set("margin-top", "5px");
 		return profileErrorDiv;
 	}
 

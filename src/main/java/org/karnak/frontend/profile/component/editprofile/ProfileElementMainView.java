@@ -100,8 +100,8 @@ public class ProfileElementMainView extends VerticalLayout {
 				new Span("The order of the profile elements matters: they are applied from top to bottom. "),
 				documentation);
 		message.getStyle()
-			.set("color", "var(--lumo-secondary-text-color)")
-			.set("font-size", "var(--lumo-font-size-s)")
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("font-size", "var(--aura-font-size-s)")
 			.set("margin", "2px 0");
 		return message;
 	}
@@ -115,10 +115,10 @@ public class ProfileElementMainView extends VerticalLayout {
 				new Text("No \"Basic DICOM confidentiality profile\" (" + ProfileItemType.BASIC_DICOM_ALIAS
 						+ ") is present. A de-identification profile should include it; it is always applied last."));
 		warning.getStyle()
-			.set("color", "var(--lumo-error-text-color)")
-			.set("background-color", "var(--lumo-error-color-10pct)")
-			.set("padding", "var(--lumo-space-s)")
-			.set("border-radius", "var(--lumo-border-radius-m)")
+			.set("color", "var(--aura-red-text)")
+			.set("background-color", "color-mix(in srgb, var(--aura-red) 10%, transparent)")
+			.set("padding", "var(--vaadin-gap-s)")
+			.set("border-radius", "var(--vaadin-radius-m)")
 			.set("margin", "5px 0");
 		return warning;
 	}
@@ -140,14 +140,14 @@ public class ProfileElementMainView extends VerticalLayout {
 		edit.setEnabled(ProfileElementEditor.supports(element.getCodename()));
 
 		Button delete = iconButton(VaadinIcon.TRASH, () -> confirmDelete(element));
-		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		delete.addThemeVariants(ButtonVariant.ERROR);
 
 		return new HorizontalLayout(up, down, edit, delete);
 	}
 
 	private Button iconButton(VaadinIcon icon, Runnable action) {
 		Button button = new Button(icon.create(), event -> action.run());
-		button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+		button.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 		return button;
 	}
 

@@ -138,7 +138,7 @@ public class DicomNodeEditorDialog extends Dialog {
 		Button cancelBtn = new Button("Cancel", event -> close());
 
 		Button saveBtn = new Button("Save", event -> save());
-		saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		getFooter().add(cancelBtn, saveBtn);
 	}

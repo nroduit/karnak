@@ -115,7 +115,7 @@ public class ExternalIDForm extends Div {
 		clearFieldsButton = new Button("Clear");
 
 		addPatientButton = new Button("Add patient");
-		addPatientButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addPatientButton.addThemeVariants(ButtonVariant.PRIMARY);
 		addPatientButton.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 
