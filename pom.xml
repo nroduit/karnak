@@ -20,7 +20,7 @@
 
     <springframework.version>4.1.0</springframework.version>
     <springdoc.version>1.8.0</springdoc.version>
-    <vaadin.version>25.1.8</vaadin.version>
+    <vaadin.version>25.2.1</vaadin.version>
     <org.json.version>20260522</org.json.version>
     <opencsv.version>5.12.0</opencsv.version>
 
@@ -273,7 +273,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>3.7.0</version>
+        <version>3.8.0</version>
         <configuration>
           <!-- define a language-specific format -->
           <java>
