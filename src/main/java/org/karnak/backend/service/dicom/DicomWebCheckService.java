@@ -105,7 +105,7 @@ public class DicomWebCheckService {
 
 		try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			List<Callable<WebNodeCheckResult>> tasks = destinations.stream()
-				.map((destination) -> (Callable<WebNodeCheckResult>) () -> new WebNodeCheckResult(destination,
+				.map(destination -> (Callable<WebNodeCheckResult>) () -> new WebNodeCheckResult(destination,
 						check(destination)))
 				.toList();
 
@@ -129,7 +129,7 @@ public class DicomWebCheckService {
 		try {
 			return future.get();
 		}
-		catch (InterruptedException ex) {
+		catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 			return timedOut(destination);
 		}
@@ -153,6 +153,14 @@ public class DicomWebCheckService {
 			DicomWebServiceType.CAPABILITIES);
 
 	private static final String BOGUS_UID = "1.2.826.0.1.3680043.2.1143.999999";
+
+	private static final String HTTPS = "https";
+
+	private static final String STUDIES_PATH = "/studies";
+
+	private static final String APPLICATION_DICOM_JSON = "application/dicom+json";
+
+	private static final String PROBE_NOT_SENT = "probe could not be sent";
 
 	/** Checks a configured destination, probing the default DICOMweb services. */
 	public WebDestinationCheckResult check(WebDestinationNode destination) {
@@ -193,7 +201,7 @@ public class DicomWebCheckService {
 			uri = URI.create(url.trim());
 			host = uri.getHost();
 		}
-		catch (IllegalArgumentException ex) {
+		catch (IllegalArgumentException _) {
 			return WebDestinationCheckResult.builder().url(url).unexpectedErrorMessage("Invalid URL").build();
 		}
 
@@ -201,8 +209,9 @@ public class DicomWebCheckService {
 			return WebDestinationCheckResult.builder().url(url).unexpectedErrorMessage("Invalid URL (no host)").build();
 		}
 
-		boolean secure = "https".equalsIgnoreCase(uri.getScheme());
-		int port = (uri.getPort() != -1) ? uri.getPort() : (secure ? 443 : 80);
+		boolean secure = HTTPS.equalsIgnoreCase(uri.getScheme());
+		int defaultPort = secure ? 443 : 80;
+		int port = (uri.getPort() != -1) ? uri.getPort() : defaultPort;
 
 		boolean tcpReachable = isTcpReachable(host, port);
 		TlsCertificateInfo tls = (secure && tcpReachable) ? inspectTls(host, port) : null;
@@ -276,20 +285,21 @@ public class DicomWebCheckService {
 			if (secure) {
 				builder.sslContext(permissiveContext());
 			}
-			HttpClient client = builder.build();
 
 			HttpRequest request = HttpRequest.newBuilder(uri)
 				.timeout(timeout)
 				.method("OPTIONS", BodyPublishers.noBody())
 				.build();
-			HttpResponse<Void> response = client.send(request, BodyHandlers.discarding());
-			return new HttpProbe(true, response.statusCode());
+			try (HttpClient client = builder.build()) {
+				HttpResponse<Void> response = client.send(request, BodyHandlers.discarding());
+				return new HttpProbe(true, response.statusCode());
+			}
 		}
 		catch (IOException | GeneralSecurityException ex) {
 			log.debug("HTTP probe failed for {} — {}", uri, ex.getMessage());
 			return new HttpProbe(false, 0);
 		}
-		catch (InterruptedException ex) {
+		catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 			return new HttpProbe(false, 0);
 		}
@@ -309,7 +319,7 @@ public class DicomWebCheckService {
 	}
 
 	private WebServiceProbe probeUps(String base, @Nullable String token) {
-		HttpResponse<Void> response = send("GET", URI.create(base + "/workitems?limit=1"), "application/dicom+json",
+		HttpResponse<Void> response = send("GET", URI.create(base + "/workitems?limit=1"), APPLICATION_DICOM_JSON,
 				token);
 		return classifyRetrieve(DicomWebServiceType.UPS_RS, response, "worklist query");
 	}
@@ -326,7 +336,7 @@ public class DicomWebCheckService {
 				"application/json, application/vnd.sun.wadl+xml;q=0.9, application/dicom+json;q=0.8, */*;q=0.5", token);
 		if (response == null) {
 			return new WebServiceProbe(DicomWebServiceType.CAPABILITIES, WebServiceProbe.Support.INCONCLUSIVE, 0,
-					"probe could not be sent");
+					PROBE_NOT_SENT);
 		}
 
 		int status = response.statusCode();
@@ -363,10 +373,10 @@ public class DicomWebCheckService {
 	}
 
 	private WebServiceProbe probeStow(String base, @Nullable String token) {
-		HttpResponse<Void> response = send("OPTIONS", URI.create(base + "/studies"), null, token);
+		HttpResponse<Void> response = send("OPTIONS", URI.create(base + STUDIES_PATH), null, token);
 		if (response == null) {
 			return new WebServiceProbe(DicomWebServiceType.STOW_RS, WebServiceProbe.Support.INCONCLUSIVE, 0,
-					"probe could not be sent");
+					PROBE_NOT_SENT);
 		}
 		int status = response.statusCode();
 		if (status == 401 || status == 403) {
@@ -380,21 +390,20 @@ public class DicomWebCheckService {
 					"methods not advertised (status " + status + ")");
 		}
 
-		boolean postAllowed = allow.toUpperCase().contains("POST");
+		boolean postAllowed = allow.toUpperCase(Locale.ROOT).contains("POST");
 		String detail = "Allow: " + allow + ((acceptPost != null) ? "; accepts " + acceptPost : "");
 		return new WebServiceProbe(DicomWebServiceType.STOW_RS,
 				postAllowed ? WebServiceProbe.Support.SUPPORTED : WebServiceProbe.Support.UNSUPPORTED, status, detail);
 	}
 
 	private WebServiceProbe probeQido(String base, @Nullable String token) {
-		HttpResponse<Void> response = send("GET", URI.create(base + "/studies?limit=1"), "application/dicom+json",
-				token);
+		HttpResponse<Void> response = send("GET", URI.create(base + "/studies?limit=1"), APPLICATION_DICOM_JSON, token);
 		return classifyRetrieve(DicomWebServiceType.QIDO_RS, response, "query");
 	}
 
 	private WebServiceProbe probeWado(String base, @Nullable String token) {
 		HttpResponse<Void> response = send("GET", URI.create(base + "/studies/" + BOGUS_UID + "/metadata"),
-				"application/dicom+json", token);
+				APPLICATION_DICOM_JSON, token);
 		return classifyRetrieve(DicomWebServiceType.WADO_RS, response, "retrieve");
 	}
 
@@ -414,7 +423,7 @@ public class DicomWebCheckService {
 	private static WebServiceProbe classifyRetrieve(DicomWebServiceType service, @Nullable HttpResponse<Void> response,
 			String action) {
 		if (response == null) {
-			return new WebServiceProbe(service, WebServiceProbe.Support.INCONCLUSIVE, 0, "probe could not be sent");
+			return new WebServiceProbe(service, WebServiceProbe.Support.INCONCLUSIVE, 0, PROBE_NOT_SENT);
 		}
 		int status = response.statusCode();
 		if (status == 401 || status == 403) {
@@ -440,7 +449,7 @@ public class DicomWebCheckService {
 			HttpClient.Builder clientBuilder = HttpClient.newBuilder()
 				.connectTimeout(timeout)
 				.followRedirects(HttpClient.Redirect.NEVER);
-			if ("https".equalsIgnoreCase(uri.getScheme())) {
+			if (HTTPS.equalsIgnoreCase(uri.getScheme())) {
 				clientBuilder.sslContext(permissiveContext());
 			}
 
@@ -454,13 +463,15 @@ public class DicomWebCheckService {
 				requestBuilder.header("Authorization", "Bearer " + token);
 			}
 
-			return clientBuilder.build().send(requestBuilder.build(), BodyHandlers.discarding());
+			try (HttpClient client = clientBuilder.build()) {
+				return client.send(requestBuilder.build(), BodyHandlers.discarding());
+			}
 		}
 		catch (IOException | GeneralSecurityException ex) {
 			log.debug("{} {} failed — {}", method, uri, ex.getMessage());
 			return null;
 		}
-		catch (InterruptedException ex) {
+		catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 			return null;
 		}
@@ -471,7 +482,7 @@ public class DicomWebCheckService {
 			HttpClient.Builder clientBuilder = HttpClient.newBuilder()
 				.connectTimeout(timeout)
 				.followRedirects(HttpClient.Redirect.NEVER);
-			if ("https".equalsIgnoreCase(uri.getScheme())) {
+			if (HTTPS.equalsIgnoreCase(uri.getScheme())) {
 				clientBuilder.sslContext(permissiveContext());
 			}
 
@@ -483,13 +494,15 @@ public class DicomWebCheckService {
 				requestBuilder.header("Authorization", "Bearer " + token);
 			}
 
-			return clientBuilder.build().send(requestBuilder.build(), BodyHandlers.ofString());
+			try (HttpClient client = clientBuilder.build()) {
+				return client.send(requestBuilder.build(), BodyHandlers.ofString());
+			}
 		}
 		catch (IOException | GeneralSecurityException ex) {
 			log.debug("GET {} failed — {}", uri, ex.getMessage());
 			return null;
 		}
-		catch (InterruptedException ex) {
+		catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 			return null;
 		}
@@ -509,8 +522,8 @@ public class DicomWebCheckService {
 		if (base.endsWith("/")) {
 			base = base.substring(0, base.length() - 1);
 		}
-		if (base.endsWith("/studies")) {
-			base = base.substring(0, base.length() - "/studies".length());
+		if (base.endsWith(STUDIES_PATH)) {
+			base = base.substring(0, base.length() - STUDIES_PATH.length());
 		}
 		return base;
 	}
@@ -543,6 +556,13 @@ public class DicomWebCheckService {
 		return x509;
 	}
 
+	// Sonar java:S4830 — certificate verification is intentionally disabled: this is a
+	// read-only reachability/diagnostic probe (never uploads a study) whose purpose is to
+	// reach an endpoint despite an expired/self-signed certificate and report the
+	// certificate's validity and trust separately (see inspectTls / isTrusted), rather
+	// than
+	// failing the handshake the way a strict client would.
+	@SuppressWarnings("java:S4830")
 	private static SSLContext permissiveContext() throws GeneralSecurityException {
 		TrustManager[] trustAll = { new X509TrustManager() {
 			@Override

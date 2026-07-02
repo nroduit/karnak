@@ -14,7 +14,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -154,16 +157,19 @@ public class NetworkCheckService {
 
 	private int executePingCmd(String hostname) {
 		String countValue = "1";
+		String pingExecutable;
 		String countArg;
 		String timeoutArg;
 		String timeoutValue;
 
 		if (System.getProperty("os.name").startsWith("Windows")) {
+			pingExecutable = windowsPingExecutable();
 			countArg = "-n";
 			timeoutArg = "-w";
 			timeoutValue = String.valueOf(pingTimeout.toMillis());
 		}
 		else {
+			pingExecutable = unixPingExecutable();
 			countArg = "-c";
 			timeoutArg = "-W";
 			// Linux ping expects the per-reply timeout in whole seconds (at least 1).
@@ -171,7 +177,7 @@ public class NetworkCheckService {
 		}
 
 		try {
-			ProcessBuilder builder = new ProcessBuilder("ping", countArg, countValue, timeoutArg, timeoutValue,
+			ProcessBuilder builder = new ProcessBuilder(pingExecutable, countArg, countValue, timeoutArg, timeoutValue,
 					hostname);
 			Process process = builder.start();
 			return process.waitFor();
@@ -186,6 +192,30 @@ public class NetworkCheckService {
 			Thread.currentThread().interrupt();
 			return PING_OTHER_ERROR;
 		}
+	}
+
+	/**
+	 * Resolves the absolute path of the Windows {@code ping} binary (under
+	 * {@code %SystemRoot%\System32}) so the command never relies on {@code PATH} resolution.
+	 */
+	private static String windowsPingExecutable() {
+		String systemRoot = System.getenv("SystemRoot");
+		String base = (systemRoot != null && !systemRoot.isBlank()) ? systemRoot : "C:\\Windows";
+		return base + "\\System32\\PING.EXE";
+	}
+
+	/**
+	 * Resolves the absolute path of the {@code ping} binary on Unix-like systems, which lives
+	 * in different directories across Linux distributions and macOS, so the command never
+	 * relies on {@code PATH} resolution. Falls back to the conventional {@code /bin/ping}.
+	 */
+	private static String unixPingExecutable() {
+		for (String candidate : List.of("/bin/ping", "/usr/bin/ping", "/sbin/ping", "/usr/sbin/ping")) {
+			if (Files.isExecutable(Path.of(candidate))) {
+				return candidate;
+			}
+		}
+		return "/bin/ping";
 	}
 
 }

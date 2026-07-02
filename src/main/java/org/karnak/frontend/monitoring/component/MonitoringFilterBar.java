@@ -64,12 +64,6 @@ public class MonitoringFilterBar extends HorizontalLayout {
 
 	private final EnhancedDateRangePicker rangePicker = new EnhancedDateRangePicker("Custom range");
 
-	private final ComboBox<TransferStatusType> statusComboBox = new ComboBox<>("Status");
-
-	private final TextField studyUidField = new TextField("Study UID");
-
-	private final TextField serieUidField = new TextField("Series UID");
-
 	private boolean updating;
 
 	public MonitoringFilterBar(Runnable onChange) {
@@ -86,6 +80,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 		rangePicker.setClearButtonVisible(true);
 		rangePicker.addValueChangeListener(event -> onRangeEdited());
 
+		ComboBox<TransferStatusType> statusComboBox = new ComboBox<>("Status");
 		statusComboBox.setItems(TransferStatusType.values());
 		statusComboBox.setItemLabelGenerator(TransferStatusType::getLabel);
 		statusComboBox.setValue(TransferStatusType.ALL);
@@ -94,7 +89,9 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			fireChange();
 		});
 
+		TextField studyUidField = new TextField("Study UID");
 		configureTextFilter(studyUidField, filter::setStudyUid);
+		TextField serieUidField = new TextField("Series UID");
 		configureTextFilter(serieUidField, filter::setSerieUid);
 
 		setAlignItems(Alignment.BASELINE);
@@ -177,7 +174,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			rangePicker.clear();
 		}
 		else {
-			rangePicker.setValue(new DateRange(start.toLocalDate(), end != null ? end.toLocalDate() : LocalDate.now()));
+			rangePicker.setValue(new DateRange(start.toLocalDate(), end.toLocalDate()));
 		}
 		updating = false;
 		filter.setStart(start);
