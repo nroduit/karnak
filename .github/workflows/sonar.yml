@@ -41,7 +41,7 @@ jobs:
             echo "sonar_args=-Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Cache SonarCloud packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
