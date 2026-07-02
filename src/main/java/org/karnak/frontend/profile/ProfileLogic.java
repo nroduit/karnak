@@ -242,11 +242,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 		var divTitle = new Div();
 		var btn = new Div();
 		divTitle.setText("Warning");
-		divTitle.getStyle()
-			.set("font-size", "large")
-			.set("font-weight", "bolder")
-			.set("padding-bottom", "10px")
-			.set("color", "red");
+		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
 
 		var okBtn = new Button("Ok", e -> warningIssuer.close());
 		okBtn.getStyle().set("margin-top", "10px");

@@ -125,7 +125,7 @@ public class PseudonymMappingView extends HorizontalLayout {
 	private void buildTitlePseudonymToLookFor(String pseudonym) {
 		pseudonymToLookForLabel = new NativeLabel(String.format("Pseudonym %s", pseudonym));
 		pseudonymToLookForLabel.getElement().getStyle().set("margin-left", "1em");
-		pseudonymToLookForLabel.getStyle().set("font-size", "large").set("font-weight", "bolder");
+		pseudonymToLookForLabel.addClassName("karnak-title");
 
 		// Add in the layout
 		mappingLayout.add(pseudonymToLookForLabel);

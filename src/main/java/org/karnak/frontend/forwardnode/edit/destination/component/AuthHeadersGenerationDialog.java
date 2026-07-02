@@ -81,7 +81,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 	private void setElement() {
 		divTitle = new Div();
 		divTitle.setText(TITLE);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		divContent = new Div();
 		divSelectBox = new Div();

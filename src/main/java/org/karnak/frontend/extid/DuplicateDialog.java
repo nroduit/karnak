@@ -32,7 +32,7 @@ public class DuplicateDialog extends Dialog {
 
 		Div divTitle = new Div();
 		divTitle.setText(title);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		Div divContent = new Div();
 		Div divIntro = new Div();

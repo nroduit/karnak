@@ -23,7 +23,7 @@ logging:
            AtmosphereFramework: ERROR
     com:
       vaadin:
-        copilot:
+          copilot:
           # Copilot's release-note fetch fails behind TLS-inspecting proxies (PKIX
           # path building failed). The call is cosmetic, so silence its logger to
           # drop the noisy stack trace.

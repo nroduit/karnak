@@ -14,6 +14,7 @@ import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -83,6 +84,9 @@ public class WebDestinationEditorDialog extends Dialog {
 		group.setItems(DicomWebServiceType.values());
 		group.setItemLabelGenerator(DicomWebServiceType::getDisplayName);
 		group.setHelperText("none selected means all services");
+		// Aura stacks checkbox-group options vertically by default; lay them out in a row
+		// as they were under Lumo.
+		group.addThemeVariants(CheckboxGroupVariant.AURA_HORIZONTAL);
 		return group;
 	}
 

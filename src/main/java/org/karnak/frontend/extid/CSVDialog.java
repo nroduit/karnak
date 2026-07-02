@@ -115,12 +115,12 @@ public class CSVDialog extends Dialog {
 	private void setElement() {
 		divTitle = new Div();
 		divTitle.setText(TITLE);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		divGridContent = new Div();
 		errorMsg = new Div();
 		errorMsg.getStyle()
-			.set("font-weight", "bolder")
+			.set("font-weight", "var(--aura-font-weight-semibold)")
 			.set("padding-bottom", "10px")
 			.set("color", "var(--aura-red-text)");
 

@@ -1,0 +1,49 @@
+/*
+ * Aura theming for the vcf-date-range-picker toggle / clear buttons.
+ *
+ * The add-on only ships Lumo and Material themes. Its buttons draw their glyphs
+ * with `content: var(--lumo-icons-calendar)` (and the `lumo-icons` font) plus the
+ * `lumo-field-button` mixin, none of which exist under Aura, so the calendar
+ * toggle renders as an empty, unstyled box. We redraw them the way native Vaadin
+ * fields do under Aura: a self-contained SVG `mask-image` tinted with
+ * `currentColor`. Selectors are prefixed with `:host` so they outrank the
+ * add-on's bundled Lumo rules regardless of stylesheet registration order.
+ */
+:host [part='toggle-button'],
+:host [part='clear-button'] {
+  color: var(--vaadin-input-field-button-text-color, var(--vaadin-text-color-secondary));
+  cursor: var(--vaadin-clickable-cursor);
+  /* Preserve a comfortable (WCAG) click target around the icon */
+  padding: max(0px, (24px - var(--vaadin-icon-size, 1lh)) / 2);
+}
+
+:host [part='toggle-button']:hover,
+:host [part='clear-button']:hover {
+  color: var(--vaadin-text-color);
+}
+
+:host([disabled]) [part='toggle-button'],
+:host([disabled]) [part='clear-button'] {
+  color: var(--vaadin-text-color-disabled);
+  cursor: var(--vaadin-disabled-cursor);
+}
+
+:host [part='toggle-button']::before,
+:host [part='clear-button']::before {
+  content: '';
+  display: block;
+  width: var(--vaadin-icon-size, 1lh);
+  height: var(--vaadin-icon-size, 1lh);
+  background: currentColor;
+  mask-size: var(--vaadin-icon-visual-size, 100%);
+  mask-position: 50%;
+  mask-repeat: no-repeat;
+}
+
+:host [part='toggle-button']::before {
+  mask-image: var(--_vaadin-icon-calendar);
+}
+
+:host [part='clear-button']::before {
+  mask-image: var(--_vaadin-icon-cross);
+}

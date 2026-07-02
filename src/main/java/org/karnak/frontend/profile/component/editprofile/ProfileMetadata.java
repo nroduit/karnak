@@ -72,7 +72,7 @@ public class ProfileMetadata extends VerticalLayout {
 			.set("line-height", "31.5px")
 			.setHeight("38.5px");
 		valueDiv.getStyle()
-			.set("color", "grey")
+			.set("color", "var(--vaadin-text-color-secondary)")
 			.set("padding-left", "10px")
 			.set("line-height", "31.5px")
 			.setHeight("38.5px");

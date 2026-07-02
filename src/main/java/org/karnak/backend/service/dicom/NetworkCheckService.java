@@ -196,7 +196,8 @@ public class NetworkCheckService {
 
 	/**
 	 * Resolves the absolute path of the Windows {@code ping} binary (under
-	 * {@code %SystemRoot%\System32}) so the command never relies on {@code PATH} resolution.
+	 * {@code %SystemRoot%\System32}) so the command never relies on {@code PATH}
+	 * resolution.
 	 */
 	private static String windowsPingExecutable() {
 		String systemRoot = System.getenv("SystemRoot");
@@ -205,9 +206,10 @@ public class NetworkCheckService {
 	}
 
 	/**
-	 * Resolves the absolute path of the {@code ping} binary on Unix-like systems, which lives
-	 * in different directories across Linux distributions and macOS, so the command never
-	 * relies on {@code PATH} resolution. Falls back to the conventional {@code /bin/ping}.
+	 * Resolves the absolute path of the {@code ping} binary on Unix-like systems, which
+	 * lives in different directories across Linux distributions and macOS, so the command
+	 * never relies on {@code PATH} resolution. Falls back to the conventional
+	 * {@code /bin/ping}.
 	 */
 	private static String unixPingExecutable() {
 		for (String candidate : List.of("/bin/ping", "/usr/bin/ping", "/sbin/ping", "/usr/sbin/ping")) {

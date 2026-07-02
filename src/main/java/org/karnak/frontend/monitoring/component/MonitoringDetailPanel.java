@@ -61,7 +61,7 @@ public class MonitoringDetailPanel extends VerticalLayout {
 		copyButton.setEnabled(false);
 		copyButton.addClickListener(event -> copyToClipboard());
 
-		placeholder.getStyle().set("color", "var(--vaadin-text-color-secondary)");
+		placeholder.addClassName("karnak-secondary-text");
 		form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
 		form.setWidthFull();
 

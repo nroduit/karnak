@@ -121,7 +121,7 @@ public class EditAETitleDescription extends VerticalLayout {
 		pathField.setWidthFull();
 
 		Span errorMessage = new Span();
-		errorMessage.getStyle().set("color", "var(--aura-red-text)");
+		errorMessage.addClassName("karnak-error-text");
 		errorMessage.setVisible(false);
 
 		Button confirmButton = new Button("Confirm", e -> {

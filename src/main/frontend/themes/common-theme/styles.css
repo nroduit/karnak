@@ -1,5 +1,35 @@
 /* Global application styles for the Karnak UI (Aura-based). */
 
+/* ===== Semantic text colors =====
+ * Shared classes for recurring, meaning-carrying text styling, applied from Java via
+ * addClassName(...) instead of repeating inline getStyle().set("color", ...) tokens.
+ */
+.karnak-error-text {
+  color: var(--aura-red-text);
+}
+
+.karnak-secondary-text {
+  color: var(--vaadin-text-color-secondary);
+}
+
+/* ===== Titles =====
+ * Shared heading style built on Aura's default type scale (font-size-l +
+ * semibold weight + matching line-height) instead of the raw `large` / `bolder`
+ * CSS keywords, which sit outside Aura's token system. Compose with
+ * `karnak-error-text` for a red (warning) dialog title.
+ */
+.karnak-title,
+.karnak-dialog-title {
+  font-size: var(--aura-font-size-l);
+  font-weight: var(--aura-font-weight-semibold);
+  line-height: var(--aura-line-height-l);
+}
+
+/* A title that introduces a dialog body, with Aura's small gap below it. */
+.karnak-dialog-title {
+  padding-bottom: var(--vaadin-gap-s);
+}
+
 /* ===== Message box (see org.karnak.frontend.component.MessageBox) ===== */
 .stroked-button {
   border: 1px solid currentColor;
@@ -61,9 +91,6 @@
 }
 
 /* ===== Layout, navigation menu and forms ===== */
-html {
-  font-size: var(--aura-font-size-s);
-}
 
 /* Stack login-screen vertically on narrow screen */
 @media (max-width: 800px) {

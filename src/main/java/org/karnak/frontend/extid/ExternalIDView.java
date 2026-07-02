@@ -33,6 +33,8 @@ import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.cache.Patient;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
+import org.karnak.frontend.component.ButtonFactory;
+import org.karnak.frontend.component.NewItemDialog;
 import org.karnak.frontend.component.ProjectDropDown;
 import org.karnak.frontend.component.WarningConfirmDialog;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +67,8 @@ public class ExternalIDView extends HorizontalLayout {
 
 	private Upload uploadCsvButton;
 
+	private final Button addPatientButton;
+
 	private final Button deleteAllButton;
 
 	private Div uploadCsvLabelDiv;
@@ -72,18 +76,28 @@ public class ExternalIDView extends HorizontalLayout {
 	@Autowired
 	public ExternalIDView(final ExternalIDLogic externalIDLogic) {
 		setSizeFull();
-		externalIDLogic.setExternalIDView(this);
+		// Safety net for short viewports: the outer row can scroll if the column below
+		// can't
+		// shrink enough. It's a separate container from the grid, so it doesn't affect
+		// the
+		// grid's flex sizing inside the column.
 		getStyle().set("overflow-y", "auto");
+		externalIDLogic.setExternalIDView(this);
+
+		// Content lives in a full-height column so the result grid can flex-grow into the
+		// space left below the controls; the column's own padding provides the page
+		// margins.
 		VerticalLayout verticalLayout = new VerticalLayout();
+		verticalLayout.setSizeFull();
 
 		NativeLabel labelDisclaimer = new NativeLabel(LABEL_DISCLAIMER_EXTID);
-		labelDisclaimer.getStyle().set("color", "var(--aura-red-text)");
+		labelDisclaimer.addClassName("karnak-error-text");
 		labelDisclaimer.setMinWidth("75%");
 		labelDisclaimer.getStyle().set("right", "0px");
 
 		Div labelProject = new Div();
 		labelProject.setText(LABEL_CHOOSE_PROJECT);
-		labelProject.getStyle().set("font-size", "large").set("font-weight", "bolder");
+		labelProject.addClassName("karnak-title");
 
 		setUploadCSVElement();
 		projectDropDown = new ProjectDropDown();
@@ -91,7 +105,28 @@ public class ExternalIDView extends HorizontalLayout {
 		projectDropDown.setItems(externalIDLogic.retrieveProject());
 		externalIDGrid = new ExternalIDGrid();
 		externalIDForm = new ExternalIDForm();
+		addPatientButton = ButtonFactory.createAddButton("Add patient");
 		deleteAllButton = new Button("Delete all patients");
+
+		// The patient fields live in a popup (like the project / profile "new item"
+		// flows);
+		// the toolbar only shows the "Add patient" button that opens it.
+		NewItemDialog addPatientDialog = new NewItemDialog("Add patient", "Add", externalIDForm);
+		addPatientDialog.setOnConfirm(() -> {
+			final Patient newPatient = externalIDForm.getNewPatient();
+			if (newPatient == null) {
+				return false;
+			}
+			externalIDGrid.addPatient(newPatient);
+			checkDuplicatePatient();
+			externalIDGrid.readAllCacheValue();
+			return true;
+		});
+		addPatientButton.addClickListener(click -> {
+			externalIDForm.clearPatientFields();
+			addPatientDialog.open();
+			externalIDForm.getExternalIdField().focus();
+		});
 
 		projectDropDown.addValueChangeListener(event -> {
 			setEnableAddPatient(!projectDropDown.isEmpty());
@@ -118,29 +153,32 @@ public class ExternalIDView extends HorizontalLayout {
 			dialog.open();
 		});
 
-		externalIDForm.getAddPatientButton().addClickListener(click -> {
-			final Patient newPatient = externalIDForm.getNewPatient();
-			if (newPatient != null) {
-				externalIDGrid.addPatient(newPatient);
-				checkDuplicatePatient();
-				externalIDGrid.readAllCacheValue();
-			}
-		});
-
 		externalIDGrid.getEditor().addOpenListener(editorOpenEvent -> {
-			externalIDForm.setEnabled(false);
+			addPatientButton.setEnabled(false);
 			uploadCsvButton.setMaxFiles(0);
 		});
 
 		externalIDGrid.getEditor().addCloseListener(editorOpenEvent -> {
-			externalIDForm.setEnabled(true);
+			addPatientButton.setEnabled(true);
 			uploadCsvButton.setMaxFiles(1);
 		});
 
 		Div validationStatus = externalIDGrid.setBinder();
 
+		// Toolbar sitting right above the result grid: create a patient (popup) or clear
+		// all.
+		HorizontalLayout gridToolbar = new HorizontalLayout(addPatientButton, deleteAllButton);
+		gridToolbar.setPadding(false);
+
 		verticalLayout.add(new H2("External Pseudonym"), labelDisclaimer, labelProject, projectDropDown,
-				uploadCsvLabelDiv, uploadCsvButton, externalIDForm, deleteAllButton, validationStatus, externalIDGrid);
+				uploadCsvLabelDiv, uploadCsvButton, gridToolbar, validationStatus, externalIDGrid);
+
+		// The grid (with its filters) takes all vertical space left below the controls
+		// and
+		// scrolls its own rows; the floor keeps it usable when the controls leave little
+		// room.
+		verticalLayout.setFlexGrow(1, externalIDGrid);
+		externalIDGrid.setMinHeight("20rem");
 
 		add(verticalLayout);
 
@@ -150,7 +188,7 @@ public class ExternalIDView extends HorizontalLayout {
 	public void setUploadCSVElement() {
 		uploadCsvLabelDiv = new Div();
 		uploadCsvLabelDiv.setText("Upload the CSV file containing the external ID associated with patient(s): ");
-		uploadCsvLabelDiv.getStyle().set("font-size", "large").set("font-weight", "bolder");
+		uploadCsvLabelDiv.addClassName("karnak-title");
 
 		// Buffer the whole upload in memory: the request-bound input stream is only valid
 		// during the upload handler, but the CSV is parsed later (after the user picks a
@@ -200,7 +238,7 @@ public class ExternalIDView extends HorizontalLayout {
 	}
 
 	public void setEnableAddPatient(boolean value) {
-		externalIDForm.setEnabled(value);
+		addPatientButton.setEnabled(value);
 		if (value) {
 			uploadCsvButton.setMaxFiles(1);
 		}

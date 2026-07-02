@@ -9,11 +9,7 @@
  */
 package org.karnak.frontend.extid;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
@@ -26,9 +22,14 @@ import org.karnak.backend.cache.Patient;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.weasis.core.util.annotations.Generated;
 
+/**
+ * The set of fields describing a new patient/pseudonym mapping. It carries only the
+ * inputs and their validation; it is shown as the body of the "Add patient" popup, which
+ * supplies its own Add / Cancel buttons.
+ */
 @Generated()
 @NullUnmarked
-public class ExternalIDForm extends Div {
+public class ExternalIDForm extends VerticalLayout {
 
 	private static final String ERROR_MESSAGE_PATIENT = "Length must be between 1 and 50.";
 
@@ -37,6 +38,7 @@ public class ExternalIDForm extends Div {
 	@Setter
 	private transient ProjectEntity projectEntity;
 
+	@Getter
 	private TextField externalIdField;
 
 	private TextField patientIdField;
@@ -47,76 +49,33 @@ public class ExternalIDForm extends Div {
 
 	private TextField issuerOfPatientIdField;
 
-	@Getter
-	private Button addPatientButton;
-
-	private Button clearFieldsButton;
-
-	private Div addedPatientLabelDiv;
-
 	public ExternalIDForm() {
-		setSizeFull();
+		setPadding(false);
+		setSpacing(true);
 
 		binder = new BeanValidationBinder<>(Patient.class);
 
 		setElements();
 		setBinder();
 
-		clearFieldsButton.addClickListener(click -> clearPatientFields());
-
-		// enable/disable update button while editing
-		binder.addStatusChangeListener(event -> {
-			boolean isValid = !event.hasValidationErrors();
-			boolean hasChanges = binder.hasChanges();
-			addPatientButton.setEnabled(hasChanges && isValid);
-		});
-
-		HorizontalLayout horizontalLayout1 = new HorizontalLayout();
-		HorizontalLayout horizontalLayout2 = new HorizontalLayout();
-		HorizontalLayout horizontalLayout3 = new HorizontalLayout();
-		HorizontalLayout horizontalLayout4 = new HorizontalLayout();
-		HorizontalLayout horizontalLayout5 = new HorizontalLayout();
-		Div addPatientDiv = new Div();
-
-		horizontalLayout1.setSizeFull();
-		horizontalLayout2.setSizeFull();
-		horizontalLayout3.setSizeFull();
-		horizontalLayout4.setSizeFull();
-
-		horizontalLayout3.add(addedPatientLabelDiv);
-
-		horizontalLayout4.add(externalIdField, patientIdField, patientFirstNameField, patientLastNameField,
-				issuerOfPatientIdField);
-		horizontalLayout5.add(clearFieldsButton, addPatientButton);
-
-		addPatientDiv.add(horizontalLayout4, horizontalLayout5);
-		add(horizontalLayout1, horizontalLayout2, horizontalLayout3, addPatientDiv);
+		add(externalIdField, patientIdField, patientFirstNameField, patientLastNameField, issuerOfPatientIdField);
 	}
 
 	private void setElements() {
-		addedPatientLabelDiv = new Div();
-		addedPatientLabelDiv.setText("Add a new patient: ");
-		addedPatientLabelDiv.getStyle().set("font-size", "large").set("font-weight", "bolder");
-
 		externalIdField = new TextField("External Pseudonym");
-		externalIdField.setWidth("20%");
+		externalIdField.setWidthFull();
 		externalIdField.setRequired(true);
+
 		patientIdField = new TextField("Patient ID");
-		patientIdField.setWidth("20%");
+		patientIdField.setWidthFull();
 		patientIdField.setRequired(true);
 
 		patientFirstNameField = new TextField("Patient first name");
-		patientFirstNameField.setWidth("20%");
+		patientFirstNameField.setWidthFull();
 		patientLastNameField = new TextField("Patient last name");
-		patientLastNameField.setWidth("20%");
+		patientLastNameField.setWidthFull();
 		issuerOfPatientIdField = new TextField("Issuer of patient ID");
-		issuerOfPatientIdField.setWidth("20%");
-
-		clearFieldsButton = new Button("Clear");
-
-		addPatientButton = new Button("Add patient");
-		addPatientButton.addThemeVariants(ButtonVariant.PRIMARY);
-		addPatientButton.setIcon(VaadinIcon.PLUS_CIRCLE.create());
+		issuerOfPatientIdField.setWidthFull();
 	}
 
 	public void setBinder() {

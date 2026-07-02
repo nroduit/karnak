@@ -12,6 +12,7 @@ package org.karnak.frontend.monitoring.component;
 import com.vaadin.componentfactory.DateRange;
 import com.vaadin.componentfactory.EnhancedDateRangePicker;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -33,6 +34,19 @@ import org.weasis.core.util.annotations.Generated;
  * any change triggers the supplied {@code onChange} callback so the tree and the
  * dashboard reload.
  */
+// The vcf-date-range-picker add-on ships only Lumo/Material themes; these
+// themeFor stylesheets re-theme its shadow-DOM sub-components for Aura (which
+// defines no --lumo-* variables), otherwise the calendar toggle button and the
+// popup render unstyled. See src/main/frontend/themes/common-theme/components/.
+@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker.css", themeFor = "vcf-date-range-picker")
+@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker-text-field.css",
+		themeFor = "vcf-date-range-picker-text-field")
+@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker-overlay.css",
+		themeFor = "vcf-date-range-picker-overlay")
+@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker-overlay-content.css",
+		themeFor = "vcf-date-range-picker-overlay-content")
+@CssImport(value = "./themes/common-theme/components/vcf-date-range-month-calendar.css",
+		themeFor = "vcf-date-range-month-calendar")
 @Generated()
 public class MonitoringFilterBar extends HorizontalLayout {
 

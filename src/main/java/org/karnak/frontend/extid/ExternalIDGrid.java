@@ -122,7 +122,10 @@ public class ExternalIDGrid extends Grid<Patient> {
 		this.externalIDCache = AppConfig.getInstance().getExternalIDCache();
 
 		setSelectionMode(Grid.SelectionMode.MULTI);
-		setSizeFull();
+		// Width only: the height is driven by the parent view (flex-grow into the
+		// remaining
+		// space). A height:100% here would fight that flex sizing and collapse the grid.
+		setWidthFull();
 		getElement().addEventListener("keyup", event -> editor.cancel())
 			.setFilter("event.key === 'Escape' || event.key === 'Esc'");
 
@@ -261,7 +264,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 	public Div setBinder() {
 		Div validationStatus = new Div();
 		validationStatus.setId("validation");
-		validationStatus.getStyle().set("color", "var(--theme-color, red)");
+		validationStatus.addClassName("karnak-error-text");
 		binder.forField(externalIdField)
 			.withValidator(StringUtils::isNotBlank, "External Pseudonym is empty")
 			.withValidator(new StringLengthValidator(ERROR_MESSAGE_PATIENT, 1, 50))

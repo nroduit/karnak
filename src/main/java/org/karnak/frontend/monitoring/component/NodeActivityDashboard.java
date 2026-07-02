@@ -82,7 +82,7 @@ public class NodeActivityDashboard extends VerticalLayout {
 		Span number = new Span(Long.toString(value));
 		number.getStyle().set("font-size", "var(--aura-font-size-xl)").set("font-weight", "700");
 		if (errorEmphasis && value > 0) {
-			number.getStyle().set("color", "var(--aura-red-text)");
+			number.addClassName("karnak-error-text");
 		}
 		Span caption = new Span(label);
 		caption.getStyle()

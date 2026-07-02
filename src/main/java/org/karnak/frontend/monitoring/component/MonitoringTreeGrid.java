@@ -10,6 +10,8 @@
 package org.karnak.frontend.monitoring.component;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -31,6 +33,7 @@ import org.karnak.frontend.monitoring.component.MonitoringNode.DestinationNode;
 import org.karnak.frontend.monitoring.component.MonitoringNode.ErrorNode;
 import org.karnak.frontend.monitoring.component.MonitoringNode.SeriesNode;
 import org.karnak.frontend.monitoring.component.MonitoringNode.StudyNode;
+import org.karnak.frontend.util.UIS;
 import org.weasis.core.util.annotations.Generated;
 
 /**
@@ -58,7 +61,10 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 		addColumn(this::seriesText).setHeader("Series").setFlexGrow(0).setAutoWidth(true);
 		addColumn(this::instancesText).setHeader("Instances").setFlexGrow(0).setAutoWidth(true);
 		addColumn(this::errorsText).setHeader("Errors").setFlexGrow(0).setAutoWidth(true);
-		addComponentColumn(this::statusBadge).setHeader("Status").setFlexGrow(0).setAutoWidth(true);
+		// Auto-width so the column grows to its widest content (the "N error(s)" badge)
+		// rather than staying at the header width. The header is padded so the column
+		// reserves extra room around the badge.
+		addComponentColumn(this::statusBadge).setHeader(statusHeader()).setFlexGrow(0).setAutoWidth(true);
 
 		setSelectionMode(SelectionMode.SINGLE);
 		asSingleSelect().addValueChangeListener(event -> {
@@ -118,7 +124,7 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 		icon.setSize("var(--aura-font-size-l)");
 		Span label = new Span(text);
 		if (node.hasErrors()) {
-			label.getStyle().set("color", "var(--aura-red-text)");
+			label.addClassName("karnak-error-text");
 		}
 		HorizontalLayout layout = new HorizontalLayout(icon, label);
 		layout.setAlignItems(Alignment.CENTER);
@@ -153,23 +159,50 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 		return errors > 0 ? Long.toString(errors) : "";
 	}
 
-	private Span statusBadge(MonitoringNode node) {
+	private Badge statusBadge(MonitoringNode node) {
 		return switch (node) {
-			case ErrorNode ignored -> badge("error", true);
-			case DestinationNode d -> statusBadge(d.errors());
-			case StudyNode s -> statusBadge(s.errors());
-			case SeriesNode se -> statusBadge(se.errors());
+			case ErrorNode ignored -> badge("error", BadgeVariant.ERROR);
+			case DestinationNode d -> statusBadge(d.instances(), d.sent(), d.errors());
+			case StudyNode s -> statusBadge(s.instances(), s.sent(), s.errors());
+			case SeriesNode se -> statusBadge(se.instances(), se.sent(), se.errors());
 		};
 	}
 
-	private Span statusBadge(long errors) {
-		return errors > 0 ? badge(errors + " error(s)", true) : badge("OK", false);
+	/**
+	 * Worst-status badge for an aggregated node: red when any instance errored, orange
+	 * when some instances were excluded (neither sent nor errored) and green when every
+	 * instance was sent.
+	 */
+	private Badge statusBadge(long instances, long sent, long errors) {
+		long excluded = instances - sent - errors;
+		Badge badge;
+		if (errors > 0) {
+			badge = badge(errors + " error(s)", BadgeVariant.ERROR);
+		}
+		else if (excluded > 0) {
+			badge = badge(excluded + " excluded", BadgeVariant.WARNING);
+		}
+		else {
+			badge = badge("OK", BadgeVariant.SUCCESS);
+		}
+		UIS.setTooltip(badge, "Sent: " + sent + " · Excluded: " + excluded + " · Errors: " + errors);
+		return badge;
 	}
 
-	private Span badge(String text, boolean error) {
-		Span span = new Span(text);
-		span.getElement().getThemeList().add(error ? "badge error" : "badge success");
-		return span;
+	/** "Status" header with horizontal padding so the column reserves extra width. */
+	private Span statusHeader() {
+		Span header = new Span("Status");
+		header.getStyle().set("padding-inline", "var(--vaadin-gap-l)");
+		return header;
+	}
+
+	private Badge badge(String text, BadgeVariant variant) {
+		Badge badge = new Badge(text);
+		badge.addThemeVariants(variant);
+		// Keep the badge on a single line so the auto-width Status column measures its
+		// full width (the widest being the "N error(s)" badge) instead of a wrapped one.
+		badge.getStyle().set("white-space", "nowrap");
+		return badge;
 	}
 
 	private static boolean isBlank(String value) {

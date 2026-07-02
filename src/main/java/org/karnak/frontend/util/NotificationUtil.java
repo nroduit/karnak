@@ -25,7 +25,7 @@ public class NotificationUtil {
 	 */
 	public static void displayErrorMessage(String message, Notification.Position position) {
 		Span content = new Span(message);
-		content.getStyle().set("color", "var(--aura-red-text)");
+		content.addClassName("karnak-error-text");
 		Notification notification = new Notification(content);
 		notification.setDuration(3000);
 		notification.setPosition(position);

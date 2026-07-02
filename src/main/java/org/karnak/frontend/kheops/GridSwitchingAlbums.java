@@ -114,7 +114,7 @@ public class GridSwitchingAlbums extends Grid<KheopsAlbumsEntity> {
 				else {
 					// Show a notification
 					Span content = new Span("Already existing");
-					content.getStyle().set("color", "var(--aura-red-text)");
+					content.addClassName("karnak-error-text");
 					Notification notification = new Notification(content);
 					notification.setDuration(3000);
 					notification.setPosition(Position.BOTTOM_END);

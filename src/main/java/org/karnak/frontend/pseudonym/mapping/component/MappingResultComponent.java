@@ -76,7 +76,7 @@ public class MappingResultComponent extends VerticalLayout {
 	 */
 	public static void handleResultFindPatientPatientNotFound(String inputValue, String location) {
 		Span content = new Span(String.format("%s Pseudonym %s not found", location, inputValue));
-		content.getStyle().set("color", "var(--aura-red-text)");
+		content.addClassName("karnak-error-text");
 		Notification notification = new Notification(content);
 		notification.setDuration(3000);
 		notification.setPosition(Position.TOP_CENTER);
@@ -93,7 +93,7 @@ public class MappingResultComponent extends VerticalLayout {
 
 		// Summary
 		NativeLabel summaryDetails = new NativeLabel(location);
-		summaryDetails.getStyle().set("font-size", "large").set("font-weight", "bolder");
+		summaryDetails.addClassName("karnak-title");
 		getPatientFoundDetails().setSummary(summaryDetails);
 
 		// Add result in details
@@ -136,7 +136,7 @@ public class MappingResultComponent extends VerticalLayout {
 
 		// Badge
 		BoxShadowComponent badgeTitle = new BoxShadowComponent(label);
-		badgeTitle.getStyle().set("font-size", "revert").set("font-weight", "bolder");
+		badgeTitle.getStyle().set("font-size", "revert").set("font-weight", "var(--aura-font-weight-semibold)");
 		badgeTitle.getStyle().set("background-color", "color-mix(in srgb, var(--vaadin-text-color) 5%, transparent)");
 		badgeTitle.getStyle().set("color", "var(--aura-accent-text-color)");
 

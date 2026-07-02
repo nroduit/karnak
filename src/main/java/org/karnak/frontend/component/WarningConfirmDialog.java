@@ -115,7 +115,7 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 		titleText = new Span(valueTitle);
 		titleText.getStyle().set("font-size", "24px");
 		titleText.getStyle().set("font-weight", "400");
-		titleText.getStyle().set("color", "var(--aura-red-text)");
+		titleText.addClassName("karnak-error-text");
 	}
 
 	private void createButtonsLayout() {

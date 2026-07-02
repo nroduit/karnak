@@ -14,6 +14,7 @@ import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.ListItem;
@@ -102,6 +103,9 @@ public class DicomWebView extends AbstractView {
 		servicesFld.setItemLabelGenerator(DicomWebServiceType::getDisplayName);
 		servicesFld.setHelperText("none selected means all services");
 		servicesFld.setValue(EnumSet.allOf(DicomWebServiceType.class));
+		// Aura stacks checkbox-group options vertically by default; lay them out in a row
+		// as they were under Lumo.
+		servicesFld.addThemeVariants(CheckboxGroupVariant.AURA_HORIZONTAL);
 
 		groupFilterFld = new ComboBox<>("Group");
 		groupFilterFld.setClearButtonVisible(true);

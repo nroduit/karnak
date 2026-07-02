@@ -202,7 +202,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void buildDisclaimerLabel() {
 		disclaimerLabel = new NativeLabel(LABEL_DISCLAIMER_DEIDENTIFICATION);
-		disclaimerLabel.getStyle().set("color", "var(--aura-red-text)");
+		disclaimerLabel.addClassName("karnak-error-text");
 		disclaimerLabel.setMinWidth("75%");
 		disclaimerLabel.getStyle().set("right", "0px");
 	}
