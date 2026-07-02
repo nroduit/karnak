@@ -39,6 +39,8 @@ import org.weasis.core.util.annotations.Generated;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.error.Mark;
+import org.yaml.snakeyaml.error.MarkedYAMLException;
 import org.yaml.snakeyaml.error.YAMLException;
 
 @SpringComponent
@@ -245,6 +247,10 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 				openWarningIssuerDialog();
 			}
 		}
+		catch (MarkedYAMLException e) {
+			log.warn("Invalid YAML in uploaded profile", e);
+			profileView.getProfileErrorView().setView("Unable to read uploaded YAML file.\n" + formatYamlError(e));
+		}
 		catch (YAMLException e) {
 			log.error("Unable to read uploaded YAML", e);
 			profileView.getProfileErrorView()
@@ -287,10 +293,30 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 			}
 			return List.of();
 		}
+		catch (MarkedYAMLException e) {
+			log.warn("Invalid YAML in edited profile", e);
+			return List.of(formatYamlError(e));
+		}
 		catch (YAMLException e) {
 			log.error("Unable to read edited YAML", e);
 			return List.of("Unable to read the YAML content. Please check the YAML structure.");
 		}
+	}
+
+	/**
+	 * Build a human-readable, positional message from a SnakeYAML parse error. Uses the
+	 * problem mark (line/column are 0-based in SnakeYAML, shown 1-based to the user) and
+	 * appends the mark's snippet, which underlines the offending column with a caret and
+	 * makes indentation mistakes obvious.
+	 * @param e the marked parse exception
+	 * @return a message such as {@code "Line 5, column 3: <problem>\n<snippet>"}
+	 */
+	private static String formatYamlError(MarkedYAMLException e) {
+		Mark mark = e.getProblemMark();
+		String where = mark != null ? "Line " + (mark.getLine() + 1) + ", column " + (mark.getColumn() + 1) + ": " : "";
+		String problem = e.getProblem() != null ? e.getProblem() : "invalid YAML structure";
+		String snippet = mark != null ? "\n" + mark.get_snippet() : "";
+		return where + problem + snippet;
 	}
 
 	private static String formatError(ProfileError profileError) {

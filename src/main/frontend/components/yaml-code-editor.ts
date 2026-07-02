@@ -41,6 +41,9 @@ class KarnakYamlEditor extends LitElement {
       height: 100%;
       min-height: 0;
 
+      /* Width of the line-number gutter; recomputed from the digit count. */
+      --yaml-gutter-width: 3.5em;
+
       /* Syntax palette — override any of these from the outside to re-theme.
        * Defaults are built from Aura tokens so they flip with the app theme. */
       --yaml-key-color: var(--aura-accent-text-color, #2160c4);
@@ -69,14 +72,15 @@ class KarnakYamlEditor extends LitElement {
       opacity: 0.85;
     }
 
-    /* The two stacked layers must be geometrically identical. */
+    /* The two stacked text layers must be geometrically identical. They start to the
+     * right of the line-number gutter. */
     .layer {
       margin: 0;
       border: 0;
       padding: 10px 12px;
       box-sizing: border-box;
       position: absolute;
-      inset: 0;
+      inset: 0 0 0 var(--yaml-gutter-width);
       font-family: var(
         --vaadin-code-font-family,
         ui-monospace,
@@ -122,6 +126,41 @@ class KarnakYamlEditor extends LitElement {
       background: color-mix(in srgb, var(--aura-primary-color, #6a4bcc) 28%, transparent);
     }
 
+    /* Line-number gutter. Shares the layers' font metrics and vertical padding so each
+     * number lines up with its row; scrolls vertically in lock-step with the textarea. */
+    .gutter {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: var(--yaml-gutter-width);
+      margin: 0;
+      padding: 10px 8px;
+      box-sizing: border-box;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+      text-align: right;
+      white-space: pre;
+      font-family: var(
+        --vaadin-code-font-family,
+        ui-monospace,
+        'SF Mono',
+        'SFMono-Regular',
+        'Menlo',
+        'Consolas',
+        'Liberation Mono',
+        monospace
+      );
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--vaadin-text-color-secondary, #6b7280);
+      background: color-mix(in srgb, var(--vaadin-text-color, #000) 4%, transparent);
+      border-right: 1px solid
+        var(--vaadin-input-field-border-color, color-mix(in srgb, var(--vaadin-text-color, #000) 12%, transparent));
+    }
+
     /* Token colours */
     .tok-key {
       color: var(--yaml-key-color);
@@ -158,6 +197,7 @@ class KarnakYamlEditor extends LitElement {
   render() {
     return html`
       <div class="editor">
+        <div class="gutter" aria-hidden="true"></div>
         <pre class="layer highlight" aria-hidden="true"><code></code></pre>
         <textarea
           class="layer"
@@ -181,6 +221,10 @@ class KarnakYamlEditor extends LitElement {
 
   private get code(): HTMLElement {
     return this.renderRoot.querySelector('pre.highlight code') as HTMLElement;
+  }
+
+  private get gutter(): HTMLElement {
+    return this.renderRoot.querySelector('.gutter') as HTMLElement;
   }
 
   firstUpdated() {
@@ -223,10 +267,28 @@ class KarnakYamlEditor extends LitElement {
       pre.scrollTop = ta.scrollTop;
       pre.scrollLeft = ta.scrollLeft;
     }
+    // The gutter follows the vertical scroll only; it never scrolls horizontally.
+    if (this.gutter && ta) {
+      this.gutter.scrollTop = ta.scrollTop;
+    }
   }
 
   private paint() {
     this.code.innerHTML = highlightYaml(this.textarea.value ?? '');
+    this.paintGutter();
+  }
+
+  /** Render the line numbers and size the gutter to fit the widest number. */
+  private paintGutter() {
+    const lineCount = ((this.textarea.value ?? '').match(/\n/g)?.length ?? 0) + 1;
+    let numbers = '';
+    for (let i = 1; i <= lineCount; i++) {
+      numbers += i === 1 ? '1' : `\n${i}`;
+    }
+    this.gutter.textContent = numbers;
+    const digits = String(lineCount).length;
+    // digits worth of monospace glyphs + the gutter's 8px horizontal padding on each side.
+    this.style.setProperty('--yaml-gutter-width', `calc(${digits}ch + 16px)`);
   }
 }
 
