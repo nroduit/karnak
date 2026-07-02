@@ -105,7 +105,33 @@ Note: this portable package runs an embedded database (H2) in file mode, and the
             - `OIDC_CLIENT_ID=undefined`
             - `OIDC_CLIENT_SECRET=undefined`
             - `OIDC_ISSUER_URI=undefined`
-            
+
+## Debug the portable package in IntelliJ
+
+The portable build has no external dependencies: it runs an embedded H2 database (file mode) and an
+in-memory cache instead of Postgres + Redis. To debug it in IntelliJ you don't need the docker
+components — you only need to activate the `portable` Spring profile and, optionally, configure a
+local DICOM node so received studies are written to disk.
+
+Reuse the Spring Boot launcher from [Debug in IntelliJ](#debug-in-intellij) with the same VM options
+(`-Djava.library.path=...`), then in Environment variables:
+
+- Activate the portable profile (it swaps in `application-portable.yml`). Either set it in the
+  launcher's **Active profiles** field (`portable`), or add the environment variable:
+    - `SPRING_PROFILES_ACTIVE=portable`
+- Mandatory (same as above):
+    - `ENVIRONMENT=DEV`
+- Optional — persist incoming studies to a local folder. When `LOCAL_NODE_PORT` and
+  `LOCAL_NODE_STORAGE_PATH` are both set, Karnak starts an additional DICOM listener that stores
+  received objects on disk:
+    - `LOCAL_NODE_STORAGE_PATH=./dicom`
+    - `LOCAL_NODE_AE_TITLE=KARNAK-LOCAL`
+    - `LOCAL_NODE_PORT=11115`
+    - `LOCAL_NODE_FILEPATH_PATTERN={00100010}/{00080060}/{0020000E}/{00080018}.dcm`
+
+The H2 database file is created under `./data` in the working directory, so no docker services are
+required. Then open <http://localhost:8081> and log in (see [Accessing Karnak](#accessing-karnak)).
+
 ## Run locally the database and the cache with docker
 
 - Go in the `docker` folder located in the root project folder.
