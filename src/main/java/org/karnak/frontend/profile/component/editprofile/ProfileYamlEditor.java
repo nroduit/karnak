@@ -18,7 +18,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
 import java.util.List;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProfileEntity;
@@ -37,7 +36,7 @@ public class ProfileYamlEditor extends VerticalLayout {
 
 	private ProfileEntity profileEntity;
 
-	private final TextArea yamlArea = new TextArea();
+	private final YamlCodeEditor yamlArea = new YamlCodeEditor();
 
 	private final Div errorBox = new Div();
 
@@ -59,7 +58,6 @@ public class ProfileYamlEditor extends VerticalLayout {
 		// Floor the editor height: it flex-shrinks down to this height before the
 		// panel scrolls.
 		yamlArea.setMinHeight("200px");
-		yamlArea.getStyle().set("font-family", "monospace").set("--vaadin-input-field-value-font-size", "13px");
 
 		errorBox.setVisible(false);
 		errorBox.getStyle()
@@ -97,7 +95,7 @@ public class ProfileYamlEditor extends VerticalLayout {
 		this.profileEntity = profileEntity;
 		errorBox.setVisible(false);
 		if (profileEntity == null) {
-			yamlArea.clear();
+			yamlArea.setValue("");
 			setEnabled(false);
 			return;
 		}
