@@ -31,15 +31,27 @@ jobs:
         run: tar xzf sonar-input.tgz
       - name: Resolve analysis parameters
         id: ctx
+        # SECURITY: event/head_branch and the pr-context files all originate from the untrusted
+        # fork PR. Never interpolate them directly into the shell — pass through env, validate
+        # strictly, then emit via a fixed-delimiter heredoc (safe once newlines are rejected).
+        env:
+          EVENT: ${{ github.event.workflow_run.event }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          if [ "${{ github.event.workflow_run.event }}" = "pull_request" ]; then
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ]; then
             pr=$(cat pr-context/pr_number)
             head=$(cat pr-context/head_ref)
             base=$(cat pr-context/base_ref)
-            echo "sonar_args=-Dsonar.pullrequest.key=${pr} -Dsonar.pullrequest.branch=${head} -Dsonar.pullrequest.base=${base}" >> "$GITHUB_OUTPUT"
+            [[ "$pr"   =~ ^[0-9]+$ ]]           || { echo "invalid pr_number"; exit 1; }
+            [[ "$head" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid head_ref";  exit 1; }
+            [[ "$base" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid base_ref";  exit 1; }
+            args="-Dsonar.pullrequest.key=${pr} -Dsonar.pullrequest.branch=${head} -Dsonar.pullrequest.base=${base}"
           else
-            echo "sonar_args=-Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
+            [[ "$HEAD_BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid head_branch"; exit 1; }
+            args="-Dsonar.branch.name=${HEAD_BRANCH}"
           fi
+          { echo "sonar_args<<__SONAR_EOF__"; echo "$args"; echo "__SONAR_EOF__"; } >> "$GITHUB_OUTPUT"
       - name: Cache SonarCloud packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
@@ -56,9 +68,13 @@ jobs:
           unzip -q scanner.zip
           echo "${PWD}/sonar-scanner-${SCANNER_VERSION}-linux-x64/bin" >> "$GITHUB_PATH"
       - name: Analyze
+        # SONAR_ARGS is validated in the previous step, so the intentional word-splitting below
+        # is safe. It is passed via env rather than inlined as ${{ }} to avoid shell injection.
         env:
           SONAR_TOKEN: ${{ secrets.P_SONAR_TOKEN }}
+          SONAR_ARGS: ${{ steps.ctx.outputs.sonar_args }}
         run: |
+          # shellcheck disable=SC2086
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=osirix-foundation-1 \
@@ -73,4 +89,4 @@ jobs:
             -Dsonar.junit.reportPaths=target/surefire-reports \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.coverage.exclusions='**/org/karnak/frontend/**/*' \
-            ${{ steps.ctx.outputs.sonar_args }}
+            $SONAR_ARGS
