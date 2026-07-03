@@ -12,6 +12,7 @@ package org.karnak.frontend.dicom.echo;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H6;
@@ -36,13 +37,16 @@ import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomEchoQueryData;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.result.DicomCapabilitiesResult;
+import org.karnak.backend.model.dicom.result.DicomNodeCheckHistory;
 import org.karnak.backend.model.dicom.result.DicomNodeCheckResult;
 import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckHistoryService;
 import org.karnak.backend.service.dicom.DicomNodeCheckService;
 import org.karnak.backend.util.DicomNodeUtil;
 import org.karnak.frontend.dicom.AETField;
 import org.karnak.frontend.dicom.AbstractView;
 import org.karnak.frontend.dicom.DicomCapabilitiesPanel;
+import org.karnak.frontend.dicom.DicomNodeCheckHistoryGrid;
 import org.karnak.frontend.dicom.DicomNodeCheckResultGrid;
 import org.karnak.frontend.dicom.DicomNodeSelectionDialog;
 import org.karnak.frontend.dicom.DicomNodeSelectionDialog.SelectDicomNodeEvent;
@@ -77,7 +81,6 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	private final DicomEchoLogic logic;
 
 	// UI COMPONENTS
-	// Dicom Echo Query
 	private VerticalLayout dicomEchoQueryLayout;
 
 	private FormLayout formLayout;
@@ -100,20 +103,26 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 	private Button dicomEchoBtn;
 
-	// Dicom Echo Result
-	private VerticalLayout dicomEchoResultLayout;
+	// Current check result (single row, with an on-demand capabilities probe)
+	private VerticalLayout currentResultLayout;
 
-	private DicomNodeCheckResultGrid dicomEchoResultGrid;
+	private DicomNodeCheckResultGrid currentResultGrid;
 
-	// Dicom Capabilities
-	private VerticalLayout dicomCapabilitiesLayout;
+	// Persisted check history, detached from the current result
+	private VerticalLayout historyLayout;
 
-	private DicomCapabilitiesPanel dicomCapabilitiesPanel;
+	private H6 historyTitle;
+
+	private DicomNodeCheckHistoryGrid historyGrid;
 
 	// DATA
 	private DicomEchoQueryData dicomEchoQueryData;
 
 	private Binder<DicomEchoQueryData> binder;
+
+	// Number of persisted checks currently shown; drives history-layout visibility so a
+	// field edit does not hide the existing history.
+	private int historyCount;
 
 	// PARAMETERS
 	private String callingAetParam;
@@ -128,9 +137,12 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 	private final DicomNodeUtil dicomNodeUtil;
 
+	private final DicomNodeCheckHistoryService historyService;
+
 	public DicomEchoView(DicomNodeUtil dicomNodeUtil, DicomNodeCheckService dicomNodeCheckService,
-			DicomCapabilitiesCheckService dicomCapabilitiesCheckService) {
+			DicomCapabilitiesCheckService dicomCapabilitiesCheckService, DicomNodeCheckHistoryService historyService) {
 		this.dicomNodeUtil = dicomNodeUtil;
+		this.historyService = historyService;
 		this.logic = new DicomEchoLogic(this, dicomNodeCheckService, dicomCapabilitiesCheckService);
 		init();
 		createView();
@@ -139,6 +151,9 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 		add(mainLayout);
 
 		bindFields();
+
+		// Show the persisted history straight away, before any check has been run.
+		refreshHistory();
 	}
 
 	@Override
@@ -151,13 +166,27 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	}
 
 	public void displayResult(DicomNodeCheckResult result) {
-		dicomEchoResultGrid.setItems(List.of(result));
-		dicomEchoResultLayout.setVisible(true);
+		currentResultGrid.setItems(List.of(result));
+		currentResultLayout.setVisible(true);
+
+		historyService.record(result);
+		refreshHistory();
 	}
 
-	public void displayCapabilities(DicomCapabilitiesResult capabilities) {
-		dicomCapabilitiesPanel.display(capabilities);
-		dicomCapabilitiesLayout.setVisible(true);
+	/**
+	 * Called when the Dicom Echo tab is (re)selected: reload the persisted history so
+	 * checks run in another session are reflected without a page reload.
+	 */
+	public void onSelected() {
+		refreshHistory();
+	}
+
+	private void refreshHistory() {
+		List<DicomNodeCheckHistory> history = historyService.getRecentChecks();
+		historyCount = history.size();
+		historyGrid.setItems(history);
+		historyTitle.setText("History (" + historyCount + ")");
+		historyLayout.setVisible(historyCount > 0);
 	}
 
 	private void init() {
@@ -167,19 +196,25 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 
 	private void createView() {
 		setSizeFull();
+		getStyle().set("min-height", "0");
 	}
 
 	private void createMainLayout() {
 		mainLayout = new VerticalLayout();
 		mainLayout.setPadding(true);
 		mainLayout.setSpacing(true);
-		mainLayout.setWidthFull();
+		mainLayout.setSizeFull();
+		mainLayout.getStyle().set("min-height", "0");
 
 		buildDicomEchoQueryLayout();
-		buildDicomEchoResultLayout();
-		buildDicomCapabilitiesLayout();
+		buildCurrentResultLayout();
+		buildHistoryLayout();
 
-		mainLayout.add(dicomEchoQueryLayout, dicomEchoResultLayout, dicomCapabilitiesLayout);
+		mainLayout.add(dicomEchoQueryLayout, currentResultLayout, historyLayout);
+
+		// Let the history section absorb the remaining vertical space; the grid inside
+		// it scrolls internally when the checks exceed the available height.
+		mainLayout.setFlexGrow(1, historyLayout);
 	}
 
 	private void buildDicomEchoQueryLayout() {
@@ -293,55 +328,84 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 		dicomEchoBtn.addClickListener(event -> executeEcho());
 	}
 
-	private void buildDicomEchoResultLayout() {
-		dicomEchoResultLayout = new VerticalLayout();
-		dicomEchoResultLayout.setWidthFull();
-		dicomEchoResultLayout.setPadding(true);
-		dicomEchoResultLayout.setSpacing(false);
-		dicomEchoResultLayout.getStyle()
+	private void buildCurrentResultLayout() {
+		currentResultLayout = new VerticalLayout();
+		currentResultLayout.setWidthFull();
+		currentResultLayout.setPadding(true);
+		currentResultLayout.setSpacing(false);
+		currentResultLayout.getStyle()
 			.set("box-shadow",
 					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
-		dicomEchoResultLayout.getStyle().set("border-radius", "4px");
-		dicomEchoResultLayout.setVisible(false);
+		currentResultLayout.getStyle().set("border-radius", "4px");
+		currentResultLayout.setVisible(false);
 
 		H6 resultTitle = new H6("Result");
 		resultTitle.getStyle().set("margin-top", "0px");
 		resultTitle.getStyle().set("padding-bottom", "0px");
 
-		Div dicomEchoResultNote = new Div("Select the row to view the details");
-		dicomEchoResultNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
-		dicomEchoResultNote.getStyle().set("font-style", "italic");
+		Div resultNote = new Div("Select the row to view the details, or probe the node capabilities");
+		resultNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
+		resultNote.getStyle().set("font-style", "italic");
 
-		dicomEchoResultGrid = new DicomNodeCheckResultGrid();
-		dicomEchoResultGrid.setWidthFull();
-		dicomEchoResultGrid.setAllRowsVisible(true);
+		currentResultGrid = new DicomNodeCheckResultGrid();
+		currentResultGrid.setWidthFull();
+		currentResultGrid.setAllRowsVisible(true);
+		currentResultGrid.setCapabilityProbeAction(this::openCapabilitiesDialog);
 
-		dicomEchoResultLayout.add(resultTitle, dicomEchoResultNote, dicomEchoResultGrid);
+		currentResultLayout.add(resultTitle, resultNote, currentResultGrid);
 	}
 
-	private void buildDicomCapabilitiesLayout() {
-		dicomCapabilitiesLayout = new VerticalLayout();
-		dicomCapabilitiesLayout.setWidthFull();
-		dicomCapabilitiesLayout.setPadding(true);
-		dicomCapabilitiesLayout.setSpacing(false);
-		dicomCapabilitiesLayout.getStyle()
+	private void buildHistoryLayout() {
+		historyLayout = new VerticalLayout();
+		historyLayout.setWidthFull();
+		historyLayout.setPadding(true);
+		historyLayout.setSpacing(false);
+		historyLayout.getStyle()
 			.set("box-shadow",
 					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
-		dicomCapabilitiesLayout.getStyle().set("border-radius", "4px");
-		dicomCapabilitiesLayout.setVisible(false);
+		historyLayout.getStyle().set("border-radius", "4px");
+		// Let this section shrink so the grid inside it can flex-shrink down to its
+		// min-height instead of forcing the page to scroll while the table is still tall.
+		historyLayout.getStyle().set("min-height", "0");
+		historyLayout.setVisible(false);
 
-		H6 capabilitiesTitle = new H6("DICOM Capabilities");
-		capabilitiesTitle.getStyle().set("margin-top", "0px");
-		capabilitiesTitle.getStyle().set("padding-bottom", "0px");
+		historyTitle = new H6("History");
+		historyTitle.getStyle().set("margin-top", "0px");
+		historyTitle.getStyle().set("padding-bottom", "0px");
 
-		Div capabilitiesNote = new Div(
-				"Non-invasive probe: which SOP Classes and transfer syntaxes the node accepts (no data is sent)");
-		capabilitiesNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
-		capabilitiesNote.getStyle().set("font-style", "italic");
+		Div historyNote = new Div("Previous checks, most recent first - select a row to view the details");
+		historyNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
+		historyNote.getStyle().set("font-style", "italic");
 
-		dicomCapabilitiesPanel = new DicomCapabilitiesPanel();
+		historyGrid = new DicomNodeCheckHistoryGrid();
+		historyGrid.setWidthFull();
+		historyGrid.setMinHeight("200px");
 
-		dicomCapabilitiesLayout.add(capabilitiesTitle, capabilitiesNote, dicomCapabilitiesPanel);
+		historyLayout.add(historyTitle, historyNote, historyGrid);
+
+		// Grow the grid to fill whatever height the history section receives.
+		historyLayout.setFlexGrow(1, historyGrid);
+	}
+
+	private void openCapabilitiesDialog(DicomNodeCheckResult result) {
+		if (callingAetFld.isEmpty()) {
+			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT, "A calling AE Title is required"));
+			return;
+		}
+
+		DicomCapabilitiesResult capabilities = logic.probeCapabilities(callingAetFld.getValue(),
+				result.getCalledNode());
+
+		DicomCapabilitiesPanel panel = new DicomCapabilitiesPanel();
+		panel.display(capabilities);
+
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("DICOM Capabilities — " + result.getCalledNodeDescription());
+		dialog.setWidth("900px");
+		dialog.add(panel);
+		Button closeBtn = new Button("Close", (event) -> dialog.close());
+		dialog.getFooter().add(closeBtn);
+		dialog.open();
 	}
 
 	private void bindFields() {
@@ -373,8 +437,8 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 				dicomEchoBtn.setEnabled(!event.hasValidationErrors());
 			}
 
-			dicomEchoResultLayout.setVisible(false);
-			dicomCapabilitiesLayout.setVisible(false);
+			currentResultLayout.setVisible(false);
+			historyLayout.setVisible(historyCount > 0);
 		});
 	}
 

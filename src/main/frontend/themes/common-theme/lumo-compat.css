@@ -1,0 +1,58 @@
+/*
+ * Minimal Lumo compatibility shim for the com.vaadin.componentfactory:vcf-date-range-picker
+ * add-on (used by the Monitoring "Custom range" filter).
+ *
+ * That add-on ships only a Lumo theme and works out of the box on Lumo. The app now
+ * uses Aura, which defines none of the --lumo-* custom properties the add-on's styles
+ * consume, so its calendar toggle button and popup render unstyled/collapsed.
+ *
+ * Rather than re-theming every shadow-DOM sub-component, we simply supply the exact set
+ * of --lumo-* variables the add-on reads (see its theme/lumo/*.js). Only that add-on
+ * reads --lumo-*, so defining them globally has no effect on the rest of the Aura UI.
+ * Custom properties inherit through shadow boundaries, so this reaches every sub-part.
+ *
+ * - Colors alias to Aura tokens, so the picker follows the app's accent + light/dark mode.
+ * - Metrics use Lumo's own default values, preserving the add-on's proven geometry.
+ * - Icon glyphs + the `lumo-icons` font come from @vaadin/vaadin-lumo-styles/src/props/icons.css
+ *   (imported alongside this file); the glyph variables below are set there.
+ */
+html {
+  /* Colors -> Aura.
+   * Use the *solid* surface: --aura-surface-color is translucent (relies on Aura's
+   * backdrop-blur machinery the add-on's overlay doesn't apply), which would leave
+   * the calendar popup see-through and hard to read. */
+  --lumo-base-color: var(--aura-surface-color-solid, var(--vaadin-background-color));
+  --lumo-body-text-color: var(--vaadin-text-color);
+  --lumo-header-text-color: var(--vaadin-text-color);
+  --lumo-tertiary-text-color: var(--vaadin-text-color-secondary);
+  --lumo-disabled-text-color: var(--vaadin-text-color-disabled);
+  --lumo-contrast-10pct: color-mix(in srgb, var(--vaadin-text-color) 10%, transparent);
+  --lumo-contrast-20pct: color-mix(in srgb, var(--vaadin-text-color) 20%, transparent);
+  --lumo-contrast-60pct: color-mix(in srgb, var(--vaadin-text-color) 60%, transparent);
+  --lumo-contrast-90pct: color-mix(in srgb, var(--vaadin-text-color) 90%, transparent);
+  --lumo-shade-5pct: color-mix(in srgb, var(--vaadin-text-color) 5%, transparent);
+  --lumo-tint-5pct: color-mix(in srgb, white 5%, transparent);
+  --lumo-primary-color: var(--aura-accent-color);
+  --lumo-primary-text-color: var(--aura-accent-text-color);
+  --lumo-primary-contrast-color: var(--aura-accent-contrast-color);
+  --lumo-primary-color-10pct: color-mix(in srgb, var(--aura-accent-color) 10%, transparent);
+  --lumo-primary-color-50pct: color-mix(in srgb, var(--aura-accent-color) 50%, transparent);
+
+  /* Metrics -> Lumo defaults (preserve the add-on's original geometry) */
+  --lumo-size-xs: 1.625rem;
+  --lumo-size-s: 1.875rem;
+  --lumo-size-m: 2.25rem;
+  --lumo-icon-size-m: 1.5rem;
+  --lumo-space-xs: 0.25rem;
+  --lumo-space-s: 0.5rem;
+  --lumo-space-m: 1rem;
+  --lumo-font-size-xs: 0.75rem;
+  --lumo-font-size-s: 0.875rem;
+  --lumo-font-size-m: 1rem;
+  --lumo-font-size-l: 1.125rem;
+  --lumo-border-radius-m: var(--vaadin-radius-m, 0.5rem);
+  --lumo-box-shadow-xl: 0 4px 16px 0 color-mix(in srgb, var(--vaadin-text-color) 20%, transparent);
+
+  /* Misc */
+  --lumo-clickable-cursor: var(--vaadin-clickable-cursor, pointer);
+}

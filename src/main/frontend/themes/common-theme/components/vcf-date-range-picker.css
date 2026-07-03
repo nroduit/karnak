@@ -1,49 +1,21 @@
 /*
- * Aura theming for the vcf-date-range-picker toggle / clear buttons.
+ * Aura fix for the vcf-date-range-picker calendar toggle placement.
  *
- * The add-on only ships Lumo and Material themes. Its buttons draw their glyphs
- * with `content: var(--lumo-icons-calendar)` (and the `lumo-icons` font) plus the
- * `lumo-field-button` mixin, none of which exist under Aura, so the calendar
- * toggle renders as an empty, unstyled box. We redraw them the way native Vaadin
- * fields do under Aura: a self-contained SVG `mask-image` tinted with
- * `currentColor`. Selectors are prefixed with `:host` so they outrank the
- * add-on's bundled Lumo rules regardless of stylesheet registration order.
+ * The add-on positions its toggle button with `position: absolute; right: 6px`
+ * inside the end field, relying on Lumo's <vaadin-input-container> being
+ * `position: relative` to act as the toggle's containing block. Aura's input
+ * container is not positioned, so the toggle has no anchor: it escapes its field
+ * and lands at the far right of the monitoring filter row.
+ *
+ * Restore Lumo's geometry by making the end field's input container positioned
+ * again. The toggle then overlays at `right: 6px` inside the field (as designed)
+ * without taking layout space, so the start and end fields keep the same height.
+ *
+ * This must be injected into the picker's shadow DOM, so it is imported with
+ * @CssImport(themeFor = "vcf-date-range-picker"): the app dropped @Theme (which
+ * used to auto-apply themes/.../components/*.css), and a plain @CssImport only
+ * reaches shadow parts through inherited custom properties, not selectors.
  */
-:host [part='toggle-button'],
-:host [part='clear-button'] {
-  color: var(--vaadin-input-field-button-text-color, var(--vaadin-text-color-secondary));
-  cursor: var(--vaadin-clickable-cursor);
-  /* Preserve a comfortable (WCAG) click target around the icon */
-  padding: max(0px, (24px - var(--vaadin-icon-size, 1lh)) / 2);
-}
-
-:host [part='toggle-button']:hover,
-:host [part='clear-button']:hover {
-  color: var(--vaadin-text-color);
-}
-
-:host([disabled]) [part='toggle-button'],
-:host([disabled]) [part='clear-button'] {
-  color: var(--vaadin-text-color-disabled);
-  cursor: var(--vaadin-disabled-cursor);
-}
-
-:host [part='toggle-button']::before,
-:host [part='clear-button']::before {
-  content: '';
-  display: block;
-  width: var(--vaadin-icon-size, 1lh);
-  height: var(--vaadin-icon-size, 1lh);
-  background: currentColor;
-  mask-size: var(--vaadin-icon-visual-size, 100%);
-  mask-position: 50%;
-  mask-repeat: no-repeat;
-}
-
-:host [part='toggle-button']::before {
-  mask-image: var(--_vaadin-icon-calendar);
-}
-
-:host [part='clear-button']::before {
-  mask-image: var(--_vaadin-icon-cross);
+:host [part='end-text-field']::part(input-field) {
+  position: relative;
 }

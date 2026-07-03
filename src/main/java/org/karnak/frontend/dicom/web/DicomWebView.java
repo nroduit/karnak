@@ -9,22 +9,21 @@
  */
 package org.karnak.frontend.dicom.web;
 
-import com.vaadin.flow.component.badge.Badge;
-import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H6;
-import com.vaadin.flow.component.html.ListItem;
-import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.jspecify.annotations.NullUnmarked;
@@ -34,11 +33,13 @@ import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.WebDestinationNode;
-import org.karnak.backend.model.dicom.result.TlsCertificateInfo;
 import org.karnak.backend.model.dicom.result.WebDestinationCheckResult;
+import org.karnak.backend.model.dicom.result.WebNodeCheckResult;
 import org.karnak.backend.service.WebDestinationConfigService;
 import org.karnak.backend.service.dicom.DicomWebCheckService;
+import org.karnak.backend.util.DicomNodeUtil;
 import org.karnak.frontend.dicom.AbstractView;
+import org.karnak.frontend.dicom.WebDestinationCheckResultGrid;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
@@ -48,6 +49,8 @@ public class DicomWebView extends AbstractView {
 	private final transient DicomWebCheckService dicomWebCheckService;
 
 	private final transient WebDestinationConfigService webDestinationConfigService;
+
+	private final transient DicomNodeUtil dicomNodeUtil;
 
 	private ComboBox<String> groupFilterFld;
 
@@ -61,18 +64,21 @@ public class DicomWebView extends AbstractView {
 
 	private Button checkBtn;
 
+	private Button checkGroupBtn;
+
 	private Button saveBtn;
 
 	private VerticalLayout resultLayout;
 
-	private Badge resultBadge;
+	private Div resultNote;
 
-	private UnorderedList resultDetails;
+	private WebDestinationCheckResultGrid resultGrid;
 
 	public DicomWebView(DicomWebCheckService dicomWebCheckService,
-			WebDestinationConfigService webDestinationConfigService) {
+			WebDestinationConfigService webDestinationConfigService, DicomNodeUtil dicomNodeUtil) {
 		this.dicomWebCheckService = dicomWebCheckService;
 		this.webDestinationConfigService = webDestinationConfigService;
+		this.dicomNodeUtil = dicomNodeUtil;
 		setSizeFull();
 		createMainLayout();
 		add(mainLayout);
@@ -103,15 +109,14 @@ public class DicomWebView extends AbstractView {
 		servicesFld.setItemLabelGenerator(DicomWebServiceType::getDisplayName);
 		servicesFld.setHelperText("none selected means all services");
 		servicesFld.setValue(EnumSet.allOf(DicomWebServiceType.class));
-		// Aura stacks checkbox-group options vertically by default; lay them out in a row
-		// as they were under Lumo.
 		servicesFld.addThemeVariants(CheckboxGroupVariant.AURA_HORIZONTAL);
 
 		groupFilterFld = new ComboBox<>("Group");
 		groupFilterFld.setClearButtonVisible(true);
 		groupFilterFld.setPlaceholder("All groups");
-		groupFilterFld.setWidth("12em");
+		groupFilterFld.setWidth("14em");
 		groupFilterFld.addValueChangeListener(event -> applyGroupFilter(event.getValue()));
+		checkGroupBtn = new Button("Check group", (event) -> runGroupCheck());
 
 		savedEndpointFld = new ComboBox<>("Saved endpoint");
 		savedEndpointFld.setItemLabelGenerator(DicomWebView::endpointLabel);
@@ -120,12 +125,13 @@ public class DicomWebView extends AbstractView {
 		savedEndpointFld.setWidth("22em");
 		savedEndpointFld.addValueChangeListener(event -> applyEndpoint(event.getValue()));
 
-		checkBtn = new Button("Check", (event) -> runCheck());
+		checkBtn = new Button("Check URL", (event) -> runCheck());
 		checkBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		saveBtn = new Button("Save as endpoint", (event) -> saveAsEndpoint());
 
-		HorizontalLayout bar = new HorizontalLayout(groupFilterFld, savedEndpointFld, urlFld, checkBtn, saveBtn);
+		HorizontalLayout bar = new HorizontalLayout(groupFilterFld, checkGroupBtn, savedEndpointFld, urlFld, checkBtn,
+				saveBtn);
 		bar.setWidthFull();
 		bar.setDefaultVerticalComponentAlignment(Alignment.END);
 		bar.expand(urlFld);
@@ -144,16 +150,20 @@ public class DicomWebView extends AbstractView {
 	private void refreshSavedEndpoints() {
 		allEndpoints = webDestinationConfigService.findAll();
 
-		List<String> groups = allEndpoints.stream()
+		// The dynamic "Gateway destinations" group is always offered (as in the Monitor
+		// tab), followed by the organizational groups actually in use by saved endpoints.
+		List<String> groups = new ArrayList<>();
+		groups.add(DicomNodeUtil.GATEWAY_DESTINATIONS_GROUP_NAME);
+		allEndpoints.stream()
 			.map(WebDestinationConfigEntity::getGroupName)
 			.filter(group -> group != null && !group.isBlank())
 			.distinct()
 			.sorted()
-			.toList();
+			.forEach(groups::add);
 
 		groupFilterFld.setItems(groups);
 		// Only show the Group filter when there is more than one group to choose from;
-		// otherwise the group already shown in the endpoint label is enough.
+		// otherwise an empty selection already checks everything.
 		groupFilterFld.setVisible(groups.size() > 1);
 		if (!groupFilterFld.isVisible()) {
 			groupFilterFld.clear();
@@ -216,10 +226,15 @@ public class DicomWebView extends AbstractView {
 		H6 title = new H6("Result");
 		title.getStyle().set("margin-top", "0px");
 
-		resultBadge = new Badge();
-		resultDetails = new UnorderedList();
+		resultNote = new Div();
+		resultNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
+		resultNote.getStyle().set("font-style", "italic");
 
-		resultLayout.add(title, resultBadge, resultDetails);
+		resultGrid = new WebDestinationCheckResultGrid();
+		resultGrid.setWidthFull();
+		resultGrid.setAllRowsVisible(true);
+
+		resultLayout.add(title, resultNote, resultGrid);
 		return resultLayout;
 	}
 
@@ -230,48 +245,56 @@ public class DicomWebView extends AbstractView {
 		}
 
 		String url = urlFld.getValue();
-		WebDestinationCheckResult result = dicomWebCheckService.check(new WebDestinationNode(url, url),
-				selectedServices());
-		display(result);
+		WebDestinationNode node = new WebDestinationNode(url, url);
+		WebDestinationCheckResult result = dicomWebCheckService.check(node, selectedServices());
+		displayResults(List.of(new WebNodeCheckResult(node, result)));
 	}
 
-	private void display(WebDestinationCheckResult result) {
-		resultDetails.removeAll();
-
-		if (result.isUnexpectedError()) {
-			initBadge(false);
-			resultDetails.add(new ListItem("Error: " + result.getUnexpectedErrorMessage()));
-			resultLayout.setVisible(true);
+	private void runGroupCheck() {
+		List<WebDestinationNode> destinations = collectWebDestinations();
+		if (destinations.isEmpty()) {
+			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT,
+					"No DICOMweb (STOW-RS) destination is configured for the selected group"));
 			return;
 		}
 
-		initBadge(result.isSuccessful());
-
-		String endpoint = result.getHost() + ":" + result.getPort();
-		resultDetails.add(new ListItem(result.isTcpReachable() ? "TCP connection to " + endpoint + " succeeded"
-				: "TCP connection to " + endpoint + " failed"));
-
-		if (result.isHttpResponded()) {
-			resultDetails.add(new ListItem("HTTP OPTIONS returned status " + result.getHttpStatus()));
-		}
-		else if (result.isTcpReachable()) {
-			resultDetails.add(new ListItem("No HTTP response from the endpoint"));
-		}
-
-		if (result.isSecure()) {
-			TlsCertificateInfo tls = result.getTls();
-			resultDetails.add(new ListItem(tls != null ? "TLS: " + tls.getSummary() : "TLS handshake failed"));
-		}
-
-		result.getServiceProbes().forEach((probe) -> resultDetails.add(new ListItem(probe.getSummary())));
-
-		resultLayout.setVisible(true);
+		displayResults(dicomWebCheckService.check(destinations));
 	}
 
-	private void initBadge(boolean successful) {
-		resultBadge.removeThemeVariants(BadgeVariant.values());
-		resultBadge.addThemeVariants(successful ? BadgeVariant.SUCCESS : BadgeVariant.ERROR);
-		resultBadge.setText(successful ? "Reachable" : "Unreachable");
+	/**
+	 * The DICOMweb destinations to check for the selected group, deduplicated by URL: the
+	 * saved endpoints (filtered by group) and, unless a specific saved group is selected,
+	 * the dynamic Gateway STOW destinations (their own
+	 * {@value DicomNodeUtil#GATEWAY_DESTINATIONS_GROUP_NAME} group). An empty selection
+	 * checks everything.
+	 */
+	private List<WebDestinationNode> collectWebDestinations() {
+		String group = groupFilterFld.getValue();
+		boolean gatewayGroup = DicomNodeUtil.GATEWAY_DESTINATIONS_GROUP_NAME.equals(group);
+
+		var destinations = new ArrayList<WebDestinationNode>();
+		Set<String> seen = new HashSet<>();
+		if (!gatewayGroup) {
+			for (WebDestinationConfigEntity entity : webDestinationConfigService.findAll(group)) {
+				if (seen.add(entity.getUrl())) {
+					destinations.add(webDestinationConfigService.toWebDestinationNode(entity));
+				}
+			}
+		}
+		if (group == null || gatewayGroup) {
+			for (WebDestinationNode node : dicomNodeUtil.getGatewayStowDestinations()) {
+				if (seen.add(node.url())) {
+					destinations.add(node);
+				}
+			}
+		}
+		return destinations;
+	}
+
+	private void displayResults(List<WebNodeCheckResult> results) {
+		resultGrid.setItems(results);
+		resultNote.setText(results.size() + " destination(s) checked - select a row to view the details");
+		resultLayout.setVisible(true);
 	}
 
 	private static VerticalLayout boxed(VerticalLayout layout) {

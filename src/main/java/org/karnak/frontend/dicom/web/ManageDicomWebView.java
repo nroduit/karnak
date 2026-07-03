@@ -77,11 +77,13 @@ public class ManageDicomWebView extends AbstractView {
 		// Fill the page so the grid can flex-grow and scroll internally rather than
 		// rendering at its intrinsic (header-only) height.
 		setSizeFull();
+		getStyle().set("min-height", "0");
 
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
 		mainLayout.setPadding(true);
 		mainLayout.setSpacing(true);
+		mainLayout.getStyle().set("min-height", "0");
 
 		H6 title = new H6("DICOMweb Endpoint Management");
 		title.getStyle().set("margin-top", "0px");
@@ -103,6 +105,9 @@ public class ManageDicomWebView extends AbstractView {
 	private WebDestinationManagementGrid createGrid() {
 		WebDestinationManagementGrid managementGrid = new WebDestinationManagementGrid();
 		managementGrid.setSizeFull();
+		// Floor the grid at a few rows: it flex-shrinks with the window down to this
+		// height, and only then does the page scroll.
+		managementGrid.setMinHeight("200px");
 		managementGrid.setEditHandler(this::openEditor);
 		managementGrid.setDeleteHandler(this::deleteEndpoint);
 		return managementGrid;

@@ -84,6 +84,7 @@ public class FormSTOW extends VerticalLayout {
 
 	public void init(Binder<DestinationEntity> binder, ButtonSaveDeleteCancel buttonSaveDeleteCancel) {
 		setSizeFull();
+		buttonSaveDeleteCancel.getStyle().set("padding-bottom", "var(--vaadin-gap-l)");
 		this.binder = binder;
 		this.deIdentificationComponent.init(this.binder);
 		this.tagMorphingComponent.init(this.binder);

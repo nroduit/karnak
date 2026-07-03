@@ -17,9 +17,15 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +36,7 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.frontend.component.ButtonFactory;
 import org.karnak.frontend.component.ConfirmDialog;
+import org.karnak.frontend.component.NewItemDialog;
 import org.karnak.frontend.profile.ProfileLogic;
 
 @NullUnmarked
@@ -39,20 +46,26 @@ public class ProfileElementMainView extends VerticalLayout {
 
 	private ProfileEntity profileEntity;
 
+	private final WarningDeleteProfileUsed dialogWarning = new WarningDeleteProfileUsed();
+
 	private final Grid<ProfileElementEntity> grid = new Grid<>(ProfileElementEntity.class, false);
 
 	public ProfileElementMainView(ProfileLogic profileLogic) {
 		this.profileLogic = profileLogic;
+		setSizeFull();
+		getStyle().set("min-height", "0");
 		configureGrid();
 	}
 
 	private void configureGrid() {
 		grid.addColumn(e -> e.getPosition() + 1).setHeader("#").setWidth("60px").setFlexGrow(0);
-		grid.addColumn(ProfileElementEntity::getName).setHeader("Name").setAutoWidth(true);
-		grid.addColumn(ProfileElementEntity::getCodename).setHeader("Type").setAutoWidth(true);
-		grid.addColumn(this::summary).setHeader("Summary").setAutoWidth(true);
+		grid.addColumn(ProfileElementEntity::getName).setHeader("Name").setFlexGrow(2).setWidth("120px");
+		grid.addColumn(ProfileElementEntity::getCodename).setHeader("Type").setFlexGrow(2).setWidth("120px");
+		grid.addColumn(this::summary).setHeader("Summary").setFlexGrow(3).setWidth("150px");
 		grid.addComponentColumn(this::rowActions).setHeader("").setAutoWidth(true).setFlexGrow(0);
-		grid.setAllRowsVisible(true);
+		grid.setSizeFull();
+		// Floor the grid height: it flex-shrinks down to this height before scrolling.
+		grid.setMinHeight("200px");
 	}
 
 	public void setProfile(ProfileEntity profileEntity) {
@@ -73,7 +86,8 @@ public class ProfileElementMainView extends VerticalLayout {
 
 	/** Read-only rendering kept for the built-in (default) profile. */
 	private void renderReadOnly() {
-		add(new HorizontalLayout(new H2("Profile element(s)")));
+		add(buildHeader(false));
+		add(metadataInfo());
 		for (ProfileElementEntity profileElementEntity : orderedElements()) {
 			add(setProfileName((profileElementEntity.getPosition() + 1) + ". " + profileElementEntity.getName()));
 			add(new ProfileElementView(profileElementEntity));
@@ -81,15 +95,111 @@ public class ProfileElementMainView extends VerticalLayout {
 	}
 
 	private void renderEditable() {
-		Button addButton = ButtonFactory.createAddButton("Add element");
-		addButton.addClickListener(event -> openEditor(null));
-		add(new HorizontalLayout(new H2("Profile element(s)"), addButton));
+		add(buildHeader(true));
+		add(metadataInfo());
 		add(orderInfoMessage());
 		if (isBasicProfileMissing()) {
 			add(basicProfileMissingWarning());
 		}
+		Button addButton = ButtonFactory.createAddButton("Add element");
+		addButton.addClickListener(event -> openEditor(null));
+		add(addButton);
 		grid.setItems(orderedElements());
 		add(grid);
+		setFlexGrow(1, grid);
+	}
+
+	/**
+	 * Header with the profile name and its actions. The metadata (name / version / min
+	 * Karnak version) is edited through the same popup as the "New profile" button; the
+	 * built-in default profile is read-only so it only offers the download.
+	 */
+	private HorizontalLayout buildHeader(boolean editable) {
+		HorizontalLayout header = new HorizontalLayout();
+		header.setAlignItems(FlexComponent.Alignment.CENTER);
+		header.setWidthFull();
+
+		String name = profileEntity.getName() != null ? profileEntity.getName() : "Profile";
+		header.add(new H2(name));
+
+		if (editable) {
+			Button editButton = new Button("Edit metadata", new Icon(VaadinIcon.EDIT));
+			editButton.addThemeVariants(ButtonVariant.TERTIARY);
+			editButton.addClickListener(event -> openMetadataDialog());
+
+			header.add(editButton, downloadButton(), deleteButton());
+		}
+		else {
+			header.add(downloadButton());
+		}
+		return header;
+	}
+
+	/** Secondary line recalling the profile version and the minimum Karnak version. */
+	private Div metadataInfo() {
+		String version = profileEntity.getVersion() != null ? profileEntity.getVersion() : "Not defined";
+		String minVersion = profileEntity.getMinimumKarnakVersion() != null ? profileEntity.getMinimumKarnakVersion()
+				: "Not defined";
+		Div message = new Div(new Span("Version: " + version + " · Min Karnak version: " + minVersion));
+		message.getStyle()
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("font-size", "var(--aura-font-size-s)")
+			.set("margin", "2px 0");
+		return message;
+	}
+
+	/** Popup, shared with the "New profile" button, to edit the three metadata values. */
+	private void openMetadataDialog() {
+		TextField name = new TextField("Name");
+		TextField version = new TextField("Version");
+		TextField minVersion = new TextField("Min Karnak version (optional)");
+		name.setValue(profileEntity.getName() != null ? profileEntity.getName() : "");
+		version.setValue(profileEntity.getVersion() != null ? profileEntity.getVersion() : "");
+		minVersion
+			.setValue(profileEntity.getMinimumKarnakVersion() != null ? profileEntity.getMinimumKarnakVersion() : "");
+		name.setWidthFull();
+		version.setWidthFull();
+		minVersion.setWidthFull();
+		NewItemDialog dialog = new NewItemDialog("Edit profile", "Save", name, version, minVersion);
+		dialog.setOnConfirm(() -> {
+			if (name.getValue() == null || name.getValue().isBlank()) {
+				name.setInvalid(true);
+				name.setErrorMessage("A name is required");
+				return false;
+			}
+			profileLogic.updateProfileMetadata(profileEntity.getId(), name.getValue().trim(), version.getValue(),
+					minVersion.getValue());
+			return true;
+		});
+		dialog.open();
+	}
+
+	private Anchor downloadButton() {
+		String profile = ProfileYamlSerializer.toYaml(profileEntity);
+		Anchor download = new Anchor();
+		download.setHref(DownloadHandler
+			.fromInputStream(event -> new DownloadResponse(new ByteArrayInputStream(profile.getBytes()),
+					String.format("%s.yml", profileEntity.getName()).replace(" ", "-"), "application/x-yaml", -1)));
+		download.getElement().setAttribute("download", true);
+		Button button = new Button(new Icon(VaadinIcon.DOWNLOAD_ALT));
+		button.addThemeVariants(ButtonVariant.TERTIARY);
+		download.add(button);
+		return download;
+	}
+
+	private Button deleteButton() {
+		Button delete = new Button(new Icon(VaadinIcon.TRASH));
+		delete.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
+		delete.addClickListener(event -> {
+			if (profileEntity.getProjectEntities() != null && !profileEntity.getProjectEntities().isEmpty()) {
+				dialogWarning.setText(profileEntity);
+				dialogWarning.open();
+			}
+			else {
+				profileLogic.deleteProfile(profileEntity);
+			}
+		});
+		return delete;
 	}
 
 	private Div orderInfoMessage() {

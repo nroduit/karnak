@@ -12,7 +12,6 @@ package org.karnak.frontend.dicom.web;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -62,15 +61,21 @@ public class WebDestinationManagementGrid extends Grid<WebDestinationConfigEntit
 	private void init() {
 		setEmptyStateText("No DICOMweb endpoints configured");
 		setSelectionMode(SelectionMode.NONE);
-		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
 		addColumn(WebDestinationConfigEntity::getDescription).setHeader("Description")
-			.setAutoWidth(true)
+			.setFlexGrow(2)
+			.setWidth("90px")
 			.setSortable(true);
-		addColumn(WebDestinationConfigEntity::getUrl).setHeader("URL").setAutoWidth(true).setSortable(true);
-		addColumn(WebDestinationManagementGrid::servicesDisplay).setHeader("Services").setAutoWidth(true);
-		addColumn(WebDestinationConfigEntity::getGroupName).setHeader("Group").setAutoWidth(true).setSortable(true);
-		addColumn(createActionsRenderer()).setHeader("Actions").setAutoWidth(true).setFlexGrow(0);
+		addColumn(WebDestinationConfigEntity::getUrl).setHeader("URL")
+			.setFlexGrow(3)
+			.setWidth("150px")
+			.setSortable(true);
+		addColumn(WebDestinationManagementGrid::servicesDisplay).setHeader("Services").setFlexGrow(2).setWidth("90px");
+		addColumn(WebDestinationConfigEntity::getGroupName).setHeader("Group")
+			.setFlexGrow(1)
+			.setWidth("60px")
+			.setSortable(true);
+		addColumn(createActionsRenderer()).setHeader("Actions").setFlexGrow(0).setWidth("100px");
 	}
 
 	private static String servicesDisplay(WebDestinationConfigEntity endpoint) {

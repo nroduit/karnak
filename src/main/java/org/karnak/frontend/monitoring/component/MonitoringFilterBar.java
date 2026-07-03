@@ -34,19 +34,14 @@ import org.weasis.core.util.annotations.Generated;
  * any change triggers the supplied {@code onChange} callback so the tree and the
  * dashboard reload.
  */
-// The vcf-date-range-picker add-on ships only Lumo/Material themes; these
-// themeFor stylesheets re-theme its shadow-DOM sub-components for Aura (which
-// defines no --lumo-* variables), otherwise the calendar toggle button and the
-// popup render unstyled. See src/main/frontend/themes/common-theme/components/.
+// The EnhancedDateRangePicker add-on ships only a Lumo theme. Under Aura (which
+// defines no --lumo-* variables) it renders unstyled, so we supply the --lumo-*
+// tokens it needs plus Lumo's icon font. See lumo-compat.css. The picker also
+// positions its calendar toggle assuming Lumo's positioned input container, so a
+// shadow-DOM fix (themeFor) keeps that toggle inside the field under Aura.
+@CssImport("@vaadin/vaadin-lumo-styles/src/props/icons.css")
+@CssImport("./themes/common-theme/lumo-compat.css")
 @CssImport(value = "./themes/common-theme/components/vcf-date-range-picker.css", themeFor = "vcf-date-range-picker")
-@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker-text-field.css",
-		themeFor = "vcf-date-range-picker-text-field")
-@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker-overlay.css",
-		themeFor = "vcf-date-range-picker-overlay")
-@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker-overlay-content.css",
-		themeFor = "vcf-date-range-picker-overlay-content")
-@CssImport(value = "./themes/common-theme/components/vcf-date-range-month-calendar.css",
-		themeFor = "vcf-date-range-month-calendar")
 @Generated()
 public class MonitoringFilterBar extends HorizontalLayout {
 
@@ -54,7 +49,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 	public enum RangePreset {
 
 		LAST_5_MIN("Last 5 minutes"), LAST_15_MIN("Last 15 minutes"), LAST_HOUR("Last hour"), LAST_24H("Last 24 hours"),
-		TODAY("Today"), LAST_7_DAYS("Last 7 days"), ALL("All"), CUSTOM("Custom");
+		TODAY("Today"), LAST_7_DAYS("Last 7 days"), LAST_15_DAYS("Last 15 days"), ALL("All"), CUSTOM("Custom");
 
 		private final String label;
 
@@ -176,6 +171,10 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			}
 			case LAST_7_DAYS -> {
 				start = now.minusDays(7);
+				end = now;
+			}
+			case LAST_15_DAYS -> {
+				start = now.minusDays(15);
 				end = now;
 			}
 			default -> {

@@ -92,6 +92,7 @@ public class FormDICOM extends VerticalLayout {
 		transcodeOnlyUncompressedComponent.init(this.binder);
 
 		setSizeFull();
+		buttonSaveDeleteCancel.getStyle().set("padding-bottom", "var(--vaadin-gap-l)");
 
 		aeTitle = new TextField("AETitle");
 		description = new TextField("Description");

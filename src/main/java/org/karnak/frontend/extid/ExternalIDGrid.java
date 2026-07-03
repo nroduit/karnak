@@ -176,7 +176,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 			edit.setEnabled(!editor.isOpen());
 			editButtons.add(edit);
 			return edit;
-		});
+		}).setAutoWidth(true).setFlexGrow(0);
 
 		addFilterElements();
 

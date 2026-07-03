@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.model.dicom.result;
 
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jspecify.annotations.NullUnmarked;
@@ -23,6 +24,8 @@ import org.karnak.backend.model.dicom.ConfigNode;
 @Getter
 @NullUnmarked
 public class DicomNodeCheckResult {
+
+	private final Instant checkedAt = Instant.now();
 
 	private String callingAET;
 

@@ -16,7 +16,9 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -152,7 +154,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 
 	public void deleteProfile(ProfileEntity profileEntity) {
 		profilePipeService.deleteProfile(profileEntity);
-		profileView.remove(profileView.getProfileHorizontalLayout());
+		profileView.remove(profileView.getProfileEditorPanel());
 		refreshAll();
 	}
 
@@ -194,10 +196,26 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	public void refreshProfile(Long profileId) {
 		ProfileEntity profileEntity = retrieveProfile(profileId);
 		if (profileView != null) {
-			profileView.getProfileComponent().setProfile(profileEntity);
-			profileView.getProfileElementMainView().setProfile(profileEntity);
+			profileView.getProfileEditorPanel().setProfile(profileEntity);
 			profileView.getProfileGrid().selectRow(profileEntity);
 		}
+	}
+
+	/**
+	 * Update a profile's metadata (name, version, minimum Karnak version) and refresh the
+	 * editor panels and grid. Edited through the "Edit profile" popup in the profile
+	 * elements page.
+	 */
+	public void updateProfileMetadata(Long profileId, String name, String version, String minimumKarnakVersion) {
+		ProfileEntity profileEntity = retrieveProfile(profileId);
+		if (profileEntity == null) {
+			return;
+		}
+		profileEntity.setName(name);
+		profileEntity.setVersion(version);
+		profileEntity.setMinimumKarnakVersion(minimumKarnakVersion);
+		profilePipeService.updateProfile(profileEntity);
+		refreshProfile(profileId);
 	}
 
 	private ProfilePipeBody readProfileYaml(InputStream stream) {
@@ -215,13 +233,12 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 				profileView.getProfileErrorView().removeAll();
 				profileView.getProfileGrid().reload();
 				profileView.getProfileGrid().selectRow(newProfileEntity);
-				profileView.getProfileComponent().setProfile(newProfileEntity);
-				profileView.getProfileElementMainView().setProfile(newProfileEntity);
+				profileView.getProfileEditorPanel().setProfile(newProfileEntity);
 			}
 			else {
 				profileView.getProfileGrid().deselectAll();
 				profileView.getProfileErrorView().setView(profileErrors);
-				profileView.remove(profileView.getProfileHorizontalLayout());
+				profileView.remove(profileView.getProfileEditorPanel());
 				profileView.add(profileView.getProfileErrorView());
 			}
 			if (profilePipe.getDefaultIssuerOfPatientID() != null) {
@@ -234,6 +251,51 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 				.setView("Unable to read uploaded YAML file.\n"
 						+ "Please make sure it is a YAML file and respects the YAML structure.");
 		}
+	}
+
+	/**
+	 * Parse, validate and apply edited YAML to an existing profile in place (its id is
+	 * preserved so referencing projects are not broken).
+	 * @param profileId the profile being edited
+	 * @param yaml the edited YAML content
+	 * @return an empty list on success, otherwise the human-readable error messages to
+	 * show in the editor (YAML parse errors or per-element validation errors)
+	 */
+	public List<String> saveProfileYaml(Long profileId, String yaml) {
+		try {
+			ProfilePipeBody profilePipe = readProfileYaml(
+					new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
+			if (profilePipe == null) {
+				return List.of("The YAML content is empty.");
+			}
+			if (profilePipe.getProfileElements() == null) {
+				return List.of("The profile must contain a \"profileElements\" list.");
+			}
+			List<String> messages = profilePipeService.validateProfile(profilePipe)
+				.stream()
+				.filter(profileError -> profileError.getError() != null)
+				.map(ProfileLogic::formatError)
+				.toList();
+			if (!messages.isEmpty()) {
+				return messages;
+			}
+			ProfileEntity updated = profilePipeService.updateProfileFromYaml(profileId, profilePipe);
+			refreshAll();
+			if (profileView != null && updated != null) {
+				profileView.getProfileGrid().selectRow(updated);
+				profileView.getProfileEditorPanel().setProfile(updated);
+			}
+			return List.of();
+		}
+		catch (YAMLException e) {
+			log.error("Unable to read edited YAML", e);
+			return List.of("Unable to read the YAML content. Please check the YAML structure.");
+		}
+	}
+
+	private static String formatError(ProfileError profileError) {
+		String name = profileError.getProfileElement() != null ? profileError.getProfileElement().getName() : null;
+		return (name != null ? name + ": " : "") + profileError.getError();
 	}
 
 	public void openWarningIssuerDialog() {

@@ -38,7 +38,6 @@ import org.karnak.frontend.help.HelpView;
 import org.karnak.frontend.image.LogoKarnak;
 import org.karnak.frontend.profile.ProfileView;
 import org.karnak.frontend.project.ProjectView;
-import org.karnak.frontend.pseudonym.mapping.PseudonymMappingView;
 import org.weasis.core.util.annotations.Generated;
 
 /**
@@ -59,8 +58,7 @@ public class NotAuthorizedScreen extends FlexLayout implements HasErrorParameter
 
 	// Views to evaluate when looking for a fallback view the user may access
 	private static final List<Class<? extends Component>> FALLBACK_VIEWS = List.of(ForwardNodeView.class,
-			ProfileView.class, ProjectView.class, ExternalIDView.class, PseudonymMappingView.class, DicomMainView.class,
-			HelpView.class);
+			ProfileView.class, ProjectView.class, ExternalIDView.class, DicomMainView.class, HelpView.class);
 
 	// Checks view security annotations (@RolesAllowed / @PermitAll / @AnonymousAllowed)
 	// against the current user.

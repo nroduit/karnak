@@ -142,6 +142,7 @@ label[disabled] {
 
 .menu-link > span {
   display: block;
+  white-space: nowrap;
 }
 
 .menu-button {

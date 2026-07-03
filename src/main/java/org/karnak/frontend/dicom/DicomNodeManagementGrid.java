@@ -12,7 +12,6 @@ package org.karnak.frontend.dicom;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -58,15 +57,29 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 	private void init() {
 		setEmptyStateText("No DICOM nodes configured");
 		setSelectionMode(SelectionMode.NONE);
-		addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
 
-		addColumn(DicomNodeConfigEntity::getDescription).setHeader("Description").setAutoWidth(true).setSortable(true);
-		addColumn(DicomNodeConfigEntity::getAeTitle).setHeader("AE Title").setAutoWidth(true).setSortable(true);
-		addColumn(DicomNodeConfigEntity::getHostname).setHeader("Hostname").setAutoWidth(true).setSortable(true);
-		addColumn(DicomNodeConfigEntity::getPort).setHeader("Port").setAutoWidth(true);
-		addColumn(DicomNodeConfigEntity::getNodeType).setHeader("Node Type").setAutoWidth(true).setSortable(true);
-		addColumn(DicomNodeConfigEntity::getNodeGroup).setHeader("Group").setAutoWidth(true).setSortable(true);
-		addColumn(createActionsRenderer()).setHeader("Actions").setAutoWidth(true).setFlexGrow(0);
+		addColumn(DicomNodeConfigEntity::getDescription).setHeader("Description")
+			.setFlexGrow(3)
+			.setWidth("120px")
+			.setSortable(true);
+		addColumn(DicomNodeConfigEntity::getAeTitle).setHeader("AE Title")
+			.setFlexGrow(2)
+			.setWidth("100px")
+			.setSortable(true);
+		addColumn(DicomNodeConfigEntity::getHostname).setHeader("Hostname")
+			.setFlexGrow(2)
+			.setWidth("100px")
+			.setSortable(true);
+		addColumn(DicomNodeConfigEntity::getPort).setHeader("Port").setFlexGrow(1).setWidth("70px");
+		addColumn(DicomNodeConfigEntity::getNodeType).setHeader("Node Type")
+			.setFlexGrow(1)
+			.setWidth("90px")
+			.setSortable(true);
+		addColumn(DicomNodeConfigEntity::getNodeGroup).setHeader("Group")
+			.setFlexGrow(1)
+			.setWidth("80px")
+			.setSortable(true);
+		addColumn(createActionsRenderer()).setHeader("Actions").setFlexGrow(0).setWidth("100px");
 	}
 
 	private ComponentRenderer<HorizontalLayout, DicomNodeConfigEntity> createActionsRenderer() {
