@@ -12,17 +12,41 @@ package org.karnak.frontend.profile.component.editprofile;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.vaadin.flow.component.UI;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.frontend.profile.ProfileLogic;
 import org.mockito.Mockito;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class ProfileElementMainViewTest {
 
 	private final ProfileLogic profileLogic = Mockito.mock(ProfileLogic.class);
+
+	// Vaadin keeps the current UI in a WeakReference, so a strong reference is held here
+	// to keep it alive for the whole test.
+	private UI ui;
+
+	// Rendering the editable profile registers a download Anchor whose stream resource
+	// URI is resolved against the current UI, so a UI must be active during the test.
+	@BeforeEach
+	void setUpUi() {
+		ui = new UI();
+		UI.setCurrent(ui);
+	}
+
+	@AfterEach
+	void tearDownUi() {
+		UI.setCurrent(null);
+		ui = null;
+	}
 
 	@Test
 	void should_create_profile_element_main_view() {
