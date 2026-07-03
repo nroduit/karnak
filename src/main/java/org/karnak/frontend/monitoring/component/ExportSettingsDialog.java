@@ -132,7 +132,7 @@ public class ExportSettingsDialog extends Dialog {
 		// Buttons
 		cancelButton = new Button("Cancel");
 		saveButton = new Button("Save settings");
-		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 		HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton, saveButton);
 		buttonLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 		buttonLayout.setWidthFull();

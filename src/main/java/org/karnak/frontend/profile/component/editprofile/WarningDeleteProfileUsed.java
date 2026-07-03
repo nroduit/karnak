@@ -23,11 +23,7 @@ public class WarningDeleteProfileUsed extends Dialog {
 		removeAll();
 		Div divTitle = new Div();
 		divTitle.setText(String.format("The profile %s can't be remove", profileEntity.getName()));
-		divTitle.getStyle()
-			.set("font-size", "large")
-			.set("font-weight", "bolder")
-			.set("padding-bottom", "10px")
-			.set("color", "red");
+		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
 
 		Div divContent = new Div();
 		Div divIntro = new Div();

@@ -12,6 +12,7 @@ package org.karnak.frontend.monitoring.component;
 import com.vaadin.componentfactory.DateRange;
 import com.vaadin.componentfactory.EnhancedDateRangePicker;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -33,6 +34,14 @@ import org.weasis.core.util.annotations.Generated;
  * any change triggers the supplied {@code onChange} callback so the tree and the
  * dashboard reload.
  */
+// The EnhancedDateRangePicker add-on ships only a Lumo theme. Under Aura (which
+// defines no --lumo-* variables) it renders unstyled, so we supply the --lumo-*
+// tokens it needs plus Lumo's icon font. See lumo-compat.css. The picker also
+// positions its calendar toggle assuming Lumo's positioned input container, so a
+// shadow-DOM fix (themeFor) keeps that toggle inside the field under Aura.
+@CssImport("@vaadin/vaadin-lumo-styles/src/props/icons.css")
+@CssImport("./themes/common-theme/lumo-compat.css")
+@CssImport(value = "./themes/common-theme/components/vcf-date-range-picker.css", themeFor = "vcf-date-range-picker")
 @Generated()
 public class MonitoringFilterBar extends HorizontalLayout {
 
@@ -40,7 +49,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 	public enum RangePreset {
 
 		LAST_5_MIN("Last 5 minutes"), LAST_15_MIN("Last 15 minutes"), LAST_HOUR("Last hour"), LAST_24H("Last 24 hours"),
-		TODAY("Today"), LAST_7_DAYS("Last 7 days"), ALL("All"), CUSTOM("Custom");
+		TODAY("Today"), LAST_7_DAYS("Last 7 days"), LAST_15_DAYS("Last 15 days"), ALL("All"), CUSTOM("Custom");
 
 		private final String label;
 
@@ -64,12 +73,6 @@ public class MonitoringFilterBar extends HorizontalLayout {
 
 	private final EnhancedDateRangePicker rangePicker = new EnhancedDateRangePicker("Custom range");
 
-	private final ComboBox<TransferStatusType> statusComboBox = new ComboBox<>("Status");
-
-	private final TextField studyUidField = new TextField("Study UID");
-
-	private final TextField serieUidField = new TextField("Series UID");
-
 	private boolean updating;
 
 	public MonitoringFilterBar(Runnable onChange) {
@@ -86,6 +89,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 		rangePicker.setClearButtonVisible(true);
 		rangePicker.addValueChangeListener(event -> onRangeEdited());
 
+		ComboBox<TransferStatusType> statusComboBox = new ComboBox<>("Status");
 		statusComboBox.setItems(TransferStatusType.values());
 		statusComboBox.setItemLabelGenerator(TransferStatusType::getLabel);
 		statusComboBox.setValue(TransferStatusType.ALL);
@@ -94,7 +98,9 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			fireChange();
 		});
 
+		TextField studyUidField = new TextField("Study UID");
 		configureTextFilter(studyUidField, filter::setStudyUid);
+		TextField serieUidField = new TextField("Series UID");
 		configureTextFilter(serieUidField, filter::setSerieUid);
 
 		setAlignItems(Alignment.BASELINE);
@@ -167,6 +173,10 @@ public class MonitoringFilterBar extends HorizontalLayout {
 				start = now.minusDays(7);
 				end = now;
 			}
+			case LAST_15_DAYS -> {
+				start = now.minusDays(15);
+				end = now;
+			}
 			default -> {
 				start = null;
 				end = null;
@@ -177,7 +187,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			rangePicker.clear();
 		}
 		else {
-			rangePicker.setValue(new DateRange(start.toLocalDate(), end != null ? end.toLocalDate() : LocalDate.now()));
+			rangePicker.setValue(new DateRange(start.toLocalDate(), end.toLocalDate()));
 		}
 		updating = false;
 		filter.setStart(start);

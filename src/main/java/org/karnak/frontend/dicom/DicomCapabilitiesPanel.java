@@ -33,7 +33,7 @@ public class DicomCapabilitiesPanel extends VerticalLayout {
 		setSpacing(false);
 
 		summary = new Div();
-		summary.getStyle().set("font-size", "var(--lumo-font-size-s)");
+		summary.getStyle().set("font-size", "var(--aura-font-size-s)");
 		summary.getStyle().set("padding-bottom", "0.5em");
 
 		grid = new DicomCapabilitiesGrid();

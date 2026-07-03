@@ -15,6 +15,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -56,7 +57,7 @@ public class AuthConfigView extends HorizontalLayout {
 
 		authConfigGrid = new Grid<>();
 		authConfigComponent = new AuthConfigComponent();
-		authConfigComponent.setWidth("72%");
+		authConfigComponent.setWidth("100%");
 
 		initComponents();
 		buildLayout();
@@ -69,7 +70,11 @@ public class AuthConfigView extends HorizontalLayout {
 
 		setAlignItems(Alignment.STRETCH);
 		this.getStyle().setDisplay(Style.Display.FLEX);
-		add(barAndGridLayout, authConfigComponent);
+
+		SplitLayout splitLayout = new SplitLayout(barAndGridLayout, authConfigComponent);
+		splitLayout.setSizeFull();
+		splitLayout.setSplitterPosition(25);
+		add(splitLayout);
 	}
 
 	private void initComponents() {
@@ -87,7 +92,7 @@ public class AuthConfigView extends HorizontalLayout {
 		barAndGridLayout = new VerticalLayout();
 		barAndGridLayout.add(newAuthConfigComponent);
 		barAndGridLayout.add(authConfigGrid);
-		barAndGridLayout.setWidth("25%");
+		barAndGridLayout.setWidth("100%");
 
 	}
 

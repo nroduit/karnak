@@ -41,8 +41,6 @@ import org.jspecify.annotations.NullUnmarked;
 @NullUnmarked
 public class ProfileEntity implements Serializable {
 
-	private static final long serialVersionUID = -7178858361090900170L;
-
 	private Long id;
 
 	private String name;
@@ -164,7 +162,7 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonGetter("masks")
-	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	public Set<MaskEntity> getMaskEntities() {
 		return maskEntities;
 	}

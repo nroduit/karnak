@@ -211,7 +211,7 @@ public class MonitorView extends AbstractView {
 
 	private void buildDicomEchoBtn() {
 		dicomEchoBtn = new Button("Check DICOM Nodes");
-		dicomEchoBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		dicomEchoBtn.addThemeVariants(ButtonVariant.PRIMARY);
 		dicomEchoBtn.addClickListener(event -> runCheck());
 	}
 
@@ -273,7 +273,7 @@ public class MonitorView extends AbstractView {
 
 	private void buildResultNote() {
 		resultNote = new Div();
-		resultNote.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+		resultNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
 		resultNote.getStyle().set("font-style", "italic");
 	}
 
@@ -310,7 +310,7 @@ public class MonitorView extends AbstractView {
 		webGroupFld.setVisible(webGroups.size() > 1);
 
 		webBtn = new Button("Check DICOMweb", (event) -> runWebCheck());
-		webBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		webBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		HorizontalLayout webBar = new HorizontalLayout(webGroupFld, webBtn);
 		// Align on the input baseline so the button lines up with the combo's field
@@ -319,7 +319,7 @@ public class MonitorView extends AbstractView {
 		webBar.setSpacing(true);
 
 		webNote = new Div();
-		webNote.getStyle().set("font-size", "var(--lumo-font-size-xs)");
+		webNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
 		webNote.getStyle().set("font-style", "italic");
 
 		webGrid = new WebDestinationCheckResultGrid();

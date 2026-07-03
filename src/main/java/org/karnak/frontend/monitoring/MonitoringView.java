@@ -106,6 +106,7 @@ public class MonitoringView extends VerticalLayout {
 		tabs.addSelectedChangeListener(event -> showSelectedTab());
 
 		content.setSizeFull();
+		content.getStyle().set("min-height", "0");
 		content.add(activityPanel);
 	}
 
@@ -130,7 +131,7 @@ public class MonitoringView extends VerticalLayout {
 		exportAnchor.add(exportButton);
 
 		Button deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
-		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteButton.addClickListener(event -> confirmDeleteAll());
 
 		HorizontalLayout buttonLayout = new HorizontalLayout(expandErrorsButton, exportSettingsButton, exportAnchor,
@@ -141,6 +142,8 @@ public class MonitoringView extends VerticalLayout {
 		treeSide.setSizeFull();
 		treeSide.setFlexGrow(1, treeGrid);
 		treeSide.setPadding(false);
+		treeSide.getStyle().set("min-height", "0");
+		treeGrid.getStyle().set("min-height", "0");
 
 		SplitLayout split = new SplitLayout(treeSide, detailPanel);
 		split.setSizeFull();

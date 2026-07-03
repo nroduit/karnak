@@ -107,7 +107,7 @@ public class DicomPane extends Composite<Dialog> {
 	private void buildDownloadTextAnchor() {
 		Button downloadTextBtn = new Button();
 		downloadTextBtn.setText("Download Text");
-		downloadTextBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		downloadTextBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		downloadTextAnchor = new Anchor();
 		downloadTextAnchor.getElement().setAttribute("download", true);
@@ -120,7 +120,7 @@ public class DicomPane extends Composite<Dialog> {
 	private void buildDownloadDicomAnchor() {
 		Button downloadDicomBtn = new Button();
 		downloadDicomBtn.setText("Download DICOM");
-		downloadDicomBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		downloadDicomBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		downloadDicomAnchor = new Anchor();
 		downloadDicomAnchor.getElement().setAttribute("download", true);

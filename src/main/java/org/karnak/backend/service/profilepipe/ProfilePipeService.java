@@ -272,12 +272,43 @@ public class ProfilePipeService {
 	private ProfileEntity createNewProfile(ProfilePipeBody profilePipeYml, Boolean byDefault) {
 		final ProfileEntity newProfileEntity = new ProfileEntity(profilePipeYml.getName(), profilePipeYml.getVersion(),
 				profilePipeYml.getMinimumKarnakVersion(), null, byDefault);
+		populateProfile(newProfileEntity, profilePipeYml);
+		return newProfileEntity;
+	}
+
+	/**
+	 * Replace an existing (non-default) profile's content in place from an edited YAML
+	 * body, keeping its id, group and {@code byDefault} flag so referencing projects are
+	 * not broken. Elements and masks are cleared (orphan-removed) and rebuilt from the
+	 * body; the Basic DICOM confidentiality profile is forced back to the last position.
+	 * @param profileId the profile to update
+	 * @param profilePipeYml the parsed YAML body
+	 * @return the reloaded, persisted profile (or the unchanged profile when it is a
+	 * default one or no longer exists)
+	 */
+	public @Nullable ProfileEntity updateProfileFromYaml(Long profileId, ProfilePipeBody profilePipeYml) {
+		ProfileEntity profile = profileRepo.findById(profileId).orElse(null);
+		if (profile == null || Boolean.TRUE.equals(profile.getByDefault())) {
+			return profile;
+		}
+		profile.setName(profilePipeYml.getName());
+		profile.setVersion(profilePipeYml.getVersion());
+		profile.setMinimumKarnakVersion(profilePipeYml.getMinimumKarnakVersion());
+		profile.getProfileElementEntities().clear();
+		profile.getMaskEntities().clear();
+		populateProfile(profile, profilePipeYml);
+		enforceBasicProfileLast(profile);
+		return profileRepo.saveAndFlush(profile);
+	}
+
+	/** Build mask and (ordered) element children from a YAML body and attach them. */
+	private void populateProfile(ProfileEntity target, ProfilePipeBody profilePipeYml) {
 		if (profilePipeYml.getMasks() != null) {
 			profilePipeYml.getMasks().forEach(m -> {
 				MaskEntity maskEntity = new MaskEntity(m.getStationName(), m.getImageWidth(), m.getImageHeight(),
-						m.getColor(), newProfileEntity);
+						m.getColor(), target);
 				m.getRectangles().forEach(maskEntity::addRectangle);
-				newProfileEntity.addMask(maskEntity);
+				target.addMask(maskEntity);
 			});
 		}
 
@@ -285,7 +316,7 @@ public class ProfilePipeService {
 		profilePipeYml.getProfileElements().forEach(profileBody -> {
 			ProfileElementEntity profileElementEntity = new ProfileElementEntity(profileBody.getName(),
 					profileBody.getCodename(), profileBody.getCondition(), profileBody.getAction(),
-					profileBody.getOption(), profilePosition.get(), newProfileEntity);
+					profileBody.getOption(), profilePosition.get(), target);
 
 			if (profileBody.getArguments() != null) {
 				profileBody.getArguments().forEach((key, value) -> {
@@ -309,10 +340,9 @@ public class ProfilePipeService {
 				});
 			}
 
-			newProfileEntity.addProfilePipe(profileElementEntity);
+			target.addProfilePipe(profileElementEntity);
 			profilePosition.getAndIncrement();
 		});
-		return newProfileEntity;
 	}
 
 	public ProfileEntity updateProfile(ProfileEntity profileEntity) {

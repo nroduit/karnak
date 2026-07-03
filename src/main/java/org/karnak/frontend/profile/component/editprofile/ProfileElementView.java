@@ -62,7 +62,7 @@ public class ProfileElementView extends Div {
 		Div profileNameDiv = new Div();
 		profileNameDiv.add(new Text(value));
 		profileNameDiv.getStyle()
-			.set("color", "var(--lumo-secondary-text-color)")
+			.set("color", "var(--vaadin-text-color-secondary)")
 			.set("padding-left", "10px")
 			.set("margin-top", "5px");
 		return profileNameDiv;
@@ -75,7 +75,7 @@ public class ProfileElementView extends Div {
 			Div tagDiv = new Div();
 			tagDiv.add(new Text(tagEntity.getTagValue()));
 			tagDiv.getStyle()
-				.set("color", "var(--lumo-secondary-text-color)")
+				.set("color", "var(--vaadin-text-color-secondary)")
 				.set("padding-left", "15px")
 				.set("margin-top", "2px");
 			verticalLayout.add(tagDiv);
@@ -90,7 +90,7 @@ public class ProfileElementView extends Div {
 			Div tagDiv = new Div();
 			tagDiv.add(new Text(argumentEntity.getArgumentKey() + " : " + argumentEntity.getArgumentValue()));
 			tagDiv.getStyle()
-				.set("color", "var(--lumo-secondary-text-color)")
+				.set("color", "var(--vaadin-text-color-secondary)")
 				.set("padding-left", "15px")
 				.set("margin-top", "2px");
 			verticalLayout.add(tagDiv);

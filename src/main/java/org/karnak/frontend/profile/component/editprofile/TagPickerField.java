@@ -52,7 +52,7 @@ public class TagPickerField extends VerticalLayout {
 		chips.getStyle().set("gap", "5px").set("margin", "5px 0");
 
 		Button browse = new Button("Browse / search", VaadinIcon.SEARCH.create(), event -> openPicker());
-		browse.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		browse.addThemeVariants(ButtonVariant.TERTIARY);
 
 		add(title, chips, browse);
 		refreshChips();
@@ -89,8 +89,8 @@ public class TagPickerField extends VerticalLayout {
 	private Span buildChip(String tag) {
 		Span chip = new Span();
 		chip.getStyle()
-			.set("background-color", "var(--lumo-contrast-10pct)")
-			.set("border-radius", "var(--lumo-border-radius-m)")
+			.set("background-color", "color-mix(in srgb, var(--vaadin-text-color) 10%, transparent)")
+			.set("border-radius", "var(--vaadin-radius-m)")
 			.set("padding", "2px 4px 2px 8px")
 			.set("display", "inline-flex")
 			.set("align-items", "center");
@@ -99,7 +99,7 @@ public class TagPickerField extends VerticalLayout {
 		String name = resolveName(tag);
 		if (name != null) {
 			Span nameSpan = new Span(name);
-			nameSpan.getStyle().set("color", "var(--lumo-secondary-text-color)").set("margin-left", "6px");
+			nameSpan.getStyle().set("color", "var(--vaadin-text-color-secondary)").set("margin-left", "6px");
 			chip.add(nameSpan);
 		}
 
@@ -107,7 +107,7 @@ public class TagPickerField extends VerticalLayout {
 			tags.remove(tag);
 			refreshChips();
 		});
-		remove.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ICON);
+		remove.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 		chip.add(remove);
 		return chip;
 	}

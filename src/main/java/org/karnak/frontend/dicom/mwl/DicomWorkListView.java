@@ -186,6 +186,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private void createView() {
 		setSizeFull();
+		getStyle().set("min-height", "0");
 	}
 
 	private void createMainLayout() {
@@ -193,6 +194,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		mainLayout.setPadding(true);
 		mainLayout.setSpacing(true);
 		mainLayout.setSizeFull();
+		mainLayout.getStyle().set("min-height", "0");
 
 		buildWlConfigurationLayout();
 		buildQueryResultLayout();
@@ -368,7 +370,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 		queryBtn = new Button("Run Query");
 		queryBtn.getStyle().set("cursor", "pointer");
 		queryBtn.setEnabled(false);
-		queryBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		queryBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		queryBtn.addClickListener(e -> executeQuery());
 	}
@@ -382,6 +384,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 			.set("box-shadow",
 					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
 		queryResultLayout.getStyle().set("border-radius", "4px");
+		queryResultLayout.getStyle().set("min-height", "0");
 		queryResultLayout.setVisible(false);
 
 		buildQueryResultTitleBar();
@@ -394,16 +397,13 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	private void buildQueryResultTitleBar() {
 		queryResultTitle = new H6("Query Result");
 		queryResultTitle.getStyle().set("margin-top", "0px");
-		queryResultTitle.getStyle().set("padding-bottom", "var(--lumo-space-m)");
+		queryResultTitle.getStyle().set("padding-bottom", "var(--vaadin-gap-m)");
 	}
 
 	private void buildGrid() {
 		queryResultGrid = new DicomWorkListGrid();
 		queryResultGrid.setSizeFull();
-
-		// Clicking a row expands its inline details (with a "View DICOM Details" action);
-		// no
-		// modal is opened on selection anymore.
+		queryResultGrid.setMinHeight("200px");
 		queryResultGrid.setDataProvider(dataProviderForAttributes);
 	}
 

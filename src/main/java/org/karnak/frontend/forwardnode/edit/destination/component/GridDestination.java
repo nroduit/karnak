@@ -44,8 +44,7 @@ public class GridDestination extends Grid<DestinationEntity> {
 			spanDot.getStyle().set("border-radius", "50%");
 			spanDot.getStyle().set("display", "inline-block");
 			spanDot.getStyle()
-				.set("background-color",
-						destination.isActivate() ? "var(--lumo-success-color)" : "var(--lumo-error-color)");
+				.set("background-color", destination.isActivate() ? "var(--aura-green)" : "var(--aura-red)");
 			return spanDot;
 		}).setHeader("Enabled").setFlexGrow(20);
 

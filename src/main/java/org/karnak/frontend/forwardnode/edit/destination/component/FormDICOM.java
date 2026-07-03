@@ -92,6 +92,7 @@ public class FormDICOM extends VerticalLayout {
 		transcodeOnlyUncompressedComponent.init(this.binder);
 
 		setSizeFull();
+		buttonSaveDeleteCancel.getStyle().set("padding-bottom", "var(--vaadin-gap-l)");
 
 		aeTitle = new TextField("AETitle");
 		description = new TextField("Description");
@@ -176,10 +177,10 @@ public class FormDICOM extends VerticalLayout {
 		hostname.setRequired(true);
 
 		port.setWidth("30%");
-		port.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+		port.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
 
 		concurrentConnections.setWidth("30%");
-		concurrentConnections.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+		concurrentConnections.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
 		UIS.setTooltip(concurrentConnections,
 				"Number of parallel DICOM associations to this destination (1 = single connection). "
 						+ "Increase to speed up heavy multi-source forwarding, but keep it within the "

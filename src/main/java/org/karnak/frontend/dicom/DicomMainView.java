@@ -25,6 +25,7 @@ import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.service.DicomNodeConfigService;
 import org.karnak.backend.service.WebDestinationConfigService;
 import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckHistoryService;
 import org.karnak.backend.service.dicom.DicomNodeCheckService;
 import org.karnak.backend.service.dicom.DicomWebCheckService;
 import org.karnak.backend.util.DicomNodeUtil;
@@ -70,16 +71,23 @@ public class DicomMainView extends VerticalLayout {
 
 	private final DicomWebCheckService dicomWebCheckService;
 
+	private final DicomNodeCheckHistoryService dicomNodeCheckHistoryService;
+
+	// Kept to refresh the persisted echo history when its tab is (re)selected.
+	private DicomEchoView dicomEchoView;
+
 	@Autowired
 	public DicomMainView(DicomNodeUtil dicomNodeUtil, DicomNodeConfigService dicomNodeConfigService,
 			WebDestinationConfigService webDestinationConfigService, DicomNodeCheckService dicomNodeCheckService,
-			DicomCapabilitiesCheckService dicomCapabilitiesCheckService, DicomWebCheckService dicomWebCheckService) {
+			DicomCapabilitiesCheckService dicomCapabilitiesCheckService, DicomWebCheckService dicomWebCheckService,
+			DicomNodeCheckHistoryService dicomNodeCheckHistoryService) {
 		this.dicomNodeUtil = dicomNodeUtil;
 		this.dicomNodeConfigService = dicomNodeConfigService;
 		this.webDestinationConfigService = webDestinationConfigService;
 		this.dicomNodeCheckService = dicomNodeCheckService;
 		this.dicomCapabilitiesCheckService = dicomCapabilitiesCheckService;
 		this.dicomWebCheckService = dicomWebCheckService;
+		this.dicomNodeCheckHistoryService = dicomNodeCheckHistoryService;
 
 		createDicomWebToolsBrand();
 		createMenu();
@@ -92,11 +100,13 @@ public class DicomMainView extends VerticalLayout {
 	private void createMenu() {
 		// Tabs follow the DICOM Web Tools section order.
 		var pages = new LinkedHashMap<Tab, Component>();
-		pages.put(new Tab("DICOM Echo"),
-				new DicomEchoView(dicomNodeUtil, dicomNodeCheckService, dicomCapabilitiesCheckService));
+		dicomEchoView = new DicomEchoView(dicomNodeUtil, dicomNodeCheckService, dicomCapabilitiesCheckService,
+				dicomNodeCheckHistoryService);
+		pages.put(new Tab("DICOM Echo"), dicomEchoView);
 		pages.put(new Tab("DICOM Worklist"), new DicomWorkListView(dicomNodeUtil));
 		pages.put(new Tab("Manage DICOM Nodes"), new ManageDicomNodesView(dicomNodeConfigService, dicomNodeUtil));
-		pages.put(new Tab("DICOMweb"), new DicomWebView(dicomWebCheckService, webDestinationConfigService));
+		pages.put(new Tab("DICOMweb"),
+				new DicomWebView(dicomWebCheckService, webDestinationConfigService, dicomNodeUtil));
 		pages.put(new Tab("Manage DICOMweb"), new ManageDicomWebView(webDestinationConfigService, dicomNodeUtil));
 		pages.put(new Tab("Monitor"), new MonitorView(dicomNodeUtil, webDestinationConfigService, dicomNodeCheckService,
 				dicomCapabilitiesCheckService, dicomWebCheckService));
@@ -124,6 +134,10 @@ public class DicomMainView extends VerticalLayout {
 			pagesShown.add(selectedPage);
 			add(selectedPage);
 			setFlexGrow(1, selectedPage);
+
+			if (selectedPage == dicomEchoView) {
+				dicomEchoView.onSelected();
+			}
 		});
 	}
 

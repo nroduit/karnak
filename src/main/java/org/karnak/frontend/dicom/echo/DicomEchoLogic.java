@@ -42,9 +42,11 @@ public class DicomEchoLogic {
 
 		DicomNodeCheckResult result = dicomNodeCheckService.check(data.getCallingAet(), calledNode);
 		view.displayResult(result);
+	}
 
-		DicomCapabilitiesResult capabilities = dicomCapabilitiesCheckService.probe(data.getCallingAet(), calledNode);
-		view.displayCapabilities(capabilities);
+	// On-demand capabilities probe, triggered by the current-result row button.
+	public DicomCapabilitiesResult probeCapabilities(String callingAet, ConfigNode node) {
+		return dicomCapabilitiesCheckService.probe(callingAet, node);
 	}
 
 }

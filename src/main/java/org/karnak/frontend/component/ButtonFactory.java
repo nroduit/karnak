@@ -24,13 +24,13 @@ public final class ButtonFactory {
 
 	/**
 	 * Build the primary "add a new item" button used to create a new node, project, etc.:
-	 * a {@link ButtonVariant#LUMO_PRIMARY} button prefixed with a plus icon.
+	 * a {@link ButtonVariant#PRIMARY} button prefixed with a plus icon.
 	 * @param text the button label (e.g. {@code "New forward node"})
 	 * @return the configured button
 	 */
 	public static Button createAddButton(String text) {
 		Button button = new Button(text, VaadinIcon.PLUS_CIRCLE.create());
-		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		button.addThemeVariants(ButtonVariant.PRIMARY);
 		return button;
 	}
 

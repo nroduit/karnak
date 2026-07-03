@@ -81,7 +81,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 	private void setElement() {
 		divTitle = new Div();
 		divTitle.setText(TITLE);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		divContent = new Div();
 		divSelectBox = new Div();
@@ -100,7 +100,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 				generateAuthHeaders(authTypeSelect.getValue());
 			}
 		});
-		generateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		generateButton.addThemeVariants(ButtonVariant.PRIMARY);
 		generateButton.setWidth(BUTTON_WIDTH);
 		cancelButton = new Button("Cancel", event -> close());
 		cancelButton.setWidth(BUTTON_WIDTH);

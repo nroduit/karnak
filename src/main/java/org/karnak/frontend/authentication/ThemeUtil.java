@@ -10,13 +10,18 @@
 package org.karnak.frontend.authentication;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.theme.lumo.Lumo;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
 public final class ThemeUtil {
 
 	private static final String THEME_COLOR_KEY = "theme-variant";
+
+	// Aura selects light/dark via the CSS color-scheme property, not the Lumo "theme"
+	// attribute.
+	private static final String DARK = "dark";
+
+	private static final String LIGHT = "light";
 
 	private ThemeUtil() {
 		// Utility class
@@ -29,15 +34,15 @@ public final class ThemeUtil {
 			.then(String.class, ThemeUtil::applyTheme);
 	}
 
-	private static void applyTheme(String themeColor) {
-		if (isValidTheme(themeColor)) {
-			UI.getCurrent().getElement().setAttribute("theme", themeColor);
-			UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, themeColor);
+	private static void applyTheme(String colorScheme) {
+		if (isValidTheme(colorScheme)) {
+			UI.getCurrent().getPage().executeJs("document.documentElement.style.colorScheme = $0", colorScheme);
+			UI.getCurrent().getPage().executeJs("localStorage.setItem($0, $1)", THEME_COLOR_KEY, colorScheme);
 		}
 	}
 
 	private static boolean isValidTheme(String theme) {
-		return Lumo.DARK.equals(theme) || Lumo.LIGHT.equals(theme);
+		return DARK.equals(theme) || LIGHT.equals(theme);
 	}
 
 }

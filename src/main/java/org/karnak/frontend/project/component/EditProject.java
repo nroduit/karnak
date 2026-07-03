@@ -89,7 +89,7 @@ public class EditProject extends VerticalLayout {
 		profileDropDown.setWidthFull();
 		buttonUpdate = new Button("Update");
 		buttonRemove = new Button("Remove");
-		buttonRemove.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		buttonRemove.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		horizontalLayoutButtons = new HorizontalLayout(buttonUpdate, buttonRemove);
 	}
 

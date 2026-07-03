@@ -17,8 +17,8 @@ import org.weasis.core.util.annotations.Generated;
 public class BoxShadowComponent extends Div {
 
 	public BoxShadowComponent(Component... component) {
-		getElement().getStyle().set("box-shadow", "var(--lumo-box-shadow-s)");
-		getElement().getStyle().set("border-radius", "var(--lumo-border-radius-m)");
+		getElement().getStyle().set("box-shadow", "var(--aura-shadow-s)");
+		getElement().getStyle().set("border-radius", "var(--vaadin-radius-m)");
 		getElement().getStyle().set("background-color", "hsla(245, 100%, 100%, 0.03)");
 		add(component);
 	}
