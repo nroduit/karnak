@@ -25,10 +25,24 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: sonar-input
+          # SECURITY (artifact poisoning): the artifact is produced by the unprivileged Build job
+          # running untrusted fork code, so download it into an isolated dir under RUNNER_TEMP —
+          # never the workspace — so it cannot sit next to or overwrite this workflow's files.
+          path: ${{ runner.temp }}/artifact
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Unpack analysis input
-        run: tar xzf sonar-input.tgz
+        # Extract the untrusted tarball into its own directory (again under RUNNER_TEMP, not the
+        # workspace) so a crafted archive cannot overwrite workflow files such as the SonarScanner
+        # binary that later runs with P_SONAR_TOKEN. Default GNU tar strips leading '/' and refuses
+        # '..' members, confining extraction to $SRC; do NOT add -P, which disables that.
+        env:
+          SRC: ${{ runner.temp }}/src
+        run: |
+          set -euo pipefail
+          mkdir -p "$SRC"
+          tar -xzf "$RUNNER_TEMP/artifact/sonar-input.tgz" -C "$SRC" --no-same-owner
+          echo "SONAR_SRC=$SRC" >> "$GITHUB_ENV"
       - name: Resolve analysis parameters
         id: ctx
         # SECURITY: event/head_branch and the pr-context files all originate from the untrusted
@@ -40,9 +54,9 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$EVENT" = "pull_request" ]; then
-            pr=$(cat pr-context/pr_number)
-            head=$(cat pr-context/head_ref)
-            base=$(cat pr-context/base_ref)
+            pr=$(cat "$SONAR_SRC/pr-context/pr_number")
+            head=$(cat "$SONAR_SRC/pr-context/head_ref")
+            base=$(cat "$SONAR_SRC/pr-context/base_ref")
             [[ "$pr"   =~ ^[0-9]+$ ]]           || { echo "invalid pr_number"; exit 1; }
             [[ "$head" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid head_ref";  exit 1; }
             [[ "$base" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid base_ref";  exit 1; }
@@ -79,6 +93,7 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=osirix-foundation-1 \
             -Dsonar.projectKey=karnak \
+            -Dsonar.projectBaseDir="$SONAR_SRC" \
             -Dsonar.java.source=25 \
             -Dsonar.sources=src/main/java \
             -Dsonar.tests=src/test/java \
