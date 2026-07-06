@@ -11,9 +11,14 @@ package org.karnak.backend.model.validation;
 
 /**
  * The kind of conformance check that produced a finding. Label and color are used by the
- * HTML report renderer; the color identifies the issue category: red/orange for presence
- * requirements, purple for encoding (VR/VM), teal for value constraints, blue for
- * cross-dataset consistency, brown for private-block structure, gray for retired usages.
+ * HTML report renderer; the color identifies the issue category: red for presence &
+ * privacy requirements (#e74c3c, the presence swatch in the report legend), purple for
+ * encoding (VR/VM), teal for value constraints, blue for cross-dataset consistency, brown
+ * for private-block structure, gray for retired / unknown usages. The category is a
+ * separate dimension from severity: a category keeps its color regardless of whether the
+ * finding is an ERROR or a WARNING, rather than borrowing a severity swatch (ERROR
+ * #c0392b, WARNING #e67e22). Gray (#7f8c8d) is the one deliberate overlap — it is both
+ * the retired/unknown category color and the INFO severity swatch.
  */
 public enum CheckKind {
 
@@ -21,13 +26,13 @@ public enum CheckKind {
 
 	RETIRED_SOP_CLASS("Retired SOP Class", "#7f8c8d"),
 
-	MODULE_MISSING("Missing module", "#c0392b"),
+	MODULE_MISSING("Missing module", "#e74c3c"),
 
 	TYPE1_MISSING("Type 1 missing", "#e74c3c"),
 
 	TYPE1_EMPTY("Type 1 empty", "#e74c3c"),
 
-	TYPE2_MISSING("Type 2 missing", "#e67e22"),
+	TYPE2_MISSING("Type 2 missing", "#e74c3c"),
 
 	VR_MISMATCH("VR mismatch", "#8e44ad"),
 
@@ -61,7 +66,7 @@ public enum CheckKind {
 
 	NON_STANDARD_ATTRIBUTE("Non-standard attribute", "#2980b9"),
 
-	PRIVACY_RISK("Residual identifier", "#c0392b"),
+	PRIVACY_RISK("Residual identifier", "#e74c3c"),
 
 	PRIVATE_CREATOR_MISSING("Private creator missing", "#a04000"),
 

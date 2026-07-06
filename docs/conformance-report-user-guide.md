@@ -168,7 +168,7 @@ is the default; a few checks are **optional** (value-conformity option) or
 | **Laterality** | A paired (non-midline) Body Part Examined carries no Laterality (skipped when another laterality is conveyed, or for segmentation / specimen / waveform objects). | WARNING |
 | **Codes** | Code Value uses characters not allowed by its Coding Scheme Designator (SNOMED / DICOM); code denotes the "Unknown" concept. | WARNING |
 | **Identifiers & consistency** | The SOP Instance / Series / Study / Frame of Reference UIDs reuse one another's value; (study-level) more than one Study UID, Patient identity, or Frame of Reference; Modality ↔ SOP Class coherence; retired transfer syntax. | ERROR / WARNING |
-| **Privacy (de-identification verification)** | A direct identifier (e.g. Patient's Telephone Numbers, Address, Other Patient Names, Institution / physician names, Occupation, Patient Comments) is still present after de-identification. | WARNING |
+| **Privacy (de-identification verification)** | A direct identifier (e.g. Patient's Telephone Numbers, Address, Other Patient Names, Institution / physician names, Occupation, Patient Comments) is still present after de-identification. **Only run for a de-identifying destination.** | WARNING |
 | **Private blocks** | A private attribute is not covered by a non-empty Private Creator (orphan or empty private block). | WARNING |
 | **Enhanced multi-frame** | Per-frame Functional Groups item count ≠ Number of Frames; *(deep)* Dimension Index Values count ≠ Dimension Index Sequence; *(deep)* a functional group present in both the Shared and a Per-frame Functional Groups item. | ERROR |
 | **Segmentation** | Segment Numbers do not increase monotonically from one by one (LABELMAP segmentations exempt). | ERROR |
@@ -177,8 +177,10 @@ is the default; a few checks are **optional** (value-conformity option) or
 > **Note on the privacy check.** It is *not* part of `dciodvfy` (which is a pure
 > IOD verifier); it is a Karnak addition for the de-identification use case, and
 > its attribute list mirrors the identifiers removed by `dciodvfy`'s companion
-> de-identifier, `dcanon`. It is most useful on a **de-identifying destination**,
-> where a residual identifier indicates a gap in the profile.
+> de-identifier, `dcanon`. It runs **only on a de-identifying destination**,
+> where a residual identifier indicates a gap in the profile; on a destination
+> that forwards identified data by design these attributes are expected, so the
+> check is skipped and never appears in the report.
 
 ### Study consistency
 
@@ -201,7 +203,7 @@ Every email ends with a legend explaining the severities and issue colors.
 | **INFO** | Informational only, no action required. | A **retired attribute** is still in use, an **unknown VR (UN)**, a **standard attribute outside this IOD** (Standard Extended SOP Class). |
 
 The issue color groups checks into categories: **presence & privacy**
-(red/orange), **encoding — VR/VM, multi-frame & segmentation** (purple),
+(red), **encoding — VR/VM, multi-frame & segmentation** (purple),
 **value, geometry & code constraints** (teal), **identifiers & consistency**
 (blue), **retired / unknown usage** (gray).
 
@@ -297,6 +299,8 @@ destination:
   (the header shows *"(hidden — destination not de-identified)"* and the name is
   never used in any finding). Other identifiers it still needs to locate the
   study — **Patient ID, Accession Number, Study/Series UIDs, study date and
-  description** — are shown as-is.
+  description** — are shown as-is. The residual-identifier (Privacy) check is
+  **skipped** here: nothing was meant to be removed, so the identifiers still
+  present are expected rather than a leak.
 
 Either way, treat the email as sensitive and send it only to trusted recipients.
