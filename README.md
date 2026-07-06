@@ -12,17 +12,42 @@ For detailed usage instructions, refer to the [Karnak User Guide](https://osirix
 
 ## Gateway
 
-- Allow to have multiple destinations for one source. 
-- A destination can be DICOM or DICOMWeb.
-- Provides filtering options for image providers by AE Title and/or hostname to ensure source authenticity.
-- Provides filtering options for SOP Class UID to send only specific SOP Class UIDs.
-- Use expressions to filter images from the DICOM tag values.
+- Fan out from a single source to multiple destinations.
+- A destination can be DICOM (C-STORE) or DICOMWeb (STOW-RS).
+- Authenticate sources by AE Title and/or hostname to ensure their authenticity.
+- Filter by SOP Class UID to forward only specific SOP Classes.
+- Use expressions on DICOM tag values to filter which images are forwarded.
+- On-the-fly transfer-syntax adaptation (transcoding) per destination.
 
 ## De-identification
 
-- Each destination can be configured with a specific de-identification profile
-- [Build your own de-identification profile](https://osirix-foundation.github.io/karnak-documentation/en/profiles)
-- Import and export the de-identification profiles to share them with other users.
+- Each destination can be configured with a specific de-identification profile.
+- Profiles are ordered pipelines of items: basic profile, tag actions (keep, remove,
+  replace, hash), date shifting, UID re-mapping, add/replace tags, and API-based value replacement.
+- Pixel-data cleaning: mask burned-in annotations and deface (remove facial features from head studies).
+- Deterministic pseudonymization (HMAC-based), so the same patient always maps to the same pseudonym.
+- [Build your own de-identification profile](https://osirix-foundation.github.io/karnak-documentation/en/profiles),
+  edit it directly as YAML in the UI, and import/export profiles to share them with other users.
+
+## Pseudonym mapping (External ID)
+
+- Supply your own patient-to-pseudonym mapping instead of the generated one, entered in the UI or
+  imported from a CSV file.
+- Mappings are held in a cache (Redis, or an in-memory cache in the portable build).
+
+## Projects
+
+- Group destinations under a project that carries the secret used for pseudonymization.
+- Secrets are stored encrypted at the database layer.
+
+## Monitoring
+
+- Track the transfer status of forwarded studies from the web interface, with filtering.
+
+## DICOM Web Tools
+
+- Built-in tools to check connectivity and query remote nodes: C-ECHO (with a persisted check
+  history) and Modality Worklist (MWL) queries.
 
 # Getting started
 
@@ -52,7 +77,7 @@ Prerequisites:
 
 ## Build for docker image
 
-Execute the maven command `mvn clean install -P production` in the root directory of the project.
+Execute the maven command `mvn clean install -P production` in the root directory of the project. The "production" profile builds the Vaadin frontend via pnpm and produces a deployable jar.
 
 ## Build for portable package
 
