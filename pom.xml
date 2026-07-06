@@ -50,7 +50,7 @@
 
     <bash.executable>bash</bash.executable>
     <!-- Tests require the native library and can only be run on Linux, Windows and macOS-->
-<!--    <argLine>-Djava.library.path=${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</argLine>-->
+    <argLine>-Djava.library.path=${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</argLine>
 
     <!-- JUnit tag filtering. By default the slow "performance" tests are skipped; run them
          with -Pperformance. -->
@@ -184,37 +184,37 @@
           </java>
         </configuration>
       </plugin>
-<!--      <plugin>-->
-<!--        <groupId>org.apache.maven.plugins</groupId>-->
-<!--        <artifactId>maven-surefire-plugin</artifactId>-->
-<!--        <configuration>-->
-<!--          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>-->
-<!--          <parallel>all</parallel>-->
-<!--          <groups>${karnak.test.groups}</groups>-->
-<!--          <excludedGroups>${karnak.test.excludedGroups}</excludedGroups>-->
-<!--        </configuration>-->
-<!--      </plugin>-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+          <parallel>all</parallel>
+          <groups>${karnak.test.groups}</groups>
+          <excludedGroups>${karnak.test.excludedGroups}</excludedGroups>
+        </configuration>
+      </plugin>
     </plugins>
 
-<!--    <resources>-->
-<!--      <resource>-->
-<!--        <filtering>true</filtering>-->
-<!--        <directory>src/main/resources</directory>-->
-<!--        <includes>-->
-<!--          <include>**/application*.yml</include>-->
-<!--          <include>**/application*.yaml</include>-->
-<!--          <include>**/application*.properties</include>-->
-<!--        </includes>-->
-<!--      </resource>-->
-<!--      <resource>-->
-<!--        <directory>src/main/resources</directory>-->
-<!--        <excludes>-->
-<!--          <exclude>**/application*.yml</exclude>-->
-<!--          <exclude>**/application*.yaml</exclude>-->
-<!--          <exclude>**/application*.properties</exclude>-->
-<!--        </excludes>-->
-<!--      </resource>-->
-<!--    </resources>-->
+    <resources>
+      <resource>
+        <filtering>true</filtering>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/application*.yml</include>
+          <include>**/application*.yaml</include>
+          <include>**/application*.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>**/application*.yml</exclude>
+          <exclude>**/application*.yaml</exclude>
+          <exclude>**/application*.properties</exclude>
+        </excludes>
+      </resource>
+    </resources>
 
   </build>
 

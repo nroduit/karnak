@@ -126,6 +126,15 @@ public class DicomConformanceValidator {
 	}
 
 	/**
+	 * Validates one instance, treating the dataset as de-identified so the
+	 * residual-identifier check runs.
+	 */
+	public InstanceValidationResult validate(Attributes attrs, Set<Integer> bulkPresentTags, String transferSyntaxUid,
+			boolean checkValueConformity, int maxSequenceDepth) {
+		return validate(attrs, bulkPresentTags, transferSyntaxUid, checkValueConformity, maxSequenceDepth, true);
+	}
+
+	/**
 	 * Validates one instance.
 	 * @param attrs the dataset actually sent (metadata only, bulk values stripped)
 	 * @param bulkPresentTags top-level tags whose value was present but stripped — they
@@ -137,9 +146,13 @@ public class DicomConformanceValidator {
 	 * ({@link #DEFAULT_MAX_SEQUENCE_DEPTH} = one level; higher walks SR content trees and
 	 * functional groups). Must not exceed the depth the {@code MetadataSnapshot}
 	 * retained.
+	 * @param deidentified whether the destination de-identifies. The residual-identifier
+	 * check (direct identifiers expected to have been removed or emptied) is meaningful
+	 * only for a de-identified destination; it is skipped otherwise, so identifiers a
+	 * destination forwards intact by design are not flagged as a residual privacy risk.
 	 */
 	public InstanceValidationResult validate(Attributes attrs, Set<Integer> bulkPresentTags, String transferSyntaxUid,
-			boolean checkValueConformity, int maxSequenceDepth) {
+			boolean checkValueConformity, int maxSequenceDepth, boolean deidentified) {
 		String sopClassUid = attrs.getString(Tag.SOPClassUID);
 		String sopInstanceUid = attrs.getString(Tag.SOPInstanceUID);
 		List<ConformanceFinding> findings = new ArrayList<>();
@@ -171,7 +184,9 @@ public class DicomConformanceValidator {
 
 		// Cross-attribute semantic checks, evaluated once on the top-level dataset
 		checkPixelGeometry(attrs, findings);
-		checkResidualIdentifiers(attrs, findings);
+		if (deidentified) {
+			checkResidualIdentifiers(attrs, findings);
+		}
 		checkLaterality(attrs, findings);
 		checkImplausibleValues(attrs, findings);
 		checkCodeSequences(attrs, findings);
@@ -517,7 +532,9 @@ public class DicomConformanceValidator {
 	 * de-identification pipeline — a residual privacy risk. NOTE: this is not a check the
 	 * dciodvfy verifier performs; the tag set mirrors the attributes removed by
 	 * dciodvfy's companion de-identifier (dcanon). On-mission for a gateway whose purpose
-	 * is de-identification.
+	 * is de-identification. Only run for a de-identified destination (see the
+	 * {@code deidentified} flag on {@link #validate}); for a destination that forwards
+	 * identified data by design these identifiers are expected, not residual.
 	 */
 	private void checkResidualIdentifiers(Attributes attrs, List<ConformanceFinding> findings) {
 		for (int tag : rules.getIdentifyingAttributes()) {

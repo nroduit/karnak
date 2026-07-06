@@ -121,8 +121,9 @@ public class ConformanceReportService {
 		try {
 			int depth = data.deepSequenceValidation() ? maxSequenceDepth
 					: DicomConformanceValidator.DEFAULT_MAX_SEQUENCE_DEPTH;
-			InstanceValidationResult result = data.sent() ? validator.validate(data.snapshot().metadata(),
-					data.snapshot().bulkPresentTags(), data.transferSyntaxUid(), data.checkValueConformity(), depth)
+			InstanceValidationResult result = data.sent()
+					? validator.validate(data.snapshot().metadata(), data.snapshot().bulkPresentTags(),
+							data.transferSyntaxUid(), data.checkValueConformity(), depth, data.deidentified())
 					: null;
 			Instant now = clock.instant();
 			// A concurrent flush may close the accumulator between lookup and add: retry

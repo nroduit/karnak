@@ -68,6 +68,17 @@ class SemanticConformanceChecksTest {
 		return validator.validate(dcm, Set.of(), UID.ExplicitVRLittleEndian, false, 8).findings();
 	}
 
+	/**
+	 * Validates as a destination that forwards identified data by design, so the
+	 * residual-identifier check is skipped.
+	 */
+	private List<ConformanceFinding> validateNotDeidentified(Attributes dcm) {
+		return validator
+			.validate(dcm, Set.of(), UID.ExplicitVRLittleEndian, false,
+					DicomConformanceValidator.DEFAULT_MAX_SEQUENCE_DEPTH, false)
+			.findings();
+	}
+
 	@Test
 	void one_to_one_pixel_aspect_ratio_is_an_error() {
 		var dcm = minimalCt();
@@ -123,6 +134,14 @@ class SemanticConformanceChecksTest {
 	@Test
 	void instance_without_direct_identifiers_has_no_privacy_finding() {
 		assertFalse(hasKind(validate(minimalCt()), CheckKind.PRIVACY_RISK));
+	}
+
+	@Test
+	void residual_identifier_is_not_flagged_for_a_non_deidentified_destination() {
+		var dcm = minimalCt();
+		dcm.setString(Tag.PatientTelephoneNumbers, VR.SH, "555-0100");
+
+		assertFalse(hasKind(validateNotDeidentified(dcm), CheckKind.PRIVACY_RISK));
 	}
 
 	@Test
