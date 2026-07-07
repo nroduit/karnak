@@ -45,9 +45,11 @@ if not exist "%KARNAK_BIN%" (echo ERROR: Karnak executable not found & exit /b 1
 
 rem Start de-identification image service (optional)
 if /i "%DEIDENTIFY_IMAGE_ENABLED%"=="true" (
-  if exist "%APP_DIR%deidentification\deidentify-karnak.exe" (
+  set "DEIDENT_NAME=%DEIDENTIFY_IMAGE_SERVICE_NAME%"
+  if not defined DEIDENT_NAME set "DEIDENT_NAME=image-ocr-identifier"
+  if exist "%APP_DIR%!DEIDENT_NAME!\!DEIDENT_NAME!.exe" (
     echo [run.bat] Starting de-identification image service...
-    start "Deidentify" /min "%APP_DIR%deidentification\deidentify-karnak.exe"
+    start "Deidentify" /min "%APP_DIR%!DEIDENT_NAME!\!DEIDENT_NAME!.exe"
   )
 )
 

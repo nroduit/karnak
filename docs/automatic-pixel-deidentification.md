@@ -123,16 +123,19 @@ alongside Karnak. It is controlled in `run.cfg`:
 ### Image Deidentification
 DEIDENTIFY_IMAGE_ENABLED=true
 DEIDENTIFY_IMAGE_URL=http://localhost:8000
+DEIDENTIFY_IMAGE_SERVICE_NAME=image-ocr-identifier
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DEIDENTIFY_IMAGE_ENABLED` | `true` | Start the bundled de-identification sidecar with the portable package. Set to `false` to manage the service yourself. |
 | `DEIDENTIFY_IMAGE_URL` | `http://localhost:8000` | Base URL Karnak uses to reach the service. |
+| `DEIDENTIFY_IMAGE_SERVICE_NAME` | `image-ocr-identifier` | Name of the bundled service folder and executable. The sidecar lives in `<app>/<name>/` and its binary is named `<name>` (`<name>.exe` on Windows). |
 
-When enabled, `run.sh` starts the bundled binary
-(`deidentify-karnak/deidentify-karnak`) on launch and stops it on shutdown. If
-the binary is missing, the step is skipped and a message is logged.
+When enabled, `run.sh` / `run.bat` starts the bundled binary
+(`image-ocr-identifier/image-ocr-identifier`, `.exe` on Windows) on launch and
+stops it on shutdown. If the binary is missing, the step is skipped and a message
+is logged.
 
 ---
 

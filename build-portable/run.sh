@@ -30,7 +30,8 @@ start_deidentify() {
     log "De-identification image service disabled (DEIDENTIFY_IMAGE_ENABLED)"
     return
   fi
-  local bin="$APP_DIR/deidentify-karnak/deidentify-karnak"
+  local name="${DEIDENTIFY_IMAGE_SERVICE_NAME:-image-ocr-identifier}"
+  local bin="$APP_DIR/$name/$name"
   if [[ ! -x "$bin" ]]; then
     log "De-identification binary not found at '$bin' — skipping"
     return
