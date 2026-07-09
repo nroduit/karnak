@@ -11,32 +11,39 @@ package org.karnak.backend.security;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.karnak.backend.enums.SecurityRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Component;
 
 /**
- * Maps the roles provided by the OpenID Connect identity provider to the Karnak security
- * roles ({@link SecurityRole}).
+ * Maps the roles carried by the OpenID Connect provider's Bearer/access token to the
+ * Karnak security roles ({@link SecurityRole}).
  *
  * <p>
  * Roles are read exclusively from the Keycloak claim "resource_access.karnak.roles" of
- * the ID token and the userinfo endpoint. Only the roles matching a {@link SecurityRole}
- * type (admin, investigator, user) are mapped, as "ROLE_"-prefixed granted authorities.
- * The IDP must therefore be configured to include the roles of the "karnak" client in the
- * ID token or in the userinfo response (in Keycloak: client scope "roles").
+ * the decoded <b>access token (Bearer token)</b>, not from the ID token. Per OAuth2/OIDC
+ * semantics, the ID token authenticates the user to the client (its audience is the
+ * client id) while the access token is the credential presented to resource servers and
+ * is the standard place for authorization data. Its presence in the access token does
+ * not depend on an "Add to ID token" toggle in the IDP client scope configuration,
+ * unlike the ID token, whose content can legitimately vary between environments
+ * (e.g. present in a dev realm, absent in a cert realm) without this being a
+ * misconfiguration. Only the roles matching a {@link SecurityRole} type (admin,
+ * investigator, user) are mapped, as "ROLE_"-prefixed granted authorities. The IDP must
+ * therefore be configured to include the roles of the "karnak" client in the access
+ * token (in Keycloak: client scope "roles", mapper "Add to access token" enabled).
  */
-public class OidcRoleAuthoritiesMapper implements GrantedAuthoritiesMapper {
+@Component
+@Slf4j
+public class OidcRoleAuthoritiesMapper {
 
 	private static final String RESOURCE_ACCESS_CLAIM = "resource_access";
 
@@ -44,48 +51,62 @@ public class OidcRoleAuthoritiesMapper implements GrantedAuthoritiesMapper {
 
 	private static final String ROLES_CLAIM = "roles";
 
-	@Override
-	@NonNull public Collection<? extends GrantedAuthority> mapAuthorities(
-			@NonNull Collection<? extends GrantedAuthority> authorities) {
-		Set<GrantedAuthority> mappedAuthorities = new HashSet<>(authorities);
-		for (GrantedAuthority authority : authorities) {
-			if (authority instanceof OidcUserAuthority oidcUserAuthority) {
-				mappedAuthorities.addAll(extractRoles(oidcUserAuthority.getIdToken().getClaims()));
-				if (oidcUserAuthority.getUserInfo() != null) {
-					mappedAuthorities.addAll(extractRoles(oidcUserAuthority.getUserInfo().getClaims()));
-				}
-			}
-			else if (authority instanceof OAuth2UserAuthority oauth2UserAuthority) {
-				mappedAuthorities.addAll(extractRoles(oauth2UserAuthority.getAttributes()));
-			}
+	/**
+	 * Maps the roles of the "karnak" client found in the decoded access token to known
+	 * Karnak granted authorities.
+	 * @param accessToken the decoded Bearer/access token
+	 * @return the granted authorities matching a known {@link SecurityRole}
+	 */
+	@NonNull
+	public Set<GrantedAuthority> mapAuthorities(Jwt accessToken) {
+		Set<String> roleNames = extractRoleNames(accessToken.getClaims());
+		Set<GrantedAuthority> mappedAuthorities = roleNames.stream()
+			.map(SecurityRole::fromType)
+			.filter(Objects::nonNull)
+			.map(securityRole -> new SimpleGrantedAuthority(securityRole.getRole()))
+			.collect(Collectors.toCollection(HashSet::new));
+		Set<String> unknownRoleNames = roleNames.stream()
+			.filter(roleName -> SecurityRole.fromType(roleName) == null)
+			.collect(Collectors.toSet());
+		if (!unknownRoleNames.isEmpty()) {
+			log.warn(
+					"OIDC (access token): role(s) {} on the \"{}\" client do not match any known Karnak role "
+							+ "(expected one of: admin, investigator, user) and are ignored.",
+					unknownRoleNames, KARNAK_CLIENT);
 		}
 		return mappedAuthorities;
 	}
 
 	/**
-	 * Maps the roles of the "karnak" client found in the claims to known Karnak
-	 * authorities.
+	 * Returns the role names of the "karnak" entry of the "resource_access" claim of
+	 * the access token.
 	 */
-	private static Set<GrantedAuthority> extractRoles(Map<String, Object> claims) {
-		Set<String> roleNames = new HashSet<>();
-		if (claims.get(RESOURCE_ACCESS_CLAIM) instanceof Map<?, ?> resourceAccess) {
-			roleNames.addAll(retrieveRoles(resourceAccess.get(KARNAK_CLIENT)));
+	private static Set<String> extractRoleNames(Map<String, Object> claims) {
+		Object resourceAccessClaim = claims.get(RESOURCE_ACCESS_CLAIM);
+		if (!(resourceAccessClaim instanceof Map<?, ?> resourceAccess)) {
+			log.warn(
+					"OIDC (access token): no \"{}\" claim found. The IDP must include the client roles of the "
+							+ "\"{}\" client in the access token (Keycloak: client scope \"roles\", mapper "
+							+ "\"Add to access token\" enabled).",
+					RESOURCE_ACCESS_CLAIM, KARNAK_CLIENT);
+			return Set.of();
 		}
-		return roleNames.stream()
-			.map(SecurityRole::fromType)
-			.filter(Objects::nonNull)
-			.map(securityRole -> new SimpleGrantedAuthority(securityRole.getRole()))
-			.collect(Collectors.toSet());
-	}
-
-	/**
-	 * Returns the role names of the "karnak" entry of the "resource_access" claim.
-	 */
-	private static Collection<String> retrieveRoles(@Nullable Object accessClaim) {
-		if (accessClaim instanceof Map<?, ?> access && access.get(ROLES_CLAIM) instanceof Collection<?> roles) {
-			return roles.stream().filter(String.class::isInstance).map(String.class::cast).toList();
+		if (!resourceAccess.containsKey(KARNAK_CLIENT)) {
+			log.warn(
+					"OIDC (access token): no entry \"{}\" found in the \"{}\" claim (found clients: {}). Check "
+							+ "that the OIDC client id configured in Keycloak is exactly \"{}\".",
+					KARNAK_CLIENT, RESOURCE_ACCESS_CLAIM, resourceAccess.keySet(), KARNAK_CLIENT);
 		}
-		return List.of();
+		if (resourceAccess.get(KARNAK_CLIENT) instanceof Map<?, ?> resource
+				&& resource.get(ROLES_CLAIM) instanceof Collection<?> roles) {
+			return roles.stream()
+				.filter(String.class::isInstance)
+				.map(String.class::cast)
+				.collect(Collectors.toSet());
+		}
+		return Set.of();
 	}
 
 }
+
+
