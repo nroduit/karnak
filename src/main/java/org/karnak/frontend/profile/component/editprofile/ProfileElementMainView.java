@@ -203,7 +203,7 @@ public class ProfileElementMainView extends VerticalLayout {
 	}
 
 	private Div orderInfoMessage() {
-		Anchor documentation = new Anchor("https://osirix-foundation.github.io/karnak-documentation/en/profiles/",
+		Anchor documentation = new Anchor("https://weasis.org/karnak-documentation/en/profiles/",
 				"See the documentation");
 		documentation.setTarget("_blank");
 		Div message = new Div(

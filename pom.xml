@@ -31,8 +31,8 @@
     <mockito.version>5.23.0</mockito.version>
     <swagger.version>2.2.52</swagger.version>
 
-    <sonar.organization>osirix-foundation-1</sonar.organization>
-    <sonar.projectKey>karnak</sonar.projectKey>
+    <sonar.organization>nroduit-github</sonar.organization>
+    <sonar.projectKey>nroduit_karnak</sonar.projectKey>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.language>java</sonar.language>
     <sonar.java.source>${java.version}</sonar.java.source>

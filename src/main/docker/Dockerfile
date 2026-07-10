@@ -1,6 +1,6 @@
 # To build, run the following command from the top level project directory:
 #
-# docker build -t osirixfoundation/karnak:latest -f src/main/docker/Dockerfile .
+# docker build -t nroduit/karnak:latest -f src/main/docker/Dockerfile .
 #
 # For a local multi-arch build:
 # docker buildx build --platform linux/amd64,linux/arm64 -f src/main/docker/Dockerfile .
