@@ -22,7 +22,7 @@ discussions, or pull requests.**
 
 Instead, report them privately using one of the following channels:
 
-- **Preferred:** Open a [private security advisory](https://github.com/OsiriX-Foundation/karnak/security/advisories/new)
+- **Preferred:** Open a [private security advisory](https://github.com/nroduit/karnak/security/advisories/new)
   via GitHub's "Report a vulnerability" feature.
 - Alternatively, email the maintainers at **dicom@hcuge.ch**.
 

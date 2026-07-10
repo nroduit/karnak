@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/License-EPL%202.0-blue.svg)](https://opensource.org/licenses/EPL-2.0) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)  ![Maven build](https://github.com/OsiriX-Foundation/karnak/workflows/Build/badge.svg)
+[![License](https://img.shields.io/badge/License-EPL%202.0-blue.svg)](https://opensource.org/licenses/EPL-2.0) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)  ![Maven build](https://github.com/nroduit/karnak/workflows/Build/badge.svg)
 
 [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=karnak&metric=ncloc)](https://sonarcloud.io/component_measures?id=karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=karnak&metric=coverage)](https://sonarcloud.io/component_measures?id=karnak&metric=coverage) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=karnak&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=karnak&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=karnak&metric=security_rating)](https://sonarcloud.io/component_measures?id=karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=karnak&metric=alert_status)](https://sonarcloud.io/dashboard?id=karnak)
 
@@ -6,7 +6,7 @@ Karnak is a DICOM gateway designed for data de-identification and DICOM attribut
 
 In practice, Karnak receives DICOM studies from one or more **sources** (modalities, PACS, workstations…), applies a configurable **de-identification / tag-morphing profile**, and forwards the result to one or more **destinations** over DICOM or DICOMWeb (STOW-RS). Everything is configured and monitored from a web interface.
 
-For detailed usage instructions, refer to the [Karnak User Guide](https://osirix-foundation.github.io/karnak-documentation/).
+For detailed usage instructions, refer to the [Karnak User Guide](https://weasis.org/karnak-documentation/).
 
 # Application Features
 
@@ -26,7 +26,7 @@ For detailed usage instructions, refer to the [Karnak User Guide](https://osirix
   replace, hash), date shifting, UID re-mapping, add/replace tags, and API-based value replacement.
 - Pixel-data cleaning: mask burned-in annotations and deface (remove facial features from head studies).
 - Deterministic pseudonymization (HMAC-based), so the same patient always maps to the same pseudonym.
-- [Build your own de-identification profile](https://osirix-foundation.github.io/karnak-documentation/en/profiles),
+- [Build your own de-identification profile](https://weasis.org/karnak-documentation/en/profiles),
   edit it directly as YAML in the UI, and import/export profiles to share them with other users.
 
 ## Pseudonym mapping (External ID)
@@ -55,7 +55,7 @@ You don't need to build Karnak from source to use it. Pick the option that fits 
 
 | I want to… | Use | Details |
 |------------|-----|---------|
-| Run Karnak in production | **Docker** | [karnak-docker](https://github.com/OsiriX-Foundation/karnak-docker) — Postgres + Redis, the recommended setup |
+| Run Karnak in production | **Docker** | [karnak-docker](https://github.com/nroduit/karnak-docker) — Postgres + Redis, the recommended setup |
 | Try Karnak quickly on a single machine | **Portable package** | Self-contained, embedded database, no external services — see [Run portable package](#run-portable-package) |
 | Contribute to / develop Karnak | **Build from source** | See [Build Karnak](#build-karnak) and [Debug Karnak](#debug-karnak) |
 
@@ -67,7 +67,7 @@ Once Karnak is running, with the default configuration:
 - **Default credentials**: user `admin`, password `karnak` (change these in production via `KARNAK_ADMIN` / `KARNAK_PASSWORD`)
 - **DICOM listener**: AE Title `KARNAK-GATEWAY`, port `11119` (the portable package uses `11112`) — point your modality or PACS here to send studies to Karnak
 
-The web port (`KARNAK_WEB_PORT`), the listener AE Title (`DICOM_LISTENER_AET`) and port (`DICOM_LISTENER_PORT`), as well as the sources and destinations, are all configurable; see the [Karnak User Guide](https://osirix-foundation.github.io/karnak-documentation/).
+The web port (`KARNAK_WEB_PORT`), the listener AE Title (`DICOM_LISTENER_AET`) and port (`DICOM_LISTENER_PORT`), as well as the sources and destinations, are all configurable; see the [Karnak User Guide](https://weasis.org/karnak-documentation/).
 
 # Build Karnak
 
@@ -88,7 +88,7 @@ Note: on Windows the bash.exe must be specified: `mvn clean install -Pportable -
 # Run Karnak
 
 ## Run with docker
-To configure and run Karnak with docker, see [karnak-docker](https://github.com/OsiriX-Foundation/karnak-docker). This is the recommended setup for production.
+To configure and run Karnak with docker, see [karnak-docker](https://github.com/nroduit/karnak-docker). This is the recommended setup for production.
 
 ## Run portable package
 After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch the executable `run.sh` (Linux or macOS) or `run.bat` (Windows).
@@ -241,7 +241,7 @@ An OpenID Connect identity provider can be configured by using the environment v
  
 # API / Endpoints
 
-Karnak exposes a small REST API in addition to the web interface. An OpenAPI (Swagger) description is generated by springdoc and the C-ECHO endpoint is available at `/api/echo`. For the full list of endpoints and their usage, refer to the [Karnak User Guide](https://osirix-foundation.github.io/karnak-documentation/).
+Karnak exposes a small REST API in addition to the web interface. An OpenAPI (Swagger) description is generated by springdoc and the C-ECHO endpoint is available at `/api/echo`. For the full list of endpoints and their usage, refer to the [Karnak User Guide](https://weasis.org/karnak-documentation/).
 
 # Workflow
 

@@ -41,15 +41,15 @@ public class HelpView extends VerticalLayout {
 		setSizeFull();
 		H1 heading = new H1("Help");
 
-		Anchor generalDoc = new Anchor("https://osirix-foundation.github.io/karnak-documentation/",
+		Anchor generalDoc = new Anchor("https://weasis.org/karnak-documentation/",
 				"General documentation");
 		generalDoc.setTarget("_blank");
 
-		Anchor installation = new Anchor("https://osirix-foundation.github.io/karnak-documentation/en/userguide/",
+		Anchor installation = new Anchor("https://weasis.org/karnak-documentation/en/userguide/",
 				"User guide: configuration and administration");
 		installation.setTarget("_blank");
 
-		Anchor profile = new Anchor("https://osirix-foundation.github.io/karnak-documentation/en/profiles/",
+		Anchor profile = new Anchor("https://weasis.org/karnak-documentation/en/profiles/",
 				"Build your own profile for de-identification or for tag morphing");
 		profile.setTarget("_blank");
 
