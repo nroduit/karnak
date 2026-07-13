@@ -9,18 +9,19 @@
  */
 package org.karnak.backend.model.profilepipe;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Map;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.junit.jupiter.api.Test;
 
-public class SensitiveTagDefinitionTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class SensitiveTagDefinitionTest {
 
 	@Test
-	public void extractSensitiveData_works_correctly() {
+	void extractSensitiveData_works_correctly() {
 		String patientName = "DOE^JOHN";
 		String patientId = "962738";
 		String patientBirthDate = "19280303";
@@ -36,27 +37,29 @@ public class SensitiveTagDefinitionTest {
 
 		Map<String, String> retrievedData = SensitiveTagDefinition.extractSensitiveData(attributes);
 
-		assertThat(retrievedData).containsEntry("PatientName", patientName);
-		assertThat(retrievedData).containsEntry("PatientID", patientId);
-		assertThat(retrievedData).containsEntry("PatientBirthDate", patientBirthDate);
-		assertThat(retrievedData).containsEntry("PatientSex", patientSex);
-		assertThat(retrievedData).containsEntry("PatientAge", patientAge);
-		assertThat(retrievedData).hasSize(5);
+		assertThat(retrievedData)
+			.containsEntry("PatientName", patientName)
+			.containsEntry("PatientID", patientId)
+			.containsEntry("PatientBirthDate", patientBirthDate)
+			.containsEntry("PatientSex", patientSex)
+			.containsEntry("PatientAge", patientAge)
+			.hasSize(5);
 	}
 
 	@Test
-	public void extractSensitiveData_only_present_tags_included() {
+	void extractSensitiveData_only_present_tags_included() {
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PatientName, VR.PN, "TEST^PRENOM");
 
 		Map<String, String> retrievedData = SensitiveTagDefinition.extractSensitiveData(attributes);
 
-		assertThat(retrievedData).containsEntry("PatientName", "TEST^PRENOM");
-		assertThat(retrievedData).doesNotContainKey("PatientID");
+		assertThat(retrievedData)
+			.containsEntry("PatientName", "TEST^PRENOM")
+			.doesNotContainKey("PatientID");
 	}
 
 	@Test
-	public void extractSensitiveData_no_tags_should_return_empty() {
+	void extractSensitiveData_no_tags_should_return_empty() {
 		Attributes attributes = new Attributes();
 
 		Map<String, String> retrievedData = SensitiveTagDefinition.extractSensitiveData(attributes);
