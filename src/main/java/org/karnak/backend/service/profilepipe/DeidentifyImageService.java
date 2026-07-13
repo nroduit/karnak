@@ -9,14 +9,15 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -25,6 +26,7 @@ import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -50,6 +52,10 @@ public class DeidentifyImageService {
 	private final RestClient restClient;
 
 	private final ObjectMapper objectMapper;
+
+	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+	private static final int[] EMPTY_INT_ARRAY = new int[0];
 
 	private static final TransferSyntaxMapping JPEG = new TransferSyntaxMapping("image.jpg", MediaType.IMAGE_JPEG);
 
@@ -121,7 +127,7 @@ public class DeidentifyImageService {
 			String tsuid) {
 		// Extract pixel data bytes from the DICOM instance
 		byte[] imageBytes = this.extractPixelDataBytes(dcmAttributes);
-		if (imageBytes == null || imageBytes.length == 0) {
+		if (imageBytes.length == 0) {
 			log.warn("Could not extract pixel data from DICOM instance — skipping API call");
 			return Collections.emptyList();
 		}
@@ -279,12 +285,12 @@ public class DeidentifyImageService {
 	/**
 	 * Extracts the raw pixel data bytes from a DICOM Attributes object.
 	 * @param dcmAttributes the DICOM attributes containing pixel data
-	 * @return the pixel data as a byte array, or {@code null} if extraction fails
+	 * @return the pixel data as a byte array, or an empty array if extraction fails
 	 */
 	byte[] extractPixelDataBytes(Attributes dcmAttributes) {
 		if (dcmAttributes == null) {
 			log.error("The passed DCMAttributes is null !");
-			return null;
+			return EMPTY_BYTE_ARRAY;
 		}
 
 		Object pixelData = dcmAttributes.getValue(Tag.PixelData);
@@ -296,7 +302,7 @@ public class DeidentifyImageService {
 			}
 			catch (IOException ex) {
 				log.error("Failed to read BulkData pixel bytes", ex);
-				return null;
+				return EMPTY_BYTE_ARRAY;
 			}
 		}
 		else if (pixelData instanceof Fragments fragments) {
@@ -314,14 +320,14 @@ public class DeidentifyImageService {
 					}
 					catch (IOException ex) {
 						log.error("Failed to read Fragments frame BulkData bytes", ex);
-						return null;
+						return EMPTY_BYTE_ARRAY;
 					}
 				}
 			}
 		}
 
 		log.warn("Pixel data is not BulkData or Fragments — cannot extract image bytes");
-		return null;
+		return EMPTY_BYTE_ARRAY;
 	}
 
 	private TransferSyntaxMapping resolveMapping(String tsuid) {
@@ -356,7 +362,7 @@ public class DeidentifyImageService {
 		int[] redLut = this.extractLutData(dcmAttributes, Tag.RedPaletteColorLookupTableData, redDesc);
 		int[] greenLut = this.extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
 		int[] blueLut = this.extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
-		if (redLut == null || greenLut == null || blueLut == null) {
+		if (redLut.length == 0 || greenLut.length == 0 || blueLut.length == 0) {
 			log.warn("PALETTE COLOR photometric but missing LUT data");
 			return null;
 		}
@@ -385,7 +391,7 @@ public class DeidentifyImageService {
 		if (bitsPerEntry == 8) {
 			byte[] data = dcmAttributes.getSafeBytes(lutDataTag);
 			if (data == null) {
-				return null;
+				return EMPTY_INT_ARRAY;
 			}
 			int[] result = new int[data.length];
 			for (int i = 0; i < data.length; i++) {
@@ -393,7 +399,8 @@ public class DeidentifyImageService {
 			}
 			return result;
 		}
-		return dcmAttributes.getInts(lutDataTag);
+		int[] lutDatas = dcmAttributes.getInts(lutDataTag);
+		return lutDatas == null ? EMPTY_INT_ARRAY : lutDatas;
 	}
 
 	private record TransferSyntaxMapping(String filename, MediaType mediaType) {

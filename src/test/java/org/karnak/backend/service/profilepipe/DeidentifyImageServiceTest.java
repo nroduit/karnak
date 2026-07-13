@@ -9,16 +9,15 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
 import org.dcm4che3.data.Fragments;
@@ -28,10 +27,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.karnak.backend.model.profilebody.MaskBody;
+
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DeidentifyImageServiceTest {
 
@@ -202,18 +204,18 @@ public class DeidentifyImageServiceTest {
 
 	// Extract Pixel Data Bytes
 	@Test
-	public void extractPixelDataBytes_dcmAttribute_null_should_return_null() {
+	public void extractPixelDataBytes_dcmAttribute_null_should_return_empty_array() {
 		byte[] extractedPixels = this.deidentifyImageService.extractPixelDataBytes(null);
-		assertThat(extractedPixels).isNull();
+		assertThat(extractedPixels).isEmpty();
 	}
 
 	@Test
-	public void extractPixelDataBytes_pixeldata_absent_should_return_null() {
+	public void extractPixelDataBytes_pixeldata_absent_should_return_empty_array() {
 		Attributes attributes = new Attributes();
 
 		byte[] extractedPixels = this.deidentifyImageService.extractPixelDataBytes(attributes);
 
-		assertThat(extractedPixels).isNull();
+		assertThat(extractedPixels).isEmpty();
 	}
 
 	@Test
@@ -231,14 +233,14 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractPixelDataBytes_fragments_with_only_offset_table_return_null() {
+	public void extractPixelDataBytes_fragments_with_only_offset_table_return_empty_array() {
 		Attributes attributes = new Attributes();
 		Fragments fragments = attributes.newFragments(Tag.PixelData, VR.OB, 1);
 		fragments.add(null);
 
 		byte[] extractedPixels = this.deidentifyImageService.extractPixelDataBytes(attributes);
 
-		assertThat(extractedPixels).isNull();
+		assertThat(extractedPixels).isEmpty();
 	}
 
 	@Test
@@ -255,7 +257,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractPixelDataBytes_fragments_unexpected_type_return_null() {
+	public void extractPixelDataBytes_fragments_unexpected_type_return_empty_array() {
 		Attributes attributes = new Attributes();
 		String pixelData = "test";
 		Fragments fragments = attributes.newFragments(Tag.PixelData, VR.OB, 2);
@@ -264,7 +266,7 @@ public class DeidentifyImageServiceTest {
 
 		byte[] extractedPixels = this.deidentifyImageService.extractPixelDataBytes(attributes);
 
-		assertThat(extractedPixels).isNull();
+		assertThat(extractedPixels).isEmpty();
 	}
 
 	// Build Pattern Color LUT Json
