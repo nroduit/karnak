@@ -9,9 +9,6 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
-
 import java.awt.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -22,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -60,6 +58,9 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
+
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 @Slf4j
 public class Profile {
@@ -307,6 +308,24 @@ public class Profile {
 		}
 	}
 
+	private MaskArea toMaskArea(MaskBody maskBody){
+		Color color = StringUtil.hasText(maskBody.getColor())
+			? ActionTags.hexadecimal2Color(maskBody.getColor())
+			: null;
+
+		List<Shape> shapeList = new ArrayList<>();
+		if (maskBody.getRectangles() != null) {
+			for (String rectStr : maskBody.getRectangles()) {
+				Rectangle rect = RectangleListConverter.stringToRectangle(rectStr);
+				if (rect != null) {
+					shapeList.add(rect);
+				}
+			}
+		}
+
+		return shapeList.isEmpty() ? null : new MaskArea(shapeList, color);
+	}
+
 	/**
 	 * Calls the external de-identification image API and converts the returned masks into
 	 * a list of {@link MaskArea}.
@@ -329,21 +348,9 @@ public class Profile {
 		// Each one becomes a separate MaskArea so different colors are preserved.
 		List<MaskArea> maskAreas = new ArrayList<>();
 		for (MaskBody maskBody : masks) {
-			Color color = null;
-			if (StringUtil.hasText(maskBody.getColor())) {
-				color = ActionTags.hexadecimal2Color(maskBody.getColor());
-			}
-			List<Shape> shapeList = new ArrayList<>();
-			if (maskBody.getRectangles() != null) {
-				for (String rectStr : maskBody.getRectangles()) {
-					Rectangle rect = RectangleListConverter.stringToRectangle(rectStr);
-					if (rect != null) {
-						shapeList.add(rect);
-					}
-				}
-			}
-			if (!shapeList.isEmpty()) {
-				maskAreas.add(new MaskArea(shapeList, color));
+			MaskArea maskArea = this.toMaskArea(maskBody);
+			if (maskArea != null){
+				maskAreas.add(maskArea);
 			}
 		}
 

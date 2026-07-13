@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,6 +27,9 @@ import org.dcm4che3.data.VR;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.karnak.backend.model.profilebody.MaskBody;
 
 import org.springframework.core.io.ByteArrayResource;
@@ -35,7 +39,7 @@ import org.springframework.util.MultiValueMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DeidentifyImageServiceTest {
+class DeidentifyImageServiceTest {
 
 	@TempDir
 	Path tempDir;
@@ -44,26 +48,27 @@ public class DeidentifyImageServiceTest {
 	DeidentifyImageService deidentifyImageService;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		this.deidentifyImageService = new DeidentifyImageService("http://localhost:8000");
 	}
 
 	// Extract mask from JSON
 	@Test
-	public void extractMasksFromJson_null_params_should_return_empty_list() {
+	void extractMasksFromJson_null_params_should_return_empty_list() {
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(null, null);
 		assertThat(maskBodies).isEmpty();
 	}
 
 	@Test
-	public void extractMasksFromJson_blank_json_should_return_empty_list() {
+	void extractMasksFromJson_blank_json_should_return_empty_list() {
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson("", null);
 		assertThat(maskBodies).isEmpty();
 	}
 
-	@Test
-	public void extractMasksFromJson_valid_json_null_response_uid_should_return_empty_list() {
-		String responseJson = """
+	static Stream<Arguments> emptyMasksCases() {
+		return Stream.of(
+			Arguments.of(
+				"""
 				{
 					"message": "Sensitive data detected",
 					"masks": [
@@ -84,17 +89,12 @@ public class DeidentifyImageServiceTest {
 					}
 					]
 				}
-				""";
-		String expectedUid = "2.25.251867431509614238946512793485716204981";
-
-		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
-
-		assertThat(maskBodies).isEmpty();
-	}
-
-	@Test
-	public void extractMasksFromJson_valid_json_response_uid_not_equals_expected_should_return_empty_list() {
-		String responseJson = """
+				""",
+				"2.25.251867431509614238946512793485716204981",
+				"UID absent"
+			),
+			Arguments.of(
+				"""
 				{
 					"message": "Sensitive data detected",
 					"masks": [
@@ -116,47 +116,44 @@ public class DeidentifyImageServiceTest {
 					],
 				  "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 				}
-				""";
-		String expectedUid = "2.25.251867431509614238946512793485716204980";
-
-		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
-
-		assertThat(maskBodies).isEmpty();
-	}
-
-	@Test
-	public void extractMasksFromJson_valid_json_response_no_mask_should_return_empty_list() {
-		String responseJson = """
+				""",
+				"2.25.251867431509614238946512793485716204980",
+				"UID different"
+			),
+			Arguments.of(
+				"""
 				{
 					"message": "Test",
 					"sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 				}
-				""";
-		String expectedUid = "2.25.251867431509614238946512793485716204981";
-
-		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
-
-		assertThat(maskBodies).isEmpty();
-	}
-
-	@Test
-	public void extractMasksFromJson_valid_json_response_empty_mask_should_return_empty_list() {
-		String responseJson = """
+				""",
+				"2.25.251867431509614238946512793485716204981",
+				"No mask"
+			),
+			Arguments.of(
+				"""
 				{
 					"message": "Test",
 					"masks" : [],
 					"sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 				}
-				""";
-		String expectedUid = "2.25.251867431509614238946512793485716204981";
+				""",
+				"2.25.251867431509614238946512793485716204981",
+				"Empty mask"
+			)
+		);
+	}
 
+	@ParameterizedTest(name = "{index} - {2}")
+	@MethodSource("emptyMasksCases")
+	void extractMasksFromJson_valid_json_should_return_empty_list(String responseJson, String expectedUid, String description) {
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 
 		assertThat(maskBodies).isEmpty();
 	}
 
 	@Test
-	public void extractMasksFromJson_should_return_correct_masks() {
+	void extractMasksFromJson_should_return_correct_masks() {
 		String responseJson = """
 				{
 					"message": "Sensitive data detected",
@@ -194,7 +191,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractMasksFromJson_malformed_json_should_return_empty_list() {
+	void extractMasksFromJson_malformed_json_should_return_empty_list() {
 		String malformedJson = "not json";
 
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(malformedJson, null);
@@ -204,13 +201,13 @@ public class DeidentifyImageServiceTest {
 
 	// Extract Pixel Data Bytes
 	@Test
-	public void extractPixelDataBytes_dcmAttribute_null_should_return_empty_array() {
+	void extractPixelDataBytes_dcmAttribute_null_should_return_empty_array() {
 		byte[] extractedPixels = this.deidentifyImageService.extractPixelDataBytes(null);
 		assertThat(extractedPixels).isEmpty();
 	}
 
 	@Test
-	public void extractPixelDataBytes_pixeldata_absent_should_return_empty_array() {
+	void extractPixelDataBytes_pixeldata_absent_should_return_empty_array() {
 		Attributes attributes = new Attributes();
 
 		byte[] extractedPixels = this.deidentifyImageService.extractPixelDataBytes(attributes);
@@ -219,7 +216,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractPixelDataBytes_bulkdata_return_correct() throws IOException {
+	void extractPixelDataBytes_bulkdata_return_correct() throws IOException {
 		Attributes attributes = new Attributes();
 		Path temp = this.tempDir.resolve("test.bin");
 		byte[] pixelDataBytes = new byte[] { 1, 2, 3, 4 };
@@ -233,7 +230,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractPixelDataBytes_fragments_with_only_offset_table_return_empty_array() {
+	void extractPixelDataBytes_fragments_with_only_offset_table_return_empty_array() {
 		Attributes attributes = new Attributes();
 		Fragments fragments = attributes.newFragments(Tag.PixelData, VR.OB, 1);
 		fragments.add(null);
@@ -244,7 +241,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractPixelDataBytes_fragments_return_correct() {
+	void extractPixelDataBytes_fragments_return_correct() {
 		Attributes attributes = new Attributes();
 		byte[] pixelDataBytes = new byte[] { 1, 2, 3, 4 };
 		Fragments fragments = attributes.newFragments(Tag.PixelData, VR.OB, 2);
@@ -257,7 +254,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void extractPixelDataBytes_fragments_unexpected_type_return_empty_array() {
+	void extractPixelDataBytes_fragments_unexpected_type_return_empty_array() {
 		Attributes attributes = new Attributes();
 		String pixelData = "test";
 		Fragments fragments = attributes.newFragments(Tag.PixelData, VR.OB, 2);
@@ -271,7 +268,7 @@ public class DeidentifyImageServiceTest {
 
 	// Build Pattern Color LUT Json
 	@Test
-	public void buildPaletteColorLutJson_monochrome_should_return_null() {
+	void buildPaletteColorLutJson_monochrome_should_return_null() {
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "MONOCHROME2");
 
@@ -281,7 +278,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void buildPaletteColorLutJson_palette_without_descriptor_tags_should_return_null() {
+	void buildPaletteColorLutJson_palette_without_descriptor_tags_should_return_null() {
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
 
@@ -291,7 +288,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void buildPaletteColorLutJson_palette_without_lut_data_tags_should_return_null() {
+	void buildPaletteColorLutJson_palette_without_lut_data_tags_should_return_null() {
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
 		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
@@ -304,7 +301,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void buildPaletteColorLutJson_palette_with_8bit() throws JsonProcessingException {
+	void buildPaletteColorLutJson_palette_with_8bit() throws JsonProcessingException {
 		byte[] redBytes = new byte[] { 10, 24, (byte) 200 };
 		byte[] greenBytes = new byte[] { 20, 1, 0 };
 		byte[] blueBytes = new byte[] { 100, 50, 12 };
@@ -330,7 +327,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void buildPaletteColorLutJson_palette_with_16bit() throws JsonProcessingException {
+	void buildPaletteColorLutJson_palette_with_16bit() throws JsonProcessingException {
 		int[] redInts = new int[] { 10, 24, 50 };
 		int[] greenInts = new int[] { 20, 1, 0 };
 		int[] blueInts = new int[] { 100, 50, 12 };
@@ -357,7 +354,7 @@ public class DeidentifyImageServiceTest {
 
 	// Generate Multipart Body
 	@Test
-	public void generateMultipartBody_with_jpeg() {
+	void generateMultipartBody_with_jpeg() {
 		Attributes attributes = new Attributes();
 		byte[] imageByte = new byte[] { 10, 20, 30 };
 
@@ -373,7 +370,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void generateMultipartBody_with_unknown_tsid_should_be_raw() {
+	void generateMultipartBody_with_unknown_tsid_should_be_raw() {
 		Attributes attributes = new Attributes();
 		byte[] imageByte = new byte[] { 10, 20, 30 };
 
@@ -389,7 +386,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void generateMultipartBody_with_raw() {
+	void generateMultipartBody_with_raw() {
 		Attributes attributes = new Attributes();
 		attributes.setDouble(Tag.RescaleSlope, VR.DS, 1.0);
 		attributes.setDouble(Tag.RescaleIntercept, VR.DS, 2.0);
@@ -438,7 +435,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void generateMultipartBody_with_raw_without_optional_tags_should_not_contain_optional_parts() {
+	void generateMultipartBody_with_raw_without_optional_tags_should_not_contain_optional_parts() {
 		Attributes attributes = new Attributes(); // no rescale/window tags
 		byte[] imageByte = new byte[] { 10, 20, 30 };
 
@@ -452,7 +449,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void generateMultipartBody_with_photometric_lut_data() throws JsonProcessingException {
+	void generateMultipartBody_with_photometric_lut_data() throws JsonProcessingException {
 		int[] redInts = new int[] { 10, 24, 200 };
 		int[] greenInts = new int[] { 20, 1, 0 };
 		int[] blueInts = new int[] { 100, 50, 12 };
@@ -483,7 +480,7 @@ public class DeidentifyImageServiceTest {
 	}
 
 	@Test
-	public void generateMultipartBody_correct_sop_instance_uid() {
+	void generateMultipartBody_correct_sop_instance_uid() {
 		String sopInstanceUid = "1.2.3.4.5.6";
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.SOPInstanceUID, VR.UI, sopInstanceUid);
