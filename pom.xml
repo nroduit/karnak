@@ -20,7 +20,7 @@
 
     <springframework.version>4.1.0</springframework.version>
     <springdoc.version>1.8.0</springdoc.version>
-    <vaadin.version>25.2.1</vaadin.version>
+    <vaadin.version>25.2.2</vaadin.version>
     <org.json.version>20260522</org.json.version>
     <opencsv.version>5.12.0</opencsv.version>
 
