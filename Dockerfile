@@ -1,6 +1,6 @@
 # To build, run the following command from the top level project directory:
 #
-# docker build -t osirixfoundation/karnak:latest -f Dockerfile .
+# docker build -t nroduit/karnak:latest -f Dockerfile .
 
 # Based on build image containing maven, jdk and git
 FROM maven:3.9-eclipse-temurin-25-noble AS builder

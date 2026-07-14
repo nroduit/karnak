@@ -33,7 +33,7 @@ public class ProjectSecret extends Div {
 	private static final String REFER_LINK_TEXT = "For more details on the use of the project secret, please refer to the following link";
 
 	private static final Anchor REFER_LINK = new Anchor(
-			"https://osirix-foundation.github.io/karnak-documentation/en/userguide/projects/index.html#4-project-secret",
+			"https://weasis.org/karnak-documentation/en/userguide/projects/index.html#4-project-secret",
 			"Project Secret Documentation");
 
 	private final Div messageWarningLayout = new Div();

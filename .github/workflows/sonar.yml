@@ -91,8 +91,8 @@ jobs:
           # shellcheck disable=SC2086
           sonar-scanner \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=osirix-foundation-1 \
-            -Dsonar.projectKey=karnak \
+            -Dsonar.organization=nroduit-github \
+            -Dsonar.projectKey=nroduit_karnak \
             -Dsonar.projectBaseDir="$SONAR_SRC" \
             -Dsonar.java.source=25 \
             -Dsonar.sources=src/main/java \

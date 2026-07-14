@@ -183,7 +183,7 @@ public class MonitoringFilterBar extends HorizontalLayout {
 			}
 		}
 		updating = true;
-		if (start == null) {
+		if (start == null || end == null) {
 			rangePicker.clear();
 		}
 		else {
