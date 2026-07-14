@@ -11,6 +11,7 @@ package org.karnak.frontend.forwardnode.edit.destination.component;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -91,14 +92,23 @@ public class NotificationComponent extends VerticalLayout {
 	 * Add components in notification components
 	 */
 	private void addComponents() {
-		// notificationObjectsDiv.add(UIS.setWidthFull(new HorizontalLayout(notify)),
-		// UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix,
-		// notifyObjectRejectionPrefix)));
 		notificationInputsDiv.add(UIS.setWidthFull(new VerticalLayout(UIS.setWidthFull(new HorizontalLayout(notify)),
-				UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectRejectionPrefix)),
-				UIS.setWidthFull(new HorizontalLayout(notifyObjectPattern, notifyObjectValues, notifyInterval)))));
+				spreadRow(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectRejectionPrefix)),
+				spreadRow(new HorizontalLayout(notifyObjectPattern, notifyObjectValues, notifyInterval)))));
 
 		add(UIS.setWidthFull(new HorizontalLayout(activateNotification)), notificationInputsDiv);
+	}
+
+	/**
+	 * Make a row fill the full width and spread its fixed-width fields so the last one
+	 * aligns with the right edge.
+	 * @param row Row to configure
+	 * @return the configured row
+	 */
+	private static HorizontalLayout spreadRow(HorizontalLayout row) {
+		row.setWidthFull();
+		row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+		return row;
 	}
 
 	/**
