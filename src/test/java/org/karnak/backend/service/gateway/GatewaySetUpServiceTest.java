@@ -55,7 +55,7 @@ class GatewaySetUpServiceTest {
 	public void setUp() throws Exception {
 
 		// Build mocked service
-		gatewaySetUpService = new GatewaySetUpService(forwardNodeRepoMock, versionRepoMock, destinationRepoMock);
+		gatewaySetUpService = new GatewaySetUpService(forwardNodeRepoMock, versionRepoMock, destinationRepoMock, null);
 	}
 
 	@Test

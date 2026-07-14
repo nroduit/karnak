@@ -13,6 +13,7 @@ import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext;
@@ -32,11 +33,12 @@ abstract class AbstractProfileEditor implements AttributeEditor {
 
 	protected final ProjectEntity projectEntity;
 
-	protected AbstractProfileEditor(DestinationEntity destinationEntity, ProjectEntity projectEntity) {
+	protected AbstractProfileEditor(DestinationEntity destinationEntity, ProjectEntity projectEntity,
+			DeidentifyImageService deidentifyImageService) {
 		this.destinationEntity = destinationEntity;
 		this.projectEntity = projectEntity;
 		this.profileEntity = projectEntity.getProfileEntity();
-		this.profile = new Profile(profileEntity);
+		this.profile = new Profile(profileEntity, deidentifyImageService);
 	}
 
 	@Override

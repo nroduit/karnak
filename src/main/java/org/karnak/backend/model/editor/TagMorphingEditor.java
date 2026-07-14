@@ -11,12 +11,13 @@ package org.karnak.backend.model.editor;
 
 import org.dcm4che3.data.Attributes;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.weasis.dicom.param.AttributeEditorContext;
 
 public class TagMorphingEditor extends AbstractProfileEditor {
 
-	public TagMorphingEditor(DestinationEntity destinationEntity) {
-		super(destinationEntity, destinationEntity.getTagMorphingProjectEntity());
+	public TagMorphingEditor(DestinationEntity destinationEntity, DeidentifyImageService deidentifyImageService) {
+		super(destinationEntity, destinationEntity.getTagMorphingProjectEntity(), deidentifyImageService);
 	}
 
 	@Override

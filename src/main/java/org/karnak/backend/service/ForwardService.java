@@ -57,6 +57,7 @@ import org.karnak.backend.model.image.TransformedPlanarImage;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.karnak.backend.model.validation.InstanceConformanceData;
 import org.karnak.backend.model.validation.MetadataSnapshot;
+import org.karnak.backend.service.profilepipe.Profile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -443,31 +444,45 @@ public class ForwardService {
 			TransformedPlanarImage transformedPlanarImage) {
 		MaskArea m = context.getMaskArea();
 		boolean defacing = LangUtil.emptyToFalse(context.getProperties().getProperty(Defacer.APPLY_DEFACING));
-		if (m != null || defacing) {
-			Editable<PlanarImage> editablePlanarImage = buildEditablePlanarImage(attributes, m, defacing,
-					transformedPlanarImage);
+
+		// Retrieve additional masks (from the de-identification image API)
+		// Each additional MaskArea can have a different color.
+		List<MaskArea> additionalMasks = (List<MaskArea>) context.getProperties()
+			.get(Profile.ADDITIONAL_MASK_AREAS_KEY);
+
+		if (m != null || defacing || (additionalMasks != null && !additionalMasks.isEmpty())) {
+			Editable<PlanarImage> editablePlanarImage = buildEditablePlanarImage(attributes, m, additionalMasks,
+					defacing, transformedPlanarImage);
 			transformedPlanarImage.setEditablePlanarImage(editablePlanarImage);
 			return true;
 		}
 		return false;
 	}
 
-	private static Editable<PlanarImage> buildEditablePlanarImage(Attributes attributes, MaskArea m, boolean defacing,
-			TransformedPlanarImage transformedPlanarImage) {
+	private static Editable<PlanarImage> buildEditablePlanarImage(Attributes attributes, MaskArea m,
+			List<MaskArea> additionalMasks, boolean defacing, TransformedPlanarImage transformedPlanarImage) {
 		return img -> {
-			PlanarImage planarImage = buildPlanarImage(attributes, m, defacing, img);
+			PlanarImage planarImage = buildPlanarImage(attributes, m, additionalMasks, defacing, img);
 			transformedPlanarImage.setPlanarImage(planarImage);
 			return planarImage;
 		};
 	}
 
-	private static PlanarImage buildPlanarImage(Attributes attributes, MaskArea m, boolean defacing, PlanarImage img) {
+	private static PlanarImage buildPlanarImage(Attributes attributes, MaskArea m, List<MaskArea> additionalMasks,
+			boolean defacing, PlanarImage img) {
 		PlanarImage image = img;
 		if (defacing) {
 			image = Defacer.apply(attributes, image);
 		}
+		// Apply the primary mask (from static config or the first API mask)
 		if (m != null) {
 			image = MaskArea.drawShape(image.toMat(), m);
+		}
+		// Apply each additional mask (from the de-identification image API).
+		if (additionalMasks != null) {
+			for (MaskArea additional : additionalMasks) {
+				image = MaskArea.drawShape(image.toMat(), additional);
+			}
 		}
 		return image;
 	}
