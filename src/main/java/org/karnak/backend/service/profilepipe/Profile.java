@@ -9,11 +9,7 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
-
-import java.awt.Color;
-import java.awt.Shape;
+import java.awt.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -33,6 +30,7 @@ import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
 import org.dcm4che3.util.TagUtils;
 import org.jspecify.annotations.Nullable;
+import org.karnak.backend.data.converter.RectangleListConverter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
@@ -47,8 +45,10 @@ import org.karnak.backend.model.action.Remove;
 import org.karnak.backend.model.action.ReplaceNull;
 import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.expression.ExpressionResult;
+import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.HashContext;
+import org.karnak.backend.model.profilepipe.SensitiveTagDefinition;
 import org.karnak.backend.model.profiles.ActionTags;
 import org.karnak.backend.model.profiles.CleanPixelData;
 import org.karnak.backend.model.profiles.Defacing;
@@ -58,6 +58,9 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
+
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 @Slf4j
 public class Profile {
@@ -75,35 +78,37 @@ public class Profile {
 
 	private final Map<MaskStationCondition, MaskArea> maskMap;
 
-	public Profile(ProfileEntity profileEntity) {
+	private final DeidentifyImageService deidentifyImageService;
+
+	/**
+	 * Property key used to store additional {@link MaskArea} objects in the
+	 * {@link AttributeEditorContext#getProperties()} map. The main (first) mask is set
+	 * via {@link AttributeEditorContext#setMaskArea(MaskArea)}, and any extra masks (with
+	 * potentially different colors) are stored here so that {@code ForwardService} can
+	 * draw them all sequentially.
+	 */
+	public static final String ADDITIONAL_MASK_AREAS_KEY = "additionalMaskAreas";
+
+	/**
+	 * @param profileEntity the profile configuration
+	 * @param deidentifyImageService the service that calls the external de-id image API;
+	 * pass {@code null} to disable the API call
+	 */
+	public Profile(ProfileEntity profileEntity, DeidentifyImageService deidentifyImageService) {
 		this.maskMap = new HashMap<>();
 		this.pseudonym = new Pseudonym();
-		this.profiles = createProfilesList(profileEntity);
-		this.tagProfiles = profiles.stream().filter(p -> !(p instanceof CleanPixelData)).toList();
+		this.deidentifyImageService = deidentifyImageService;
+		this.profiles = this.createProfilesList(profileEntity);
+		this.tagProfiles = this.profiles.stream().filter(p -> !(p instanceof CleanPixelData)).toList();
 	}
 
-	public @Nullable MaskArea getMask(MaskStationCondition key) {
-		MaskArea mask = maskMap.get(key);
-		if (mask == null) {
-			// No exact match, remove image size information to match the station name
-			// only
-			key.setImageWidth(null);
-			key.setImageHeight(null);
-			mask = maskMap.get(key);
-		}
-		if (mask == null) {
-			// No match with the station name, get the universal mask
-			mask = maskMap.get(new MaskStationCondition("*"));
-		}
-		return mask;
-	}
-
-	public void addMask(String stationName, MaskArea maskArea) {
-		this.maskMap.put(new MaskStationCondition(stationName), maskArea);
-	}
-
-	public void addMask(MaskStationCondition key, MaskArea maskArea) {
-		this.maskMap.put(key, maskArea);
+	/**
+	 * Convenience constructor for tests and legacy callers that do not need the
+	 * de-identification image API.
+	 * @param profileEntity the profile configuration
+	 */
+	public Profile(ProfileEntity profileEntity) {
+		this(profileEntity, null);
 	}
 
 	public static List<ProfileItem> getProfileItems(ProfileEntity profileEntity) {
@@ -129,6 +134,30 @@ public class Profile {
 		return profileItems;
 	}
 
+	public @Nullable MaskArea getMask(MaskStationCondition key) {
+		MaskArea mask = this.maskMap.get(key);
+		if (mask == null) {
+			// No exact match, remove image size information to match the station name
+			// only
+			key.setImageWidth(null);
+			key.setImageHeight(null);
+			mask = this.maskMap.get(key);
+		}
+		if (mask == null) {
+			// No match with the station name, get the universal mask
+			mask = this.maskMap.get(new MaskStationCondition("*"));
+		}
+		return mask;
+	}
+
+	public void addMask(String stationName, MaskArea maskArea) {
+		this.maskMap.put(new MaskStationCondition(stationName), maskArea);
+	}
+
+	public void addMask(MaskStationCondition key, MaskArea maskArea) {
+		this.maskMap.put(key, maskArea);
+	}
+
 	public List<ProfileItem> createProfilesList(final ProfileEntity profileEntity) {
 		if (profileEntity != null) {
 			List<ProfileItem> profileItems = getProfileItems(profileEntity);
@@ -138,7 +167,7 @@ public class Profile {
 					color = ActionTags.hexadecimal2Color(m.getColor());
 				}
 				List<Shape> shapeList = m.getRectangles().stream().map(Shape.class::cast).toList();
-				addMask(new MaskStationCondition(m.getStationName(), m.getImageWidth(), m.getImageHeight()),
+				this.addMask(new MaskStationCondition(m.getStationName(), m.getImageWidth(), m.getImageHeight()),
 						new MaskArea(shapeList, color));
 			});
 			return profileItems;
@@ -155,7 +184,7 @@ public class Profile {
 
 			ActionItem currentAction = null;
 			ProfileItem currentProfile = null;
-			for (ProfileItem profileEntity : tagProfiles) {
+			for (ProfileItem profileEntity : this.tagProfiles) {
 				currentProfile = profileEntity;
 
 				if (profileEntity.getCondition() == null
@@ -178,7 +207,7 @@ public class Profile {
 						// Set the current action to null after execution and do not break
 						// out of the loop if other
 						// profile elements should be applied to the tag
-						execute(currentAction, dcm, tag, hmac);
+						this.execute(currentAction, dcm, tag, hmac);
 						currentAction = null;
 
 					}
@@ -203,13 +232,13 @@ public class Profile {
 				Sequence seq = dcm.getSequence(tag);
 				if (seq != null) {
 					for (Attributes d : seq) {
-						applyAction(d, dcmCopy, hmac, currentProfile, currentAction, context);
+						this.applyAction(d, dcmCopy, hmac, currentProfile, currentAction, context);
 					}
 				}
 			}
 			else {
 				if (currentAction != null) {
-					execute(currentAction, dcm, tag, hmac);
+					this.execute(currentAction, dcm, tag, hmac);
 				}
 			}
 		}
@@ -229,16 +258,45 @@ public class Profile {
 
 	public void applyCleanPixelData(Attributes dcmCopy, AttributeEditorContext context, ProfileEntity profileEntity) {
 		Object pix = dcmCopy.getValue(Tag.PixelData);
-		if ((pix instanceof BulkData || pix instanceof Fragments) && !profileEntity.getMaskEntities().isEmpty()
-				&& profiles.stream().anyMatch(CleanPixelData.class::isInstance)) {
+		if ((pix instanceof BulkData || pix instanceof Fragments)
+				&& this.profiles.stream().anyMatch(CleanPixelData.class::isInstance)) {
 			String sopClassUID = dcmCopy.getString(Tag.SOPClassUID);
 			if (!StringUtil.hasText(sopClassUID)) {
 				throw new IllegalStateException("DICOM Object does not contain sopClassUID");
 			}
-			MaskArea mask = getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
-					dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
-			if (isCleanPixelAllowedDependingImageType(dcmCopy, sopClassUID)
-					&& evaluateConditionCleanPixelData(dcmCopy)) {
+
+			MaskArea mask = null;
+
+			CleanPixelData cleanPixelDataItem = (CleanPixelData) this.profiles.stream()
+				.filter(CleanPixelData.class::isInstance)
+				.findFirst()
+				.orElse(null);
+
+			if (cleanPixelDataItem != null && cleanPixelDataItem.isAutomaticMasksGeneration()) {
+				List<MaskArea> apiMasks = this.fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
+				if (!apiMasks.isEmpty()) {
+					// Use the first API mask as the "primary" mask (set on the context),
+					// and store the rest as "additional" masks in context.properties.
+					mask = apiMasks.getFirst();
+					if (apiMasks.size() > 1) {
+						context.getProperties().put(ADDITIONAL_MASK_AREAS_KEY, apiMasks.subList(1, apiMasks.size()));
+					}
+				}
+			}
+			if (mask == null && (cleanPixelDataItem == null || !cleanPixelDataItem.isAutomaticMasksGeneration())) {
+				// Manual mask should be applied only if automatic mask generation is not
+				// enabled
+				// If the API doesn't return any mask (because of an internal error,
+				// unreachable, etc...)
+				// then the data should not be sent
+				mask = this.getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
+						dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
+			}
+
+			// A mask must be applied with all the US and Secondary Capture sopClassUID,
+			// and with BurnedInAnnotation
+			if (this.isCleanPixelAllowedDependingImageType(dcmCopy, sopClassUID)
+					&& this.evaluateConditionCleanPixelData(dcmCopy)) {
 				context.setMaskArea(mask);
 				if (mask == null) {
 					throw new IllegalStateException("Clean pixel is not applied: mask not defined in station name");
@@ -248,6 +306,56 @@ public class Profile {
 				context.setMaskArea(null);
 			}
 		}
+	}
+
+	private MaskArea toMaskArea(MaskBody maskBody){
+		Color color = StringUtil.hasText(maskBody.getColor())
+			? ActionTags.hexadecimal2Color(maskBody.getColor())
+			: null;
+
+		List<Shape> shapeList = new ArrayList<>();
+		if (maskBody.getRectangles() != null) {
+			for (String rectStr : maskBody.getRectangles()) {
+				Rectangle rect = RectangleListConverter.stringToRectangle(rectStr);
+				if (rect != null) {
+					shapeList.add(rect);
+				}
+			}
+		}
+
+		return shapeList.isEmpty() ? null : new MaskArea(shapeList, color);
+	}
+
+	/**
+	 * Calls the external de-identification image API and converts the returned masks into
+	 * a list of {@link MaskArea}.
+	 * @param dcmCopy DICOM attributes (original copy, before de-identification)
+	 * @return a list of {@link MaskArea}, possibly empty but never {@code null}
+	 */
+	private List<MaskArea> fetchMasksFromDeidentifyImageApi(Attributes dcmCopy, String tsuid) {
+		if (this.deidentifyImageService == null) {
+			return Collections.emptyList();
+		}
+		Map<String, String> sensitiveData = SensitiveTagDefinition.extractSensitiveData(dcmCopy);
+
+		List<MaskBody> masks = this.deidentifyImageService.callDeidentifyImageApi(dcmCopy, sensitiveData, tsuid);
+
+		if (masks.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		// Convert each MaskBody into a MaskArea.
+		// Each one becomes a separate MaskArea so different colors are preserved.
+		List<MaskArea> maskAreas = new ArrayList<>();
+		for (MaskBody maskBody : masks) {
+			MaskArea maskArea = this.toMaskArea(maskBody);
+			if (maskArea != null){
+				maskAreas.add(maskArea);
+			}
+		}
+
+		log.debug("De-identification image API returned {} mask area(s)", maskAreas.size());
+		return maskAreas;
 	}
 
 	/**
@@ -270,7 +378,7 @@ public class Profile {
 	 */
 	boolean evaluateConditionCleanPixelData(Attributes dcmCopy) {
 		boolean conditionCleanPixelData = true;
-		ProfileItem profileItemCleanPixelData = profiles.stream()
+		ProfileItem profileItemCleanPixelData = this.profiles.stream()
 			.filter(CleanPixelData.class::isInstance)
 			.findFirst()
 			.orElse(null);
@@ -284,7 +392,10 @@ public class Profile {
 	}
 
 	public void applyDefacing(Attributes dcmCopy, AttributeEditorContext context) {
-		ProfileItem profileItemDefacing = profiles.stream().filter(Defacing.class::isInstance).findFirst().orElse(null);
+		ProfileItem profileItemDefacing = this.profiles.stream()
+			.filter(Defacing.class::isInstance)
+			.findFirst()
+			.orElse(null);
 		if (profileItemDefacing != null && isCT(dcmCopy) && isAxial(dcmCopy)) {
 			if (profileItemDefacing.getCondition() == null) {
 				context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
@@ -310,35 +421,35 @@ public class Profile {
 	 */
 	public void applyDeIdentification(Attributes dcm, DestinationEntity destinationEntity, ProfileEntity profileEntity,
 			AttributeEditorContext context, ProjectEntity projectEntity) {
-		HMAC hmac = generateHMAC(dcm.getString(Tag.PatientID), projectEntity);
+		HMAC hmac = this.generateHMAC(dcm.getString(Tag.PatientID), projectEntity);
 		putSourceMdc(dcm);
 
 		String pseudonymValue = this.pseudonym.generatePseudonym(destinationEntity, dcm);
-		String newPatientID = generatePatientID(pseudonymValue, hmac).toString(16).toUpperCase();
+		String newPatientID = this.generatePatientID(pseudonymValue, hmac).toString(16).toUpperCase();
 
 		Attributes dcmCopy = new Attributes(dcm);
-		applyCleanPixelData(dcmCopy, context, profileEntity);
+		this.applyCleanPixelData(dcmCopy, context, profileEntity);
 		// Clean recognizable visual features option
-		applyDefacing(dcmCopy, context);
-		applyAction(dcm, dcmCopy, hmac, null, null, context);
+		this.applyDefacing(dcmCopy, context);
+		this.applyAction(dcm, dcmCopy, hmac, null, null, context);
 
 		ProjectEntity deidProject = destinationEntity.getDeIdentificationProjectEntity();
 		AttributesByDefault.setPatientModule(dcm, newPatientID, pseudonymValue, deidProject);
 		AttributesByDefault.setSOPCommonModule(dcm);
 		AttributesByDefault.setClinicalTrialAttributes(dcm, deidProject, pseudonymValue);
 
-		logClinicalEvent("Deidentify", dcm, deidProject.getName(), profileEntity.getName());
+		this.logClinicalEvent("Deidentify", dcm, deidProject.getName(), profileEntity.getName());
 	}
 
 	public void applyTagMorphing(Attributes dcm, DestinationEntity destinationEntity, ProfileEntity profileEntity,
 			AttributeEditorContext context, ProjectEntity projectEntity) {
-		HMAC hmac = generateHMAC(dcm.getString(Tag.PatientID), projectEntity);
+		HMAC hmac = this.generateHMAC(dcm.getString(Tag.PatientID), projectEntity);
 		putSourceMdc(dcm);
 
 		Attributes dcmCopy = new Attributes(dcm);
-		applyAction(dcm, dcmCopy, hmac, null, null, context);
+		this.applyAction(dcm, dcmCopy, hmac, null, null, context);
 
-		logClinicalEvent("TagMorphing", dcm, destinationEntity.getTagMorphingProjectEntity().getName(),
+		this.logClinicalEvent("TagMorphing", dcm, destinationEntity.getTagMorphingProjectEntity().getName(),
 				profileEntity.getName());
 	}
 
@@ -354,7 +465,8 @@ public class Profile {
 		MDC.put(prefix + "SeriesInstanceUID", dcm.getString(Tag.SeriesInstanceUID));
 		MDC.put("ProjectName", projectName);
 		MDC.put("ProfileName", profileName);
-		MDC.put("ProfileCodenames", profiles.stream().map(ProfileItem::getCodeName).collect(Collectors.joining("-")));
+		MDC.put("ProfileCodenames",
+				this.profiles.stream().map(ProfileItem::getCodeName).collect(Collectors.joining("-")));
 		log.debug(CLINICAL_MARKER, "");
 		MDC.clear();
 	}
@@ -365,7 +477,7 @@ public class Profile {
 		}
 
 		SecretEntity secretEntity = projectEntity.retrieveActiveSecret();
-		byte[] secret = secretEntity != null ? secretEntity.getSecretKey() : null;
+		byte[] secret = (secretEntity != null) ? secretEntity.getSecretKey() : null;
 		if (secret == null || secret.length != HMAC.KEY_BYTE_LENGTH) {
 			throw new IllegalStateException(
 					"Cannot build the HMAC no secret defined in the project associate at the destination");
