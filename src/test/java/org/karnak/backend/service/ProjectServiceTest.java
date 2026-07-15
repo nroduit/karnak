@@ -23,6 +23,7 @@ import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.ProjectGroupEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProjectGroupRepo;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.model.event.NodeEvent;
@@ -40,6 +41,8 @@ class ProjectServiceTest {
 
 	private final ProjectGroupRepo projectGroupRepositoryMock = Mockito.mock(ProjectGroupRepo.class);
 
+	private final DestinationRepo destinationRepositoryMock = Mockito.mock(DestinationRepo.class);
+
 	// Service
 	private ProjectService projectService;
 
@@ -56,7 +59,7 @@ class ProjectServiceTest {
 
 		// Build mocked service
 		projectService = new ProjectService(projectRepositoryMock, projectGroupRepositoryMock,
-				applicationEventPublisherMock);
+				destinationRepositoryMock, applicationEventPublisherMock);
 	}
 
 	@Test
@@ -91,6 +94,31 @@ class ProjectServiceTest {
 
 		// Test results
 		Mockito.verify(projectRepositoryMock, Mockito.times(1)).saveAndFlush(Mockito.any(ProjectEntity.class));
+		Mockito.verify(applicationEventPublisherMock, Mockito.times(2)).publishEvent(Mockito.any(NodeEvent.class));
+	}
+
+	@Test
+	void should_also_publish_event_for_tag_morphing_destinations() {
+		// The project is used for de-identification by one destination and for tag
+		// morphing by another. getDestinationEntities() only maps the de-identification
+		// side, so the tag-morphing destination must be queried and notified separately.
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+
+		DestinationEntity deidentifyDestination = new DestinationEntity();
+		deidentifyDestination.setForwardNodeEntity(new ForwardNodeEntity());
+		projectEntity.setDestinationEntities(List.of(deidentifyDestination));
+
+		DestinationEntity tagMorphingDestination = new DestinationEntity();
+		tagMorphingDestination.setForwardNodeEntity(new ForwardNodeEntity());
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(projectEntity))
+			.thenReturn(List.of(tagMorphingDestination));
+
+		// Call service
+		projectService.update(projectEntity);
+
+		// One event for the de-identification destination and one for the tag-morphing
+		// one
 		Mockito.verify(applicationEventPublisherMock, Mockito.times(2)).publishEvent(Mockito.any(NodeEvent.class));
 	}
 

@@ -25,6 +25,7 @@ import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProfileGroupRepo;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.enums.NodeEventType;
@@ -47,15 +48,18 @@ public class ProfilePipeService {
 
 	private final ProfileGroupRepo profileGroupRepo;
 
+	private final DestinationRepo destinationRepo;
+
 	// Event publisher: used to notify the DICOM gateway that a profile changed so it
 	// reloads its in-memory de-identification pipeline instead of keeping the old one.
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Autowired
 	public ProfilePipeService(final ProfileRepo profileRepo, final ProfileGroupRepo profileGroupRepo,
-			final ApplicationEventPublisher applicationEventPublisher) {
+			final DestinationRepo destinationRepo, final ApplicationEventPublisher applicationEventPublisher) {
 		this.profileRepo = profileRepo;
 		this.profileGroupRepo = profileGroupRepo;
+		this.destinationRepo = destinationRepo;
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
@@ -377,11 +381,17 @@ public class ProfilePipeService {
 
 	/**
 	 * Notify the DICOM gateway that a profile's content changed so it rebuilds its
-	 * in-memory de-identification pipeline. A {@link NodeEvent} is published for every
-	 * destination whose project references the edited profile; the gateway listens for
-	 * these events, bumps its configuration version and reloads on the next scheduled
-	 * check. Without this, edits to a profile are persisted but the gateway keeps
-	 * applying the previously loaded (stale) profile until it is restarted.
+	 * in-memory pipeline. A {@link NodeEvent} is published for every destination whose
+	 * project references the edited profile; the gateway listens for these events, bumps
+	 * its configuration version and reloads on the next scheduled check. Without this,
+	 * edits to a profile are persisted but the gateway keeps applying the previously
+	 * loaded (stale) profile until it is restarted.
+	 *
+	 * <p>
+	 * A project's profile can be applied either for de-identification or for tag
+	 * morphing. {@code ProjectEntity.getDestinationEntities()} only maps the
+	 * de-identification side, so tag-morphing destinations are queried explicitly,
+	 * otherwise editing a tag-morphing profile would not refresh them.
 	 * @param profileEntity the edited, persisted profile (ignored when {@code null})
 	 */
 	private void notifyGatewayProfileChanged(@Nullable ProfileEntity profileEntity) {
@@ -389,10 +399,12 @@ public class ProfilePipeService {
 			return;
 		}
 		for (ProjectEntity projectEntity : profileEntity.getProjectEntities()) {
-			if (projectEntity.getDestinationEntities() == null) {
-				continue;
+			if (projectEntity.getDestinationEntities() != null) {
+				for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+					applicationEventPublisher.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
+				}
 			}
-			for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+			for (DestinationEntity destinationEntity : destinationRepo.findByTagMorphingProjectEntity(projectEntity)) {
 				applicationEventPublisher.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
 			}
 		}

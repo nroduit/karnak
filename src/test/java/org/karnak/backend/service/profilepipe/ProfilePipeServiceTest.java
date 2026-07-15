@@ -33,6 +33,7 @@ import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProfileGroupRepo;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.model.event.NodeEvent;
@@ -51,6 +52,8 @@ class ProfilePipeServiceTest {
 
 	private final ProfileGroupRepo profileGroupRepositoryMock = Mockito.mock(ProfileGroupRepo.class);
 
+	private final DestinationRepo destinationRepositoryMock = Mockito.mock(DestinationRepo.class);
+
 	// Event publisher
 	private final ApplicationEventPublisher applicationEventPublisherMock = Mockito
 		.mock(ApplicationEventPublisher.class);
@@ -62,7 +65,7 @@ class ProfilePipeServiceTest {
 	public void setUp() {
 		// Build mocked service
 		profilePipeService = new ProfilePipeService(profileRepositoryMock, profileGroupRepositoryMock,
-				applicationEventPublisherMock);
+				destinationRepositoryMock, applicationEventPublisherMock);
 		// saveAndFlush returns the entity it was given, like the real repository
 		Mockito.when(profileRepositoryMock.saveAndFlush(Mockito.any(ProfileEntity.class)))
 			.thenAnswer(invocation -> invocation.getArgument(0));
@@ -278,6 +281,25 @@ class ProfilePipeServiceTest {
 
 		// One NodeEvent per destination so the gateway reloads the edited profile
 		Mockito.verify(applicationEventPublisherMock, Mockito.times(2)).publishEvent(Mockito.any(NodeEvent.class));
+	}
+
+	@Test
+	void editing_a_tag_morphing_profile_notifies_its_tag_morphing_destinations() {
+		ProfileEntity profile = profileWithElements(1L, 1);
+		// A project referencing the profile, but with no de-identification destinations:
+		// its destinations use the profile for tag morphing (separate FK).
+		ProjectEntity project = new ProjectEntity();
+		project.setDestinationEntities(new ArrayList<>());
+		profile.setProjectEntities(List.of(project));
+		DestinationEntity tagMorphingDestination = new DestinationEntity();
+		tagMorphingDestination.setForwardNodeEntity(new ForwardNodeEntity("FWD_AET"));
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(project))
+			.thenReturn(List.of(tagMorphingDestination));
+		Mockito.when(profileRepositoryMock.findById(1L)).thenReturn(Optional.of(profile));
+
+		profilePipeService.saveElement(1L, actionTagsElement(null, "Keep name", 0));
+
+		Mockito.verify(applicationEventPublisherMock, Mockito.times(1)).publishEvent(Mockito.any(NodeEvent.class));
 	}
 
 	@Test
