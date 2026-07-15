@@ -17,19 +17,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
+import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.MaskEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.repo.ProfileGroupRepo;
 import org.karnak.backend.data.repo.ProfileRepo;
+import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.enums.ProfileItemType;
+import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.karnak.frontend.util.CollatorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.weasis.core.util.annotations.Generated;
 
@@ -42,10 +47,16 @@ public class ProfilePipeService {
 
 	private final ProfileGroupRepo profileGroupRepo;
 
+	// Event publisher: used to notify the DICOM gateway that a profile changed so it
+	// reloads its in-memory de-identification pipeline instead of keeping the old one.
+	private final ApplicationEventPublisher applicationEventPublisher;
+
 	@Autowired
-	public ProfilePipeService(final ProfileRepo profileRepo, final ProfileGroupRepo profileGroupRepo) {
+	public ProfilePipeService(final ProfileRepo profileRepo, final ProfileGroupRepo profileGroupRepo,
+			final ApplicationEventPublisher applicationEventPublisher) {
 		this.profileRepo = profileRepo;
 		this.profileGroupRepo = profileGroupRepo;
+		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
 	public List<ProfileEntity> getAllProfiles() {
@@ -185,7 +196,9 @@ public class ProfilePipeService {
 		attachElement(profile, element, position);
 		profile.addProfilePipe(element);
 		enforceBasicProfileLast(profile);
-		return profileRepo.saveAndFlush(profile);
+		ProfileEntity saved = profileRepo.saveAndFlush(profile);
+		notifyGatewayProfileChanged(saved);
+		return saved;
 	}
 
 	/** Delete an element from a profile and re-index the remaining positions (0..n-1). */
@@ -196,7 +209,9 @@ public class ProfilePipeService {
 		}
 		profile.getProfileElementEntities().removeIf(e -> Objects.equals(e.getId(), elementId));
 		enforceBasicProfileLast(profile);
-		return profileRepo.saveAndFlush(profile);
+		ProfileEntity saved = profileRepo.saveAndFlush(profile);
+		notifyGatewayProfileChanged(saved);
+		return saved;
 	}
 
 	/**
@@ -217,7 +232,9 @@ public class ProfilePipeService {
 			}
 		}
 		enforceBasicProfileLast(profile);
-		return profileRepo.saveAndFlush(profile);
+		ProfileEntity saved = profileRepo.saveAndFlush(profile);
+		notifyGatewayProfileChanged(saved);
+		return saved;
 	}
 
 	private static @Nullable ProfileElementEntity findElement(ProfileEntity profile, Long elementId) {
@@ -298,7 +315,9 @@ public class ProfilePipeService {
 		profile.getMaskEntities().clear();
 		populateProfile(profile, profilePipeYml);
 		enforceBasicProfileLast(profile);
-		return profileRepo.saveAndFlush(profile);
+		ProfileEntity saved = profileRepo.saveAndFlush(profile);
+		notifyGatewayProfileChanged(saved);
+		return saved;
 	}
 
 	/** Build mask and (ordered) element children from a YAML body and attach them. */
@@ -346,12 +365,37 @@ public class ProfilePipeService {
 	}
 
 	public ProfileEntity updateProfile(ProfileEntity profileEntity) {
-		return profileRepo.saveAndFlush(profileEntity);
+		ProfileEntity saved = profileRepo.saveAndFlush(profileEntity);
+		notifyGatewayProfileChanged(saved);
+		return saved;
 	}
 
 	public void deleteProfile(ProfileEntity profileEntity) {
 		profileRepo.deleteById(profileEntity.getId());
 		profileRepo.flush();
+	}
+
+	/**
+	 * Notify the DICOM gateway that a profile's content changed so it rebuilds its
+	 * in-memory de-identification pipeline. A {@link NodeEvent} is published for every
+	 * destination whose project references the edited profile; the gateway listens for
+	 * these events, bumps its configuration version and reloads on the next scheduled
+	 * check. Without this, edits to a profile are persisted but the gateway keeps
+	 * applying the previously loaded (stale) profile until it is restarted.
+	 * @param profileEntity the edited, persisted profile (ignored when {@code null})
+	 */
+	private void notifyGatewayProfileChanged(@Nullable ProfileEntity profileEntity) {
+		if (profileEntity == null || profileEntity.getProjectEntities() == null) {
+			return;
+		}
+		for (ProjectEntity projectEntity : profileEntity.getProjectEntities()) {
+			if (projectEntity.getDestinationEntities() == null) {
+				continue;
+			}
+			for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+				applicationEventPublisher.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
+			}
+		}
 	}
 
 }
