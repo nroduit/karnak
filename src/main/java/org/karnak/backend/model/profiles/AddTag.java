@@ -33,6 +33,8 @@ public class AddTag extends AbstractProfileItem {
 
 	private boolean tagAdded;
 
+	private String currentInstanceUID;
+
 	private final StandardDICOM standardDICOM;
 
 	private static final String LOG_PATTERN = "SOPInstanceUID={} TAG={} ACTION={} REASON={}";
@@ -45,11 +47,18 @@ public class AddTag extends AbstractProfileItem {
 		ActionItem actionByDefault = new Keep("K");
 		profileValidation();
 		mapTagsToAction(tagsAction, null, actionByDefault);
+        this.currentInstanceUID = "";
+        this.tagAdded = false;
 	}
 
 	@Override
 	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
-		if (!tagAdded) {
+        String currentUID = dcm.getString(Tag.SOPInstanceUID);
+        if (!currentInstanceUID.equals(currentUID) && currentUID != null) {
+            currentInstanceUID = currentUID;
+            tagAdded = false;
+        }
+        if (!tagAdded) {
 			IncludedTagEntity t = tagEntities.getFirst();
 			String tagValue = StandardDICOM.cleanTagPath(t.getTagValue());
 
