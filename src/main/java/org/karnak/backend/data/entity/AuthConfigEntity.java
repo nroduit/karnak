@@ -17,8 +17,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnTransformer;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.AuthConfigType;
@@ -26,8 +29,11 @@ import org.karnak.backend.enums.AuthConfigType;
 @Entity(name = "AuthConfig")
 @Table(name = "auth_config")
 @NullUnmarked
+@Getter
+@Setter
 public class AuthConfigEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -63,62 +69,6 @@ public class AuthConfigEntity implements Serializable {
 	@Column(name = "type")
 	@NotNull
 	private AuthConfigType authConfigType;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	public String getClientSecret() {
-		return clientSecret;
-	}
-
-	public void setClientSecret(String clientSecret) {
-		this.clientSecret = clientSecret;
-	}
-
-	public String getClientId() {
-		return clientId;
-	}
-
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
-
-	public String getAccessTokenUrl() {
-		return accessTokenUrl;
-	}
-
-	public void setAccessTokenUrl(String accessTokenUrl) {
-		this.accessTokenUrl = accessTokenUrl;
-	}
-
-	public String getScope() {
-		return scope;
-	}
-
-	public void setScope(String scope) {
-		this.scope = scope;
-	}
-
-	public AuthConfigType getAuthConfigType() {
-		return authConfigType;
-	}
-
-	public void setAuthConfigType(AuthConfigType authConfigType) {
-		this.authConfigType = authConfigType;
-	}
 
 	@Override
 	public String toString() {

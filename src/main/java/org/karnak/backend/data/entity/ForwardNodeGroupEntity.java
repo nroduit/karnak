@@ -15,8 +15,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 /**
@@ -26,40 +29,24 @@ import org.jspecify.annotations.NullUnmarked;
 @Entity(name = "ForwardNodeGroup")
 @Table(name = "forward_node_group")
 @NullUnmarked
+@Getter
+@Setter
 public class ForwardNodeGroupEntity implements NamedGroupEntity, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	@NotBlank(message = "Group name is mandatory")
 	private String name;
 
 	public ForwardNodeGroupEntity() {
 	}
 
 	public ForwardNodeGroupEntity(String name) {
-		this.name = name;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Override
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@NotBlank(message = "Group name is mandatory")
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public void setName(String name) {
 		this.name = name;
 	}
 

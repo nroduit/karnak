@@ -11,13 +11,15 @@ package org.karnak.backend.data.entity;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import java.io.Serial;
 import java.io.Serializable;
 
 @Entity(name = "IncludedTag")
 @DiscriminatorValue("IncludedTag")
 public class IncludedTagEntity extends TagEntity implements Serializable {
 
-	private static final long serialVersionUID = 6644786515302502293L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	public IncludedTagEntity() {
 	}

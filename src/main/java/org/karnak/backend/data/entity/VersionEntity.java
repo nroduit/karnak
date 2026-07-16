@@ -14,36 +14,28 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Version")
 @Table(name = "version")
 @NullUnmarked
+@Getter
+@Setter
 public class VersionEntity implements Serializable {
 
-	private Long id;
-
-	private long gatewaySetup;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
+	private Long id;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public long getGatewaySetup() {
-		return gatewaySetup;
-	}
-
-	public void setGatewaySetup(long gatewaySetup) {
-		this.gatewaySetup = gatewaySetup;
-	}
+	private long gatewaySetup;
 
 	@Override
 	public boolean equals(Object o) {

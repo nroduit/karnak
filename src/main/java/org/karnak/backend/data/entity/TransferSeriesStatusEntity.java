@@ -21,9 +21,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.jspecify.annotations.NullUnmarked;
@@ -38,20 +41,34 @@ import org.karnak.backend.util.DateFormat;
 @NullUnmarked
 @Entity(name = "TransferSeriesStatus")
 @Table(name = "transfer_series_status")
+@Getter
+@Setter
 public class TransferSeriesStatusEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@SequenceGenerator(name = "TRANSFER_SERIES_STATUS_GEN", sequenceName = "transfer_series_status_sequence",
+			allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_STATUS_GEN")
 	private Long id;
 
+	@ManyToOne(targetEntity = ForwardNodeEntity.class)
+	@JoinColumn(name = "forward_node_id", nullable = false, insertable = false, updatable = false)
 	@CsvRecurse
 	private ForwardNodeEntity forwardNodeEntity;
 
+	@Column(name = "forward_node_id")
 	private Long forwardNodeId;
 
+	@ManyToOne(targetEntity = DestinationEntity.class)
+	@JoinColumn(name = "destination_id", nullable = false, insertable = false, updatable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	@CsvRecurse
 	private DestinationEntity destinationEntity;
 
+	@Column(name = "destination_id")
 	private Long destinationId;
 
 	private String patientIdOriginal;
@@ -111,241 +128,6 @@ public class TransferSeriesStatusEntity implements Serializable {
 	private String reasons;
 
 	public TransferSeriesStatusEntity() {
-	}
-
-	@Id
-	@SequenceGenerator(name = "TRANSFER_SERIES_STATUS_GEN", sequenceName = "transfer_series_status_sequence",
-			allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_STATUS_GEN")
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@ManyToOne(targetEntity = ForwardNodeEntity.class)
-	@JoinColumn(name = "forward_node_id", nullable = false, insertable = false, updatable = false)
-	public ForwardNodeEntity getForwardNodeEntity() {
-		return forwardNodeEntity;
-	}
-
-	public void setForwardNodeEntity(ForwardNodeEntity forwardNodeEntity) {
-		this.forwardNodeEntity = forwardNodeEntity;
-	}
-
-	@Column(name = "forward_node_id")
-	public Long getForwardNodeId() {
-		return forwardNodeId;
-	}
-
-	public void setForwardNodeId(Long forwardNodeId) {
-		this.forwardNodeId = forwardNodeId;
-	}
-
-	@ManyToOne(targetEntity = DestinationEntity.class)
-	@JoinColumn(name = "destination_id", nullable = false, insertable = false, updatable = false)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public DestinationEntity getDestinationEntity() {
-		return destinationEntity;
-	}
-
-	public void setDestinationEntity(DestinationEntity destinationEntity) {
-		this.destinationEntity = destinationEntity;
-	}
-
-	@Column(name = "destination_id")
-	public Long getDestinationId() {
-		return destinationId;
-	}
-
-	public void setDestinationId(Long destinationId) {
-		this.destinationId = destinationId;
-	}
-
-	public String getPatientIdOriginal() {
-		return patientIdOriginal;
-	}
-
-	public void setPatientIdOriginal(String patientIdOriginal) {
-		this.patientIdOriginal = patientIdOriginal;
-	}
-
-	public String getPatientIdToSend() {
-		return patientIdToSend;
-	}
-
-	public void setPatientIdToSend(String patientIdToSend) {
-		this.patientIdToSend = patientIdToSend;
-	}
-
-	public String getAccessionNumberOriginal() {
-		return accessionNumberOriginal;
-	}
-
-	public void setAccessionNumberOriginal(String accessionNumberOriginal) {
-		this.accessionNumberOriginal = accessionNumberOriginal;
-	}
-
-	public String getAccessionNumberToSend() {
-		return accessionNumberToSend;
-	}
-
-	public void setAccessionNumberToSend(String accessionNumberToSend) {
-		this.accessionNumberToSend = accessionNumberToSend;
-	}
-
-	public String getStudyDescriptionOriginal() {
-		return studyDescriptionOriginal;
-	}
-
-	public void setStudyDescriptionOriginal(String studyDescriptionOriginal) {
-		this.studyDescriptionOriginal = studyDescriptionOriginal;
-	}
-
-	public String getStudyDescriptionToSend() {
-		return studyDescriptionToSend;
-	}
-
-	public void setStudyDescriptionToSend(String studyDescriptionToSend) {
-		this.studyDescriptionToSend = studyDescriptionToSend;
-	}
-
-	public LocalDateTime getStudyDateOriginal() {
-		return studyDateOriginal;
-	}
-
-	public void setStudyDateOriginal(LocalDateTime studyDateOriginal) {
-		this.studyDateOriginal = studyDateOriginal;
-	}
-
-	public LocalDateTime getStudyDateToSend() {
-		return studyDateToSend;
-	}
-
-	public void setStudyDateToSend(LocalDateTime studyDateToSend) {
-		this.studyDateToSend = studyDateToSend;
-	}
-
-	public String getStudyUidOriginal() {
-		return studyUidOriginal;
-	}
-
-	public void setStudyUidOriginal(String studyUidOriginal) {
-		this.studyUidOriginal = studyUidOriginal;
-	}
-
-	public String getStudyUidToSend() {
-		return studyUidToSend;
-	}
-
-	public void setStudyUidToSend(String studyUidToSend) {
-		this.studyUidToSend = studyUidToSend;
-	}
-
-	public String getSerieDescriptionOriginal() {
-		return serieDescriptionOriginal;
-	}
-
-	public void setSerieDescriptionOriginal(String serieDescriptionOriginal) {
-		this.serieDescriptionOriginal = serieDescriptionOriginal;
-	}
-
-	public String getSerieDescriptionToSend() {
-		return serieDescriptionToSend;
-	}
-
-	public void setSerieDescriptionToSend(String serieDescriptionToSend) {
-		this.serieDescriptionToSend = serieDescriptionToSend;
-	}
-
-	public LocalDateTime getSerieDateOriginal() {
-		return serieDateOriginal;
-	}
-
-	public void setSerieDateOriginal(LocalDateTime serieDateOriginal) {
-		this.serieDateOriginal = serieDateOriginal;
-	}
-
-	public LocalDateTime getSerieDateToSend() {
-		return serieDateToSend;
-	}
-
-	public void setSerieDateToSend(LocalDateTime serieDateToSend) {
-		this.serieDateToSend = serieDateToSend;
-	}
-
-	public String getSerieUidOriginal() {
-		return serieUidOriginal;
-	}
-
-	public void setSerieUidOriginal(String serieUidOriginal) {
-		this.serieUidOriginal = serieUidOriginal;
-	}
-
-	public String getSerieUidToSend() {
-		return serieUidToSend;
-	}
-
-	public void setSerieUidToSend(String serieUidToSend) {
-		this.serieUidToSend = serieUidToSend;
-	}
-
-	public String getModality() {
-		return modality;
-	}
-
-	public void setModality(String modality) {
-		this.modality = modality;
-	}
-
-	public String getSopClassUids() {
-		return sopClassUids;
-	}
-
-	public void setSopClassUids(String sopClassUids) {
-		this.sopClassUids = sopClassUids;
-	}
-
-	public long getInstances() {
-		return instances;
-	}
-
-	public void setInstances(long instances) {
-		this.instances = instances;
-	}
-
-	public long getSent() {
-		return sent;
-	}
-
-	public void setSent(long sent) {
-		this.sent = sent;
-	}
-
-	public long getErrors() {
-		return errors;
-	}
-
-	public void setErrors(long errors) {
-		this.errors = errors;
-	}
-
-	public LocalDateTime getFirstSeen() {
-		return firstSeen;
-	}
-
-	public void setFirstSeen(LocalDateTime firstSeen) {
-		this.firstSeen = firstSeen;
-	}
-
-	public LocalDateTime getLastSeen() {
-		return lastSeen;
-	}
-
-	public void setLastSeen(LocalDateTime lastSeen) {
-		this.lastSeen = lastSeen;
 	}
 
 	@Transient

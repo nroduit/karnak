@@ -20,10 +20,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.awt.Rectangle;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.converter.RectangleListConverter;
@@ -32,12 +35,21 @@ import org.karnak.backend.data.converter.RectangleListToStringListConverter;
 @Entity(name = "Masks")
 @Table(name = "masks")
 @NullUnmarked
+@Getter
+@Setter
 public class MaskEntity implements Serializable {
 
-	private static final long serialVersionUID = 1833858684629178458L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@JsonIgnore
 	private Long id;
 
+	@ManyToOne
+	@JoinColumn(name = "profile_id", nullable = false)
+	@JsonIgnore
 	private ProfileEntity profileEntity;
 
 	private String stationName;
@@ -48,6 +60,7 @@ public class MaskEntity implements Serializable {
 
 	private String color;
 
+	@Convert(converter = RectangleListConverter.class)
 	private List<Rectangle> rectangles = new ArrayList<>();
 
 	public MaskEntity() {
@@ -77,68 +90,9 @@ public class MaskEntity implements Serializable {
 		rectangles.add(rect);
 	}
 
-	@Convert(converter = RectangleListConverter.class)
 	@JsonSerialize(converter = RectangleListToStringListConverter.class)
 	public List<Rectangle> getRectangles() {
 		return rectangles;
-	}
-
-	public void setRectangles(List<Rectangle> rectangles) {
-		this.rectangles = rectangles;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@JsonIgnore
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "profile_id", nullable = false)
-	@JsonIgnore
-	public ProfileEntity getProfileEntity() {
-		return profileEntity;
-	}
-
-	public void setProfileEntity(ProfileEntity profileEntity) {
-		this.profileEntity = profileEntity;
-	}
-
-	public String getStationName() {
-		return stationName;
-	}
-
-	public void setStationName(String stationName) {
-		this.stationName = stationName;
-	}
-
-	public Long getImageWidth() {
-		return imageWidth;
-	}
-
-	public void setImageWidth(Long imageWidth) {
-		this.imageWidth = imageWidth;
-	}
-
-	public Long getImageHeight() {
-		return imageHeight;
-	}
-
-	public void setImageHeight(Long imageHeight) {
-		this.imageHeight = imageHeight;
-	}
-
-	public String getColor() {
-		return color;
-	}
-
-	public void setColor(String color) {
-		this.color = color;
 	}
 
 	@Override

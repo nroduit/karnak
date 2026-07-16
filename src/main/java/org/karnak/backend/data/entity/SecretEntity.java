@@ -16,20 +16,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity
 @Table(name = "secret")
 @NullUnmarked
+@Getter
+@Setter
 public class SecretEntity implements Serializable {
 
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	@ManyToOne
+	@JoinColumn(name = "project_id")
 	private ProjectEntity projectEntity;
 
 	private byte[] secretKey;
@@ -50,50 +62,6 @@ public class SecretEntity implements Serializable {
 		this.projectEntity = projectEntity;
 		this.secretKey = secretKey;
 		this.creationDate = LocalDateTime.now(ZoneId.of("CET"));
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "project_id")
-	public ProjectEntity getProjectEntity() {
-		return projectEntity;
-	}
-
-	public void setProjectEntity(ProjectEntity projectEntity) {
-		this.projectEntity = projectEntity;
-	}
-
-	public byte[] getSecretKey() {
-		return secretKey;
-	}
-
-	public void setSecretKey(byte[] key) {
-		this.secretKey = key;
-	}
-
-	public LocalDateTime getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(LocalDateTime creationDate) {
-		this.creationDate = creationDate;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
 	}
 
 	@Override

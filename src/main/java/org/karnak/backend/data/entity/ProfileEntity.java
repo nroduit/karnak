@@ -26,11 +26,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Profile")
@@ -39,8 +42,15 @@ import org.jspecify.annotations.NullUnmarked;
 @JsonPropertyOrder({ "name", "version", "minimumKarnakVersion", "defaultIssuerOfPatientID", "profileElementEntities",
 		"maskEntities" })
 @NullUnmarked
+@Getter
+@Setter
 public class ProfileEntity implements Serializable {
 
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private String name;
@@ -49,19 +59,26 @@ public class ProfileEntity implements Serializable {
 
 	private String minimumKarnakVersion;
 
+	@Transient // not use in db but used in warning msg profile
 	private String defaultIssuerOfPatientId; // not use in db but used in warning msg
 
 	// profile
 
+	@Column(name = "bydefault")
 	private Boolean byDefault;
 
+	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
 
+	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<MaskEntity> maskEntities = new HashSet<>();
 
+	@OneToMany(mappedBy = "profileEntity", fetch = FetchType.EAGER)
 	private List<ProjectEntity> projectEntities;
 
 	// Optional organizational group (null = shown at the root of the list)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "profile_group_id")
 	private ProfileGroupEntity group;
 
 	public ProfileEntity() {
@@ -84,15 +101,9 @@ public class ProfileEntity implements Serializable {
 		this.byDefault = byDefault;
 	}
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	@JsonIgnore
 	public Long getId() {
 		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public void addProfilePipe(ProfileElementEntity profileElementEntity) {
@@ -101,22 +112,6 @@ public class ProfileEntity implements Serializable {
 
 	public void addMask(MaskEntity maskEntity) {
 		this.maskEntities.add(maskEntity);
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
 	}
 
 	@JsonGetter("minimumKarnakVersion")
@@ -130,7 +125,6 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonGetter("defaultIssuerOfPatientID")
-	@Transient // not use in db but used in warning msg profile
 	public String getDefaultIssuerOfPatientId() {
 		return defaultIssuerOfPatientId;
 	}
@@ -141,7 +135,6 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonGetter("profileElements")
-	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	public Set<ProfileElementEntity> getProfileElementEntities() {
 		return profileElementEntities;
 	}
@@ -152,17 +145,11 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonIgnore
-	@Column(name = "bydefault")
 	public Boolean getByDefault() {
 		return byDefault;
 	}
 
-	public void setByDefault(Boolean bydefault) {
-		this.byDefault = bydefault;
-	}
-
 	@JsonGetter("masks")
-	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	public Set<MaskEntity> getMaskEntities() {
 		return maskEntities;
 	}
@@ -172,25 +159,14 @@ public class ProfileEntity implements Serializable {
 		this.maskEntities = maskEntities;
 	}
 
-	@OneToMany(mappedBy = "profileEntity", fetch = FetchType.EAGER)
 	@JsonIgnore
 	public List<ProjectEntity> getProjectEntities() {
 		return projectEntities;
 	}
 
-	public void setProjectEntities(List<ProjectEntity> projectEntities) {
-		this.projectEntities = projectEntities;
-	}
-
 	@JsonIgnore
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "profile_group_id")
 	public ProfileGroupEntity getGroup() {
 		return group;
-	}
-
-	public void setGroup(ProfileGroupEntity group) {
-		this.group = group;
 	}
 
 	@Override

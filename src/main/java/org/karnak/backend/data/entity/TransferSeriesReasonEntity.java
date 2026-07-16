@@ -16,8 +16,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 /**
@@ -27,12 +30,20 @@ import org.jspecify.annotations.NullUnmarked;
 @NullUnmarked
 @Entity(name = "TransferSeriesReason")
 @Table(name = "transfer_series_reason")
+@Getter
+@Setter
 public class TransferSeriesReasonEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@SequenceGenerator(name = "TRANSFER_SERIES_REASON_GEN", sequenceName = "transfer_series_reason_sequence",
+			allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_REASON_GEN")
 	private Long id;
 
+	@Column(name = "series_status_id")
 	private Long seriesStatusId;
 
 	private String reason;
@@ -45,43 +56,6 @@ public class TransferSeriesReasonEntity implements Serializable {
 	public TransferSeriesReasonEntity(Long seriesStatusId, String reason, long count) {
 		this.seriesStatusId = seriesStatusId;
 		this.reason = reason;
-		this.count = count;
-	}
-
-	@Id
-	@SequenceGenerator(name = "TRANSFER_SERIES_REASON_GEN", sequenceName = "transfer_series_reason_sequence",
-			allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_REASON_GEN")
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@Column(name = "series_status_id")
-	public Long getSeriesStatusId() {
-		return seriesStatusId;
-	}
-
-	public void setSeriesStatusId(Long seriesStatusId) {
-		this.seriesStatusId = seriesStatusId;
-	}
-
-	public String getReason() {
-		return reason;
-	}
-
-	public void setReason(String reason) {
-		this.reason = reason;
-	}
-
-	public long getCount() {
-		return count;
-	}
-
-	public void setCount(long count) {
 		this.count = count;
 	}
 
