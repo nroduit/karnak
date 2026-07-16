@@ -14,6 +14,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.router.BeforeEvent;
@@ -60,6 +61,8 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 
 	private VerticalLayout barAndGridLayout;
 
+	private VerticalLayout rightPanel;
+
 	private Upload uploadProfile;
 
 	private UI ui;
@@ -76,8 +79,6 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 		initComponents();
 		buildLayout();
 
-		add(barAndGridLayout, profileEditorPanel);
-
 		addAttachListener(event -> this.ui = event.getUI());
 	}
 
@@ -90,8 +91,7 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 			if (idProfilePipe != null) {
 				currentProfileEntity = profileLogic.retrieveProfile(idProfilePipe);
 			}
-			remove(profileErrorView);
-			add(profileEditorPanel);
+			showEditorPanel();
 		}
 		profileGrid.selectRow(currentProfileEntity);
 		profileEditorPanel.setProfile(currentProfileEntity);
@@ -99,9 +99,8 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 
 	private void buildLayout() {
 		setSizeFull();
-		profileErrorView.setWidth("75%");
-		profileEditorPanel.setWidth("75%");
-		profileEditorPanel.setHeightFull();
+		setPadding(false);
+		setSpacing(false);
 
 		Button newProfileButton = ButtonFactory.createAddButton("New profile");
 		newProfileButton.addClickListener(event -> openNewProfileDialog());
@@ -115,7 +114,39 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 		barAndGridLayout.setFlexGrow(0, uploadProfile);
 		barAndGridLayout.setFlexGrow(0, addGroupButton);
 		barAndGridLayout.setFlexGrow(1, profileGrid);
-		barAndGridLayout.setWidth("25%");
+		barAndGridLayout.setSizeFull();
+
+		profileEditorPanel.setSizeFull();
+		profileErrorView.setSizeFull();
+
+		rightPanel = new VerticalLayout();
+		rightPanel.setPadding(false);
+		rightPanel.setSpacing(false);
+		rightPanel.setSizeFull();
+		rightPanel.add(profileEditorPanel);
+
+		// Draggable splitter between the profile list (left) and the edit panel (right).
+		SplitLayout splitLayout = new SplitLayout(barAndGridLayout, rightPanel);
+		splitLayout.setSizeFull();
+		splitLayout.setSplitterPosition(25);
+		add(splitLayout);
+	}
+
+	/** Show the profile editor panel on the right side of the split. */
+	public void showEditorPanel() {
+		rightPanel.removeAll();
+		rightPanel.add(profileEditorPanel);
+	}
+
+	/** Show the profile error view on the right side of the split. */
+	public void showErrorView() {
+		rightPanel.removeAll();
+		rightPanel.add(profileErrorView);
+	}
+
+	/** Clear the right side of the split (e.g. after a profile is deleted). */
+	public void clearRightPanel() {
+		rightPanel.removeAll();
 	}
 
 	private void initComponents() {

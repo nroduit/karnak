@@ -32,14 +32,14 @@ import org.springframework.stereotype.Component;
  * the decoded <b>access token (Bearer token)</b>, not from the ID token. Per OAuth2/OIDC
  * semantics, the ID token authenticates the user to the client (its audience is the
  * client id) while the access token is the credential presented to resource servers and
- * is the standard place for authorization data. Its presence in the access token does
- * not depend on an "Add to ID token" toggle in the IDP client scope configuration,
- * unlike the ID token, whose content can legitimately vary between environments
- * (e.g. present in a dev realm, absent in a cert realm) without this being a
- * misconfiguration. Only the roles matching a {@link SecurityRole} type (admin,
- * investigator, user) are mapped, as "ROLE_"-prefixed granted authorities. The IDP must
- * therefore be configured to include the roles of the "karnak" client in the access
- * token (in Keycloak: client scope "roles", mapper "Add to access token" enabled).
+ * is the standard place for authorization data. Its presence in the access token does not
+ * depend on an "Add to ID token" toggle in the IDP client scope configuration, unlike the
+ * ID token, whose content can legitimately vary between environments (e.g. present in a
+ * dev realm, absent in a cert realm) without this being a misconfiguration. Only the
+ * roles matching a {@link SecurityRole} type (admin, investigator, user) are mapped, as
+ * "ROLE_"-prefixed granted authorities. The IDP must therefore be configured to include
+ * the roles of the "karnak" client in the access token (in Keycloak: client scope
+ * "roles", mapper "Add to access token" enabled).
  */
 @Component
 @Slf4j
@@ -57,8 +57,7 @@ public class OidcRoleAuthoritiesMapper {
 	 * @param accessToken the decoded Bearer/access token
 	 * @return the granted authorities matching a known {@link SecurityRole}
 	 */
-	@NonNull
-	public Set<GrantedAuthority> mapAuthorities(Jwt accessToken) {
+	@NonNull public Set<GrantedAuthority> mapAuthorities(Jwt accessToken) {
 		Set<String> roleNames = extractRoleNames(accessToken.getClaims());
 		Set<GrantedAuthority> mappedAuthorities = roleNames.stream()
 			.map(SecurityRole::fromType)
@@ -78,17 +77,15 @@ public class OidcRoleAuthoritiesMapper {
 	}
 
 	/**
-	 * Returns the role names of the "karnak" entry of the "resource_access" claim of
-	 * the access token.
+	 * Returns the role names of the "karnak" entry of the "resource_access" claim of the
+	 * access token.
 	 */
 	private static Set<String> extractRoleNames(Map<String, Object> claims) {
 		Object resourceAccessClaim = claims.get(RESOURCE_ACCESS_CLAIM);
 		if (!(resourceAccessClaim instanceof Map<?, ?> resourceAccess)) {
-			log.warn(
-					"OIDC (access token): no \"{}\" claim found. The IDP must include the client roles of the "
-							+ "\"{}\" client in the access token (Keycloak: client scope \"roles\", mapper "
-							+ "\"Add to access token\" enabled).",
-					RESOURCE_ACCESS_CLAIM, KARNAK_CLIENT);
+			log.warn("OIDC (access token): no \"{}\" claim found. The IDP must include the client roles of the "
+					+ "\"{}\" client in the access token (Keycloak: client scope \"roles\", mapper "
+					+ "\"Add to access token\" enabled).", RESOURCE_ACCESS_CLAIM, KARNAK_CLIENT);
 			return Set.of();
 		}
 		if (!resourceAccess.containsKey(KARNAK_CLIENT)) {
@@ -99,14 +96,9 @@ public class OidcRoleAuthoritiesMapper {
 		}
 		if (resourceAccess.get(KARNAK_CLIENT) instanceof Map<?, ?> resource
 				&& resource.get(ROLES_CLAIM) instanceof Collection<?> roles) {
-			return roles.stream()
-				.filter(String.class::isInstance)
-				.map(String.class::cast)
-				.collect(Collectors.toSet());
+			return roles.stream().filter(String.class::isInstance).map(String.class::cast).collect(Collectors.toSet());
 		}
 		return Set.of();
 	}
 
 }
-
-

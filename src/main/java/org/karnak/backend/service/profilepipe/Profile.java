@@ -9,6 +9,9 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
+
 import java.awt.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -19,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -58,9 +60,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
-
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 @Slf4j
 public class Profile {
@@ -308,10 +307,9 @@ public class Profile {
 		}
 	}
 
-	private MaskArea toMaskArea(MaskBody maskBody){
-		Color color = StringUtil.hasText(maskBody.getColor())
-			? ActionTags.hexadecimal2Color(maskBody.getColor())
-			: null;
+	private MaskArea toMaskArea(MaskBody maskBody) {
+		Color color = StringUtil.hasText(maskBody.getColor()) ? ActionTags.hexadecimal2Color(maskBody.getColor())
+				: null;
 
 		List<Shape> shapeList = new ArrayList<>();
 		if (maskBody.getRectangles() != null) {
@@ -349,7 +347,7 @@ public class Profile {
 		List<MaskArea> maskAreas = new ArrayList<>();
 		for (MaskBody maskBody : masks) {
 			MaskArea maskArea = this.toMaskArea(maskBody);
-			if (maskArea != null){
+			if (maskArea != null) {
 				maskAreas.add(maskArea);
 			}
 		}
