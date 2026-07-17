@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
 import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
+import org.karnak.backend.data.repo.TransferSeriesInstanceRepo;
 import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
 import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
 import org.karnak.backend.data.repo.specification.TransferSeriesSpecification;
@@ -62,13 +63,17 @@ public class TransferMonitoringService {
 
 	private final TransferSeriesReasonRepo reasonRepo;
 
+	private final TransferSeriesInstanceRepo instanceRepo;
+
 	private final MonitoringWriteService monitoringWriteService;
 
 	@Autowired
 	public TransferMonitoringService(final TransferSeriesStatusRepo seriesRepo,
-			final TransferSeriesReasonRepo reasonRepo, final MonitoringWriteService monitoringWriteService) {
+			final TransferSeriesReasonRepo reasonRepo, final TransferSeriesInstanceRepo instanceRepo,
+			final MonitoringWriteService monitoringWriteService) {
 		this.seriesRepo = seriesRepo;
 		this.reasonRepo = reasonRepo;
+		this.instanceRepo = instanceRepo;
 		this.monitoringWriteService = monitoringWriteService;
 	}
 
@@ -107,6 +112,7 @@ public class TransferMonitoringService {
 	/** Delete all monitoring records. */
 	public void deleteAllTransferStatus() {
 		reasonRepo.deleteAllInBatch();
+		instanceRepo.deleteAllInBatch();
 		seriesRepo.deleteAllInBatch();
 	}
 
@@ -129,9 +135,7 @@ public class TransferMonitoringService {
 		CSVWriter writer = new CSVWriter(streamWriter,
 				exportSettings.getDelimiter() != null ? exportSettings.getDelimiter().charAt(0)
 						: ExportSettings.DEFAULT_CSV_DELIMITER,
-				exportSettings.getQuoteCharacter() != null ? exportSettings.getQuoteCharacter().charAt(0)
-						: CSVWriter.DEFAULT_QUOTE_CHARACTER,
-				CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
+				CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
 
 		StatefulBeanToCsv<TransferSeriesStatusEntity> beanToCsv = new StatefulBeanToCsvBuilder<TransferSeriesStatusEntity>(
 				writer)

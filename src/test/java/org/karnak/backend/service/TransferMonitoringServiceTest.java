@@ -21,6 +21,7 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
+import org.karnak.backend.data.repo.TransferSeriesInstanceRepo;
 import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
 import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
 import org.karnak.backend.data.repo.specification.TransferSeriesSpecification;
@@ -37,19 +38,21 @@ class TransferMonitoringServiceTest {
 
 	private final TransferSeriesReasonRepo reasonRepoMock = Mockito.mock(TransferSeriesReasonRepo.class);
 
+	private final TransferSeriesInstanceRepo instanceRepoMock = Mockito.mock(TransferSeriesInstanceRepo.class);
+
 	private final MonitoringWriteService monitoringWriteServiceMock = Mockito.mock(MonitoringWriteService.class);
 
 	private TransferMonitoringService transferMonitoringService;
 
 	@BeforeEach
 	void setUp() {
-		transferMonitoringService = new TransferMonitoringService(seriesRepoMock, reasonRepoMock,
+		transferMonitoringService = new TransferMonitoringService(seriesRepoMock, reasonRepoMock, instanceRepoMock,
 				monitoringWriteServiceMock);
 	}
 
 	private static TransferMonitoringEvent event() {
 		Attributes attributes = new Attributes();
-		MonitoringEntry entry = MonitoringEntry.of(2L, 1L, attributes, attributes, true, false, null, "OT",
+		MonitoringEntry entry = MonitoringEntry.of(2L, 1L, attributes, attributes, true, false, false, null, "OT",
 				"1.2.840.10008.5.1.4.1.1.7");
 		return new TransferMonitoringEvent(entry);
 	}
@@ -104,6 +107,7 @@ class TransferMonitoringServiceTest {
 		transferMonitoringService.deleteAllTransferStatus();
 
 		Mockito.verify(reasonRepoMock, Mockito.times(1)).deleteAllInBatch();
+		Mockito.verify(instanceRepoMock, Mockito.times(1)).deleteAllInBatch();
 		Mockito.verify(seriesRepoMock, Mockito.times(1)).deleteAllInBatch();
 	}
 

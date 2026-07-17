@@ -164,3 +164,7 @@ and/or hostname (`SourceNodeService`).
 - The Vaadin frontend build is driven by Maven (`vaadin-maven-plugin`,
   `pnpmEnable=true`); `package.json` / `vite.config.ts` exist but you normally
   don't run npm/pnpm directly — let the Maven production/portable profile do it.
+- **Do not use Lumo** in frontend styling — the Lumo theme and its CSS custom
+  properties (`var(--lumo-*)`, e.g. `--lumo-space-m`, `--lumo-primary-color`) are
+  deprecated and must not be used in new or edited code. Use concrete CSS values
+  (e.g. `1rem`, `16px`) or the project's own styles instead.

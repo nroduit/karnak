@@ -311,7 +311,11 @@ public class NotificationService {
 			TransferSeriesStatusEntity series, Set<String> reasons) {
 		SerieSummaryNotification serieSummaryNotification = new SerieSummaryNotification();
 		serieSummaryNotification.setNbTransferSent(series.getSent());
-		serieSummaryNotification.setNbTransferNotSent(series.getInstances() - series.getSent());
+		// Not-transferred comes from the delivery counters (errors + excluded), the same
+		// buckets the monitoring view shows. It is not derived as instances minus sent
+		// because retries, duplicate re-sends and blank-UID events inflate the
+		// instances counter.
+		serieSummaryNotification.setNbTransferNotSent(series.getErrors() + series.getExcluded());
 		serieSummaryNotification.setContainsError(series.getErrors() > 0);
 		// Distinct reasons (truncated for the email summary: the full reason stays in the
 		// database and is shown in the monitoring view)

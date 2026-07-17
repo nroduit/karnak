@@ -18,6 +18,6 @@ import java.time.LocalDateTime;
  */
 public record SeriesActivity(String serieUid, String serieUidToSend, String serieDescription,
 		String serieDescriptionToSend, String modality, String sopClassUids, LocalDateTime serieDateOriginal,
-		LocalDateTime serieDateToSend, long instances, long sent, long errors, LocalDateTime firstSeen,
-		LocalDateTime lastSeen) {
+		LocalDateTime serieDateToSend, long instances, long sent, long errors, long retries, long excluded,
+		LocalDateTime firstSeen, LocalDateTime lastSeen) {
 }

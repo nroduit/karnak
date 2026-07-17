@@ -33,10 +33,17 @@ import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.util.DateFormat;
 
 /**
- * Aggregated monitoring row: one per (forward node, destination, series). Counters
- * ({@code instances}/{@code sent}/{@code errors}) are incremented as instances are
- * transferred; the study/series context is captured once on first occurrence. The
- * per-reason error breakdown lives in {@link TransferSeriesReasonEntity}.
+ * Aggregated monitoring row: one per (forward node, destination, series). Counters are
+ * incremented as instances are transferred; the study/series context is captured once on
+ * first occurrence. Each outcome carries one delivery bucket — {@code sent},
+ * {@code errors} or {@code excluded} (neither sent nor errored, e.g. filtered or aborted)
+ * — and, when it can be attributed to an instance, one novelty bucket: {@code instances}
+ * (distinct SOP instances, by original SOP Instance UID) or {@code retries} (re-sends of
+ * an already-seen instance, including HTTP 409 "already present"). An outcome with no
+ * original SOP Instance UID cannot be attributed, so it updates only its delivery bucket
+ * and neither novelty bucket. The identities that back the novelty split live in
+ * {@link TransferSeriesInstanceEntity} and the per-reason error breakdown in
+ * {@link TransferSeriesReasonEntity}.
  */
 @NullUnmarked
 @Entity(name = "TransferSeriesStatus")
@@ -113,9 +120,13 @@ public class TransferSeriesStatusEntity implements Serializable {
 
 	private long instances;
 
+	private long retries;
+
 	private long sent;
 
 	private long errors;
+
+	private long excluded;
 
 	@CsvDate(DateFormat.FORMAT_DDMMYYYY_SLASH_HHMMSS_2POINTS_SSSSSS_POINT)
 	private LocalDateTime firstSeen;
