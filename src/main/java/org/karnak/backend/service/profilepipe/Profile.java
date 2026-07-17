@@ -77,7 +77,7 @@ public class Profile {
 
 	private final Map<MaskStationCondition, MaskArea> maskMap;
 
-	private final DeidentifyImageService deidentifyImageService;
+	private final @Nullable DeidentifyImageService deidentifyImageService;
 
 	/**
 	 * Property key used to store additional {@link MaskArea} objects in the
@@ -93,7 +93,7 @@ public class Profile {
 	 * @param deidentifyImageService the service that calls the external de-id image API;
 	 * pass {@code null} to disable the API call
 	 */
-	public Profile(ProfileEntity profileEntity, DeidentifyImageService deidentifyImageService) {
+	public Profile(ProfileEntity profileEntity, @Nullable DeidentifyImageService deidentifyImageService) {
 		this.maskMap = new HashMap<>();
 		this.pseudonym = new Pseudonym();
 		this.deidentifyImageService = deidentifyImageService;
@@ -307,7 +307,7 @@ public class Profile {
 		}
 	}
 
-	private MaskArea toMaskArea(MaskBody maskBody) {
+	private @Nullable MaskArea toMaskArea(MaskBody maskBody) {
 		Color color = StringUtil.hasText(maskBody.getColor()) ? ActionTags.hexadecimal2Color(maskBody.getColor())
 				: null;
 

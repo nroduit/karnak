@@ -23,6 +23,7 @@ import org.dcm4che3.data.BulkData;
 import org.dcm4che3.data.Fragments;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -178,6 +179,11 @@ public class DeidentifyImageService {
 		catch (Exception ex) {
 			throw new DeidentifyImageException(
 					"Unexpected error calling de-identification image API: " + ex.getMessage(), ex);
+		}
+
+		if (jsonResponse == null) {
+			log.warn("Empty response body from de-identification image API — no masks to apply");
+			return Collections.emptyList();
 		}
 
 		// Parse the JSON response
@@ -343,7 +349,7 @@ public class DeidentifyImageService {
 	 * Returns a JSON object with "red", "green", "blue" arrays, or null if no palette LUT
 	 * data is found.
 	 */
-	String buildPaletteColorLutJson(Attributes dcmAttributes) {
+	@Nullable String buildPaletteColorLutJson(Attributes dcmAttributes) {
 		String photometric = dcmAttributes.getString(Tag.PhotometricInterpretation);
 		if (!"PALETTE COLOR".equals(photometric)) {
 			return null;
