@@ -12,6 +12,34 @@
   color: var(--vaadin-text-color-secondary);
 }
 
+/* ===== Form grouping helpers =====
+ * Used by the destination panels (de-identification, tag morphing) to give a
+ * readable hierarchy without Lumo tokens.
+ */
+
+/* Advisory note shown inside a form card: an informative caution, not an error. */
+.karnak-note-text {
+  display: block;
+  color: var(--vaadin-text-color-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--aura-orange);
+  background-color: color-mix(in srgb, var(--aura-orange) 8%, transparent);
+  border-radius: 4px;
+}
+
+/* Small uppercase heading that groups related fields inside a form card. */
+.karnak-section-title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: var(--aura-font-weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vaadin-text-color-secondary);
+  margin: 0.5rem 0 0.15rem;
+}
+
 /* ===== Titles =====
  * Shared heading style built on Aura's default type scale (font-size-l +
  * semibold weight + matching line-height) instead of the raw `large` / `bolder`

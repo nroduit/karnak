@@ -11,7 +11,6 @@ package org.karnak.frontend.forwardnode.edit.destination.component;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.Binder;
 import lombok.Getter;
@@ -19,7 +18,6 @@ import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.ProjectDropDown;
-import org.karnak.frontend.util.UIS;
 import org.weasis.core.util.annotations.Generated;
 
 @Getter
@@ -108,14 +106,20 @@ public class TagMorphingComponent extends VerticalLayout {
 		// Padding
 		setPadding(true);
 
-		// Add components in div
-		tagMorphingDiv.add(projectDropDown, profileLabel);
+		// Keep the resolved-profile label tight under the project field
+		VerticalLayout content = new VerticalLayout();
+		content.setPadding(false);
+		content.setSpacing(false);
+		content.setWidthFull();
+		content.getStyle().set("gap", "0.25rem");
+		content.add(projectDropDown, profileLabel);
+		tagMorphingDiv.add(content);
 
 		// If checkbox is checked set div visible, invisible otherwise
 		tagMorphingDiv.setVisible(tagMorphingCheckbox.getValue());
 
-		// Add components in view
-		add(UIS.setWidthFull(new HorizontalLayout(tagMorphingCheckbox, tagMorphingDiv)));
+		// Checkbox as a full-width header row, the form fields stacked below it
+		add(tagMorphingCheckbox, tagMorphingDiv);
 	}
 
 }

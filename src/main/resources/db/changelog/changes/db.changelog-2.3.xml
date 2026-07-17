@@ -57,4 +57,15 @@
     </addColumn>
   </changeSet>
 
+  <!-- Drop reason rows left all-zero by this migration: rows written under the old single
+       `count` column (dropped in 2.3-3) could not be split into the new buckets, so they
+       now read 0/0/0 and would surface in the monitoring tree as a meaningless "OK" leaf
+       with no instances. Any row written by the new code always has error_count +
+       excluded_count >= 1, so this only removes the stale pre-migration leftovers. -->
+  <changeSet author="karnak" id="2.3-5">
+    <delete tableName="transfer_series_reason">
+      <where>error_count = 0 AND excluded_count = 0 AND retry_count = 0</where>
+    </delete>
+  </changeSet>
+
 </databaseChangeLog>

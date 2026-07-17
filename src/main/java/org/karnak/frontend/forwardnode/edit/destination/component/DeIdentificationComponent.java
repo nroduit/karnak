@@ -16,7 +16,7 @@ import static org.karnak.backend.enums.PseudonymType.EXTID_IN_TAG;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -27,7 +27,6 @@ import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.ProjectDropDown;
-import org.karnak.frontend.util.UIS;
 import org.weasis.core.util.annotations.Generated;
 
 @Getter
@@ -40,11 +39,11 @@ public class DeIdentificationComponent extends VerticalLayout {
 
 	private static final String LABEL_DISCLAIMER_DEIDENTIFICATION = "In order to ensure complete de-identification, visual verification of metadata and images is necessary.";
 
-	private static final String LABEL_DEFAULT_ISSUER = "If this field is filled, it will be used with the Patient ID to ensure unique patient identification across different healthcare systems.";
+	private static final String LABEL_DEFAULT_ISSUER = "If filled, it is combined with the Patient ID to ensure unique patient identification across different healthcare systems.";
 
-	private static final String LABEL_CHECKBOX_SKIP_ISSUER = "Does the Issuer of Patient ID of the image to de-identify should be ignored when retrieving the pseudonym in the cache ? (only for \"Pseudonym is already stored in KARNAK\")";
+	private static final String LABEL_CHECKBOX_SKIP_ISSUER = "Ignore Issuer of Patient ID";
 
-	private static final String TOOLTIP_SKIP_ISSUER = "When checked, the Issuer of Patient ID of the image to de-identify will not be taken into account when generating the key to retrieve the pseudonym in the cache.";
+	private static final String HELPER_SKIP_ISSUER = "When checked, the Issuer of Patient ID is not used to build the key that retrieves the pseudonym from the cache. Only applies to \"Pseudonym is already stored in KARNAK\".";
 
 	// Components
 	private Checkbox deIdentificationCheckbox;
@@ -113,22 +112,53 @@ public class DeIdentificationComponent extends VerticalLayout {
 		// Padding
 		setPadding(true);
 
-		// Group issuer text field + skip checkbox in a dedicated block
+		// Group issuer text field + skip checkbox in a dedicated block, with enough
+		// spacing that each field reads together with its own helper text
 		VerticalLayout issuerLayout = new VerticalLayout();
 		issuerLayout.setPadding(false);
 		issuerLayout.setSpacing(false);
 		issuerLayout.setWidthFull();
+		issuerLayout.getStyle().set("gap", "1.25rem");
 		issuerLayout.add(issuerOfPatientIDByDefault, skipIssuerOfPatientIdCheckbox);
 
-		// Add components in deidentification div
-		deIdentificationDiv.add(disclaimerLabel, projectDropDown, profileLabel, pseudonymTypeSelect,
-				pseudonymDicomTagDiv, pseudonymApi, issuerLayout);
+		// Keep the resolved-profile label tight under the project field, so it reads as
+		// that field's helper rather than a separate control
+		VerticalLayout projectGroup = new VerticalLayout();
+		projectGroup.setPadding(false);
+		projectGroup.setSpacing(false);
+		projectGroup.setWidthFull();
+		projectGroup.getStyle().set("gap", "0.25rem");
+		projectGroup.add(projectDropDown, profileLabel);
+
+		// Stack the controls in two readable sections: which project/profile to apply,
+		// then how the pseudonym is generated. A generous gap keeps each field visually
+		// bound to its own helper text instead of the next component's label.
+		VerticalLayout content = new VerticalLayout();
+		content.setPadding(false);
+		content.setSpacing(false);
+		content.setWidthFull();
+		content.getStyle().set("gap", "1.25rem");
+		content.add(disclaimerLabel, sectionTitle("Project & profile"), projectGroup,
+				sectionTitle("Pseudonym generation"), pseudonymTypeSelect, pseudonymDicomTagDiv, pseudonymApi,
+				issuerLayout);
+		deIdentificationDiv.add(content);
 
 		// If checkbox is checked set div visible, invisible otherwise
 		deIdentificationDiv.setVisible(deIdentificationCheckbox.getValue());
 
-		// Add components in view
-		add(UIS.setWidthFull(new HorizontalLayout(deIdentificationCheckbox, deIdentificationDiv)));
+		// Checkbox as a full-width header row, the form fields stacked below it
+		add(deIdentificationCheckbox, deIdentificationDiv);
+	}
+
+	/**
+	 * Build a small uppercase heading that groups related fields inside the card
+	 * @param text Heading text
+	 * @return Styled heading span
+	 */
+	private static Span sectionTitle(String text) {
+		Span title = new Span(text);
+		title.addClassName("karnak-section-title");
+		return title;
 	}
 
 	/**
@@ -192,8 +222,9 @@ public class DeIdentificationComponent extends VerticalLayout {
 	private void buildPseudonymTypeSelect() {
 		pseudonymTypeSelect = new Select<>();
 		pseudonymTypeSelect.setLabel("Pseudonym type");
-		pseudonymTypeSelect.setWidth("100%");
-		pseudonymTypeSelect.getStyle().set("right", "0px");
+		pseudonymTypeSelect.setWidthFull();
+		pseudonymTypeSelect.setHelperText(
+				"How Karnak obtains the pseudonym: from its own cache, from a DICOM tag in the image, or from an external API.");
 		pseudonymTypeSelect.setItems(CACHE_EXTID.getValue(), EXTID_IN_TAG.getValue(), EXTID_API.getValue());
 	}
 
@@ -202,9 +233,8 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void buildDisclaimerLabel() {
 		disclaimerLabel = new NativeLabel(LABEL_DISCLAIMER_DEIDENTIFICATION);
-		disclaimerLabel.addClassName("karnak-error-text");
-		disclaimerLabel.setMinWidth("75%");
-		disclaimerLabel.getStyle().set("right", "0px");
+		disclaimerLabel.addClassName("karnak-note-text");
+		disclaimerLabel.setWidthFull();
 	}
 
 	/**
@@ -213,9 +243,9 @@ public class DeIdentificationComponent extends VerticalLayout {
 	private void buildIssuerOfPatientID() {
 		issuerOfPatientIDByDefault = new TextField();
 		issuerOfPatientIDByDefault.setLabel("Issuer of Patient ID by default");
-		issuerOfPatientIDByDefault.setWidth("100%");
-		issuerOfPatientIDByDefault.setPlaceholder(LABEL_DEFAULT_ISSUER);
-		UIS.setTooltip(issuerOfPatientIDByDefault, LABEL_DEFAULT_ISSUER);
+		issuerOfPatientIDByDefault.setWidthFull();
+		issuerOfPatientIDByDefault.setPlaceholder("e.g. hospital identifier");
+		issuerOfPatientIDByDefault.setHelperText(LABEL_DEFAULT_ISSUER);
 	}
 
 	/**
@@ -225,7 +255,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	private void buildSkipIssuerOfPatientIdCheckbox() {
 		skipIssuerOfPatientIdCheckbox = new Checkbox(LABEL_CHECKBOX_SKIP_ISSUER);
 		skipIssuerOfPatientIdCheckbox.setVisible(false);
-		UIS.setTooltip(skipIssuerOfPatientIdCheckbox, TOOLTIP_SKIP_ISSUER);
+		skipIssuerOfPatientIdCheckbox.setHelperText(HELPER_SKIP_ISSUER);
 	}
 
 	/**

@@ -189,4 +189,66 @@ class NotificationServiceTest {
 		assertTrue(notifications.get(0).getSerieSummaryNotifications().get(0).isContainsError());
 	}
 
+	@Test
+	void reports_only_the_delta_since_the_last_notification() {
+		// 2 instances sent earlier (already notified) then excluded on re-send: snapshot
+		// holds notifiedSent=2 / notifiedExcluded=0, current sent=2 / excluded=2. Only
+		// the
+		// 2 new exclusions are reported, not the 2 historical sends.
+		DestinationEntity destinationEntity = new DestinationEntity();
+		destinationEntity.setDesidentification(false);
+		destinationEntity.setLastTransfer(LocalDateTime.MIN);
+		destinationEntity.setId(1L);
+		destinationEntity.setActivateNotification(true);
+		when(destinationRepositoryMock.findAll()).thenReturn(List.of(destinationEntity));
+
+		TransferSeriesStatusEntity series = new TransferSeriesStatusEntity();
+		series.setDestinationEntity(destinationEntity);
+		series.setForwardNodeId(2L);
+		series.setForwardNodeEntity(new ForwardNodeEntity());
+		series.setStudyUidOriginal("studyUidOriginal");
+		series.setSerieUidOriginal("serieUidOriginal");
+		series.setInstances(2);
+		series.setSent(2);
+		series.setExcluded(2);
+		series.setNotifiedSent(2);
+		series.setNotifiedExcluded(0);
+		when(transferSeriesStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(series));
+
+		List<TransferMonitoringNotification> notifications = notificationService.buildNotificationsToSend();
+
+		assertEquals(1, notifications.size());
+		assertEquals(0, notifications.get(0).getSerieSummaryNotifications().get(0).getNbTransferSent());
+		assertEquals(2, notifications.get(0).getSerieSummaryNotifications().get(0).getNbTransferNotSent());
+		// Snapshot advanced to the current counters for the next notification.
+		Mockito.verify(transferSeriesStatusRepoMock).saveAll(Mockito.anyList());
+		assertEquals(2, series.getNotifiedExcluded());
+	}
+
+	@Test
+	void series_with_no_new_outcome_since_last_notification_is_not_reported() {
+		// Snapshot already equals the current counters (nothing new): no notification.
+		DestinationEntity destinationEntity = new DestinationEntity();
+		destinationEntity.setDesidentification(false);
+		destinationEntity.setLastTransfer(LocalDateTime.MIN);
+		destinationEntity.setId(1L);
+		destinationEntity.setActivateNotification(true);
+		when(destinationRepositoryMock.findAll()).thenReturn(List.of(destinationEntity));
+
+		TransferSeriesStatusEntity series = new TransferSeriesStatusEntity();
+		series.setDestinationEntity(destinationEntity);
+		series.setForwardNodeId(2L);
+		series.setForwardNodeEntity(new ForwardNodeEntity());
+		series.setStudyUidOriginal("studyUidOriginal");
+		series.setSerieUidOriginal("serieUidOriginal");
+		series.setInstances(2);
+		series.setSent(2);
+		series.setNotifiedSent(2);
+		when(transferSeriesStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(series));
+
+		List<TransferMonitoringNotification> notifications = notificationService.buildNotificationsToSend();
+
+		assertTrue(notifications.isEmpty());
+	}
+
 }

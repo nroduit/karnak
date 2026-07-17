@@ -128,6 +128,19 @@ public class TransferSeriesStatusEntity implements Serializable {
 
 	private long excluded;
 
+	// Snapshot of sent / errors / excluded at the last email notification, so a
+	// notification reports only the delta since it was last sent (not the cumulative
+	// totals, which would re-report outcomes already notified when the row is touched
+	// again). Not part of the CSV export (columns are defined explicitly elsewhere).
+	@Column(name = "notified_sent")
+	private long notifiedSent;
+
+	@Column(name = "notified_errors")
+	private long notifiedErrors;
+
+	@Column(name = "notified_excluded")
+	private long notifiedExcluded;
+
 	@CsvDate(DateFormat.FORMAT_DDMMYYYY_SLASH_HHMMSS_2POINTS_SSSSSS_POINT)
 	private LocalDateTime firstSeen;
 

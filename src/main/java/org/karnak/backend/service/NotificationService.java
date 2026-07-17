@@ -134,10 +134,34 @@ public class NotificationService {
 				// Gather series by Source and Study: <Source , <Study, List<Series>>>
 				Map<Long, Map<String, List<TransferSeriesStatusEntity>>> seriesBySourceAndStudy = gatherSeriesBySourceAndStudy(
 						seriesLastCheck);
-				// Build the notifications to send
+				// Build the notifications to send (reads the previous per-series snapshot
+				// to compute the delta)
 				buildTransferMonitoringNotifications(transferMonitoringNotifications, seriesBySourceAndStudy);
+				// Advance the per-series snapshot to the current counters so the next
+				// notification reports only what happens afterwards. Done for every
+				// touched
+				// series (not only the reported ones), consistent with emailLastCheck
+				// being
+				// advanced above regardless of send outcome. No transfer is in progress
+				// for
+				// this destination (checkDestinationLastVerification), so counters are
+				// stable here.
+				snapshotNotifiedCounters(seriesLastCheck);
 			});
 		return transferMonitoringNotifications;
+	}
+
+	/** Records the current sent / errors / excluded counters as the notified baseline. */
+	private void snapshotNotifiedCounters(List<TransferSeriesStatusEntity> series) {
+		if (series.isEmpty()) {
+			return;
+		}
+		series.forEach(s -> {
+			s.setNotifiedSent(s.getSent());
+			s.setNotifiedErrors(s.getErrors());
+			s.setNotifiedExcluded(s.getExcluded());
+		});
+		transferSeriesStatusRepo.saveAll(series);
 	}
 
 	/** Builds a notification for each (source, study) group and adds it to the list. */
@@ -169,13 +193,22 @@ public class NotificationService {
 			transferMonitoringNotification
 				.setEmailSendingEnabled(firstSeries.getDestinationEntity().isActivateNotification());
 
-			// Build the serie notification part
+			// Build the serie notification part, keeping only series with something new
+			// to
+			// report since the last notification (a non-zero sent / not-sent delta). A
+			// series touched only by retries or duplicate re-sends has no delta and is
+			// dropped; if none remain there is nothing to notify for this study.
 			Map<Long, Set<String>> reasonsBySeries = loadReasons(studySeries);
 			boolean isDeIdentify = firstSeries.getDestinationEntity().isDesidentification();
-			transferMonitoringNotification.setSerieSummaryNotifications(studySeries.stream()
+			List<SerieSummaryNotification> serieSummaries = studySeries.stream()
 				.map(series -> buildSerieSummaryNotification(isDeIdentify, series,
 						reasonsBySeries.getOrDefault(series.getId(), Set.of())))
-				.toList());
+				.filter(ssm -> ssm.getNbTransferSent() > 0 || ssm.getNbTransferNotSent() > 0)
+				.toList();
+			if (serieSummaries.isEmpty()) {
+				return null;
+			}
+			transferMonitoringNotification.setSerieSummaryNotifications(serieSummaries);
 
 			// Has at least one file not transferred
 			boolean hasAtLeastOneFileInError = transferMonitoringNotification.getSerieSummaryNotifications()
@@ -310,13 +343,19 @@ public class NotificationService {
 	private SerieSummaryNotification buildSerieSummaryNotification(boolean isDestinationDeIdentify,
 			TransferSeriesStatusEntity series, Set<String> reasons) {
 		SerieSummaryNotification serieSummaryNotification = new SerieSummaryNotification();
-		serieSummaryNotification.setNbTransferSent(series.getSent());
-		// Not-transferred comes from the delivery counters (errors + excluded), the same
-		// buckets the monitoring view shows. It is not derived as instances minus sent
-		// because retries, duplicate re-sends and blank-UID events inflate the
-		// instances counter.
-		serieSummaryNotification.setNbTransferNotSent(series.getErrors() + series.getExcluded());
-		serieSummaryNotification.setContainsError(series.getErrors() > 0);
+		// Report only the delta since this series was last notified (current counters
+		// minus the snapshot taken at the previous notification), so outcomes already
+		// reported are not counted again when the row is touched by a later transfer.
+		// Not-transferred uses the delivery counters (errors + excluded), the same
+		// buckets
+		// the monitoring view shows; it is not derived as instances minus sent because
+		// retries, duplicate re-sends and blank-UID events inflate the instances counter.
+		long sentDelta = Math.max(0, series.getSent() - series.getNotifiedSent());
+		long errorsDelta = Math.max(0, series.getErrors() - series.getNotifiedErrors());
+		long excludedDelta = Math.max(0, series.getExcluded() - series.getNotifiedExcluded());
+		serieSummaryNotification.setNbTransferSent(sentDelta);
+		serieSummaryNotification.setNbTransferNotSent(errorsDelta + excludedDelta);
+		serieSummaryNotification.setContainsError(errorsDelta > 0);
 		// Distinct reasons (truncated for the email summary: the full reason stays in the
 		// database and is shown in the monitoring view)
 		serieSummaryNotification.setUnTransferedReasons(reasons.stream()

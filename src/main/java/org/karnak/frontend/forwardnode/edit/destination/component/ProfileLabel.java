@@ -15,6 +15,12 @@ import org.weasis.core.util.annotations.Generated;
 @Generated()
 public class ProfileLabel extends Div {
 
+	public ProfileLabel() {
+		// Render the resolved profile as secondary helper text under the project field
+		addClassName("karnak-secondary-text");
+		getStyle().set("font-size", "0.875rem");
+	}
+
 	public void setShowValue(String text) {
 		removeAll();
 		add(text);
