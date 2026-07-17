@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Split the per-reason accumulator into the same delivery buckets as the series row:
+       `error_count` for hard transfer errors and `excluded_count` for excluded (aborted /
+       filtered) outcomes, replacing the single `count` that lumped both together. The old
+       `count` cannot be split for historical rows (transient, purged after the retention
+       window) so it is dropped. -->
+
+  <changeSet author="karnak" id="2.3-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_reason" columnName="error_count"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_reason">
+      <column name="error_count" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.3-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_reason" columnName="excluded_count"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_reason">
+      <column name="excluded_count" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.3-3">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="transfer_series_reason" columnName="count"/>
+    </preConditions>
+    <dropColumn tableName="transfer_series_reason" columnName="count"/>
+  </changeSet>
+
+  <!-- Novelty axis, orthogonal to error/excluded: how many outcomes carrying the reason
+       hit an already-seen instance (a re-send), mirroring the series `retries` column. -->
+  <changeSet author="karnak" id="2.3-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_reason" columnName="retry_count"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_reason">
+      <column name="retry_count" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

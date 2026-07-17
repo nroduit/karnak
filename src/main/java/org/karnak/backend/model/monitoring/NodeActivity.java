@@ -15,5 +15,5 @@ package org.karnak.backend.model.monitoring;
  * destination has de-identification / tag-morphing enabled.
  */
 public record NodeActivity(Long forwardNodeId, String forwardAet, long studies, long series, long instances, long sent,
-		long errors, long deidentified, long tagMorphed) {
+		long errors, long retries, long excluded, long deidentified, long tagMorphed) {
 }

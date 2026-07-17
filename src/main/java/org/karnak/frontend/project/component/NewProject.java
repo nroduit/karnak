@@ -51,6 +51,7 @@ public class NewProject extends HorizontalLayout {
 		setElements();
 
 		this.dialog = new NewItemDialog("New project", "Add", this.textResearchName, this.profileDropDown);
+		this.dialog.setWidth("400px");
 
 		this.buttonNewProject = ButtonFactory.createAddButton("New project");
 		this.buttonNewProject.addClickListener(click -> openDialog());

@@ -11,12 +11,15 @@ package org.karnak.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -29,6 +32,7 @@ import org.mockito.Mockito;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class NotificationServiceTest {
 
 	// Services
@@ -119,6 +123,70 @@ class NotificationServiceTest {
 					.getSerieSummaryNotifications()
 					.get(0)
 					.toStringTransferredSopClassUid());
+	}
+
+	@Test
+	void not_transferred_count_comes_from_errors_and_excluded_not_from_inflated_instances() {
+		// A series whose instances counter is inflated (e.g. blank-UID error events that
+		// bypass de-duplication) while every recorded outcome was a successful send:
+		// sent=3, errors=0, excluded=0 but instances=6. The email must report 0
+		// not-transferred (errors + excluded), not the phantom 3 the old instances -
+		// sent formula produced.
+		DestinationEntity destinationEntity = new DestinationEntity();
+		destinationEntity.setDesidentification(false);
+		destinationEntity.setLastTransfer(LocalDateTime.MIN);
+		destinationEntity.setId(1L);
+		destinationEntity.setActivateNotification(true);
+		when(destinationRepositoryMock.findAll()).thenReturn(List.of(destinationEntity));
+
+		TransferSeriesStatusEntity series = new TransferSeriesStatusEntity();
+		series.setDestinationEntity(destinationEntity);
+		series.setForwardNodeId(2L);
+		series.setForwardNodeEntity(new ForwardNodeEntity());
+		series.setStudyUidOriginal("studyUidOriginal");
+		series.setSerieUidOriginal("serieUidOriginal");
+		series.setInstances(6);
+		series.setSent(3);
+		series.setErrors(0);
+		series.setExcluded(0);
+		when(transferSeriesStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(series));
+
+		List<TransferMonitoringNotification> notifications = notificationService.buildNotificationsToSend();
+
+		assertEquals(1, notifications.size());
+		assertEquals(3, notifications.get(0).getSerieSummaryNotifications().get(0).getNbTransferSent());
+		assertEquals(0, notifications.get(0).getSerieSummaryNotifications().get(0).getNbTransferNotSent());
+	}
+
+	@Test
+	void not_transferred_count_sums_errors_and_excluded() {
+		// Real not-transferred outcomes: 2 errored + 1 excluded on a non-de-identified
+		// destination. Not-transferred is their sum (3) and the row is flagged in error.
+		DestinationEntity destinationEntity = new DestinationEntity();
+		destinationEntity.setDesidentification(false);
+		destinationEntity.setLastTransfer(LocalDateTime.MIN);
+		destinationEntity.setId(1L);
+		destinationEntity.setActivateNotification(true);
+		when(destinationRepositoryMock.findAll()).thenReturn(List.of(destinationEntity));
+
+		TransferSeriesStatusEntity series = new TransferSeriesStatusEntity();
+		series.setDestinationEntity(destinationEntity);
+		series.setForwardNodeId(2L);
+		series.setForwardNodeEntity(new ForwardNodeEntity());
+		series.setStudyUidOriginal("studyUidOriginal");
+		series.setSerieUidOriginal("serieUidOriginal");
+		series.setInstances(5);
+		series.setSent(2);
+		series.setErrors(2);
+		series.setExcluded(1);
+		when(transferSeriesStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(series));
+
+		List<TransferMonitoringNotification> notifications = notificationService.buildNotificationsToSend();
+
+		assertEquals(1, notifications.size());
+		assertEquals(2, notifications.get(0).getSerieSummaryNotifications().get(0).getNbTransferSent());
+		assertEquals(3, notifications.get(0).getSerieSummaryNotifications().get(0).getNbTransferNotSent());
+		assertTrue(notifications.get(0).getSerieSummaryNotifications().get(0).isContainsError());
 	}
 
 }

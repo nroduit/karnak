@@ -24,53 +24,40 @@ import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 /**
- * Per-reason breakdown for a {@link TransferSeriesStatusEntity}: how many outcomes of the
- * series carried a given reason, counted in the same buckets as the series row —
- * {@code errorCount} for hard transfer errors, {@code excludedCount} for excluded
- * (aborted / filtered) outcomes, and {@code retryCount} for those that hit an
- * already-seen instance (the novelty axis, orthogonal to error/excluded). A bare 409
- * retry carries no reason.
+ * Identity of a distinct SOP instance already accounted for in a
+ * {@link TransferSeriesStatusEntity}: one row per (series, original SOP Instance UID).
+ * Its only purpose is to let the write path tell a first send of an instance apart from a
+ * re-send (which increments {@code retries} instead of {@code instances}). Rows are
+ * purged with their series through the {@code ON DELETE CASCADE} foreign key.
  */
 @NullUnmarked
-@Entity(name = "TransferSeriesReason")
-@Table(name = "transfer_series_reason")
+@Entity(name = "TransferSeriesInstance")
+@Table(name = "transfer_series_instance")
 @Getter
 @Setter
-public class TransferSeriesReasonEntity implements Serializable {
+public class TransferSeriesInstanceEntity implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@SequenceGenerator(name = "TRANSFER_SERIES_REASON_GEN", sequenceName = "transfer_series_reason_sequence",
+	@SequenceGenerator(name = "TRANSFER_SERIES_INSTANCE_GEN", sequenceName = "transfer_series_instance_sequence",
 			allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_REASON_GEN")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_INSTANCE_GEN")
 	private Long id;
 
 	@Column(name = "series_status_id")
 	private Long seriesStatusId;
 
-	private String reason;
+	@Column(name = "sop_instance_uid")
+	private String sopInstanceUid;
 
-	@Column(name = "error_count")
-	private long errorCount;
-
-	@Column(name = "excluded_count")
-	private long excludedCount;
-
-	@Column(name = "retry_count")
-	private long retryCount;
-
-	public TransferSeriesReasonEntity() {
+	public TransferSeriesInstanceEntity() {
 	}
 
-	public TransferSeriesReasonEntity(Long seriesStatusId, String reason, long errorCount, long excludedCount,
-			long retryCount) {
+	public TransferSeriesInstanceEntity(Long seriesStatusId, String sopInstanceUid) {
 		this.seriesStatusId = seriesStatusId;
-		this.reason = reason;
-		this.errorCount = errorCount;
-		this.excludedCount = excludedCount;
-		this.retryCount = retryCount;
+		this.sopInstanceUid = sopInstanceUid;
 	}
 
 	@Override
@@ -81,7 +68,7 @@ public class TransferSeriesReasonEntity implements Serializable {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		TransferSeriesReasonEntity that = (TransferSeriesReasonEntity) o;
+		TransferSeriesInstanceEntity that = (TransferSeriesInstanceEntity) o;
 		return Objects.equals(id, that.id);
 	}
 

@@ -9,7 +9,6 @@
  */
 package org.karnak.frontend.monitoring.component;
 
-import com.opencsv.CSVWriter;
 import lombok.Getter;
 import lombok.Setter;
 import org.weasis.core.util.annotations.Generated;
@@ -24,8 +23,6 @@ public class ExportSettings {
 
 	private String delimiter;
 
-	private String quoteCharacter;
-
 	public static final char DEFAULT_CSV_DELIMITER = ',';
 
 	/**
@@ -33,7 +30,6 @@ public class ExportSettings {
 	 */
 	public ExportSettings() {
 		this.delimiter = String.valueOf(DEFAULT_CSV_DELIMITER);
-		this.quoteCharacter = String.valueOf(CSVWriter.DEFAULT_QUOTE_CHARACTER);
 	}
 
 }

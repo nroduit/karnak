@@ -10,8 +10,10 @@
 package org.karnak.backend.model.monitoring;
 
 /**
- * Number of instances affected by a distinct error reason within a series (leaf level of
- * the monitoring hierarchy, shown only when the series contains errors).
+ * Per-reason breakdown at the leaf level of the monitoring hierarchy: a distinct reason
+ * with how many outcomes of the series carried it, counted in the series buckets —
+ * {@code errors} for hard transfer errors, {@code excluded} for excluded (aborted /
+ * filtered) outcomes, and {@code retries} for those that hit an already-seen instance.
  */
-public record ErrorBreakdown(String reason, long instances) {
+public record ErrorBreakdown(String reason, long errors, long excluded, long retries) {
 }

@@ -152,7 +152,7 @@ public class MonitoringDetailPanel extends VerticalLayout {
 			case DestinationNode d -> d.displayName();
 			case StudyNode s -> "Study " + StringUtils.defaultString(s.studyUid());
 			case SeriesNode se -> "Series " + StringUtils.defaultString(se.serieUid());
-			case ErrorNode ignored -> "Error";
+			case ErrorNode e -> e.errors() > 0 ? "Error" : "Excluded";
 		};
 	}
 
@@ -165,8 +165,10 @@ public class MonitoringDetailPanel extends VerticalLayout {
 				number(fields, "Studies", d.studies());
 				number(fields, "Series", d.series());
 				number(fields, "Instances", d.instances());
+				number(fields, "Retries", d.retries());
 				number(fields, "Sent", d.sent());
 				number(fields, "Errors", d.errors());
+				number(fields, "Excluded", d.excluded());
 			}
 			case StudyNode s -> {
 				section(fields, "Patient");
@@ -179,8 +181,10 @@ public class MonitoringDetailPanel extends VerticalLayout {
 				section(fields, "Transfer");
 				number(fields, "Series", s.series());
 				number(fields, "Instances", s.instances());
+				number(fields, "Retries", s.retries());
 				number(fields, "Sent", s.sent());
 				number(fields, "Errors", s.errors());
+				number(fields, "Excluded", s.excluded());
 				date(fields, "First seen", s.firstSeen());
 				date(fields, "Last seen", s.lastSeen());
 			}
@@ -200,14 +204,19 @@ public class MonitoringDetailPanel extends VerticalLayout {
 				datePair(fields, "Series date", se.serieDateOriginal(), se.serieDateToSend());
 				section(fields, "Transfer");
 				number(fields, "Instances", se.instances());
+				number(fields, "Retries", se.retries());
 				number(fields, "Sent", se.sent());
 				number(fields, "Errors", se.errors());
+				number(fields, "Excluded", se.excluded());
 				date(fields, "First seen", se.firstSeen());
 				date(fields, "Last seen", se.lastSeen());
 			}
 			case ErrorNode e -> {
 				fields.add(new Field("Reason", StringUtils.defaultString(e.reason()), true, false));
-				number(fields, "Instances affected", e.instances());
+				number(fields, "Instances", e.instances());
+				number(fields, "Errors", e.errors());
+				number(fields, "Excluded", e.excluded());
+				number(fields, "Retries", e.retries());
 			}
 		}
 		return fields;

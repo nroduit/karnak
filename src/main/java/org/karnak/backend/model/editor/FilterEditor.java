@@ -30,8 +30,10 @@ public class FilterEditor implements AttributeEditor {
 		String classUID = dcm.getString(Tag.SOPClassUID);
 		if (sopClassUIDEntitySet.stream().noneMatch(sopClassUID -> sopClassUID.getUid().equals(classUID))) {
 			context.setAbort(Abort.FILE_EXCEPTION);
-			context.setAbortMessage(dcm.getString(Tag.SOPInstanceUID) + " is blocked because " + classUID
-					+ " is not in the SOPClassUID filter");
+			// Keep the message stable per SOP Class (no per-instance SOP Instance UID) so
+			// every instance blocked by the same filter aggregates into one monitoring
+			// reason line instead of one line per instance.
+			context.setAbortMessage("SOP Class " + classUID + " is not in the SOPClassUID filter");
 		}
 	}
 

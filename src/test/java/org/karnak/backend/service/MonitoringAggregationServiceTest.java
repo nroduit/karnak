@@ -106,18 +106,21 @@ class MonitoringAggregationServiceTest {
 		destDeidId = deid.getId();
 		destMorphId = morph.getId();
 
-		// Study 1 on the de-identified destination: one clean series, one failing series.
-		Long errRowId = persistStatus(destDeidId, STUDY_1, SERIE_OK, "CT", 10, 10, 0, DAY1);
-		errRowId = persistStatus(destDeidId, STUDY_1, SERIE_ERR, "CT", 5, 3, 2, DAY2);
-		// Study 2 on the tag-morphing destination: clean.
-		persistStatus(destMorphId, STUDY_2, "1.2.2.1", "MR", 4, 4, 0, DAY2);
+		// Study 1 on the de-identified destination: one clean series (with a re-send),
+		// one failing series (with one excluded/filtered instance).
+		Long errRowId = persistStatus(destDeidId, STUDY_1, SERIE_OK, "CT", 10, 10, 0, 1, 0, DAY1);
+		errRowId = persistStatus(destDeidId, STUDY_1, SERIE_ERR, "CT", 5, 3, 2, 0, 1, DAY2);
+		// Study 2 on the tag-morphing destination: clean, with two re-sends.
+		persistStatus(destMorphId, STUDY_2, "1.2.2.1", "MR", 4, 4, 0, 2, 0, DAY2);
 
-		reasonRepo.saveAndFlush(new TransferSeriesReasonEntity(errRowId, "timeout", 1));
-		reasonRepo.saveAndFlush(new TransferSeriesReasonEntity(errRowId, "association-rejected", 1));
+		// Two error outcomes carry "timeout" (one of them a retry); the single excluded
+		// outcome carries "association-rejected" — mirroring the series counters.
+		reasonRepo.saveAndFlush(new TransferSeriesReasonEntity(errRowId, "timeout", 2, 0, 1));
+		reasonRepo.saveAndFlush(new TransferSeriesReasonEntity(errRowId, "association-rejected", 0, 1, 0));
 	}
 
 	private Long persistStatus(Long destinationId, String studyUid, String serieUid, String modality, long instances,
-			long sent, long errors, LocalDateTime seen) {
+			long sent, long errors, long retries, long excluded, LocalDateTime seen) {
 		TransferSeriesStatusEntity row = new TransferSeriesStatusEntity();
 		row.setForwardNodeId(forwardNodeId);
 		row.setDestinationId(destinationId);
@@ -129,6 +132,8 @@ class MonitoringAggregationServiceTest {
 		row.setInstances(instances);
 		row.setSent(sent);
 		row.setErrors(errors);
+		row.setRetries(retries);
+		row.setExcluded(excluded);
 		row.setFirstSeen(seen);
 		row.setLastSeen(seen);
 		return statusRepo.saveAndFlush(row).getId();
@@ -153,6 +158,8 @@ class MonitoringAggregationServiceTest {
 		assertEquals(15, first.instances());
 		assertEquals(13, first.sent());
 		assertEquals(2, first.errors());
+		assertEquals(1, first.retries());
+		assertEquals(1, first.excluded());
 
 		DestinationActivity second = result.get(1);
 		assertEquals(destMorphId, second.destinationId());
@@ -160,6 +167,8 @@ class MonitoringAggregationServiceTest {
 		assertEquals("AET-MORPH", second.destinationLabel());
 		assertEquals(0, second.errors());
 		assertEquals(4, second.instances());
+		assertEquals(2, second.retries());
+		assertEquals(0, second.excluded());
 	}
 
 	@Test
@@ -172,6 +181,8 @@ class MonitoringAggregationServiceTest {
 		assertEquals(15, study.instances());
 		assertEquals(13, study.sent());
 		assertEquals(2, study.errors());
+		assertEquals(1, study.retries());
+		assertEquals(1, study.excluded());
 		assertEquals(DAY1, study.firstSeen());
 		assertEquals(DAY2, study.lastSeen());
 	}
@@ -189,13 +200,23 @@ class MonitoringAggregationServiceTest {
 	}
 
 	@Test
-	void list_errors_sums_reason_counters_for_a_series() {
+	void list_errors_sums_reason_counters_per_bucket_for_a_series() {
 		List<ErrorBreakdown> result = service.listErrors(noFilter(), destDeidId, SERIE_ERR);
 
 		assertEquals(2, result.size());
-		assertEquals(2, result.stream().mapToLong(ErrorBreakdown::instances).sum());
-		assertTrue(result.stream().anyMatch(e -> "timeout".equals(e.reason())));
-		assertTrue(result.stream().anyMatch(e -> "association-rejected".equals(e.reason())));
+		assertEquals(2, result.stream().mapToLong(ErrorBreakdown::errors).sum());
+		assertEquals(1, result.stream().mapToLong(ErrorBreakdown::excluded).sum());
+		ErrorBreakdown timeout = result.stream().filter(e -> "timeout".equals(e.reason())).findFirst().orElseThrow();
+		assertEquals(2, timeout.errors());
+		assertEquals(0, timeout.excluded());
+		assertEquals(1, timeout.retries());
+		ErrorBreakdown rejected = result.stream()
+			.filter(e -> "association-rejected".equals(e.reason()))
+			.findFirst()
+			.orElseThrow();
+		assertEquals(0, rejected.errors());
+		assertEquals(1, rejected.excluded());
+		assertEquals(0, rejected.retries());
 	}
 
 	@Test
@@ -216,6 +237,8 @@ class MonitoringAggregationServiceTest {
 		assertEquals(19, node.instances());
 		assertEquals(17, node.sent());
 		assertEquals(2, node.errors());
+		assertEquals(3, node.retries());
+		assertEquals(1, node.excluded());
 		// 15 instances on the de-identified destination, 4 on the tag-morphing one.
 		assertEquals(15, node.deidentified());
 		assertEquals(4, node.tagMorphed());

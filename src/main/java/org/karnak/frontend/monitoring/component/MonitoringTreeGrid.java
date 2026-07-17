@@ -9,6 +9,7 @@
  */
 package org.karnak.frontend.monitoring.component;
 
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.badge.Badge;
 import com.vaadin.flow.component.badge.BadgeVariant;
@@ -38,8 +39,8 @@ import org.weasis.core.util.annotations.Generated;
 
 /**
  * Hierarchical monitoring view: Destination (prefixed by the forward node AE Title) /
- * Study / Series, with one error-reason line per failing series showing the number of
- * instances concerned. Each level is fetched lazily from {@link MonitoringLogic} when
+ * Study / Series, with one reason line per failing series showing its error / excluded
+ * outcome counts. Each level is fetched lazily from {@link MonitoringLogic} when
  * expanded.
  */
 @Generated()
@@ -60,11 +61,12 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 			.setAutoWidth(true);
 		addColumn(this::seriesText).setHeader("Series").setFlexGrow(0).setAutoWidth(true);
 		addColumn(this::instancesText).setHeader("Instances").setFlexGrow(0).setAutoWidth(true);
+		addColumn(this::retriesText).setHeader("Retries").setFlexGrow(0).setAutoWidth(true);
 		addColumn(this::errorsText).setHeader("Errors").setFlexGrow(0).setAutoWidth(true);
-		// Auto-width so the column grows to its widest content (the "N error(s)" badge)
-		// rather than staying at the header width. The header is padded so the column
-		// reserves extra room around the badge.
-		addComponentColumn(this::statusBadge).setHeader(statusHeader()).setFlexGrow(0).setAutoWidth(true);
+		// Auto-width so the column grows to its widest rendered badge (e.g. "N excluded")
+		// rather than a fixed reserve. A deferred recalculation runs after every attach /
+		// reload / expand so the width tracks the badges once they have rendered.
+		addComponentColumn(this::statusBadge).setHeader("Status").setFlexGrow(0).setAutoWidth(true);
 
 		setSelectionMode(SelectionMode.SINGLE);
 		asSingleSelect().addValueChangeListener(event -> {
@@ -77,6 +79,24 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 		setSizeFull();
 	}
 
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		// Size the Status column once the initial rows (and their badges) are painted.
+		scheduleColumnWidthRecalc();
+	}
+
+	/**
+	 * Recompute the auto-width columns after the badges have rendered. The status badges
+	 * are web components that finish upgrading only after the row is first painted, so a
+	 * synchronous recalculation measures them too narrow and clips the text; deferring to
+	 * the next animation frames lets them reach their final width first.
+	 */
+	private void scheduleColumnWidthRecalc() {
+		getElement().executeJs(
+				"requestAnimationFrame(() => requestAnimationFrame(() => this.recalculateColumnWidths && this.recalculateColumnWidths()))");
+	}
+
 	/**
 	 * Notified with the selected node (or {@code null} when the selection is cleared).
 	 */
@@ -87,6 +107,7 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 	/** Reload the whole tree (after a filter change or a manual refresh). */
 	public void refresh() {
 		dataProvider.refreshAll();
+		scheduleColumnWidthRecalc();
 	}
 
 	/** Expand every destination/study/series branch that contains errors. */
@@ -94,6 +115,15 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 		List<MonitoringNode> toExpand = new ArrayList<>();
 		collectErrorBranches(null, toExpand);
 		expand(toExpand);
+		scheduleColumnWidthRecalc();
+	}
+
+	/** Collapse every destination/study/series branch that contains errors. */
+	public void collapseErrors() {
+		List<MonitoringNode> toCollapse = new ArrayList<>();
+		collectErrorBranches(null, toCollapse);
+		collapse(toCollapse);
+		scheduleColumnWidthRecalc();
 	}
 
 	private void collectErrorBranches(MonitoringNode parent, List<MonitoringNode> accumulator) {
@@ -145,8 +175,19 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 			case DestinationNode d -> Long.toString(d.instances());
 			case StudyNode s -> Long.toString(s.instances());
 			case SeriesNode se -> Long.toString(se.instances());
+			// Distinct instances affected by the reason (outcomes minus retries).
 			case ErrorNode e -> Long.toString(e.instances());
 		};
+	}
+
+	private String retriesText(MonitoringNode node) {
+		long retries = switch (node) {
+			case DestinationNode d -> d.retries();
+			case StudyNode s -> s.retries();
+			case SeriesNode se -> se.retries();
+			case ErrorNode e -> e.retries();
+		};
+		return retries > 0 ? Long.toString(retries) : "";
 	}
 
 	private String errorsText(MonitoringNode node) {
@@ -154,27 +195,30 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 			case DestinationNode d -> d.errors();
 			case StudyNode s -> s.errors();
 			case SeriesNode se -> se.errors();
-			case ErrorNode ignored -> 0;
+			case ErrorNode e -> e.errors();
 		};
 		return errors > 0 ? Long.toString(errors) : "";
 	}
 
 	private Badge statusBadge(MonitoringNode node) {
 		return switch (node) {
-			case ErrorNode ignored -> badge("error", BadgeVariant.ERROR);
-			case DestinationNode d -> statusBadge(d.instances(), d.sent(), d.errors());
-			case StudyNode s -> statusBadge(s.instances(), s.sent(), s.errors());
-			case SeriesNode se -> statusBadge(se.instances(), se.sent(), se.errors());
+			// A reason line uses the same worst-status badge as its parents, over its own
+			// error / excluded / retry counts: "N error(s)" in red, else "N excluded" in
+			// orange (retries only show in the Retries column and the tooltip).
+			case ErrorNode e -> statusBadge(0, e.errors(), e.excluded(), e.retries());
+			case DestinationNode d -> statusBadge(d.sent(), d.errors(), d.excluded(), d.retries());
+			case StudyNode s -> statusBadge(s.sent(), s.errors(), s.excluded(), s.retries());
+			case SeriesNode se -> statusBadge(se.sent(), se.errors(), se.excluded(), se.retries());
 		};
 	}
 
 	/**
-	 * Worst-status badge for an aggregated node: red when any instance errored, orange
-	 * when some instances were excluded (neither sent nor errored) and green when every
-	 * instance was sent.
+	 * Worst-status badge for an aggregated node: red when any outcome errored, orange
+	 * when some were excluded (neither sent nor errored, e.g. filtered or aborted) and
+	 * green otherwise. The counters are stored delivery buckets; a 409 re-send shows only
+	 * under retries.
 	 */
-	private Badge statusBadge(long instances, long sent, long errors) {
-		long excluded = instances - sent - errors;
+	private Badge statusBadge(long sent, long errors, long excluded, long retries) {
 		Badge badge;
 		if (errors > 0) {
 			badge = badge(errors + " error(s)", BadgeVariant.ERROR);
@@ -185,22 +229,16 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 		else {
 			badge = badge("OK", BadgeVariant.SUCCESS);
 		}
-		UIS.setTooltip(badge, "Sent: " + sent + " · Excluded: " + excluded + " · Errors: " + errors);
+		UIS.setTooltip(badge,
+				"Sent: " + sent + " · Excluded: " + excluded + " · Errors: " + errors + " · Retries: " + retries);
 		return badge;
-	}
-
-	/** "Status" header with horizontal padding so the column reserves extra width. */
-	private Span statusHeader() {
-		Span header = new Span("Status");
-		header.getStyle().set("padding-inline", "var(--vaadin-gap-l)");
-		return header;
 	}
 
 	private Badge badge(String text, BadgeVariant variant) {
 		Badge badge = new Badge(text);
 		badge.addThemeVariants(variant);
 		// Keep the badge on a single line so the auto-width Status column measures its
-		// full width (the widest being the "N error(s)" badge) instead of a wrapped one.
+		// full width (the widest badge) instead of a wrapped one.
 		badge.getStyle().set("white-space", "nowrap");
 		return badge;
 	}
@@ -248,7 +286,7 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 			return switch (item) {
 				case DestinationNode ignored -> true;
 				case StudyNode ignored -> true;
-				case SeriesNode se -> se.errors() > 0;
+				case SeriesNode se -> se.errors() > 0 || se.excluded() > 0;
 				case ErrorNode ignored -> false;
 			};
 		}
@@ -270,7 +308,8 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 				return logic.listDestinations(filter)
 					.stream()
 					.<MonitoringNode>map(d -> new DestinationNode(d.destinationId(), d.forwardAet(),
-							d.destinationLabel(), d.studies(), d.series(), d.instances(), d.sent(), d.errors()))
+							d.destinationLabel(), d.studies(), d.series(), d.instances(), d.sent(), d.errors(),
+							d.retries(), d.excluded()))
 					.toList();
 			}
 			return switch (parent) {
@@ -279,8 +318,8 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 					.<MonitoringNode>map(s -> new StudyNode(d.destinationId(), s.studyUid(), s.studyUidToSend(),
 							s.description(), s.descriptionToSend(), s.patientIdOriginal(), s.patientIdToSend(),
 							s.accessionNumberOriginal(), s.accessionNumberToSend(), s.studyDateOriginal(),
-							s.studyDateToSend(), s.series(), s.instances(), s.sent(), s.errors(), s.firstSeen(),
-							s.lastSeen()))
+							s.studyDateToSend(), s.series(), s.instances(), s.sent(), s.errors(), s.retries(),
+							s.excluded(), s.firstSeen(), s.lastSeen()))
 					.toList();
 				case StudyNode s -> logic.listSeries(filter, s.destinationId(), s.studyUid())
 					.stream()
@@ -289,12 +328,13 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 							s.accessionNumberToSend(), s.description(), s.descriptionToSend(), s.studyDateOriginal(),
 							s.studyDateToSend(), se.serieUid(), se.serieUidToSend(), se.serieDescription(),
 							se.serieDescriptionToSend(), se.modality(), se.sopClassUids(), se.serieDateOriginal(),
-							se.serieDateToSend(), se.instances(), se.sent(), se.errors(), se.firstSeen(),
-							se.lastSeen()))
+							se.serieDateToSend(), se.instances(), se.sent(), se.errors(), se.retries(), se.excluded(),
+							se.firstSeen(), se.lastSeen()))
 					.toList();
 				case SeriesNode se -> logic.listErrors(filter, se.destinationId(), se.serieUid())
 					.stream()
-					.<MonitoringNode>map(er -> new ErrorNode(se.key(), er.reason(), er.instances()))
+					.<MonitoringNode>map(
+							er -> new ErrorNode(se.key(), er.reason(), er.errors(), er.excluded(), er.retries()))
 					.toList();
 				case ErrorNode ignored -> List.of();
 			};

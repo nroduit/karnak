@@ -19,5 +19,5 @@ import java.time.LocalDateTime;
 public record StudyActivity(String studyUid, String studyUidToSend, String description, String descriptionToSend,
 		String patientIdOriginal, String patientIdToSend, String accessionNumberOriginal, String accessionNumberToSend,
 		LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend, long series, long instances, long sent,
-		long errors, LocalDateTime firstSeen, LocalDateTime lastSeen) {
+		long errors, long retries, long excluded, LocalDateTime firstSeen, LocalDateTime lastSeen) {
 }
