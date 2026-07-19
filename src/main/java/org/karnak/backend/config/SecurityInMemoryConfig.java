@@ -62,7 +62,21 @@ public class SecurityInMemoryConfig {
 				.permitAll()
 				// Allow endpoints
 				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
-				.permitAll())
+				.permitAll()
+				// Management REST API: require authentication explicitly. Without
+				// this, requests fall through to VaadinSecurityConfigurer's own
+				// route-based access control below, which treats /api/** as an
+				// unrecognized Vaadin route and denies it (403) even for an
+				// authenticated user, instead of just requiring authentication.
+				.requestMatchers("/api/**")
+				.authenticated())
+			// The management REST API is called by non-browser clients over HTTP
+			// Basic, which never carry the CSRF token a browser session would.
+			// Spring Security's default CSRF protection would otherwise reject
+			// every POST/PUT/DELETE call to /api/** with 403, regardless of valid
+			// credentials, so exempt it the same way a stateless REST API
+			// conventionally is exempted.
+			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 			// Enable HTTP Basic authentication so the management REST API (/api/**,
 			// beyond the explicitly permitted echo endpoint) can be called by
 			// non-browser clients, alongside the Vaadin/form-login session below.

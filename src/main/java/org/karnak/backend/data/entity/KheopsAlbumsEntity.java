@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
@@ -48,6 +49,7 @@ public class KheopsAlbumsEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "destination_id")
+	@JsonIgnore
 	private DestinationEntity destinationEntity = new DestinationEntity();
 
 	public KheopsAlbumsEntity() {
