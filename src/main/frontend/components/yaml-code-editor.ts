@@ -13,12 +13,12 @@ import { LitElement, html, css, type PropertyValues } from 'lit';
  * A lightweight, dependency-free YAML editor with syntax highlighting.
  *
  * A native <textarea> is layered, transparent, on top of a <pre> that mirrors the same
- * text tokenised into coloured spans. The textarea keeps caret, selection, undo and IME
- * behaviour; the <pre> underneath supplies the colours. Both layers share identical font
+ * text tokenized into colored spans. The textarea keeps caret, selection, undo and IME
+ * behavior; the <pre> underneath supplies the colors. Both layers share identical font
  * metrics and padding so they stay pixel-aligned, and the highlight layer follows the
  * textarea's scroll offset.
  *
- * Colours are drawn from the app's Aura theme tokens, so they adapt to light/dark mode.
+ * Colors are drawn from the app's Aura theme tokens, so they adapt to light/dark mode.
  * Exposed properties `value` (two-way, fires `value-changed`) and `readonly` are driven
  * from the Vaadin Java wrapper (org.karnak.frontend.profile.component.editprofile.YamlCodeEditor).
  */
@@ -295,7 +295,7 @@ class KarnakYamlEditor extends LitElement {
 /* ===================== YAML tokeniser ===================== */
 
 function escapeHtml(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
 function span(cls: string, text: string): string {
@@ -373,13 +373,20 @@ function splitTrailingComment(s: string): { content: string; comment: string } {
 
 /** Split `key: value` where the colon is a real mapping colon (followed by space or EOL). */
 function matchKeyValue(body: string): { key: string; preColon: string; sep: string; value: string } | null {
-  const m = body.match(/^("[^"]*"|'[^']*'|[^:#]+?)(\s*):(\s[\s\S]*|)$/);
+  // Quoted keys carry their trailing whitespace inside the alternation; plain keys
+  // fold it into group 1 and it is split off below. The pattern avoids adjacent
+  // overlapping quantifiers so matching stays linear (no catastrophic backtracking).
+  const m = body.match(/^("[^"]*"\s*|'[^']*'\s*|[^:#]+):(\s[\s\S]*|)$/);
   if (!m) {
     return null;
   }
-  const after = m[3]; // '' or leading-whitespace + value
-  const sepMatch = after.match(/^(\s*)([\s\S]*)$/) as RegExpMatchArray;
-  return { key: m[1], preColon: m[2], sep: sepMatch[1], value: sepMatch[2] };
+  const keyPart = m[1]; // key plus any whitespace before the colon
+  const key = keyPart.trimEnd();
+  const preColon = keyPart.slice(key.length);
+  const after = m[2]; // '' or leading-whitespace + value
+  const value = after.trimStart();
+  const sep = after.slice(0, after.length - value.length);
+  return { key, preColon, sep, value };
 }
 
 function highlightValue(value: string): string {
@@ -396,7 +403,7 @@ function highlightValue(value: string): string {
   if (/^(true|false|yes|no|on|off|null|~)$/i.test(trimmed)) {
     return span('bool', value);
   }
-  if (/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(trimmed)) {
+  if (/^[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?$/.test(trimmed)) {
     return span('number', value);
   }
   if (/^[&*!][^\s]+$/.test(trimmed)) {
