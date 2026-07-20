@@ -35,6 +35,7 @@ class MonitoringEntryTest {
 		dcm.setString(Tag.StudyInstanceUID, VR.UI, "1.2.3");
 		dcm.setString(Tag.SeriesDescription, VR.LO, "Axial");
 		dcm.setString(Tag.SeriesInstanceUID, VR.UI, "1.2.3.4");
+		dcm.setString(Tag.SOPInstanceUID, VR.UI, "1.2.3.4.5");
 		dcm.setString(Tag.StudyDate, VR.DA, "20260101");
 		dcm.setString(Tag.StudyTime, VR.TM, "101500");
 		return dcm;
@@ -51,13 +52,14 @@ class MonitoringEntryTest {
 
 	@Test
 	void of_copies_the_original_and_to_send_identifiers() {
-		MonitoringEntry entry = MonitoringEntry.of(1L, 2L, original(), toSend(), true, false, null, "CT",
+		MonitoringEntry entry = MonitoringEntry.of(1L, 2L, original(), toSend(), true, false, false, null, "CT",
 				"1.2.840.10008.5.1.4.1.1.2");
 
 		assertEquals(1L, entry.forwardNodeId());
 		assertEquals(2L, entry.destinationId());
 		assertTrue(entry.sent());
 		assertFalse(entry.error());
+		assertFalse(entry.duplicate());
 		assertEquals("REAL-ID", entry.patientIdOriginal());
 		assertEquals("PSEUDO-ID", entry.patientIdToSend());
 		assertEquals("ACC-1", entry.accessionNumberOriginal());
@@ -67,13 +69,15 @@ class MonitoringEntryTest {
 		assertEquals("9.8.7", entry.studyUidToSend());
 		assertEquals("1.2.3.4", entry.serieUidOriginal());
 		assertEquals("9.8.7.6", entry.serieUidToSend());
+		assertEquals("1.2.3.4.5", entry.sopInstanceUidOriginal());
 		assertEquals("CT", entry.modality());
 		assertEquals("1.2.840.10008.5.1.4.1.1.2", entry.sopClassUid());
 	}
 
 	@Test
 	void of_parses_the_study_date_and_stamps_a_timestamp() {
-		MonitoringEntry entry = MonitoringEntry.of(1L, 2L, original(), toSend(), false, true, "boom", "CT", "1.2.3");
+		MonitoringEntry entry = MonitoringEntry.of(1L, 2L, original(), toSend(), false, true, false, "boom", "CT",
+				"1.2.3");
 
 		assertNotNull(entry.timestamp());
 		assertNotNull(entry.studyDateOriginal());

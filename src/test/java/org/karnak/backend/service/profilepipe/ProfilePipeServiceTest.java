@@ -26,17 +26,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProfileGroupRepo;
 import org.karnak.backend.data.repo.ProfileRepo;
+import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilebody.ProfileElementBody;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class ProfilePipeServiceTest {
@@ -46,13 +52,20 @@ class ProfilePipeServiceTest {
 
 	private final ProfileGroupRepo profileGroupRepositoryMock = Mockito.mock(ProfileGroupRepo.class);
 
+	private final DestinationRepo destinationRepositoryMock = Mockito.mock(DestinationRepo.class);
+
+	// Event publisher
+	private final ApplicationEventPublisher applicationEventPublisherMock = Mockito
+		.mock(ApplicationEventPublisher.class);
+
 	// Service
 	private ProfilePipeService profilePipeService;
 
 	@BeforeEach
 	public void setUp() {
 		// Build mocked service
-		profilePipeService = new ProfilePipeService(profileRepositoryMock, profileGroupRepositoryMock);
+		profilePipeService = new ProfilePipeService(profileRepositoryMock, profileGroupRepositoryMock,
+				destinationRepositoryMock, applicationEventPublisherMock);
 		// saveAndFlush returns the entity it was given, like the real repository
 		Mockito.when(profileRepositoryMock.saveAndFlush(Mockito.any(ProfileEntity.class)))
 			.thenAnswer(invocation -> invocation.getArgument(0));
@@ -256,6 +269,61 @@ class ProfilePipeServiceTest {
 
 		assertEquals(1, profile.getProfileElementEntities().size());
 		Mockito.verify(profileRepositoryMock, Mockito.never()).saveAndFlush(Mockito.any(ProfileEntity.class));
+	}
+
+	@Test
+	void editing_a_profile_notifies_the_gateway_for_each_linked_destination() {
+		ProfileEntity profile = profileWithElements(1L, 1);
+		linkProjectWithDestinations(profile, 2);
+		Mockito.when(profileRepositoryMock.findById(1L)).thenReturn(Optional.of(profile));
+
+		profilePipeService.saveElement(1L, actionTagsElement(null, "Keep name", 0));
+
+		// One NodeEvent per destination so the gateway reloads the edited profile
+		Mockito.verify(applicationEventPublisherMock, Mockito.times(2)).publishEvent(Mockito.any(NodeEvent.class));
+	}
+
+	@Test
+	void editing_a_tag_morphing_profile_notifies_its_tag_morphing_destinations() {
+		ProfileEntity profile = profileWithElements(1L, 1);
+		// A project referencing the profile, but with no de-identification destinations:
+		// its destinations use the profile for tag morphing (separate FK).
+		ProjectEntity project = new ProjectEntity();
+		project.setDestinationEntities(new ArrayList<>());
+		profile.setProjectEntities(List.of(project));
+		DestinationEntity tagMorphingDestination = new DestinationEntity();
+		tagMorphingDestination.setForwardNodeEntity(new ForwardNodeEntity("FWD_AET"));
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(project))
+			.thenReturn(List.of(tagMorphingDestination));
+		Mockito.when(profileRepositoryMock.findById(1L)).thenReturn(Optional.of(profile));
+
+		profilePipeService.saveElement(1L, actionTagsElement(null, "Keep name", 0));
+
+		Mockito.verify(applicationEventPublisherMock, Mockito.times(1)).publishEvent(Mockito.any(NodeEvent.class));
+	}
+
+	@Test
+	void editing_a_profile_without_projects_publishes_no_event() {
+		ProfileEntity profile = profileWithElements(1L, 1);
+		Mockito.when(profileRepositoryMock.findById(1L)).thenReturn(Optional.of(profile));
+
+		profilePipeService.saveElement(1L, actionTagsElement(null, "Keep name", 0));
+
+		Mockito.verify(applicationEventPublisherMock, Mockito.never()).publishEvent(Mockito.any());
+	}
+
+	/** Attach a project owning {@code destinationCount} destinations to the profile. */
+	private static void linkProjectWithDestinations(ProfileEntity profile, int destinationCount) {
+		ProjectEntity project = new ProjectEntity();
+		ForwardNodeEntity forwardNode = new ForwardNodeEntity("FWD_AET");
+		List<DestinationEntity> destinations = new ArrayList<>();
+		for (int i = 0; i < destinationCount; i++) {
+			DestinationEntity destination = new DestinationEntity();
+			destination.setForwardNodeEntity(forwardNode);
+			destinations.add(destination);
+		}
+		project.setDestinationEntities(destinations);
+		profile.setProjectEntities(List.of(project));
 	}
 
 	@Test

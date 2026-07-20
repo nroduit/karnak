@@ -1,0 +1,88 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Split the series instance accumulator: `instances` now counts distinct SOP
+       instances (by original SOP Instance UID) and a new `retries` column counts
+       re-sends of an already-seen instance (including HTTP 409 "already present").
+       The distinct identities are tracked in transfer_series_instance. -->
+
+  <changeSet author="karnak" id="2.2-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_status" columnName="retries"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_status">
+      <column name="retries" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.2-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <sequenceExists sequenceName="transfer_series_instance_sequence"/>
+      </not>
+    </preConditions>
+    <createSequence cacheSize="1" cycle="false" incrementBy="1" maxValue="9223372036854775807"
+      minValue="1" sequenceName="transfer_series_instance_sequence" startValue="1"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.2-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="transfer_series_instance"/>
+      </not>
+    </preConditions>
+    <createTable tableName="transfer_series_instance">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="transfer_series_instance_pkey"/>
+      </column>
+      <column name="series_status_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="sop_instance_uid" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <!-- Liquibase has no uniqueConstraintExists precondition; runs once (tracked in
+       DATABASECHANGELOG) against the table just created above. -->
+  <changeSet author="karnak" id="2.2-4">
+    <addUniqueConstraint tableName="transfer_series_instance" columnNames="series_status_id, sop_instance_uid"
+      constraintName="uq_transfer_series_instance_key"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.2-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_transfer_series_instance_status"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="series_status_id" baseTableName="transfer_series_instance"
+      constraintName="fk_transfer_series_instance_status" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id"
+      referencedTableName="transfer_series_status" validate="true"/>
+  </changeSet>
+
+  <!-- Delivery bucket: sent / errors already exist; `excluded` counts outcomes that
+       were neither sent nor errored (filtered or aborted), replacing the value the UI
+       used to derive as instances - sent - errors. -->
+  <changeSet author="karnak" id="2.2-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_status" columnName="excluded"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_status">
+      <column name="excluded" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

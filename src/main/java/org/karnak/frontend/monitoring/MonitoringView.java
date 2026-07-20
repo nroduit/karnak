@@ -13,7 +13,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -24,13 +23,10 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.flow.server.streams.DownloadResponse;
 import jakarta.annotation.security.RolesAllowed;
-import java.io.ByteArrayInputStream;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.WarningConfirmDialog;
-import org.karnak.frontend.monitoring.component.ExportSettingsDialog;
+import org.karnak.frontend.monitoring.component.ExportDialog;
 import org.karnak.frontend.monitoring.component.MonitoringDetailPanel;
 import org.karnak.frontend.monitoring.component.MonitoringFilterBar;
 import org.karnak.frontend.monitoring.component.MonitoringTreeGrid;
@@ -64,7 +60,7 @@ public class MonitoringView extends VerticalLayout {
 
 	private NodeActivityDashboard dashboard;
 
-	private ExportSettingsDialog exportSettingsDialog;
+	private ExportDialog exportDialog;
 
 	private Component activityPanel;
 
@@ -75,6 +71,10 @@ public class MonitoringView extends VerticalLayout {
 	private Tab dashboardTab;
 
 	private final Div content = new Div();
+
+	private Button expandErrorsButton;
+
+	private boolean errorsExpanded;
 
 	@Autowired
 	public MonitoringView(final MonitoringLogic monitoringLogic) {
@@ -96,7 +96,8 @@ public class MonitoringView extends VerticalLayout {
 		detailPanel = new MonitoringDetailPanel();
 		treeGrid.setSelectionListener(detailPanel::show);
 		dashboard = new NodeActivityDashboard(monitoringLogic, filterBar::getFilter);
-		exportSettingsDialog = new ExportSettingsDialog();
+		exportDialog = new ExportDialog(
+				() -> monitoringLogic.buildCsv(getCurrentFilter(), exportDialog.getExportSettings()));
 
 		activityPanel = buildActivityPanel();
 
@@ -111,31 +112,36 @@ public class MonitoringView extends VerticalLayout {
 	}
 
 	private Component buildActivityPanel() {
-		Button expandErrorsButton = new Button("Expand errors", new Icon(VaadinIcon.WARNING));
-		expandErrorsButton.addClickListener(event -> treeGrid.expandErrors());
+		expandErrorsButton = new Button("Expand errors", new Icon(VaadinIcon.WARNING));
+		expandErrorsButton.addClickListener(event -> {
+			if (errorsExpanded) {
+				treeGrid.collapseErrors();
+				resetErrorsToggle();
+			}
+			else {
+				treeGrid.expandErrors();
+				expandErrorsButton.setText("Collapse errors");
+				expandErrorsButton.setIcon(new Icon(VaadinIcon.CHEVRON_UP));
+				errorsExpanded = true;
+			}
+		});
 
 		Button refreshButton = new Button("Refresh", new Icon(VaadinIcon.REFRESH));
-		refreshButton.addClickListener(event -> treeGrid.refresh());
+		refreshButton.addClickListener(event -> {
+			filterBar.refreshRange();
+			treeGrid.refresh();
+			resetErrorsToggle();
+		});
 
-		Button exportSettingsButton = new Button("Export Settings", new Icon(VaadinIcon.COGS));
-		exportSettingsButton.addClickListener(event -> exportSettingsDialog.open());
-
-		Anchor exportAnchor = new Anchor();
-		exportAnchor.setHref(DownloadHandler.fromInputStream(event -> new DownloadResponse(
-				new ByteArrayInputStream(
-						monitoringLogic.buildCsv(getCurrentFilter(), exportSettingsDialog.getExportSettings())),
-				"export.csv", "text/csv", -1)));
-		exportAnchor.getElement().setAttribute("download", true);
 		Button exportButton = new Button("Export", new Icon(VaadinIcon.DOWNLOAD_ALT));
-		exportButton.setWidthFull();
-		exportAnchor.add(exportButton);
+		exportButton.addClickListener(event -> exportDialog.open());
 
 		Button deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
 		deleteButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteButton.addClickListener(event -> confirmDeleteAll());
 
-		HorizontalLayout buttonLayout = new HorizontalLayout(expandErrorsButton, exportSettingsButton, exportAnchor,
-				refreshButton, deleteButton);
+		HorizontalLayout buttonLayout = new HorizontalLayout(expandErrorsButton, exportButton, refreshButton,
+				deleteButton);
 		buttonLayout.setWidthFull();
 
 		VerticalLayout treeSide = new VerticalLayout(treeGrid, buttonLayout);
@@ -151,6 +157,17 @@ public class MonitoringView extends VerticalLayout {
 		return split;
 	}
 
+	/**
+	 * Restore the "Expand errors" button to its collapsed state (after a tree reload).
+	 */
+	private void resetErrorsToggle() {
+		errorsExpanded = false;
+		if (expandErrorsButton != null) {
+			expandErrorsButton.setText("Expand errors");
+			expandErrorsButton.setIcon(new Icon(VaadinIcon.WARNING));
+		}
+	}
+
 	private void confirmDeleteAll() {
 		Div dialogContent = new Div();
 		dialogContent.add(new Text(
@@ -160,6 +177,7 @@ public class MonitoringView extends VerticalLayout {
 		dialog.addConfirmationListener(event -> {
 			monitoringLogic.deleteAllTransferStatus();
 			treeGrid.refresh();
+			resetErrorsToggle();
 		});
 		dialog.open();
 	}
@@ -170,6 +188,7 @@ public class MonitoringView extends VerticalLayout {
 		}
 		else {
 			treeGrid.refresh();
+			resetErrorsToggle();
 		}
 	}
 
@@ -182,6 +201,7 @@ public class MonitoringView extends VerticalLayout {
 		else {
 			content.add(activityPanel);
 			treeGrid.refresh();
+			resetErrorsToggle();
 		}
 	}
 

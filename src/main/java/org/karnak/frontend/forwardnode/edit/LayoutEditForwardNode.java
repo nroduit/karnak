@@ -124,6 +124,10 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	 */
 	private void buildLayout() {
 		layoutDestinationsSources.setSizeFull();
+		// More breathing room above the tabs, and tighten the gap below them so the
+		// sources/destinations content sits closer to the tab bar.
+		tabSourcesDestination.getStyle().set("margin-top", "1rem").set("margin-bottom", "0");
+		layoutDestinationsSources.getStyle().set("padding-top", "0");
 		getStyle().set("overflow-y", "auto");
 		setSizeFull();
 		setEditView();

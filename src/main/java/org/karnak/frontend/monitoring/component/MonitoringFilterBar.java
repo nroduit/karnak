@@ -117,6 +117,21 @@ public class MonitoringFilterBar extends HorizontalLayout {
 		applyPreset(RangePreset.LAST_24H);
 	}
 
+	/**
+	 * Re-evaluate the current relative preset so its window ends at the present instant.
+	 * Relative presets (Last 5 minutes, Last 24 hours, …) freeze their [start, end]
+	 * window when first applied, so a plain reload keeps querying the original, now-stale
+	 * range and never shows activity that arrived since. The monitoring Refresh button
+	 * calls this first so the range advances to "now". Custom ranges are explicit user
+	 * input and left untouched.
+	 */
+	public void refreshRange() {
+		RangePreset preset = presetComboBox.getValue();
+		if (preset != null && preset != RangePreset.CUSTOM) {
+			applyPreset(preset);
+		}
+	}
+
 	private void configureTextFilter(TextField field, java.util.function.Consumer<String> setter) {
 		field.setClearButtonVisible(true);
 		field.setMinWidth("16em");

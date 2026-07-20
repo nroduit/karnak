@@ -1,13 +1,16 @@
 /*
- * Copyright (c) 2020-2026 Karnak Team and other contributors.
- *
- * This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
- * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
- *
- * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
- */
+* Copyright (c) 2020-2026 Karnak Team and other contributors.
+*
+* This program and the accompanying materials are made available under the terms of the Eclipse
+* Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
+* License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
+*
+* SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+*/
 package org.karnak.backend.service.profilepipe;
+
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 import java.awt.*;
 import java.math.BigInteger;
@@ -19,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -59,9 +61,6 @@ import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
 
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
-
 @Slf4j
 public class Profile {
 
@@ -78,7 +77,7 @@ public class Profile {
 
 	private final Map<MaskStationCondition, MaskArea> maskMap;
 
-	private final DeidentifyImageService deidentifyImageService;
+	private final @Nullable DeidentifyImageService deidentifyImageService;
 
 	/**
 	 * Property key used to store additional {@link MaskArea} objects in the
@@ -94,7 +93,7 @@ public class Profile {
 	 * @param deidentifyImageService the service that calls the external de-id image API;
 	 * pass {@code null} to disable the API call
 	 */
-	public Profile(ProfileEntity profileEntity, DeidentifyImageService deidentifyImageService) {
+	public Profile(ProfileEntity profileEntity, @Nullable DeidentifyImageService deidentifyImageService) {
 		this.maskMap = new HashMap<>();
 		this.pseudonym = new Pseudonym();
 		this.deidentifyImageService = deidentifyImageService;
@@ -308,10 +307,9 @@ public class Profile {
 		}
 	}
 
-	private MaskArea toMaskArea(MaskBody maskBody){
-		Color color = StringUtil.hasText(maskBody.getColor())
-			? ActionTags.hexadecimal2Color(maskBody.getColor())
-			: null;
+	private @Nullable MaskArea toMaskArea(MaskBody maskBody) {
+		Color color = StringUtil.hasText(maskBody.getColor()) ? ActionTags.hexadecimal2Color(maskBody.getColor())
+				: null;
 
 		List<Shape> shapeList = new ArrayList<>();
 		if (maskBody.getRectangles() != null) {
@@ -349,7 +347,7 @@ public class Profile {
 		List<MaskArea> maskAreas = new ArrayList<>();
 		for (MaskBody maskBody : masks) {
 			MaskArea maskArea = this.toMaskArea(maskBody);
-			if (maskArea != null){
+			if (maskArea != null) {
 				maskAreas.add(maskArea);
 			}
 		}

@@ -76,7 +76,8 @@ public class MonitoringAggregationService {
 		List<Predicate> predicates = TransferSeriesPredicates.build(root, cb, filter);
 
 		query.multiselect(root.get("destinationId"), cb.countDistinct(root.get("studyUidOriginal")), cb.count(root),
-				cb.sum(root.<Long>get("instances")), cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")));
+				cb.sum(root.<Long>get("instances")), cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
+				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
 		query.where(predicates.toArray(new Predicate[0]));
 		query.groupBy(root.get("destinationId"));
 
@@ -88,7 +89,8 @@ public class MonitoringAggregationService {
 			Long destinationId = row.get(0, Long.class);
 			DestinationEntity destination = destinations.get(destinationId);
 			result.add(new DestinationActivity(destinationId, forwardAet(destination), destinationLabel(destination),
-					value(row, 1), value(row, 2), value(row, 3), value(row, 4), value(row, 5)));
+					value(row, 1), value(row, 2), value(row, 3), value(row, 4), value(row, 5), value(row, 6),
+					value(row, 7)));
 		}
 		result.sort(Comparator.comparingLong(DestinationActivity::errors)
 			.reversed()
@@ -114,7 +116,8 @@ public class MonitoringAggregationService {
 				cb.greatest(root.<LocalDateTime>get("studyDateOriginal")),
 				cb.greatest(root.<LocalDateTime>get("studyDateToSend")), cb.count(root),
 				cb.sum(root.<Long>get("instances")), cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
-				cb.least(root.<LocalDateTime>get("firstSeen")), cb.greatest(root.<LocalDateTime>get("lastSeen")));
+				cb.least(root.<LocalDateTime>get("firstSeen")), cb.greatest(root.<LocalDateTime>get("lastSeen")),
+				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
 		query.where(predicates.toArray(new Predicate[0]));
 		query.groupBy(root.get("studyUidOriginal"));
 
@@ -125,7 +128,7 @@ public class MonitoringAggregationService {
 					row.get(3, String.class), row.get(4, String.class), row.get(5, String.class),
 					row.get(6, String.class), row.get(7, String.class), row.get(8, LocalDateTime.class),
 					row.get(9, LocalDateTime.class), value(row, 10), value(row, 11), value(row, 12), value(row, 13),
-					row.get(14, LocalDateTime.class), row.get(15, LocalDateTime.class)))
+					value(row, 16), value(row, 17), row.get(14, LocalDateTime.class), row.get(15, LocalDateTime.class)))
 			.collect(Collectors.toCollection(ArrayList::new));
 		result.sort(Comparator.comparingLong(StudyActivity::errors)
 			.reversed()
@@ -150,7 +153,8 @@ public class MonitoringAggregationService {
 				cb.greatest(root.<LocalDateTime>get("serieDateOriginal")),
 				cb.greatest(root.<LocalDateTime>get("serieDateToSend")), cb.sum(root.<Long>get("instances")),
 				cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
-				cb.least(root.<LocalDateTime>get("firstSeen")), cb.greatest(root.<LocalDateTime>get("lastSeen")));
+				cb.least(root.<LocalDateTime>get("firstSeen")), cb.greatest(root.<LocalDateTime>get("lastSeen")),
+				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
 		query.where(predicates.toArray(new Predicate[0]));
 		query.groupBy(root.get("serieUidOriginal"));
 
@@ -160,7 +164,8 @@ public class MonitoringAggregationService {
 			.map(row -> new SeriesActivity(row.get(0, String.class), row.get(1, String.class), row.get(2, String.class),
 					row.get(3, String.class), row.get(4, String.class), row.get(5, String.class),
 					row.get(6, LocalDateTime.class), row.get(7, LocalDateTime.class), value(row, 8), value(row, 9),
-					value(row, 10), row.get(11, LocalDateTime.class), row.get(12, LocalDateTime.class)))
+					value(row, 10), value(row, 13), value(row, 14), row.get(11, LocalDateTime.class),
+					row.get(12, LocalDateTime.class)))
 			.collect(Collectors.toCollection(ArrayList::new));
 		result.sort(Comparator.comparingLong(SeriesActivity::errors)
 			.reversed()
@@ -168,7 +173,7 @@ public class MonitoringAggregationService {
 		return result;
 	}
 
-	/** Distinct error reasons of a series with the number of instances concerned. */
+	/** Distinct reasons of a series with their error / excluded outcome counts. */
 	@Transactional(readOnly = true)
 	public List<ErrorBreakdown> listErrors(TransferStatusFilter filter, Long destinationId, String serieUid) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -185,16 +190,20 @@ public class MonitoringAggregationService {
 
 		CriteriaQuery<Tuple> reasonQuery = cb.createTupleQuery();
 		Root<TransferSeriesReasonEntity> reasonRoot = reasonQuery.from(TransferSeriesReasonEntity.class);
-		reasonQuery.multiselect(reasonRoot.get("reason"), cb.sum(reasonRoot.<Long>get("count")));
+		reasonQuery.multiselect(reasonRoot.get("reason"), cb.sum(reasonRoot.<Long>get("errorCount")),
+				cb.sum(reasonRoot.<Long>get("excludedCount")), cb.sum(reasonRoot.<Long>get("retryCount")));
 		reasonQuery.where(reasonRoot.get("seriesStatusId").in(seriesIds));
 		reasonQuery.groupBy(reasonRoot.get("reason"));
 
 		List<ErrorBreakdown> result = entityManager.createQuery(reasonQuery)
 			.getResultList()
 			.stream()
-			.map(row -> new ErrorBreakdown(row.get(0, String.class), value(row, 1)))
+			.map(row -> new ErrorBreakdown(row.get(0, String.class), value(row, 1), value(row, 2), value(row, 3)))
 			.collect(Collectors.toCollection(ArrayList::new));
-		result.sort(Comparator.comparingLong(ErrorBreakdown::instances).reversed());
+		// Busiest reason first (errors weigh before exclusions on ties).
+		result.sort(Comparator.comparingLong((ErrorBreakdown e) -> e.errors() + e.excluded())
+			.thenComparingLong(ErrorBreakdown::errors)
+			.reversed());
 		return result;
 	}
 
@@ -212,7 +221,8 @@ public class MonitoringAggregationService {
 				cb.countDistinct(root.get("studyUidOriginal")), cb.count(root), cb.sum(root.<Long>get("instances")),
 				cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
 				sumInstancesWhenTrue(cb, root, destination.get("desidentification")),
-				sumInstancesWhenTrue(cb, root, destination.get("activateTagMorphing")));
+				sumInstancesWhenTrue(cb, root, destination.get("activateTagMorphing")),
+				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
 		query.where(predicates.toArray(new Predicate[0]));
 		query.groupBy(root.get("forwardNodeId"), forwardNode.get("fwdAeTitle"));
 
@@ -220,7 +230,8 @@ public class MonitoringAggregationService {
 			.getResultList()
 			.stream()
 			.map(row -> new NodeActivity(row.get(0, Long.class), row.get(1, String.class), value(row, 2), value(row, 3),
-					value(row, 4), value(row, 5), value(row, 6), value(row, 7), value(row, 8)))
+					value(row, 4), value(row, 5), value(row, 6), value(row, 9), value(row, 10), value(row, 7),
+					value(row, 8)))
 			.collect(Collectors.toCollection(ArrayList::new));
 		result.sort(Comparator.comparingLong(NodeActivity::instances)
 			.reversed()

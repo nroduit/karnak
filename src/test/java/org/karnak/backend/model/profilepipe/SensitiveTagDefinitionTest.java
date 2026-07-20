@@ -9,14 +9,13 @@
  */
 package org.karnak.backend.model.profilepipe;
 
-import java.util.Map;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class SensitiveTagDefinitionTest {
 
@@ -37,8 +36,7 @@ class SensitiveTagDefinitionTest {
 
 		Map<String, String> retrievedData = SensitiveTagDefinition.extractSensitiveData(attributes);
 
-		assertThat(retrievedData)
-			.containsEntry("PatientName", patientName)
+		assertThat(retrievedData).containsEntry("PatientName", patientName)
 			.containsEntry("PatientID", patientId)
 			.containsEntry("PatientBirthDate", patientBirthDate)
 			.containsEntry("PatientSex", patientSex)
@@ -53,9 +51,7 @@ class SensitiveTagDefinitionTest {
 
 		Map<String, String> retrievedData = SensitiveTagDefinition.extractSensitiveData(attributes);
 
-		assertThat(retrievedData)
-			.containsEntry("PatientName", "TEST^PRENOM")
-			.doesNotContainKey("PatientID");
+		assertThat(retrievedData).containsEntry("PatientName", "TEST^PRENOM").doesNotContainKey("PatientID");
 	}
 
 	@Test

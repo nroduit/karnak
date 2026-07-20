@@ -26,12 +26,12 @@ class MonitoringNodeTest {
 
 	@Test
 	void destination_key_and_errors_and_display_name() {
-		DestinationNode withForward = new DestinationNode(5L, "GATEWAY", "AET_DEST", 3, 12, 100, 98, 2);
+		DestinationNode withForward = new DestinationNode(5L, "GATEWAY", "AET_DEST", 3, 12, 100, 98, 2, 4, 0);
 		assertEquals("d:5", withForward.key());
 		assertTrue(withForward.hasErrors());
 		assertEquals("GATEWAY → AET_DEST", withForward.displayName());
 
-		DestinationNode noErrors = new DestinationNode(6L, "", "AET_DEST", 1, 1, 1, 1, 0);
+		DestinationNode noErrors = new DestinationNode(6L, "", "AET_DEST", 1, 1, 1, 1, 0, 0, 0);
 		assertFalse(noErrors.hasErrors());
 		assertEquals("AET_DEST", noErrors.displayName());
 	}
@@ -39,7 +39,7 @@ class MonitoringNodeTest {
 	@Test
 	void study_key_uses_destination_and_study_uid() {
 		StudyNode study = new StudyNode(5L, "1.2.3", null, "CT chest", null, null, null, null, null, null, null, 4, 40,
-				0, 0, null, null);
+				0, 0, 0, 0, null, null);
 		assertEquals("st:5:1.2.3", study.key());
 		assertFalse(study.hasErrors());
 	}
@@ -47,19 +47,34 @@ class MonitoringNodeTest {
 	@Test
 	void series_key_uses_destination_and_serie_uid_and_flags_errors() {
 		SeriesNode series = new SeriesNode(5L, "1.2.3", null, null, null, null, null, null, null, null, null, "1.2.3.4",
-				null, "axial", null, "CT", null, null, null, 40, 39, 1, null, null);
+				null, "axial", null, "CT", null, null, null, 40, 39, 1, 0, 0, null, null);
 		assertEquals("se:5:1.2.3.4", series.key());
 		assertTrue(series.hasErrors());
 	}
 
 	@Test
-	void error_node_is_unique_per_parent_and_always_an_error() {
+	void error_node_is_unique_per_parent_and_flags_errors_when_it_carries_errors() {
 		SeriesNode series = new SeriesNode(5L, "1.2.3", null, null, null, null, null, null, null, null, null, "1.2.3.4",
-				null, "axial", null, "CT", null, null, null, 40, 39, 1, null, null);
-		ErrorNode error = new ErrorNode(series.key(), "timeout", 3);
+				null, "axial", null, "CT", null, null, null, 40, 39, 1, 0, 0, null, null);
+		ErrorNode error = new ErrorNode(series.key(), "timeout", 3, 0, 1);
 		assertEquals("se:5:1.2.3.4|err:timeout", error.key());
 		assertTrue(error.hasErrors());
-		assertEquals(3, error.instances());
+		assertEquals(3, error.errors());
+		assertEquals(0, error.excluded());
+		assertEquals(1, error.retries());
+		// Distinct instances = outcomes (3) - retries (1).
+		assertEquals(2, error.instances());
+	}
+
+	@Test
+	void excluded_only_reason_node_is_not_flagged_as_an_error() {
+		ErrorNode excluded = new ErrorNode("se:5:1.2.3.4", "DICOMDIR not forwarded", 0, 1, 0);
+		assertEquals("se:5:1.2.3.4|err:DICOMDIR not forwarded", excluded.key());
+		assertFalse(excluded.hasErrors());
+		assertEquals(0, excluded.errors());
+		assertEquals(1, excluded.excluded());
+		assertEquals(0, excluded.retries());
+		assertEquals(1, excluded.instances());
 	}
 
 }

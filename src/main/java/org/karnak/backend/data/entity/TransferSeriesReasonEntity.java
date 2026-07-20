@@ -16,73 +16,61 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 /**
- * Per-reason error breakdown for a {@link TransferSeriesStatusEntity}: how many instances
- * of the series failed with a given reason. Replaces the per-instance error rows.
+ * Per-reason breakdown for a {@link TransferSeriesStatusEntity}: how many outcomes of the
+ * series carried a given reason, counted in the same buckets as the series row —
+ * {@code errorCount} for hard transfer errors, {@code excludedCount} for excluded
+ * (aborted / filtered) outcomes, and {@code retryCount} for those that hit an
+ * already-seen instance (the novelty axis, orthogonal to error/excluded). A bare 409
+ * retry carries no reason.
  */
 @NullUnmarked
 @Entity(name = "TransferSeriesReason")
 @Table(name = "transfer_series_reason")
+@Getter
+@Setter
 public class TransferSeriesReasonEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
-
-	private Long id;
-
-	private Long seriesStatusId;
-
-	private String reason;
-
-	private long count;
-
-	public TransferSeriesReasonEntity() {
-	}
-
-	public TransferSeriesReasonEntity(Long seriesStatusId, String reason, long count) {
-		this.seriesStatusId = seriesStatusId;
-		this.reason = reason;
-		this.count = count;
-	}
 
 	@Id
 	@SequenceGenerator(name = "TRANSFER_SERIES_REASON_GEN", sequenceName = "transfer_series_reason_sequence",
 			allocationSize = 1)
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TRANSFER_SERIES_REASON_GEN")
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
+	private Long id;
 
 	@Column(name = "series_status_id")
-	public Long getSeriesStatusId() {
-		return seriesStatusId;
+	private Long seriesStatusId;
+
+	private String reason;
+
+	@Column(name = "error_count")
+	private long errorCount;
+
+	@Column(name = "excluded_count")
+	private long excludedCount;
+
+	@Column(name = "retry_count")
+	private long retryCount;
+
+	public TransferSeriesReasonEntity() {
 	}
 
-	public void setSeriesStatusId(Long seriesStatusId) {
+	public TransferSeriesReasonEntity(Long seriesStatusId, String reason, long errorCount, long excludedCount,
+			long retryCount) {
 		this.seriesStatusId = seriesStatusId;
-	}
-
-	public String getReason() {
-		return reason;
-	}
-
-	public void setReason(String reason) {
 		this.reason = reason;
-	}
-
-	public long getCount() {
-		return count;
-	}
-
-	public void setCount(long count) {
-		this.count = count;
+		this.errorCount = errorCount;
+		this.excludedCount = excludedCount;
+		this.retryCount = retryCount;
 	}
 
 	@Override

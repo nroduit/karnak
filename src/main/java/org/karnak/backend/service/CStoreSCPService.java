@@ -107,6 +107,8 @@ public class CStoreSCPService extends BasicCStoreSCP {
 			rsp.setInt(Tag.Status, VR.US, Status.NotAuthorized);
 			log.error("Refused: not authorized (124H). Source node: {}. SopUID: {}", callingNode,
 					rq.getString(Tag.AffectedSOPInstanceUID));
+			forwardService.monitorRejected(fwdNode, destList, rq, rq.getString(Tag.AffectedSOPClassUID),
+					"Source not authorized: " + callingNode.getAet());
 			return;
 		}
 

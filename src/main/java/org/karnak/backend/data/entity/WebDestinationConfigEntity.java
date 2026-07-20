@@ -17,8 +17,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 /**
@@ -29,18 +32,28 @@ import org.jspecify.annotations.NullUnmarked;
 @Entity(name = "WebDestinationConfig")
 @Table(name = "web_destination")
 @NullUnmarked
+@Getter
+@Setter
 public class WebDestinationConfigEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private String description;
 
+	@NotBlank(message = "URL is mandatory")
+	@Size(max = 1024, message = "URL has more than 1024 characters")
+	@Column(name = "url")
 	private String url;
 
+	@Column(name = "services")
 	private String services = "";
 
+	@Column(name = "group_name")
 	private String groupName;
 
 	public WebDestinationConfigEntity() {
@@ -50,53 +63,6 @@ public class WebDestinationConfigEntity implements Serializable {
 		this.description = description;
 		this.url = url;
 		this.services = services;
-		this.groupName = groupName;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	@NotBlank(message = "URL is mandatory")
-	@Size(max = 1024, message = "URL has more than 1024 characters")
-	@Column(name = "url")
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	@Column(name = "services")
-	public String getServices() {
-		return services;
-	}
-
-	public void setServices(String services) {
-		this.services = services;
-	}
-
-	@Column(name = "group_name")
-	public String getGroupName() {
-		return groupName;
-	}
-
-	public void setGroupName(String groupName) {
 		this.groupName = groupName;
 	}
 

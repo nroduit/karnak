@@ -156,7 +156,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 
 	public void deleteProfile(ProfileEntity profileEntity) {
 		profilePipeService.deleteProfile(profileEntity);
-		profileView.remove(profileView.getProfileEditorPanel());
+		profileView.clearRightPanel();
 		refreshAll();
 	}
 
@@ -235,13 +235,13 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 				profileView.getProfileErrorView().removeAll();
 				profileView.getProfileGrid().reload();
 				profileView.getProfileGrid().selectRow(newProfileEntity);
+				profileView.showEditorPanel();
 				profileView.getProfileEditorPanel().setProfile(newProfileEntity);
 			}
 			else {
 				profileView.getProfileGrid().deselectAll();
 				profileView.getProfileErrorView().setView(profileErrors);
-				profileView.remove(profileView.getProfileEditorPanel());
-				profileView.add(profileView.getProfileErrorView());
+				profileView.showErrorView();
 			}
 			if (profilePipe.getDefaultIssuerOfPatientID() != null) {
 				openWarningIssuerDialog();

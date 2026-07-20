@@ -9,16 +9,17 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
 import org.dcm4che3.data.Fragments;
@@ -31,13 +32,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.karnak.backend.model.profilebody.MaskBody;
-
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class DeidentifyImageServiceTest {
 
@@ -66,9 +64,7 @@ class DeidentifyImageServiceTest {
 	}
 
 	static Stream<Arguments> emptyMasksCases() {
-		return Stream.of(
-			Arguments.of(
-				"""
+		return Stream.of(Arguments.of("""
 				{
 					"message": "Sensitive data detected",
 					"masks": [
@@ -89,12 +85,7 @@ class DeidentifyImageServiceTest {
 					}
 					]
 				}
-				""",
-				"2.25.251867431509614238946512793485716204981",
-				"UID absent"
-			),
-			Arguments.of(
-				"""
+				""", "2.25.251867431509614238946512793485716204981", "UID absent"), Arguments.of("""
 				{
 					"message": "Sensitive data detected",
 					"masks": [
@@ -116,37 +107,24 @@ class DeidentifyImageServiceTest {
 					],
 				  "sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 				}
-				""",
-				"2.25.251867431509614238946512793485716204980",
-				"UID different"
-			),
-			Arguments.of(
-				"""
+				""", "2.25.251867431509614238946512793485716204980", "UID different"), Arguments.of("""
 				{
 					"message": "Test",
 					"sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 				}
-				""",
-				"2.25.251867431509614238946512793485716204981",
-				"No mask"
-			),
-			Arguments.of(
-				"""
+				""", "2.25.251867431509614238946512793485716204981", "No mask"), Arguments.of("""
 				{
 					"message": "Test",
 					"masks" : [],
 					"sop_instance_uid": "2.25.251867431509614238946512793485716204981"
 				}
-				""",
-				"2.25.251867431509614238946512793485716204981",
-				"Empty mask"
-			)
-		);
+				""", "2.25.251867431509614238946512793485716204981", "Empty mask"));
 	}
 
 	@ParameterizedTest(name = "{index} - {2}")
 	@MethodSource("emptyMasksCases")
-	void extractMasksFromJson_valid_json_should_return_empty_list(String responseJson, String expectedUid, String description) {
+	void extractMasksFromJson_valid_json_should_return_empty_list(String responseJson, String expectedUid,
+			String description) {
 		List<MaskBody> maskBodies = this.deidentifyImageService.extractMasksFromJson(responseJson, expectedUid);
 
 		assertThat(maskBodies).isEmpty();

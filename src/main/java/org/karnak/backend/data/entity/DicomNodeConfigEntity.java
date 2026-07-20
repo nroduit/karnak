@@ -17,29 +17,43 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "DicomNodeConfig")
 @Table(name = "dicom_node_config")
 @NullUnmarked
+@Getter
+@Setter
 public class DicomNodeConfigEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private String description;
 
+	@NotBlank(message = "AETitle is mandatory")
+	@Size(max = 16, message = "AETitle has more than 16 characters")
+	@Column(name = "ae_title")
 	private String aeTitle;
 
 	private String hostname;
 
 	private Integer port;
 
+	@NotBlank(message = "Node type is mandatory")
+	@Column(name = "node_type")
 	private String nodeType;
 
+	@Column(name = "node_group")
 	private String nodeGroup;
 
 	public DicomNodeConfigEntity() {
@@ -56,70 +70,6 @@ public class DicomNodeConfigEntity implements Serializable {
 		this.hostname = hostname;
 		this.port = port;
 		this.nodeType = nodeType;
-		this.nodeGroup = nodeGroup;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	@NotBlank(message = "AETitle is mandatory")
-	@Size(max = 16, message = "AETitle has more than 16 characters")
-	@Column(name = "ae_title")
-	public String getAeTitle() {
-		return aeTitle;
-	}
-
-	public void setAeTitle(String aeTitle) {
-		this.aeTitle = aeTitle;
-	}
-
-	public String getHostname() {
-		return hostname;
-	}
-
-	public void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	public Integer getPort() {
-		return port;
-	}
-
-	public void setPort(Integer port) {
-		this.port = port;
-	}
-
-	@NotBlank(message = "Node type is mandatory")
-	@Column(name = "node_type")
-	public String getNodeType() {
-		return nodeType;
-	}
-
-	public void setNodeType(String nodeType) {
-		this.nodeType = nodeType;
-	}
-
-	@Column(name = "node_group")
-	public String getNodeGroup() {
-		return nodeGroup;
-	}
-
-	public void setNodeGroup(String nodeGroup) {
 		this.nodeGroup = nodeGroup;
 	}
 

@@ -23,9 +23,9 @@ import org.weasis.core.util.annotations.Generated;
 
 /**
  * Forward-node activity dashboard: KPI cards with the totals over the selected period
- * plus a per-forward-node table (studies, series, instances sent, errors, and
- * de-identification / tag-morphing volume). Dependency-free — cards are styled
- * {@code Div}s.
+ * plus a per-forward-node table (studies, series, instances, retries, sent, errors,
+ * excluded, and de-identification / tag-morphing volume). Dependency-free — cards are
+ * styled {@code Div}s.
  */
 @Generated()
 public class NodeActivityDashboard extends VerticalLayout {
@@ -49,8 +49,10 @@ public class NodeActivityDashboard extends VerticalLayout {
 		grid.addColumn(NodeActivity::studies).setHeader("Studies").setSortable(true);
 		grid.addColumn(NodeActivity::series).setHeader("Series").setSortable(true);
 		grid.addColumn(NodeActivity::instances).setHeader("Instances").setSortable(true);
+		grid.addColumn(NodeActivity::retries).setHeader("Retries").setSortable(true);
 		grid.addColumn(NodeActivity::sent).setHeader("Sent").setSortable(true);
 		grid.addColumn(NodeActivity::errors).setHeader("Errors").setSortable(true);
+		grid.addColumn(NodeActivity::excluded).setHeader("Excluded").setSortable(true);
 		grid.addColumn(NodeActivity::deidentified).setHeader("De-identified").setSortable(true);
 		grid.addColumn(NodeActivity::tagMorphed).setHeader("Tag-morphed").setSortable(true);
 		grid.setWidthFull();
@@ -68,8 +70,10 @@ public class NodeActivityDashboard extends VerticalLayout {
 		cards.add(card("Studies", sum(nodes, NodeActivity::studies), false),
 				card("Series", sum(nodes, NodeActivity::series), false),
 				card("Instances", sum(nodes, NodeActivity::instances), false),
+				card("Retries", sum(nodes, NodeActivity::retries), false),
 				card("Sent", sum(nodes, NodeActivity::sent), false),
 				card("Errors", sum(nodes, NodeActivity::errors), true),
+				card("Excluded", sum(nodes, NodeActivity::excluded), false),
 				card("De-identified", sum(nodes, NodeActivity::deidentified), false),
 				card("Tag-morphed", sum(nodes, NodeActivity::tagMorphed), false));
 	}

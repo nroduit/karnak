@@ -12,8 +12,10 @@ package org.karnak.backend.service;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.ProjectGroupEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProjectGroupRepo;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.enums.NodeEventType;
@@ -35,6 +37,8 @@ public class ProjectService {
 
 	private final ProjectGroupRepo projectGroupRepo;
 
+	private final DestinationRepo destinationRepo;
+
 	// Event publisher
 	private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -42,13 +46,15 @@ public class ProjectService {
 	 * Autowired constructor
 	 * @param projectRepo Project repository
 	 * @param projectGroupRepo Project group repository
+	 * @param destinationRepo Destination repository
 	 * @param applicationEventPublisher Application Event Publisher
 	 */
 	@Autowired
 	public ProjectService(final ProjectRepo projectRepo, final ProjectGroupRepo projectGroupRepo,
-			final ApplicationEventPublisher applicationEventPublisher) {
+			final DestinationRepo destinationRepo, final ApplicationEventPublisher applicationEventPublisher) {
 		this.projectRepo = projectRepo;
 		this.projectGroupRepo = projectGroupRepo;
+		this.destinationRepo = destinationRepo;
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
@@ -123,11 +129,20 @@ public class ProjectService {
 		}
 	}
 
-	/** Publishes an update event for each of the project's destinations. */
+	/**
+	 * Publishes an update event for every destination that uses this project, so the
+	 * gateway rebuilds their pipelines. {@code getDestinationEntities()} only maps the
+	 * de-identification side of the association; destinations that reference the project
+	 * for tag morphing are on a separate FK and must be queried explicitly, otherwise
+	 * their (tag-morphing) pipeline keeps running the previously loaded project/profile.
+	 */
 	private void updateDestinations(ProjectEntity projectEntity) {
 		projectEntity.getDestinationEntities()
 			.forEach(destinationEntity -> applicationEventPublisher
 				.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE)));
+		for (DestinationEntity destinationEntity : destinationRepo.findByTagMorphingProjectEntity(projectEntity)) {
+			applicationEventPublisher.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
+		}
 	}
 
 	/**

@@ -19,11 +19,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilepipe.HMAC;
@@ -32,82 +35,37 @@ import org.karnak.backend.util.DateFormat;
 @Entity(name = "Project")
 @Table(name = "project")
 @NullUnmarked
+@Getter
+@Setter
 public class ProjectEntity implements Serializable {
 
-	private static final long serialVersionUID = 8809562914582842501L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private String name;
 
+	@OneToMany(mappedBy = "projectEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<SecretEntity> secretEntities;
 
+	@OneToMany(mappedBy = "deIdentificationProjectEntity", fetch = FetchType.EAGER)
 	private List<DestinationEntity> destinationEntities;
 
+	@ManyToOne
+	@JoinColumn(name = "profile_pipe_id")
 	private ProfileEntity profileEntity;
 
 	// Optional organizational group (null = shown at the root of the list)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "project_group_id")
 	private ProjectGroupEntity group;
 
 	public ProjectEntity() {
 		this.destinationEntities = new ArrayList<>();
 		this.secretEntities = new ArrayList<>();
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@OneToMany(mappedBy = "projectEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	public List<SecretEntity> getSecretEntities() {
-		return secretEntities;
-	}
-
-	public void setSecretEntities(List<SecretEntity> secretEntities) {
-		this.secretEntities = secretEntities;
-	}
-
-	@OneToMany(mappedBy = "deIdentificationProjectEntity", fetch = FetchType.EAGER)
-	public List<DestinationEntity> getDestinationEntities() {
-		return destinationEntities;
-	}
-
-	public void setDestinationEntities(List<DestinationEntity> destinationEntities) {
-		this.destinationEntities = destinationEntities;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "profile_pipe_id")
-	public ProfileEntity getProfileEntity() {
-		return profileEntity;
-	}
-
-	public void setProfileEntity(ProfileEntity profileEntity) {
-		this.profileEntity = profileEntity;
-	}
-
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "project_group_id")
-	public ProjectGroupEntity getGroup() {
-		return group;
-	}
-
-	public void setGroup(ProjectGroupEntity group) {
-		this.group = group;
 	}
 
 	/**

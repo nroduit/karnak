@@ -41,8 +41,7 @@ public class HelpView extends VerticalLayout {
 		setSizeFull();
 		H1 heading = new H1("Help");
 
-		Anchor generalDoc = new Anchor("https://weasis.org/karnak-documentation/",
-				"General documentation");
+		Anchor generalDoc = new Anchor("https://weasis.org/karnak-documentation/", "General documentation");
 		generalDoc.setTarget("_blank");
 
 		Anchor installation = new Anchor("https://weasis.org/karnak-documentation/en/userguide/",

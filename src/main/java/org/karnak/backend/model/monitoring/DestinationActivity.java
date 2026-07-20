@@ -15,5 +15,5 @@ package org.karnak.backend.model.monitoring;
  * used as a prefix in the UI; {@code destinationLabel} is the destination display string.
  */
 public record DestinationActivity(Long destinationId, String forwardAet, String destinationLabel, long studies,
-		long series, long instances, long sent, long errors) {
+		long series, long instances, long sent, long errors, long retries, long excluded) {
 }

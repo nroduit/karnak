@@ -30,8 +30,8 @@ class OidcRoleAuthoritiesMapperTest {
 	@Test
 	void should_map_karnak_client_roles_of_access_token_to_karnak_roles() {
 		// Init data
-		Jwt accessToken = jwtWithClaims(
-				Map.of("resource_access", Map.of("karnak", Map.of("roles", List.of("admin", "investigator", "offline_access")))));
+		Jwt accessToken = jwtWithClaims(Map.of("resource_access",
+				Map.of("karnak", Map.of("roles", List.of("admin", "investigator", "offline_access")))));
 
 		// Call service
 		Set<GrantedAuthority> mapped = mapper.mapAuthorities(accessToken);
@@ -70,9 +70,8 @@ class OidcRoleAuthoritiesMapperTest {
 	@Test
 	void should_only_map_karnak_client_roles_ignoring_realm_and_other_clients() {
 		// Init data
-		Jwt accessToken = jwtWithClaims(Map.of("realm_access", Map.of("roles", List.of("admin")), "resource_access",
-				Map.of("karnak", Map.of("roles", List.of("user")), "other-client",
-						Map.of("roles", List.of("investigator")))));
+		Jwt accessToken = jwtWithClaims(Map.of("realm_access", Map.of("roles", List.of("admin")), "resource_access", Map
+			.of("karnak", Map.of("roles", List.of("user")), "other-client", Map.of("roles", List.of("investigator")))));
 
 		// Call service
 		Set<GrantedAuthority> mapped = mapper.mapAuthorities(accessToken);
@@ -135,5 +134,3 @@ class OidcRoleAuthoritiesMapperTest {
 	}
 
 }
-
-

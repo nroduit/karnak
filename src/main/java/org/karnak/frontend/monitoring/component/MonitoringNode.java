@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 
 /**
  * Row model for the monitoring hierarchy tree. A node is a destination, a study, a series
- * or — only under a series that has errors — a distinct error reason. Identity is the
- * stable {@link #key()} so the {@code TreeGrid} can track rows across rebuilds. Nodes
- * also carry the fields shown in the selection detail panel.
+ * or — under a series that has errors or excluded (aborted) instances — a distinct
+ * reason. Identity is the stable {@link #key()} so the {@code TreeGrid} can track rows
+ * across rebuilds. Nodes also carry the fields shown in the selection detail panel.
  */
 public sealed interface MonitoringNode {
 
@@ -29,7 +29,7 @@ public sealed interface MonitoringNode {
 	 * prefix.
 	 */
 	record DestinationNode(Long destinationId, String forwardAet, String destinationLabel, long studies, long series,
-			long instances, long sent, long errors) implements MonitoringNode {
+			long instances, long sent, long errors, long retries, long excluded) implements MonitoringNode {
 		@Override
 		public String key() {
 			return "d:" + destinationId;
@@ -50,7 +50,7 @@ public sealed interface MonitoringNode {
 	record StudyNode(Long destinationId, String studyUid, String studyUidToSend, String description,
 			String descriptionToSend, String patientIdOriginal, String patientIdToSend, String accessionNumberOriginal,
 			String accessionNumberToSend, LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend, long series,
-			long instances, long sent, long errors, LocalDateTime firstSeen,
+			long instances, long sent, long errors, long retries, long excluded, LocalDateTime firstSeen,
 			LocalDateTime lastSeen) implements MonitoringNode {
 		@Override
 		public String key() {
@@ -74,8 +74,8 @@ public sealed interface MonitoringNode {
 			String studyDescriptionOriginal, String studyDescriptionToSend, LocalDateTime studyDateOriginal,
 			LocalDateTime studyDateToSend, String serieUid, String serieUidToSend, String description,
 			String descriptionToSend, String modality, String sopClassUids, LocalDateTime serieDateOriginal,
-			LocalDateTime serieDateToSend, long instances, long sent, long errors, LocalDateTime firstSeen,
-			LocalDateTime lastSeen) implements MonitoringNode {
+			LocalDateTime serieDateToSend, long instances, long sent, long errors, long retries, long excluded,
+			LocalDateTime firstSeen, LocalDateTime lastSeen) implements MonitoringNode {
 		@Override
 		public String key() {
 			return "se:" + destinationId + ":" + serieUid;
@@ -87,8 +87,14 @@ public sealed interface MonitoringNode {
 		}
 	}
 
-	/** A distinct error reason with the number of instances concerned, under a series. */
-	record ErrorNode(String parentKey, String reason, long instances) implements MonitoringNode {
+	/**
+	 * A distinct reason under a series, counted in the same buckets as its parent —
+	 * {@code errors} outcomes that failed to transfer, {@code excluded} outcomes that
+	 * were aborted / filtered, and {@code retries} outcomes that hit an already-seen
+	 * instance. The line is highlighted as an error only when it carries transfer errors.
+	 */
+	record ErrorNode(String parentKey, String reason, long errors, long excluded,
+			long retries) implements MonitoringNode {
 		@Override
 		public String key() {
 			return parentKey + "|err:" + reason;
@@ -96,7 +102,16 @@ public sealed interface MonitoringNode {
 
 		@Override
 		public boolean hasErrors() {
-			return true;
+			return errors > 0;
+		}
+
+		/**
+		 * Distinct instances affected by this reason: every outcome is either a
+		 * first-seen instance or a retry of an already-seen one, so distinct = outcomes −
+		 * retries.
+		 */
+		public long instances() {
+			return errors + excluded - retries;
 		}
 	}
 

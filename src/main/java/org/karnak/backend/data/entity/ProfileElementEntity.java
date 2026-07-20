@@ -24,11 +24,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.converter.ArgumentToMapConverter;
 import org.karnak.backend.data.converter.TagListToStringListConverter;
@@ -37,10 +40,16 @@ import org.karnak.backend.data.converter.TagListToStringListConverter;
 @Table(name = "profile_element")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @NullUnmarked
+@Getter
+@Setter
 public class ProfileElementEntity implements Serializable {
 
-	private static final long serialVersionUID = 818925943276758147L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@JsonIgnore
 	private Long id;
 
 	private String name;
@@ -53,14 +62,24 @@ public class ProfileElementEntity implements Serializable {
 
 	private String option;
 
+	@JsonIgnore
 	private Integer position;
 
+	@ManyToOne
+	@JoinColumn(name = "profile_id", nullable = false)
+	@JsonIgnore
 	private ProfileEntity profileEntity;
 
+	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+			orphanRemoval = true)
 	private List<IncludedTagEntity> includedTagEntities = new ArrayList<>();
 
+	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+			orphanRemoval = true)
 	private List<ExcludedTagEntity> excludedTagEntities = new ArrayList<>();
 
+	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+			orphanRemoval = true)
 	private List<ArgumentEntity> argumentEntities = new ArrayList<>();
 
 	public ProfileElementEntity() {
@@ -101,60 +120,7 @@ public class ProfileElementEntity implements Serializable {
 		this.argumentEntities.add(argumentEntity);
 	}
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@JsonIgnore
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getCodename() {
-		return codename;
-	}
-
-	public void setCodename(String codename) {
-		this.codename = codename;
-	}
-
-	public String getCondition() {
-		return condition;
-	}
-
-	public void setCondition(String condition) {
-		this.condition = condition;
-	}
-
-	public String getAction() {
-		return action;
-	}
-
-	public void setAction(String action) {
-		this.action = action;
-	}
-
-	public String getOption() {
-		return option;
-	}
-
-	public void setOption(String option) {
-		this.option = option;
-	}
-
 	@JsonGetter("arguments")
-	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
-			orphanRemoval = true)
 	@JsonSerialize(converter = ArgumentToMapConverter.class)
 	public List<ArgumentEntity> getArgumentEntities() {
 		return argumentEntities;
@@ -165,29 +131,7 @@ public class ProfileElementEntity implements Serializable {
 		this.argumentEntities = argumentEntities;
 	}
 
-	@JsonIgnore
-	public Integer getPosition() {
-		return position;
-	}
-
-	public void setPosition(Integer position) {
-		this.position = position;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "profile_id", nullable = false)
-	@JsonIgnore
-	public ProfileEntity getProfileEntity() {
-		return profileEntity;
-	}
-
-	public void setProfileEntity(ProfileEntity profileEntity) {
-		this.profileEntity = profileEntity;
-	}
-
 	@JsonGetter("tags")
-	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
-			orphanRemoval = true)
 	@JsonSerialize(converter = TagListToStringListConverter.class)
 	public List<IncludedTagEntity> getIncludedTagEntities() {
 		return includedTagEntities;
@@ -199,8 +143,6 @@ public class ProfileElementEntity implements Serializable {
 	}
 
 	@JsonGetter("excludedTags")
-	@OneToMany(mappedBy = "profileElementEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER,
-			orphanRemoval = true)
 	@JsonSerialize(converter = TagListToStringListConverter.class)
 	public List<ExcludedTagEntity> getExcludedTagEntities() {
 		return excludedTagEntities;

@@ -18,23 +18,36 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+
+import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Arguments")
 @Table(name = "arguments")
 @NullUnmarked
+@Getter
+@Setter
 public class ArgumentEntity implements Serializable {
 
-	private static final long serialVersionUID = -839421871919135822L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@JsonIgnore
 	private Long id;
 
+	@ManyToOne
+	@JoinColumn(name = "profile_element_id", nullable = false)
 	private ProfileElementEntity profileElementEntity;
 
 	private String argumentKey;
 
+	@Column(columnDefinition = "text")
 	private String argumentValue;
 
 	public ArgumentEntity() {
@@ -48,44 +61,6 @@ public class ArgumentEntity implements Serializable {
 	public ArgumentEntity(String argumentKey, String argumentValue, ProfileElementEntity profileElementEntity) {
 		this.argumentKey = argumentKey;
 		this.argumentValue = argumentValue;
-		this.profileElementEntity = profileElementEntity;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@JsonIgnore
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getArgumentKey() {
-		return argumentKey;
-	}
-
-	public void setArgumentKey(String key) {
-		this.argumentKey = key;
-	}
-
-	@Column(columnDefinition = "text")
-	public String getArgumentValue() {
-		return argumentValue;
-	}
-
-	public void setArgumentValue(String value) {
-		this.argumentValue = value;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "profile_element_id", nullable = false)
-	public ProfileElementEntity getProfileElementEntity() {
-		return profileElementEntity;
-	}
-
-	public void setProfileElementEntity(ProfileElementEntity profileElementEntity) {
 		this.profileElementEntity = profileElementEntity;
 	}
 

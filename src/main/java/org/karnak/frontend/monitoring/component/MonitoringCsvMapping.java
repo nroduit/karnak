@@ -36,9 +36,9 @@ public enum MonitoringCsvMapping {
 	SERIE_DESCRIPTION_TO_SEND("serieDescriptionToSend", "Serie Description To Send"),
 	SERIE_DATE_ORIGINAL("serieDateOriginal", "Serie Date Original"),
 	SERIE_DATE_TO_SEND("serieDateToSend", "Serie Date To Send"), MODALITY("modality", "Modality"),
-	SOP_CLASS_UIDS("sopClassUids", "Sop Class Uids"), INSTANCES("instances", "Instances"), SENT("sent", "Sent"),
-	ERRORS("errors", "Errors"), REASONS("reasons", "Reasons"), FIRST_SEEN("firstSeen", "First Seen"),
-	LAST_SEEN("lastSeen", "Last Seen");
+	SOP_CLASS_UIDS("sopClassUids", "Sop Class Uids"), INSTANCES("instances", "Instances"),
+	RETRIES("retries", "Retries"), SENT("sent", "Sent"), ERRORS("errors", "Errors"), EXCLUDED("excluded", "Excluded"),
+	REASONS("reasons", "Reasons"), FIRST_SEEN("firstSeen", "First Seen"), LAST_SEEN("lastSeen", "Last Seen");
 
 	// Name of the field of the entity
 	private final String nameFieldEntity;
