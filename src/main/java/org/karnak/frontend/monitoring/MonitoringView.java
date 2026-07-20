@@ -99,6 +99,7 @@ public class MonitoringView extends VerticalLayout {
 		exportDialog = new ExportDialog(
 				() -> monitoringLogic.buildCsv(getCurrentFilter(), exportDialog.getExportSettings()));
 
+		expandErrorsButton = new Button("Expand errors", new Icon(VaadinIcon.WARNING));
 		activityPanel = buildActivityPanel();
 
 		activityTab = new Tab(VaadinIcon.LIST_OL.create(), new Text("Activity"));
@@ -112,7 +113,6 @@ public class MonitoringView extends VerticalLayout {
 	}
 
 	private Component buildActivityPanel() {
-		expandErrorsButton = new Button("Expand errors", new Icon(VaadinIcon.WARNING));
 		expandErrorsButton.addClickListener(event -> {
 			if (errorsExpanded) {
 				treeGrid.collapseErrors();
@@ -162,10 +162,8 @@ public class MonitoringView extends VerticalLayout {
 	 */
 	private void resetErrorsToggle() {
 		errorsExpanded = false;
-		if (expandErrorsButton != null) {
-			expandErrorsButton.setText("Expand errors");
-			expandErrorsButton.setIcon(new Icon(VaadinIcon.WARNING));
-		}
+		expandErrorsButton.setText("Expand errors");
+		expandErrorsButton.setIcon(new Icon(VaadinIcon.WARNING));
 	}
 
 	private void confirmDeleteAll() {

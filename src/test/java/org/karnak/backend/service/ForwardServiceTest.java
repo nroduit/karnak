@@ -204,10 +204,15 @@ class ForwardServiceTest {
 			.uploadDicom(any(Attributes.class), anyString());
 		WebForwardDestination dest = webDestination(stow, List.of());
 
-		// 409 means the object is already stored: success, no exception.
+		// 409 means the object is already stored: no exception propagates, and the
+		// outcome is monitored as a duplicate/retry (MonitoringWriteService.apply),
+		// not as a fresh send or an error.
 		forwardService.transferOther(fwdNode, dest, dataset(), params(null));
 
-		assertTrue(captureSingleEvent().sent());
+		MonitoringEntry event = captureSingleEvent();
+		assertTrue(event.duplicate());
+		assertFalse(event.sent());
+		assertFalse(event.error());
 	}
 
 	@Test
