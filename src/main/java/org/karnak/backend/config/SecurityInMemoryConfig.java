@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -62,6 +63,10 @@ public class SecurityInMemoryConfig {
 				// Allow endpoints
 				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
 				.permitAll())
+			// Enable HTTP Basic authentication so the management REST API (/api/**,
+			// beyond the explicitly permitted echo endpoint) can be called by
+			// non-browser clients, alongside the Vaadin/form-login session below.
+			.httpBasic(Customizer.withDefaults())
 			// Vaadin/Spring Security integration: permits the framework internal
 			// requests and the @AnonymousAllowed views, scopes CSRF, configures the
 			// request cache, the form login on the login view and requires

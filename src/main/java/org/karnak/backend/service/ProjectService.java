@@ -24,6 +24,7 @@ import org.karnak.frontend.util.CollatorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Project service
@@ -149,7 +150,19 @@ public class ProjectService {
 	 * Remove project
 	 * @param projectEntity Project to remove
 	 */
+	@Transactional
 	public void remove(ProjectEntity projectEntity) {
+		// Clear FK references in destinations before deleting to avoid constraint
+		// violations. Destinations using this project for de-identification or tag
+		// morphing become pass-through.
+		for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+			destinationEntity.setDeIdentificationProjectEntity(null);
+			destinationRepo.save(destinationEntity);
+		}
+		for (DestinationEntity destinationEntity : destinationRepo.findByTagMorphingProjectEntity(projectEntity)) {
+			destinationEntity.setTagMorphingProjectEntity(null);
+			destinationRepo.save(destinationEntity);
+		}
 		projectRepo.deleteById(projectEntity.getId());
 		projectRepo.flush();
 	}

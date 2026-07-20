@@ -10,6 +10,7 @@
 package org.karnak.backend.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -300,7 +301,7 @@ public class DestinationEntity implements Serializable {
 		return destinationEntity;
 	}
 
-	@JsonGetter("forwardNode")
+	@JsonIgnore
 	public ForwardNodeEntity getForwardNodeEntity() {
 		return forwardNodeEntity;
 	}
