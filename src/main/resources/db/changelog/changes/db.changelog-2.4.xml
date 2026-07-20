@@ -1,0 +1,49 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Per-series snapshot of the delivery counters at the last email notification. A
+       notification reports the delta (current - notified_*) so outcomes already notified
+       are not re-reported when the series row is touched again by a later transfer. -->
+
+  <changeSet author="karnak" id="2.4-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_status" columnName="notified_sent"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_status">
+      <column name="notified_sent" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.4-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_status" columnName="notified_errors"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_status">
+      <column name="notified_errors" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.4-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_status" columnName="notified_excluded"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_status">
+      <column name="notified_excluded" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>
