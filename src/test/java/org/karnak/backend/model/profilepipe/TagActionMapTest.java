@@ -9,12 +9,6 @@
  */
 package org.karnak.backend.model.profilepipe;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.dcm4che3.data.Tag;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -22,6 +16,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.model.action.Keep;
 import org.karnak.backend.model.action.Remove;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class TagActionMapTest {
@@ -121,6 +121,36 @@ class TagActionMapTest {
 			map.put("0010XXXX", new Keep("K"));
 
 			assertNull(map.get(Tag.StudyDate));
+		}
+
+		@Test
+		void ignores_spaces_in_an_exact_tag() {
+			TagActionMap map = new TagActionMap();
+			Keep keep = new Keep("K");
+
+			map.put("(0010, 0010)", keep);
+
+			assertSame(keep, map.get(Tag.PatientName));
+		}
+
+		@Test
+		void ignores_surrounding_and_inner_spaces_in_an_exact_tag() {
+			TagActionMap map = new TagActionMap();
+			Keep keep = new Keep("K");
+
+			map.put("  ( 0010 , 0010)  ", keep);
+
+			assertSame(keep, map.get(Tag.PatientName));
+		}
+
+		@Test
+		void ignores_spaces_in_a_wildcard_pattern() {
+			TagActionMap map = new TagActionMap();
+			Remove remove = new Remove("X");
+
+			map.put("(0010, XXXX)", remove);
+
+			assertSame(remove, map.get(Tag.PatientName));
 		}
 
 	}
