@@ -28,7 +28,9 @@ public class DestinationComponentUtil extends VerticalLayout {
 		ProjectDropDown projectDropDown = new ProjectDropDown();
 		projectDropDown.setItemLabelGenerator(ProjectEntity::getName);
 		projectDropDown.setLabel("Choose a project");
-		projectDropDown.setWidth("100%");
+		// Keep the project selector compact rather than spanning the whole card; a
+		// project name never needs the full destination-panel width.
+		projectDropDown.setWidth("300px");
 		return projectDropDown;
 	}
 

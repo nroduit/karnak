@@ -9,8 +9,10 @@
  */
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -19,7 +21,6 @@ import java.util.Objects;
 import lombok.Getter;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
-import org.karnak.frontend.util.UIS;
 import org.weasis.core.util.annotations.Generated;
 
 @Getter
@@ -37,22 +38,33 @@ public class PseudonymFromApi extends Div {
 
 	private Select<String> method;
 
-	private TextField authConfig;
+	private ComboBox<String> authConfig;
 
 	public PseudonymFromApi(Binder<DestinationEntity> destinationBinder) {
 		this.destinationBinder = destinationBinder;
 		setWidthFull();
 		setElements();
-		add(UIS.setWidthFull(new HorizontalLayout(url, method)), body,
-				UIS.setWidthFull(new HorizontalLayout(responsePath, authConfig)));
+
+		// A responsive grid on three columns when the panel is wide enough, collapsing to
+		// a single column on a narrow destination panel. Each field fills its column(s),
+		// so labels never overflow or wrap awkwardly the way they did with
+		// fixed-percentage HorizontalLayout rows under the Aura theme. Colspans give the
+		// URL and JSON Response Path the extra width they need, while the Method selector
+		// and the authentication-config combo stay compact in a single column.
+		FormLayout formLayout = new FormLayout();
+		formLayout.setWidthFull();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("25em", 3));
+		formLayout.add(url, method, body, responsePath, authConfig);
+		formLayout.setColspan(url, 2);
+		formLayout.setColspan(body, 3);
+		formLayout.setColspan(responsePath, 2);
+		add(formLayout);
 	}
 
 	public void setElements() {
 		body = new TextArea("Body (JSON)");
 		body.setVisible(false);
-		body.setWidthFull();
 		url = new TextField("Url");
-		url.getStyle().setFlexGrow("1");
 		url.setRequired(true);
 		method = new Select<>(e -> {
 			if (e.getValue() != null) {
@@ -63,13 +75,12 @@ public class PseudonymFromApi extends Div {
 		method.setEmptySelectionAllowed(false);
 		method.setValue("GET");
 		method.setLabel("Method");
-		method.getStyle().setFlexGrow("1");
 		method.setRequiredIndicatorVisible(true);
 		responsePath = new TextField("JSON Response Path");
-		responsePath.getStyle().setFlexGrow("1");
 		responsePath.setRequired(true);
-		authConfig = new TextField("Authentication Config Code");
-		authConfig.getStyle().setFlexGrow("1");
+		// Pick the authentication config from the existing identifiers rather than typing
+		// a free-text code; items are populated by the parent view.
+		authConfig = new ComboBox<>("Authentication Config Code");
 	}
 
 	public void clear() {

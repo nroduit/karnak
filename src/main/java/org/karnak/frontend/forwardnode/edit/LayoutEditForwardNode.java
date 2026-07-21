@@ -31,6 +31,7 @@ import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
+import org.karnak.backend.service.AuthConfigService;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
 import org.karnak.backend.util.DoubleToIntegerConverter;
@@ -65,6 +66,8 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	// Services
 	private final transient ProjectService projectService;
 
+	private final transient AuthConfigService authConfigService;
+
 	private final SOPClassUIDService sopClassUIDService;
 
 	// UI components
@@ -94,6 +97,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 	public LayoutEditForwardNode(ForwardNodeLogic forwardNodeLogic, Environment environment) {
 		this.projectService = forwardNodeLogic.getProjectService();
+		this.authConfigService = forwardNodeLogic.getAuthConfigService();
 		this.sopClassUIDService = forwardNodeLogic.getSopClassUIDService();
 		this.currentForwardNodeEntity = null;
 		this.binderForwardNode = new BeanValidationBinder<>(ForwardNodeEntity.class);
@@ -196,6 +200,11 @@ public class LayoutEditForwardNode extends VerticalLayout {
 			.getFilterBySOPClassesForm()
 			.getSopFilter()
 			.setItems(sopClassUIDService.getAllSOPClassUIDsName());
+		newUpdateDestination.getFormDICOM()
+			.getDeIdentificationComponent()
+			.getPseudonymFromApiComponent()
+			.getAuthConfig()
+			.setItems(authConfigService.getAllAuthConfigCodes());
 
 		// FormStow
 		newUpdateDestination.getFormSTOW()
@@ -210,6 +219,11 @@ public class LayoutEditForwardNode extends VerticalLayout {
 			.getFilterBySOPClassesForm()
 			.getSopFilter()
 			.setItems(sopClassUIDService.getAllSOPClassUIDsName());
+		newUpdateDestination.getFormSTOW()
+			.getDeIdentificationComponent()
+			.getPseudonymFromApiComponent()
+			.getAuthConfig()
+			.setItems(authConfigService.getAllAuthConfigCodes());
 
 		// Set button in view in order to be able to enable/disable it
 		destinationView.setButtonForwardNodeSaveDeleteCancel(buttonForwardNodeSaveDeleteCancel);
@@ -672,7 +686,10 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 		deIdentificationComponent.getDestinationBinder()
 			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getAuthConfig())
-			.withConverter(String::valueOf, value -> (value == null) ? "" : value)
+			// The combo yields null when no identifier is selected; store it as an empty
+			// string rather than the literal "null".
+			.withConverter(value -> (value == null) ? "" : value,
+					value -> (value == null || value.isEmpty()) ? null : value)
 			.bind(DestinationEntity::getAuthConfig, DestinationEntity::setAuthConfig);
 
 		deIdentificationComponent.getDestinationBinder()

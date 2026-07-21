@@ -25,6 +25,7 @@ import org.karnak.backend.data.entity.ForwardNodeGroupEntity;
 import org.karnak.backend.data.entity.NamedGroupEntity;
 import org.karnak.backend.service.ForwardNodeAPIService;
 import org.karnak.backend.service.ForwardNodeService;
+import org.karnak.backend.service.AuthConfigService;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
 import org.karnak.frontend.forwardnode.edit.destination.DestinationLogic;
@@ -57,6 +58,9 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
 	private final transient ProjectService projectService;
 
 	@Getter
+	private final transient AuthConfigService authConfigService;
+
+	@Getter
 	private final transient SOPClassUIDService sopClassUIDService;
 
 	@Getter
@@ -73,12 +77,13 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
 	@Autowired
 	public ForwardNodeLogic(final ForwardNodeAPIService forwardNodeAPIService,
 			final ForwardNodeService forwardNodeService, final ProjectService projectService,
-			final SOPClassUIDService sopClassUIDService, final SourceLogic sourceLogic,
-			final DestinationLogic destinationLogic) {
+			final AuthConfigService authConfigService, final SOPClassUIDService sopClassUIDService,
+			final SourceLogic sourceLogic, final DestinationLogic destinationLogic) {
 		super(new ArrayList<>());
 		this.forwardNodeAPIService = forwardNodeAPIService;
 		this.forwardNodeService = forwardNodeService;
 		this.projectService = projectService;
+		this.authConfigService = authConfigService;
 		this.sopClassUIDService = sopClassUIDService;
 		this.sourceLogic = sourceLogic;
 		this.destinationLogic = destinationLogic;

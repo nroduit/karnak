@@ -112,14 +112,16 @@ public class DeIdentificationComponent extends VerticalLayout {
 		// Padding
 		setPadding(true);
 
-		// Group issuer text field + skip checkbox in a dedicated block, with enough
-		// spacing that each field reads together with its own helper text
+		// Group the skip checkbox + issuer text field in a dedicated block, with enough
+		// spacing that each control reads together with its own helper text. The
+		// "Ignore Issuer of Patient ID" checkbox comes first because it governs the
+		// issuer field below it (checking it disables and clears that field).
 		VerticalLayout issuerLayout = new VerticalLayout();
 		issuerLayout.setPadding(false);
 		issuerLayout.setSpacing(false);
 		issuerLayout.setWidthFull();
 		issuerLayout.getStyle().set("gap", "1.25rem");
-		issuerLayout.add(issuerOfPatientIDByDefault, skipIssuerOfPatientIdCheckbox);
+		issuerLayout.add(skipIssuerOfPatientIdCheckbox, issuerOfPatientIDByDefault);
 
 		// Keep the resolved-profile label tight under the project field, so it reads as
 		// that field's helper rather than a separate control
@@ -222,7 +224,9 @@ public class DeIdentificationComponent extends VerticalLayout {
 	private void buildPseudonymTypeSelect() {
 		pseudonymTypeSelect = new Select<>();
 		pseudonymTypeSelect.setLabel("Pseudonym type");
-		pseudonymTypeSelect.setWidthFull();
+		// Keep the selector compact rather than spanning the whole panel; the option
+		// labels never need the full destination-panel width.
+		pseudonymTypeSelect.setWidth("350px");
 		pseudonymTypeSelect.setHelperText(
 				"How Karnak obtains the pseudonym: from its own cache, from a DICOM tag in the image, or from an external API.");
 		pseudonymTypeSelect.setItems(CACHE_EXTID.getValue(), EXTID_IN_TAG.getValue(), EXTID_API.getValue());
@@ -243,9 +247,14 @@ public class DeIdentificationComponent extends VerticalLayout {
 	private void buildIssuerOfPatientID() {
 		issuerOfPatientIDByDefault = new TextField();
 		issuerOfPatientIDByDefault.setLabel("Issuer of Patient ID by default");
-		issuerOfPatientIDByDefault.setWidthFull();
+		// Half-width is plenty for an issuer identifier; no need to span the whole panel.
+		issuerOfPatientIDByDefault.setWidth("50%");
 		issuerOfPatientIDByDefault.setPlaceholder("e.g. hospital identifier");
 		issuerOfPatientIDByDefault.setHelperText(LABEL_DEFAULT_ISSUER);
+		// Only relevant to CACHE_EXTID ("Pseudonym is already stored in KARNAK"), where
+		// it
+		// is the fallback issuer used to build the cache key; hidden for the other types.
+		issuerOfPatientIDByDefault.setVisible(false);
 	}
 
 	/**
@@ -290,6 +299,7 @@ public class DeIdentificationComponent extends VerticalLayout {
 	 */
 	private void updateSkipIssuerCheckboxState(String pseudonymTypeValue) {
 		boolean isCacheExtid = Objects.equals(pseudonymTypeValue, CACHE_EXTID.getValue());
+		issuerOfPatientIDByDefault.setVisible(isCacheExtid);
 		skipIssuerOfPatientIdCheckbox.setVisible(isCacheExtid);
 		if (!isCacheExtid) {
 			skipIssuerOfPatientIdCheckbox.setValue(false);
