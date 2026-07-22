@@ -162,6 +162,28 @@ public class NotificationService {
 			s.setNotifiedExcluded(s.getExcluded());
 		});
 		transferSeriesStatusRepo.saveAll(series);
+		snapshotNotifiedReasons(series);
+	}
+
+	/**
+	 * Advances the per-reason notified snapshot to the current counts for every touched
+	 * series, mirroring {@link #snapshotNotifiedCounters}. A reason not incremented in a
+	 * later run then has a zero delta and is dropped by {@link #loadReasons}.
+	 */
+	private void snapshotNotifiedReasons(List<TransferSeriesStatusEntity> series) {
+		List<Long> ids = series.stream().map(TransferSeriesStatusEntity::getId).toList();
+		if (ids.isEmpty()) {
+			return;
+		}
+		List<TransferSeriesReasonEntity> reasons = transferSeriesReasonRepo.findBySeriesStatusIdIn(ids);
+		if (reasons.isEmpty()) {
+			return;
+		}
+		reasons.forEach(r -> {
+			r.setNotifiedErrorCount(r.getErrorCount());
+			r.setNotifiedExcludedCount(r.getExcludedCount());
+		});
+		transferSeriesReasonRepo.saveAll(reasons);
 	}
 
 	/** Builds a notification for each (source, study) group and adds it to the list. */
@@ -395,7 +417,12 @@ public class NotificationService {
 					Collectors.groupingBy(s -> StringUtils.defaultString(s.getStudyUidOriginal()))));
 	}
 
-	/** Maps each series id to its distinct error reasons. */
+	/**
+	 * Maps each series id to the distinct reasons that gained a new error or excluded
+	 * outcome since the last notification. Cumulative reasons left over from earlier runs
+	 * (zero delta) are dropped so the email's reasons stay in step with its delta
+	 * counters.
+	 */
 	private Map<Long, Set<String>> loadReasons(List<TransferSeriesStatusEntity> series) {
 		List<Long> ids = series.stream().map(TransferSeriesStatusEntity::getId).toList();
 		if (ids.isEmpty()) {
@@ -403,8 +430,20 @@ public class NotificationService {
 		}
 		return transferSeriesReasonRepo.findBySeriesStatusIdIn(ids)
 			.stream()
+			.filter(NotificationService::hasNewNotTransferredOutcome)
 			.collect(Collectors.groupingBy(TransferSeriesReasonEntity::getSeriesStatusId,
 					Collectors.mapping(TransferSeriesReasonEntity::getReason, Collectors.toSet())));
+	}
+
+	/**
+	 * True when this reason recorded a new not-transferred outcome (error or excluded)
+	 * since the last notification snapshot. Retries are ignored here: a reason is only
+	 * ever booked on an error/excluded outcome, and the email reports the delivery axis.
+	 */
+	private static boolean hasNewNotTransferredOutcome(TransferSeriesReasonEntity reason) {
+		long errorDelta = reason.getErrorCount() - reason.getNotifiedErrorCount();
+		long excludedDelta = reason.getExcludedCount() - reason.getNotifiedExcludedCount();
+		return errorDelta > 0 || excludedDelta > 0;
 	}
 
 	/** Splits a comma-joined set into distinct non-blank values. */

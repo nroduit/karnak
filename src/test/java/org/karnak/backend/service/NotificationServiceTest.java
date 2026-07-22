@@ -17,16 +17,19 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
+import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
 import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
 import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
+import org.karnak.backend.model.notification.SerieSummaryNotification;
 import org.karnak.backend.model.notification.TransferMonitoringNotification;
 import org.mockito.Mockito;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -223,6 +226,48 @@ class NotificationServiceTest {
 		// Snapshot advanced to the current counters for the next notification.
 		Mockito.verify(transferSeriesStatusRepoMock).saveAll(Mockito.anyList());
 		assertEquals(2, series.getNotifiedExcluded());
+	}
+
+	@Test
+	void reports_only_reasons_with_a_new_outcome_since_the_last_notification() {
+		// Two reasons on the series: "stale" was fully notified in an earlier run
+		// (errorCount == notifiedErrorCount, zero delta) while "fresh" gained one new
+		// error
+		// this session. Only "fresh" must appear; the counters likewise report the single
+		// new error, so reasons and counters stay in step.
+		DestinationEntity destinationEntity = new DestinationEntity();
+		destinationEntity.setDesidentification(false);
+		destinationEntity.setLastTransfer(LocalDateTime.MIN);
+		destinationEntity.setId(1L);
+		destinationEntity.setActivateNotification(true);
+		when(destinationRepositoryMock.findAll()).thenReturn(List.of(destinationEntity));
+
+		TransferSeriesStatusEntity series = new TransferSeriesStatusEntity();
+		series.setId(7L);
+		series.setDestinationEntity(destinationEntity);
+		series.setForwardNodeId(2L);
+		series.setForwardNodeEntity(new ForwardNodeEntity());
+		series.setStudyUidOriginal("studyUidOriginal");
+		series.setSerieUidOriginal("serieUidOriginal");
+		series.setInstances(2);
+		series.setErrors(2);
+		series.setNotifiedErrors(1);
+		when(transferSeriesStatusRepoMock.findByDestinationId(Mockito.anyLong())).thenReturn(List.of(series));
+
+		TransferSeriesReasonEntity stale = new TransferSeriesReasonEntity(7L, "stale", 1, 0, 0);
+		stale.setNotifiedErrorCount(1);
+		TransferSeriesReasonEntity fresh = new TransferSeriesReasonEntity(7L, "fresh", 1, 0, 0);
+		when(transferSeriesReasonRepoMock.findBySeriesStatusIdIn(Mockito.anyList())).thenReturn(List.of(stale, fresh));
+
+		List<TransferMonitoringNotification> notifications = notificationService.buildNotificationsToSend();
+
+		assertEquals(1, notifications.size());
+		SerieSummaryNotification summary = notifications.get(0).getSerieSummaryNotifications().get(0);
+		assertEquals(1, summary.getNbTransferNotSent());
+		assertEquals(Set.of("fresh"), summary.getUnTransferedReasons());
+		// Reason snapshot advanced to the current counts for the next notification.
+		assertEquals(1, fresh.getNotifiedErrorCount());
+		Mockito.verify(transferSeriesReasonRepoMock).saveAll(Mockito.anyList());
 	}
 
 	@Test
