@@ -1,0 +1,38 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Per-reason snapshot of the reason counters at the last email notification. A
+       notification reports a reason only when its delta (current - notified_*_count) is
+       non-zero, mirroring the transfer_series_status notified_* columns, so a reason
+       recorded in an earlier run is not re-reported when the series row is touched again
+       by a later transfer that produced no such outcome. -->
+
+  <changeSet author="karnak" id="2.5-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_reason" columnName="notified_error_count"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_reason">
+      <column name="notified_error_count" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.5-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="transfer_series_reason" columnName="notified_excluded_count"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="transfer_series_reason">
+      <column name="notified_excluded_count" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>
