@@ -9,9 +9,6 @@
 */
 package org.karnak.backend.service.profilepipe;
 
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
-
 import java.awt.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -22,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -60,6 +58,9 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
+
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 @Slf4j
 public class Profile {
@@ -271,7 +272,7 @@ public class Profile {
 				.findFirst()
 				.orElse(null);
 
-			if (cleanPixelDataItem != null && cleanPixelDataItem.isAutomaticMasksGeneration()) {
+			if (this.isAutomaticMasksGeneration(cleanPixelDataItem)) {
 				List<MaskArea> apiMasks = this.fetchMasksFromDeidentifyImageApi(dcmCopy, context.getTsuid());
 				if (!apiMasks.isEmpty()) {
 					// Use the first API mask as the "primary" mask (set on the context),
@@ -282,12 +283,8 @@ public class Profile {
 					}
 				}
 			}
-			if (mask == null && (cleanPixelDataItem == null || !cleanPixelDataItem.isAutomaticMasksGeneration())) {
-				// Manual mask should be applied only if automatic mask generation is not
-				// enabled
-				// If the API doesn't return any mask (because of an internal error,
-				// unreachable, etc...)
-				// then the data should not be sent
+			if (mask == null && !this.isAutomaticMasksGeneration(cleanPixelDataItem)) {
+				// Manual mask should be applied only if automatic mask generation is not enabled
 				mask = this.getMask(new MaskStationCondition(dcmCopy.getString(Tag.StationName),
 						dcmCopy.getString(Tag.Columns), dcmCopy.getString(Tag.Rows)));
 			}
@@ -297,7 +294,7 @@ public class Profile {
 			if (this.isCleanPixelAllowedDependingImageType(dcmCopy, sopClassUID)
 					&& this.evaluateConditionCleanPixelData(dcmCopy)) {
 				context.setMaskArea(mask);
-				if (mask == null) {
+				if (mask == null && !this.isAutomaticMasksGeneration(cleanPixelDataItem)) {
 					throw new IllegalStateException("Clean pixel is not applied: mask not defined in station name");
 				}
 			}
@@ -305,6 +302,10 @@ public class Profile {
 				context.setMaskArea(null);
 			}
 		}
+	}
+
+	private boolean isAutomaticMasksGeneration(@Nullable CleanPixelData cleanPixelDataItem) {
+		return (cleanPixelDataItem != null && cleanPixelDataItem.isAutomaticMasksGeneration());
 	}
 
 	private @Nullable MaskArea toMaskArea(MaskBody maskBody) {
