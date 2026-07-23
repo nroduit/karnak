@@ -22,6 +22,7 @@ import org.karnak.backend.model.action.Replace;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.util.DateFormat;
+import org.karnak.backend.util.ShiftApiDate;
 import org.karnak.backend.util.ShiftByTagDate;
 import org.karnak.backend.util.ShiftDate;
 import org.karnak.backend.util.ShiftRangeDate;
@@ -48,15 +49,16 @@ public class ActionDates extends AbstractProfileItem {
 	public void profileValidation() throws ProfileException {
 		if (option == null) {
 			throw new ProfileException("Cannot build the profile " + codeName
-					+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, date_format]");
+					+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, shift_from_api, date_format]");
 		}
 		switch (option) {
 			case "shift" -> ShiftDate.verifyShiftArguments(argumentEntities);
 			case "shift_range" -> ShiftRangeDate.verifyShiftArguments(argumentEntities);
 			case "shift_by_tag" -> ShiftByTagDate.verifyShiftArguments(argumentEntities);
+			case "shift_from_api" -> ShiftApiDate.verifyShiftArguments(argumentEntities);
 			case "date_format" -> DateFormat.verifyPatternArguments(argumentEntities);
 			default -> throw new ProfileException("Cannot build the profile " + codeName + " with the option given "
-					+ option + " : Option available (shift, shift_range, shift_by_tag, date_format)");
+					+ option + " : Option available (shift, shift_range, shift_by_tag, shift_from_api, date_format)");
 		}
 
 		validateCondition();
@@ -96,6 +98,7 @@ public class ActionDates extends AbstractProfileItem {
 			case "shift" -> ShiftDate.shift(dcmCopy, tag, argumentEntities);
 			case "shift_range" -> ShiftRangeDate.shift(dcmCopy, tag, argumentEntities, hmac);
 			case "shift_by_tag" -> ShiftByTagDate.shift(dcmCopy, tag, argumentEntities, hmac);
+			case "shift_from_api" -> ShiftApiDate.shift(dcmCopy, tag, argumentEntities, hmac);
 			case "date_format" -> DateFormat.format(dcmCopy, tag, argumentEntities);
 			default -> null;
 		};
