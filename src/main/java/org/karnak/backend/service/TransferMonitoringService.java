@@ -38,6 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -122,6 +124,21 @@ public class TransferMonitoringService {
 	}
 
 	/**
+	 * Retrieve a page of series rows matching the filter, with their error reasons filled
+	 * in.
+	 */
+	public Page<TransferSeriesStatusEntity> retrieveSeriesPageable(TransferStatusFilter filter, Pageable pageable) {
+		Page<TransferSeriesStatusEntity> page = seriesRepo.findAll(new TransferSeriesSpecification(filter), pageable);
+		populateReasons(page.getContent());
+		return page;
+	}
+
+	/** Count of series rows matching the filter. */
+	public long countSeries(TransferStatusFilter filter) {
+		return seriesRepo.count(new TransferSeriesSpecification(filter));
+	}
+
+	/**
 	 * Build a per-series CSV for the matching rows (one row per destination/study/series,
 	 * with counts and the joined error reasons).
 	 */
@@ -148,7 +165,7 @@ public class TransferMonitoringService {
 	}
 
 	/** Fills each row's transient {@code reasons} with its distinct error reasons. */
-	private void populateReasons(List<TransferSeriesStatusEntity> rows) {
+	public void populateReasons(List<TransferSeriesStatusEntity> rows) {
 		if (rows.isEmpty()) {
 			return;
 		}

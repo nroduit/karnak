@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -61,7 +62,25 @@ public class SecurityInMemoryConfig {
 				.permitAll()
 				// Allow endpoints
 				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
-				.permitAll())
+				.permitAll()
+				// Management REST API: require authentication explicitly. Without
+				// this, requests fall through to VaadinSecurityConfigurer's own
+				// route-based access control below, which treats /api/** as an
+				// unrecognized Vaadin route and denies it (403) even for an
+				// authenticated user, instead of just requiring authentication.
+				.requestMatchers("/api/**")
+				.authenticated())
+			// The management REST API is called by non-browser clients over HTTP
+			// Basic, which never carry the CSRF token a browser session would.
+			// Spring Security's default CSRF protection would otherwise reject
+			// every POST/PUT/DELETE call to /api/** with 403, regardless of valid
+			// credentials, so exempt it the same way a stateless REST API
+			// conventionally is exempted.
+			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+			// Enable HTTP Basic authentication so the management REST API (/api/**,
+			// beyond the explicitly permitted echo endpoint) can be called by
+			// non-browser clients, alongside the Vaadin/form-login session below.
+			.httpBasic(Customizer.withDefaults())
 			// Vaadin/Spring Security integration: permits the framework internal
 			// requests and the @AnonymousAllowed views, scopes CSRF, configures the
 			// request cache, the form login on the login view and requires

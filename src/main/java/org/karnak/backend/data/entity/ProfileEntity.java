@@ -74,6 +74,7 @@ public class ProfileEntity implements Serializable {
 	private Set<MaskEntity> maskEntities = new HashSet<>();
 
 	@OneToMany(mappedBy = "profileEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
 	private List<ProjectEntity> projectEntities;
 
 	// Optional organizational group (null = shown at the root of the list)

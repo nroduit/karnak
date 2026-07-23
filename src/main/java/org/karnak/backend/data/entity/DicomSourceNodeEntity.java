@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -56,6 +57,7 @@ public class DicomSourceNodeEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "forward_node_id")
+	@JsonIgnore
 	private ForwardNodeEntity forwardNodeEntity;
 
 	public DicomSourceNodeEntity() {

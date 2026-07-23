@@ -66,6 +66,19 @@ class ProjectEntityTest {
 	}
 
 	@Test
+	void add_active_secret_entity_sets_back_reference_on_secret() {
+		ProjectEntity entity = new ProjectEntity();
+		entity.setId(1L);
+		SecretEntity secret = new SecretEntity(new byte[16]);
+
+		entity.addActiveSecretEntity(secret);
+
+		// The owning side of the @ManyToOne must point back to the project so
+		// Hibernate writes a non-null project_id FK on insert.
+		assertSame(entity, secret.getProjectEntity());
+	}
+
+	@Test
 	void apply_active_secret_activates_only_the_target() {
 		ProjectEntity entity = new ProjectEntity();
 		SecretEntity first = new SecretEntity(new byte[] { 1 });

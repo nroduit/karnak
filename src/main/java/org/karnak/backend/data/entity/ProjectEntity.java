@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -52,6 +53,7 @@ public class ProjectEntity implements Serializable {
 	private List<SecretEntity> secretEntities;
 
 	@OneToMany(mappedBy = "deIdentificationProjectEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
 	private List<DestinationEntity> destinationEntities;
 
 	@ManyToOne
@@ -81,6 +83,7 @@ public class ProjectEntity implements Serializable {
 	 * @param secretEntity Secret to add
 	 */
 	public void addActiveSecretEntity(SecretEntity secretEntity) {
+		secretEntity.setProjectEntity(this);
 		applyActiveSecret(secretEntity);
 		secretEntities.add(secretEntity);
 	}

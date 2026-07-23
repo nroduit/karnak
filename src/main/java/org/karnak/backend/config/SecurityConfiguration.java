@@ -80,7 +80,21 @@ public class SecurityConfiguration {
 				.permitAll()
 				// Allow endpoints
 				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
-				.permitAll())
+				.permitAll()
+				// Management REST API: require authentication explicitly. Without
+				// this, requests fall through to VaadinSecurityConfigurer's own
+				// route-based access control below, which treats /api/** as an
+				// unrecognized Vaadin route and denies it (403) even for an
+				// authenticated user, instead of just requiring authentication.
+				.requestMatchers("/api/**")
+				.authenticated())
+			// The management REST API is called by non-browser clients over HTTP
+			// Basic/Bearer, which never carry the CSRF token a browser session
+			// would. Spring Security's default CSRF protection would otherwise
+			// reject every POST/PUT/DELETE call to /api/** with 403, regardless of
+			// valid credentials, so exempt it the same way a stateless REST API
+			// conventionally is exempted.
+			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 			// OpenId connect login: map the IDP realm/client roles to the Karnak roles
 			// so that @RolesAllowed annotations on the views work with OIDC users. The
 			// roles are read from the Bearer/access token (not the ID token) via a

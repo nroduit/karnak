@@ -22,6 +22,7 @@ import jakarta.persistence.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.DiscriminatorOptions;
@@ -48,6 +49,7 @@ public abstract class TagEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "profile_element_id", nullable = false)
+	@JsonIgnore
 	private ProfileElementEntity profileElementEntity;
 
 	private String tagValue;

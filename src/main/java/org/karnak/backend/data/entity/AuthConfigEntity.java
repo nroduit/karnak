@@ -10,6 +10,8 @@
 package org.karnak.backend.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,6 +50,7 @@ public class AuthConfigEntity implements Serializable {
 			read = "pgp_sym_decrypt(" + "    client_secret, " + "    current_setting('encryption.key')" + ")",
 			write = "pgp_sym_encrypt( " + "   ?, " + "    current_setting('encryption.key')" + ") ")
 	@Column(columnDefinition = "bytea")
+	@JsonProperty(access = Access.WRITE_ONLY)
 	private String clientSecret;
 
 	@ColumnTransformer(read = "pgp_sym_decrypt(" + "    client_id, " + "    current_setting('encryption.key')" + ")",

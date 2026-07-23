@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -42,8 +43,10 @@ public class SecretEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "project_id")
+	@JsonIgnore
 	private ProjectEntity projectEntity;
 
+	@JsonIgnore
 	private byte[] secretKey;
 
 	private LocalDateTime creationDate;

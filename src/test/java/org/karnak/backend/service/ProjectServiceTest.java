@@ -127,12 +127,44 @@ class ProjectServiceTest {
 		// Init data
 		ProjectEntity projectEntity = new ProjectEntity();
 		projectEntity.setId(1L);
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(projectEntity))
+			.thenReturn(Collections.emptyList());
 
 		// Call service
 		projectService.remove(projectEntity);
 
 		// Test results
 		Mockito.verify(projectRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyLong());
+	}
+
+	@Test
+	void should_clear_destination_references_before_deleting_project() {
+		// A project referenced by one destination for de-identification and by another
+		// for tag morphing: removing the project must detach both instead of leaving a
+		// dangling FK that would violate the database constraint on delete.
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+
+		DestinationEntity deidentifyDestination = new DestinationEntity();
+		deidentifyDestination.setId(10L);
+		deidentifyDestination.setDeIdentificationProjectEntity(projectEntity);
+		projectEntity.setDestinationEntities(List.of(deidentifyDestination));
+
+		DestinationEntity tagMorphingDestination = new DestinationEntity();
+		tagMorphingDestination.setId(20L);
+		tagMorphingDestination.setTagMorphingProjectEntity(projectEntity);
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(projectEntity))
+			.thenReturn(List.of(tagMorphingDestination));
+
+		// Call service
+		projectService.remove(projectEntity);
+
+		// Test results
+		assertNull(deidentifyDestination.getDeIdentificationProjectEntity());
+		assertNull(tagMorphingDestination.getTagMorphingProjectEntity());
+		Mockito.verify(destinationRepositoryMock, Mockito.times(1)).save(deidentifyDestination);
+		Mockito.verify(destinationRepositoryMock, Mockito.times(1)).save(tagMorphingDestination);
+		Mockito.verify(projectRepositoryMock, Mockito.times(1)).deleteById(1L);
 	}
 
 	@Test
