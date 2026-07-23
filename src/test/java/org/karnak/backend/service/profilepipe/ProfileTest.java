@@ -9,19 +9,20 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.dcm4che3.data.Attributes;
+import org.dcm4che3.data.Fragments;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -33,10 +34,20 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.PseudonymType;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.karnak.backend.model.profilebody.MaskBody;
+import org.mockito.Mockito;
 import org.weasis.dicom.param.AttributeEditorContext;
 
+import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @SpringBootTest
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class ProfileTest {
 
 	@Test
@@ -312,6 +323,78 @@ class ProfileTest {
 		// the application conditions for the mask are fulfilled
 		assertTrue(cleanPixelAllowed && evaluation);
 
+	}
+
+	@Test
+	void automaticMasksGeneration_true_and_api_returns_no_masks_transmits_image_without_mask() {
+		ProfileEntity profileEntity = cleanPixelProfile("true");
+		Attributes dcm = secondaryCaptureImage();
+		AttributeEditorContext context = new AttributeEditorContext("1.2.840.10008.1.2.4.50", null, null);
+
+		DeidentifyImageService deidentifyImageService = Mockito.mock(DeidentifyImageService.class);
+		Mockito
+			.when(deidentifyImageService.callDeidentifyImageApi(Mockito.any(), Mockito.any(), Mockito.any()))
+			.thenReturn(Collections.<MaskBody>emptyList());
+		Profile profile = new Profile(profileEntity, deidentifyImageService);
+
+		// The API is trusted: no coordinates means no mask, but the image is still
+		// transmitted (no exception, no abort)
+		profile.applyCleanPixelData(dcm, context, profileEntity);
+
+		Mockito.verify(deidentifyImageService).callDeidentifyImageApi(Mockito.any(), Mockito.any(), Mockito.any());
+		assertNull(context.getMaskArea());
+		assertEquals("NONE", context.getAbort().name());
+	}
+
+	@Test
+	void automaticMasksGeneration_false_and_no_manual_mask_aborts_transmission() {
+		ProfileEntity profileEntity = cleanPixelProfile("false");
+		Attributes dcm = secondaryCaptureImage();
+		AttributeEditorContext context = new AttributeEditorContext("1.2.840.10008.1.2.4.50", null, null);
+		Profile profile = new Profile(profileEntity);
+
+		// No automatic generation and no manual mask defined: the transfer must be cut
+		assertThrows(IllegalStateException.class, () -> profile.applyCleanPixelData(dcm, context, profileEntity));
+	}
+
+	@Test
+	void automaticMasksGeneration_not_set_and_no_manual_mask_aborts_transmission() {
+		ProfileEntity profileEntity = cleanPixelProfile(null);
+		Attributes dcm = secondaryCaptureImage();
+		AttributeEditorContext context = new AttributeEditorContext("1.2.840.10008.1.2.4.50", null, null);
+		Profile profile = new Profile(profileEntity);
+
+		// automaticMasksGeneration not set behaves like false: the transfer must be cut
+		assertThrows(IllegalStateException.class, () -> profile.applyCleanPixelData(dcm, context, profileEntity));
+	}
+
+	private static ProfileEntity cleanPixelProfile(@Nullable String automaticMasksGenerationValue) {
+		ProfileEntity profileEntity = new ProfileEntity();
+		ProfileElementEntity cleanPixel = new ProfileElementEntity();
+		cleanPixel.setCodename("clean.pixel.data");
+		cleanPixel.setName("nameCleanPixel");
+		cleanPixel.setAction("ReplaceNull");
+		cleanPixel.setPosition(1);
+		if (automaticMasksGenerationValue != null) {
+			cleanPixel.addArgument(new ArgumentEntity("automaticMasksGeneration", automaticMasksGenerationValue,
+					cleanPixel));
+		}
+		Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
+		profileElementEntities.add(cleanPixel);
+		profileEntity.setProfileElementEntities(profileElementEntities);
+		return profileEntity;
+	}
+
+	private static Attributes secondaryCaptureImage() {
+		Attributes dcm = new Attributes();
+		Fragments fragments = dcm.newFragments(Tag.PixelData, VR.OB, 2);
+		fragments.add(null);
+		fragments.add(new byte[] { 1, 2, 3, 4 });
+		// Secondary Capture SOP class: clean pixel data is always allowed
+		dcm.setString(Tag.SOPClassUID, VR.UI, "1.2.840.10008.5.1.4.1.1.7");
+		dcm.setString(Tag.SOPInstanceUID, VR.UI, "1.2.3.4.5");
+		dcm.setString(Tag.StationName, VR.SH, "UNKNOWN_STATION");
+		return dcm;
 	}
 
 }
