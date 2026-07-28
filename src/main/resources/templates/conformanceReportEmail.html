@@ -1,5 +1,5 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -29,7 +29,7 @@
       </table>
 
       <!-- Totals strip -->
-      <table style="width: 100%; border-collapse: collapse; background-color: #f8f9fa; border-bottom: 1px solid #d8dee4;">
+      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f8f9fa; border-bottom: 1px solid #d8dee4;">
         <tr>
           <td style="padding: 10px 24px;">
             <!-- Layout table instead of margins (Outlook drops margins on inline
@@ -62,7 +62,7 @@
 
             <!-- Study summary -->
             <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Study summary</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
               <tr>
                 <td style="padding: 4px 8px; width: 16%; color: #7f8c8d;">Patient ID</td>
                 <td style="padding: 4px 8px; width: 34%;"><b th:text="${report.patientId()}"></b></td>
@@ -280,7 +280,7 @@
       </table>
 
       <!-- Footer -->
-      <table style="width: 100%; border-collapse: collapse; background-color: #2c3e50;">
+      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #2c3e50;">
         <tr>
           <td style="padding: 8px 24px; text-align: center; color: #bdc3c7; font-size: 11px;">Copyright Karnak Team</td>
         </tr>

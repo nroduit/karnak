@@ -19,7 +19,7 @@ import org.weasis.core.util.StringUtil;
 
 public class TagActionMap {
 
-	private static final Pattern TAG_SEPARATORS = Pattern.compile("[(),]");
+	private static final Pattern TAG_SEPARATORS = Pattern.compile("[(),\\s]");
 
 	/** A tag pattern resolved to its matching tag value and bit mask. */
 	private record PatternAction(int tag, int mask, ActionItem action) {
@@ -55,17 +55,17 @@ public class TagActionMap {
 		if (isValidPattern(cleanTag)) {
 			int patternTag = TagUtils.intFromHexString(cleanTag.replace("X", "0"));
 			int patternMask = TagUtils.intFromHexString(getMask(cleanTag));
-			tagPatternAction.put(cleanTag, new PatternAction(patternTag, patternMask, action));
+			this.tagPatternAction.put(cleanTag, new PatternAction(patternTag, patternMask, action));
 		}
 		else {
-			tagAction.put(TagUtils.intFromHexString(cleanTag), action);
+			this.tagAction.put(TagUtils.intFromHexString(cleanTag), action);
 		}
 	}
 
 	public @Nullable ActionItem get(Integer tag) {
-		ActionItem action = tagAction.get(tag);
+		ActionItem action = this.tagAction.get(tag);
 		if (action == null) {
-			for (PatternAction pattern : tagPatternAction.values()) {
+			for (PatternAction pattern : this.tagPatternAction.values()) {
 				if ((tag & pattern.mask()) == pattern.tag()) {
 					return pattern.action();
 				}

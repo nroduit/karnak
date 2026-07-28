@@ -193,6 +193,5 @@ dicom-tools:
 
 # External de-identification image API
 # This API checks if sensitive patient data is burned into DICOM pixel data.
-karnak:
-  deidentify-image:
-    url: ${DEIDENTIFY_IMAGE_URL:http://localhost:8000}
+ocr:
+  url: ${OCR_URL:http://localhost:8000}

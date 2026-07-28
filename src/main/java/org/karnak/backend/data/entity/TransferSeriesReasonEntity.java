@@ -30,6 +30,15 @@ import org.jspecify.annotations.NullUnmarked;
  * (aborted / filtered) outcomes, and {@code retryCount} for those that hit an
  * already-seen instance (the novelty axis, orthogonal to error/excluded). A bare 409
  * retry carries no reason.
+ *
+ * <p>
+ * The {@code notifiedErrorCount} / {@code notifiedExcludedCount} columns snapshot the two
+ * delivery counters at the last email notification, so the notification path can report
+ * only reasons with a non-zero delta since — mirroring the per-series {@code notified*}
+ * counters on {@link TransferSeriesStatusEntity}. Without this snapshot a reason recorded
+ * in an earlier run would keep appearing in later notifications whose session had no such
+ * outcome. ({@code retryCount} needs no snapshot: a reason is only ever booked on an
+ * error/excluded outcome, which the delivery-axis delta already captures.)
  */
 @NullUnmarked
 @Entity(name = "TransferSeriesReason")
@@ -60,6 +69,12 @@ public class TransferSeriesReasonEntity implements Serializable {
 
 	@Column(name = "retry_count")
 	private long retryCount;
+
+	@Column(name = "notified_error_count")
+	private long notifiedErrorCount;
+
+	@Column(name = "notified_excluded_count")
+	private long notifiedExcludedCount;
 
 	public TransferSeriesReasonEntity() {
 	}

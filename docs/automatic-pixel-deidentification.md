@@ -82,19 +82,18 @@ Reference profiles are provided under
 ## Configuring the external API endpoint
 
 Karnak calls the de-identification image API at the URL configured by the
-`DEIDENTIFY_IMAGE_URL` environment variable (default
-`http://localhost:8000`). It maps to the `karnak.deidentify-image.url` property
+`OCR_URL` environment variable (default
+`http://localhost:8000`). It maps to the `ocr.url` property
 in `application.yml`:
 
 ```yaml
-karnak:
-  deidentify-image:
-    url: ${DEIDENTIFY_IMAGE_URL:http://localhost:8000}
+ocr:
+  url: ${OCR_URL:http://localhost:8000}
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DEIDENTIFY_IMAGE_URL` | `http://localhost:8000` | Base URL of the de-identification image API. |
+| `OCR_URL` | `http://localhost:8000` | Base URL of the de-identification image API. |
 
 The API contract is documented in
 [`src/main/resources/deidentification-api.yaml`](../src/main/resources/deidentification-api.yaml).
@@ -104,14 +103,14 @@ The API contract is documented in
 ## Deploying the external de-identification service
 
 The de-identification image API is a separate service. Deploy and run it so that
-it is reachable from Karnak at `DEIDENTIFY_IMAGE_URL`.
+it is reachable from Karnak at `OCR_URL`.
 
 > Deployment guide of the de-identification image API: <https://github.com/nroduit/image-ocr-identifier>
 
 ### Standard deployment
 
 1. Deploy the de-identification image API (see the repository linked above).
-2. Point Karnak to it by setting `DEIDENTIFY_IMAGE_URL` to the service base URL.
+2. Point Karnak to it by setting `OCR_URL` to the service base URL.
 3. Restart Karnak so the new configuration is picked up.
 
 ### Portable build
@@ -121,16 +120,16 @@ alongside Karnak. It is controlled in `run.cfg`:
 
 ```sh
 ### Image Deidentification
-DEIDENTIFY_IMAGE_ENABLED=true
-DEIDENTIFY_IMAGE_URL=http://localhost:8000
-DEIDENTIFY_IMAGE_SERVICE_NAME=image-ocr-identifier
+OCR_ENABLED=true
+OCR_URL=http://localhost:8000
+OCR_SERVICE_NAME=image-ocr-identifier
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DEIDENTIFY_IMAGE_ENABLED` | `true` | Start the bundled de-identification sidecar with the portable package. Set to `false` to manage the service yourself. |
-| `DEIDENTIFY_IMAGE_URL` | `http://localhost:8000` | Base URL Karnak uses to reach the service. |
-| `DEIDENTIFY_IMAGE_SERVICE_NAME` | `image-ocr-identifier` | Name of the bundled service folder and executable. The sidecar lives in `<app>/<name>/` and its binary is named `<name>` (`<name>.exe` on Windows). |
+| `OCR_ENABLED` | `true` | Start the bundled de-identification sidecar with the portable package. Set to `false` to manage the service yourself. |
+| `OCR_URL` | `http://localhost:8000` | Base URL Karnak uses to reach the service. |
+| `OCR_SERVICE_NAME` | `image-ocr-identifier` | Name of the bundled service folder and executable. The sidecar lives in `<app>/<name>/` and its binary is named `<name>` (`<name>.exe` on Windows). |
 
 When enabled, `run.sh` / `run.bat` starts the bundled binary
 (`image-ocr-identifier/image-ocr-identifier`, `.exe` on Windows) on launch and
@@ -143,8 +142,8 @@ is logged.
 
 | Symptom | Likely cause | Action |
 |---------|--------------|--------|
-| Images with automatic masking are not forwarded | API unreachable or returning errors | Check the API is running and reachable at `DEIDENTIFY_IMAGE_URL`; inspect Karnak logs. |
-| `Cannot reach de-identification image API ...` in logs | Wrong URL or service down | Verify `DEIDENTIFY_IMAGE_URL` and service health. |
+| Images with automatic masking are not forwarded | API unreachable or returning errors | Check the API is running and reachable at `OCR_URL`; inspect Karnak logs. |
+| `Cannot reach de-identification image API ...` in logs | Wrong URL or service down | Verify `OCR_URL` and service health. |
 | `SOP Instance UID ... does not match` in logs | API returned a response for a different instance | Verify the API version and that it echoes back the request `sop_instance_uid`. |
 | No mask applied although PHI is visible | API detected no sensitive text, or the tag values are absent from the metadata | Confirm the sensitive tags are populated in the source metadata. |
 

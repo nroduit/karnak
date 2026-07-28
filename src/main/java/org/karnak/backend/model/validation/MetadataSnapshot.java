@@ -63,8 +63,14 @@ public record MetadataSnapshot(Attributes metadata, Set<Integer> bulkPresentTags
 	}
 
 	private static Attributes copyWithoutBulkData(Attributes source, Set<Integer> bulkTags, int depth,
-			int maxSequenceDepth) {
-		Attributes copy = new Attributes(source.size());
+	                                              int maxSequenceDepth) {
+		Attributes copy = new Attributes(source.bigEndian(), source.size());
+		copyInto(source, copy, bulkTags, depth, maxSequenceDepth);
+		return copy;
+	}
+
+	private static void copyInto(Attributes source, Attributes copy, Set<Integer> bulkTags, int depth,
+	                             int maxSequenceDepth) {
 		for (int tag : source.tags()) {
 			if (TagUtils.isGroupLength(tag)) {
 				continue;
@@ -75,7 +81,9 @@ public record MetadataSnapshot(Attributes metadata, Set<Integer> bulkPresentTags
 				Sequence copySequence = copy.newSequence(tag, sequence.size());
 				if (depth < maxSequenceDepth) {
 					for (Attributes item : sequence) {
-						copySequence.add(copyWithoutBulkData(item, bulkTags, depth + 1, maxSequenceDepth));
+						Attributes itemCopy = new Attributes(item.bigEndian(), item.size());
+						copySequence.add(itemCopy);
+						copyInto(item, itemCopy, bulkTags, depth + 1, maxSequenceDepth);
 					}
 				}
 			}
@@ -89,7 +97,6 @@ public record MetadataSnapshot(Attributes metadata, Set<Integer> bulkPresentTags
 				copy.addSelected(source, tag);
 			}
 		}
-		return copy;
 	}
 
 	private static boolean isBulkValue(int tag, Object value) {

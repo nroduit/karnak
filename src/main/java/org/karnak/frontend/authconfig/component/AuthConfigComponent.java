@@ -95,7 +95,7 @@ public class AuthConfigComponent extends VerticalLayout {
 
 		setBinder();
 
-		this.setVisible(false);
+		clear();
 	}
 
 	public void setBinder() {
@@ -133,7 +133,6 @@ public class AuthConfigComponent extends VerticalLayout {
 		this.deleteBtn.setVisible(true);
 		this.saveBtn.setVisible(false);
 		this.cancelBtn.setVisible(false);
-		this.setVisible(true);
 	}
 
 	public AuthConfigEntity getData() {
@@ -159,11 +158,28 @@ public class AuthConfigComponent extends VerticalLayout {
 		this.deleteBtn.setVisible(false);
 		this.saveBtn.setVisible(true);
 		this.cancelBtn.setVisible(true);
-		this.setVisible(true);
 	}
 
 	public void cancel() {
-		this.setVisible(false);
+		clear();
+	}
+
+	/**
+	 * Reset the form to a neutral, empty read-only state. The pane stays visible so the
+	 * split layout is shown even when no entry is selected.
+	 */
+	public void clear() {
+		this.binder.readBean(new AuthConfigEntity());
+		title.setText("");
+		url.setReadOnly(true);
+		scope.setReadOnly(true);
+		clientSecret.setReadOnly(true);
+		clientId.setReadOnly(true);
+		clientSecret.setRevealButtonVisible(false);
+		clientId.setRevealButtonVisible(false);
+		this.deleteBtn.setVisible(false);
+		this.saveBtn.setVisible(false);
+		this.cancelBtn.setVisible(false);
 	}
 
 	private void initDeleteButton() {

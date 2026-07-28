@@ -9,14 +9,15 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -26,6 +27,7 @@ import org.dcm4che3.data.VR;
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -97,7 +99,7 @@ public class DeidentifyImageService {
 	/**
 	 * @param apiBaseUrl the base URL of the de-identification image API
 	 */
-	public DeidentifyImageService(@Value("${karnak.deidentify-image.url:http://localhost:8000}") String apiBaseUrl) {
+	public DeidentifyImageService(@Value("${ocr.url:http://localhost:8000}") String apiBaseUrl) {
 		this.apiBaseUrl = apiBaseUrl;
 		this.objectMapper = new ObjectMapper();
 
@@ -147,7 +149,6 @@ public class DeidentifyImageService {
 
 		// Send the POST request and get the JSON response
 		String jsonResponse;
-		log.info("multipartBody={}", multipartBody);
 		try {
 			jsonResponse = this.restClient.post()
 				.uri("/deidentify-image")

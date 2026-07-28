@@ -26,11 +26,11 @@ generate_db_password() {
 }
 
 start_deidentify() {
-  if [[ "${DEIDENTIFY_IMAGE_ENABLED:-true}" != "true" ]]; then
-    log "De-identification image service disabled (DEIDENTIFY_IMAGE_ENABLED)"
+  if [[ "${OCR_ENABLED:-true}" != "true" ]]; then
+    log "De-identification image service disabled (OCR_ENABLED)"
     return
   fi
-  local name="${DEIDENTIFY_IMAGE_SERVICE_NAME:-image-ocr-identifier}"
+  local name="${OCR_SERVICE_NAME:-image-ocr-identifier}"
   local bin="$APP_DIR/$name/$name"
   if [[ ! -x "$bin" ]]; then
     log "De-identification binary not found at '$bin' — skipping"

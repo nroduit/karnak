@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
@@ -82,6 +83,46 @@ class MetadataSnapshotTest {
 		var snapshot = MetadataSnapshot.of(datasetWithBulkData());
 
 		assertEquals("private vendor value", snapshot.metadata().getString(0x00091001));
+	}
+
+	@Test
+	void copies_sequence_items_of_a_dataset_declaring_a_specific_character_set() {
+		var dcm = new Attributes();
+		dcm.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100");
+		dcm.setString(Tag.SOPClassUID, VR.UI, "1.2.840.10008.5.1.4.1.1.2");
+		dcm.setString(Tag.PatientName, VR.PN, "Dupont^Jérôme");
+		var item = new Attributes();
+		item.setBytes(Tag.CodeValue, VR.SH, "T-D3000".getBytes(StandardCharsets.ISO_8859_1));
+		item.setBytes(Tag.CodeMeaning, VR.LO, "Poumon supérieur".getBytes(StandardCharsets.ISO_8859_1));
+		dcm.newSequence(Tag.AnatomicRegionSequence, 1).add(item);
+
+		var snapshot = MetadataSnapshot.of(dcm);
+
+		assertEquals("Dupont^Jérôme", snapshot.metadata().getString(Tag.PatientName));
+		Attributes copiedItem = snapshot.metadata().getSequence(Tag.AnatomicRegionSequence).get(0);
+		assertEquals("T-D3000", copiedItem.getString(Tag.CodeValue));
+		assertEquals("Poumon supérieur", copiedItem.getString(Tag.CodeMeaning));
+	}
+
+	@Test
+	void copies_nested_sequence_items_of_a_dataset_declaring_a_specific_character_set() {
+		var dcm = new Attributes();
+		dcm.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100");
+		var inner = new Attributes();
+		inner.setString(Tag.CodeValue, VR.SH, "T-D3000");
+		inner.setString(Tag.CodeMeaning, VR.LO, "Poumon supérieur");
+		var outer = new Attributes();
+		outer.newSequence(Tag.ConceptNameCodeSequence, 1).add(inner);
+		dcm.newSequence(Tag.ContentSequence, 1).add(outer);
+
+		var snapshot = MetadataSnapshot.of(dcm);
+
+		Attributes copiedInner = snapshot.metadata()
+			.getSequence(Tag.ContentSequence)
+			.get(0)
+			.getSequence(Tag.ConceptNameCodeSequence)
+			.get(0);
+		assertEquals("Poumon supérieur", copiedInner.getString(Tag.CodeMeaning));
 	}
 
 	@Test
