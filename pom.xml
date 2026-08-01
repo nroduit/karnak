@@ -20,11 +20,11 @@
 
     <springframework.version>4.1.0</springframework.version>
     <springdoc.version>1.8.0</springdoc.version>
-    <vaadin.version>25.2.2</vaadin.version>
-    <org.json.version>20260522</org.json.version>
+    <vaadin.version>25.2.4</vaadin.version>
+    <org.json.version>20260719</org.json.version>
     <opencsv.version>5.12.0</opencsv.version>
 
-    <weasis-dicom-tools.version>5.34.3.1</weasis-dicom-tools.version>
+    <weasis-dicom-tools.version>5.34.3.2</weasis-dicom-tools.version>
     <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
 
     <h2.version>2.4.240</h2.version>
@@ -113,12 +113,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.5.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>6.0.2</version>
+          <version>6.1.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -273,7 +273,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>3.8.0</version>
+        <version>3.9.0</version>
         <configuration>
           <!-- define a language-specific format -->
           <java>
