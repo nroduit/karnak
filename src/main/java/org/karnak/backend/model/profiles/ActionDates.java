@@ -22,6 +22,7 @@ import org.karnak.backend.model.action.Replace;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.util.DateFormat;
+import org.karnak.backend.util.ShiftApiDate;
 import org.karnak.backend.util.ShiftByTagDate;
 import org.karnak.backend.util.ShiftDate;
 import org.karnak.backend.util.ShiftRangeDate;
@@ -48,15 +49,16 @@ public class ActionDates extends AbstractProfileItem {
 	public void profileValidation() throws ProfileException {
 		if (option == null) {
 			throw new ProfileException("Cannot build the profile " + codeName
-					+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, date_format]");
+					+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, shift_from_api, date_format]");
 		}
 		switch (option) {
 			case "shift" -> ShiftDate.verifyShiftArguments(argumentEntities);
 			case "shift_range" -> ShiftRangeDate.verifyShiftArguments(argumentEntities);
 			case "shift_by_tag" -> ShiftByTagDate.verifyShiftArguments(argumentEntities);
+			case "shift_from_api" -> ShiftApiDate.verifyShiftArguments(argumentEntities);
 			case "date_format" -> DateFormat.verifyPatternArguments(argumentEntities);
 			default -> throw new ProfileException("Cannot build the profile " + codeName + " with the option given "
-					+ option + " : Option available (shift, shift_range, shift_by_tag, date_format)");
+					+ option + " : Option available (shift, shift_range, shift_by_tag, shift_from_api, date_format)");
 		}
 
 		validateCondition();
@@ -75,14 +77,14 @@ public class ActionDates extends AbstractProfileItem {
 				return null;
 			}
 			try {
-				String dummyValue = applyOption(dcmCopy, tag, hmac);
+				String dummyValue = applyOption(dcm, tag, hmac);
 				if (dummyValue != null) {
 					actionByDefault.setDummyValue(dummyValue);
 					return actionByDefault;
 				}
 			}
 			catch (DateTimeException dateTimeException) {
-				String dcmElValue = dcmCopy.getString(tag);
+				String dcmElValue = dcm.getString(tag);
 				log.warn(String.format("Invalid date %s, the most strictest action will be choose between X/Z/D",
 						dcmElValue), dateTimeException);
 				return new MultipleActions("X/Z/D");
@@ -91,12 +93,13 @@ public class ActionDates extends AbstractProfileItem {
 		return null;
 	}
 
-	private @Nullable String applyOption(Attributes dcmCopy, int tag, HMAC hmac) throws DateTimeException {
+	private @Nullable String applyOption(Attributes dcm, int tag, HMAC hmac) throws DateTimeException {
 		return switch (option) {
-			case "shift" -> ShiftDate.shift(dcmCopy, tag, argumentEntities);
-			case "shift_range" -> ShiftRangeDate.shift(dcmCopy, tag, argumentEntities, hmac);
-			case "shift_by_tag" -> ShiftByTagDate.shift(dcmCopy, tag, argumentEntities, hmac);
-			case "date_format" -> DateFormat.format(dcmCopy, tag, argumentEntities);
+			case "shift" -> ShiftDate.shift(dcm, tag, argumentEntities);
+			case "shift_range" -> ShiftRangeDate.shift(dcm, tag, argumentEntities, hmac);
+			case "shift_by_tag" -> ShiftByTagDate.shift(dcm, tag, argumentEntities, hmac);
+			case "shift_from_api" -> ShiftApiDate.shift(dcm, tag, argumentEntities, hmac);
+			case "date_format" -> DateFormat.format(dcm, tag, argumentEntities);
 			default -> null;
 		};
 	}

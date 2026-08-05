@@ -9,10 +9,6 @@
  */
 package org.karnak.profilepipe;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
@@ -27,7 +23,12 @@ import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.HashContext;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.karnak.backend.util.DicomObjectTools;
+
 import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class ProfileTest {
@@ -451,6 +452,36 @@ class ProfileTest {
 		Profile profile = new Profile(profileEntity);
 		profile.applyAction(dataset1, dataset1, hmac, null, null, null);
 		assertTrue(DicomObjectTools.dicomObjectEquals(dataset2, dataset1));
+	}
+
+	@Test
+	void shiftDateNestedInSequenceProfile() {
+		// Test that the date/time tags nested inside a sequence should be shifted.
+		final Attributes dataset1 = new Attributes();
+		Sequence seq = dataset1.newSequence(Tag.RadiopharmaceuticalInformationSequence, 1);
+		final Attributes item = new Attributes();
+		item.setString(Tag.RadiopharmaceuticalStartDateTime, VR.DT, "20080729131503");
+		item.setString(Tag.RadiopharmaceuticalStartTime, VR.TM, "131503.000000");
+		seq.add(item);
+
+		final ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		final ProfileElementEntity shift = new ProfileElementEntity("Shift Date with argumentEntities",
+				"action.on.dates", null, null, "shift", 0, profileEntity);
+		shift.addIncludedTag(new IncludedTagEntity("(0018,1072)", shift));
+		shift.addIncludedTag(new IncludedTagEntity("(0018,1078)", shift));
+		shift.addArgument(new ArgumentEntity("seconds", "60", shift));
+		shift.addArgument(new ArgumentEntity("days", "365", shift));
+		final ProfileElementEntity basic = new ProfileElementEntity("DICOM basic profile", "basic.dicom.profile", null,
+				null, null, 1, profileEntity);
+		profileEntity.addProfilePipe(shift);
+		profileEntity.addProfilePipe(basic);
+
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, new Attributes(dataset1), defaultHMAC, null, null, null);
+
+		final Attributes resultItem = dataset1.getNestedDataset(Tag.RadiopharmaceuticalInformationSequence);
+		assertEquals("20070730131403.000000", resultItem.getString(Tag.RadiopharmaceuticalStartDateTime));
+		assertEquals("131403.000000", resultItem.getString(Tag.RadiopharmaceuticalStartTime));
 	}
 
 	@Test
