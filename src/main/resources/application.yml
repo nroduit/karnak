@@ -162,6 +162,25 @@ management:
 monitoring:
   # Maximum number of days in the monitoring history
   max-history-days: 30
+
+gateway:
+  # Maximum number of C-STORE transfers processed concurrently. Bounds the peak
+  # heap used by de-identification/transcoding (each transfer can hold the whole
+  # pixel data of an object in memory); waiting associations are throttled by not
+  # consuming their PDVs. 0 = auto (2 x CPU cores, minimum 8).
+  max-concurrent-transfers: 0
+  # How long an incoming transfer waits for a permit before being refused with
+  # A700 (out of resources)
+  transfer-permit-timeout-seconds: 300
+
+async-events:
+  # Bounded executor for the @Async event listeners (transfer monitoring,
+  # conformance collection). When the queue is full the publishing thread runs
+  # the listener itself (caller-runs), throttling ingest instead of growing the
+  # heap without limit.
+  core-pool-size: 8
+  max-pool-size: 16
+  queue-capacity: 10000
 cache-api:
   # Cache Time to leave in minutes for API calls
   ttl: 15

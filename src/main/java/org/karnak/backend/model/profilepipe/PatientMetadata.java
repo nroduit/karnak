@@ -16,7 +16,7 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
 import org.jspecify.annotations.Nullable;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 import org.weasis.core.util.StringUtil;
 
 @Getter
@@ -95,11 +95,11 @@ public class PatientMetadata {
 		return null;
 	}
 
-	public boolean compareCachedPatient(Patient patient) {
+	public boolean compareCachedPatient(PatientModel patient) {
 		return compareCachedPatient(patient, false);
 	}
 
-	public boolean compareCachedPatient(Patient patient, boolean skipIssuerOfPatientId) {
+	public boolean compareCachedPatient(PatientModel patient, boolean skipIssuerOfPatientId) {
 		if (patient != null) {
 			boolean samePatient = patient.getPatientId().equals(patientID);
 			if (!skipIssuerOfPatientId) {

@@ -39,7 +39,7 @@ public class ExternalIDLogic {
 	}
 
 	public List<ProjectEntity> retrieveProject() {
-		return projectService.getAllProjects();
+		return projectService.retrieveAllProjects();
 	}
 
 }

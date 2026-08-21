@@ -30,7 +30,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.ButtonFactory;
@@ -113,7 +113,7 @@ public class ExternalIDView extends HorizontalLayout {
 		// the toolbar only shows the "Add patient" button that opens it.
 		NewItemDialog addPatientDialog = new NewItemDialog("Add patient", "Add", externalIDForm);
 		addPatientDialog.setOnConfirm(() -> {
-			final Patient newPatient = externalIDForm.getNewPatient();
+			final PatientModel newPatient = externalIDForm.getNewPatient();
 			if (newPatient == null) {
 				return false;
 			}
@@ -145,7 +145,7 @@ public class ExternalIDView extends HorizontalLayout {
 			WarningConfirmDialog dialog = new WarningConfirmDialog(dialogContent);
 			dialog.addConfirmationListener(componentEvent -> {
 				Long projectId = projectDropDown.getValue().getId();
-				for (Patient p : externalIDGrid.getPatientsListInCache()) {
+				for (PatientModel p : externalIDGrid.getPatientsListInCache()) {
 					externalIDGrid.getExternalIDCache().remove(PatientClientUtil.generateKey(p, projectId));
 				}
 				externalIDGrid.readAllCacheValue();

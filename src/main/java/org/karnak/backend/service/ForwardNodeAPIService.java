@@ -10,6 +10,7 @@
 package org.karnak.backend.service;
 
 import java.io.Serializable;
+import java.util.UUID;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
@@ -46,7 +47,7 @@ public class ForwardNodeAPIService implements Serializable {
 	public void addForwardNode(ForwardNodeEntity forwardNodeEntity) {
 		NodeEventType eventType = forwardNodeEntity.getId() == null ? NodeEventType.ADD : NodeEventType.UPDATE;
 		if (eventType == NodeEventType.ADD) {
-			boolean aeTitleExists = forwardNodeService.getAllForwardNodes()
+			boolean aeTitleExists = forwardNodeService.retrieveAllForwardNodes()
 				.stream()
 				.anyMatch(f -> f.getFwdAeTitle().equals(forwardNodeEntity.getFwdAeTitle()));
 			if (aeTitleExists) {
@@ -73,6 +74,15 @@ public class ForwardNodeAPIService implements Serializable {
 
 	public ForwardNodeEntity getForwardNodeById(Long dataId) {
 		return forwardNodeService.get(dataId);
+	}
+
+	/**
+	 * Retrieves the ForwardNode according to its public uuid, used in the REST API.
+	 * @param uuid the public uuid.
+	 * @return the matching ForwardNodeEntity, if any.
+	 */
+	public ForwardNodeEntity retrieveForwardNodeByUuid(UUID uuid) {
+		return forwardNodeService.retrieveForwardNodeByUuid(uuid);
 	}
 
 }

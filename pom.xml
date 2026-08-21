@@ -9,7 +9,7 @@
   <parent>
     <groupId>ch.hug.spring</groupId>
     <artifactId>spring-boot-starter-microservice-webmvc</artifactId>
-    <version>4.0.5-2025.1.0-1.0-SNAPSHOT</version>
+    <version>4.1.0-2025.1.2-1.0</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -29,12 +29,13 @@
     <enforcer.jdk-version>[${java.version},)</enforcer.jdk-version>
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
 
-    <vaadin.version>25.2.2</vaadin.version>
+    <vaadin.version>25.2.4</vaadin.version>
     <org.json.version>20260719</org.json.version>
     <gson.version>2.10.1</gson.version>
     <opencsv.version>5.12.0</opencsv.version>
-    <node.version>v22.13.0</node.version>
-    <weasis-dicom-tools.version>5.34.3.1</weasis-dicom-tools.version>
+<!--    <node.version>v22.13.0</node.version>-->
+    <node.version>v24.14.0</node.version>
+    <weasis-dicom-tools.version>5.34.3.3</weasis-dicom-tools.version>
     <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
 
     <h2.version>2.4.240</h2.version>
@@ -118,6 +119,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
+<!--          <release>${java.version}</release>-->
+<!--          <parameters>true</parameters>-->
           <annotationProcessorPaths>
             <path>
               <groupId>org.projectlombok</groupId>

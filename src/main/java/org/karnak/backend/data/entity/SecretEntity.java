@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,8 +23,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity
@@ -40,6 +44,12 @@ public class SecretEntity implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
+
 	@ManyToOne
 	@JoinColumn(name = "project_id")
 	private ProjectEntity projectEntity;
@@ -51,14 +61,17 @@ public class SecretEntity implements Serializable {
 	private boolean active;
 
 	public SecretEntity() {
+		this.uuid = UUID.randomUUID();
 	}
 
 	public SecretEntity(byte[] secretKey) {
+		this.uuid = UUID.randomUUID();
 		this.secretKey = secretKey;
 		this.creationDate = LocalDateTime.now(ZoneId.of("CET"));
 	}
 
 	public SecretEntity(ProjectEntity projectEntity, byte[] secretKey) {
+		this.uuid = UUID.randomUUID();
 		this.projectEntity = projectEntity;
 		this.secretKey = secretKey;
 		this.creationDate = LocalDateTime.now(ZoneId.of("CET"));
@@ -73,13 +86,14 @@ public class SecretEntity implements Serializable {
 			return false;
 		}
 		SecretEntity that = (SecretEntity) o;
-		return active == that.active && Objects.equals(id, that.id) && Objects.equals(projectEntity, that.projectEntity)
+		return active == that.active && Objects.equals(id, that.id) && Objects.equals(uuid, that.uuid)
+				&& Objects.equals(projectEntity, that.projectEntity)
 				&& Arrays.equals(secretKey, that.secretKey) && Objects.equals(creationDate, that.creationDate);
 	}
 
 	@Override
 	public int hashCode() {
-		int result = Objects.hash(id, projectEntity, creationDate, active);
+		int result = Objects.hash(id, uuid, projectEntity, creationDate, active);
 		result = 31 * result + Arrays.hashCode(secretKey);
 		return result;
 	}

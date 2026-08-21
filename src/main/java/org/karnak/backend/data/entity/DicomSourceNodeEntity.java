@@ -9,9 +9,11 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -21,8 +23,11 @@ import jakarta.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "DicomSourceNode")
@@ -38,6 +43,13 @@ public class DicomSourceNodeEntity implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id. Stored as a native UUID column (Postgres "uuid" / H2
+	// "UUID"), not a VARCHAR, for compactness and index performance.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
 
 	private String description;
 
@@ -56,9 +68,11 @@ public class DicomSourceNodeEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "forward_node_id")
+	@JsonIgnore
 	private ForwardNodeEntity forwardNodeEntity;
 
 	public DicomSourceNodeEntity() {
+		this.uuid = UUID.randomUUID();
 		this.description = "";
 		this.aeTitle = "";
 		this.hostname = "";
@@ -99,14 +113,12 @@ public class DicomSourceNodeEntity implements Serializable {
 			return false;
 		}
 		DicomSourceNodeEntity that = (DicomSourceNodeEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(description, that.description)
-				&& Objects.equals(aeTitle, that.aeTitle) && Objects.equals(hostname, that.hostname)
-				&& Objects.equals(checkHostname, that.checkHostname);
+		return Objects.equals(aeTitle, that.aeTitle) && Objects.equals(hostname, that.hostname);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, description, aeTitle, hostname, checkHostname);
+		return Objects.hash(aeTitle, hostname);
 	}
 
 }

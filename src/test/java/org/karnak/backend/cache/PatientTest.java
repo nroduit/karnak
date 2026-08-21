@@ -12,10 +12,12 @@ package org.karnak.backend.cache;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.karnak.backend.model.patient.PatientModel;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class PatientTest {
@@ -31,7 +33,7 @@ class PatientTest {
 
 		@Test
 		void builds_DICOM_patient_name_as_lastName_caret_firstName() {
-			var patient = new Patient(PSEUDONYM, PATIENT_ID, "John", "Doe", ISSUER, 1L);
+			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, "John", "Doe", ISSUER, 1L, UUID.randomUUID());
 
 			assertEquals("Doe^John", patient.getPatientName());
 			assertEquals("John", patient.getPatientFirstName());
@@ -40,7 +42,7 @@ class PatientTest {
 
 		@Test
 		void uses_lastName_only_when_firstName_is_empty() {
-			var patient = new Patient(PSEUDONYM, PATIENT_ID, "", "Doe", ISSUER, 1L);
+			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, "", "Doe", ISSUER, 1L, UUID.randomUUID());
 
 			assertEquals("Doe", patient.getPatientName());
 			assertEquals("", patient.getPatientFirstName());
@@ -49,7 +51,7 @@ class PatientTest {
 
 		@Test
 		void stores_empty_strings_when_names_are_null() {
-			var patient = new Patient(PSEUDONYM, PATIENT_ID, null, null, ISSUER, 1L);
+			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, null, null, ISSUER, 1L, UUID.randomUUID());
 
 			assertEquals("", patient.getPatientFirstName());
 			assertEquals("", patient.getPatientLastName());
@@ -57,7 +59,7 @@ class PatientTest {
 
 		@Test
 		void prefixes_caret_when_only_firstName_is_present() {
-			var patient = new Patient(PSEUDONYM, PATIENT_ID, "John", null, ISSUER, 1L);
+			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, "John", null, ISSUER, 1L, UUID.randomUUID());
 
 			assertEquals("^John", patient.getPatientName());
 			assertEquals("John", patient.getPatientFirstName());
@@ -66,8 +68,8 @@ class PatientTest {
 
 		@Test
 		void keeps_explicit_patient_name_with_the_full_constructor() {
-			var patient = new Patient(PSEUDONYM, PATIENT_ID, "Doe^John", "John", "Doe", LocalDate.of(1993, 2, 16), "M",
-					ISSUER, 1L);
+			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, "Doe^John", "John", "Doe", LocalDate.of(1993, 2, 16), "M",
+					ISSUER, 1L, UUID.randomUUID());
 
 			assertEquals("Doe^John", patient.getPatientName());
 			assertEquals(LocalDate.of(1993, 2, 16), patient.getPatientBirthDate());
@@ -131,8 +133,8 @@ class PatientTest {
 			assertEquals("^John", patient.getPatientName());
 		}
 
-		private Patient newDoeJohn() {
-			return new Patient(PSEUDONYM, PATIENT_ID, "John", "Doe", ISSUER, 1L);
+		private PatientModel newDoeJohn() {
+			return new PatientModel(PSEUDONYM, PATIENT_ID, "John", "Doe", ISSUER, 1L, UUID.randomUUID());
 		}
 
 	}

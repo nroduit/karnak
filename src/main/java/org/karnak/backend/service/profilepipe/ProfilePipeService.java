@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jspecify.annotations.Nullable;
@@ -28,6 +29,7 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProfileGroupRepo;
 import org.karnak.backend.data.repo.ProfileRepo;
+import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.event.NodeEvent;
@@ -50,21 +52,34 @@ public class ProfilePipeService {
 
 	private final DestinationRepo destinationRepo;
 
+	private final ProjectRepo projectRepo;
+
 	// Event publisher: used to notify the DICOM gateway that a profile changed so it
 	// reloads its in-memory de-identification pipeline instead of keeping the old one.
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Autowired
 	public ProfilePipeService(final ProfileRepo profileRepo, final ProfileGroupRepo profileGroupRepo,
-			final DestinationRepo destinationRepo, final ApplicationEventPublisher applicationEventPublisher) {
+			final DestinationRepo destinationRepo, final ProjectRepo projectRepo,
+			final ApplicationEventPublisher applicationEventPublisher) {
 		this.profileRepo = profileRepo;
 		this.profileGroupRepo = profileGroupRepo;
 		this.destinationRepo = destinationRepo;
+		this.projectRepo = projectRepo;
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
-	public List<ProfileEntity> getAllProfiles() {
+	public List<ProfileEntity> retrieveAllProfiles() {
 		return new ArrayList<>(profileRepo.findAll());
+	}
+
+	/**
+	 * Retrieve a profile according to its public uuid, used in the REST API.
+	 * @param uuid the public uuid.
+	 * @return the matching ProfileEntity, or {@code null} when it does not exist.
+	 */
+	public @Nullable ProfileEntity retrieveProfileByUuid(UUID uuid) {
+		return uuid == null ? null : profileRepo.findByUuid(uuid).orElse(null);
 	}
 
 	/** Retrieve all profile groups, sorted by name. */
@@ -249,6 +264,24 @@ public class ProfilePipeService {
 			.orElse(null);
 	}
 
+	/**
+	 * Retrieve an element of the given profile according to its public uuid, used in the
+	 * REST API.
+	 * @param profile the parent profile.
+	 * @param uuid the public uuid of the element.
+	 * @return the matching ProfileElementEntity, or {@code null} when it does not exist.
+	 */
+	public @Nullable ProfileElementEntity retrieveElementByUuid(@Nullable ProfileEntity profile, UUID uuid) {
+		if (profile == null || uuid == null) {
+			return null;
+		}
+		return profile.getProfileElementEntities()
+			.stream()
+			.filter(e -> Objects.equals(e.getUuid(), uuid))
+			.findFirst()
+			.orElse(null);
+	}
+
 	/** Make {@code element} a fresh child of {@code profile} at the given position. */
 	private static void attachElement(ProfileEntity profile, ProfileElementEntity element, int position) {
 		element.setId(null);
@@ -374,9 +407,28 @@ public class ProfilePipeService {
 		return saved;
 	}
 
-	public void deleteProfile(ProfileEntity profileEntity) {
+	public record DeleteProfileResult(boolean success, @Nullable String errorMessage) {
+	}
+
+	public DeleteProfileResult deleteProfile(ProfileEntity profileEntity) {
+		if (profileEntity == null || profileEntity.getId() == null) {
+			return new DeleteProfileResult(false, "Profile not found");
+		}
+
+		// Check if the profile is used by any project
+		List<ProjectEntity> projectsUsingProfile = projectRepo.findByProfileEntityUuid(profileEntity.getUuid());
+		if (!projectsUsingProfile.isEmpty()) {
+			String projectNames = projectsUsingProfile.stream()
+				.map(ProjectEntity::getName)
+				.reduce((a, b) -> a + ", " + b)
+				.orElse("");
+			return new DeleteProfileResult(false,
+				"Cannot delete profile: it is used by project(s): " + projectNames);
+		}
+
 		profileRepo.deleteById(profileEntity.getId());
 		profileRepo.flush();
+		return new DeleteProfileResult(true, null);
 	}
 
 	/**

@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.weasis.core.util.annotations.Generated;
 
@@ -33,7 +33,7 @@ public class ExternalIDForm extends VerticalLayout {
 
 	private static final String ERROR_MESSAGE_PATIENT = "Length must be between 1 and 50.";
 
-	private final Binder<Patient> binder;
+	private final Binder<PatientModel> binder;
 
 	@Setter
 	private transient ProjectEntity projectEntity;
@@ -53,7 +53,7 @@ public class ExternalIDForm extends VerticalLayout {
 		setPadding(false);
 		setSpacing(true);
 
-		binder = new BeanValidationBinder<>(Patient.class);
+		binder = new BeanValidationBinder<>(PatientModel.class);
 
 		setElements();
 		setBinder();
@@ -103,10 +103,10 @@ public class ExternalIDForm extends VerticalLayout {
 			.bind("issuerOfPatientId");
 	}
 
-	public Patient getNewPatient() {
-		Patient newPatient = new Patient(externalIdField.getValue(), patientIdField.getValue(),
+	public PatientModel getNewPatient() {
+		PatientModel newPatient = new PatientModel(externalIdField.getValue(), patientIdField.getValue(),
 				patientFirstNameField.getValue(), patientLastNameField.getValue(), issuerOfPatientIdField.getValue(),
-				projectEntity.getId());
+				projectEntity.getId(), projectEntity.getUuid());
 		binder.validate();
 		if (binder.isValid()) {
 			binder.readBean(null);

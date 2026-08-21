@@ -13,18 +13,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ExcludedTagEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.data.entity.TagEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.expression.ExpressionError;
 import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilepipe.TagActionMap;
+import org.karnak.backend.model.profilepipe.TagPathPattern;
 
 public abstract class AbstractProfileItem implements ProfileItem {
 
@@ -93,13 +96,52 @@ public abstract class AbstractProfileItem implements ProfileItem {
 
 	@Override
 	public void profileValidation() throws ProfileException {
+		validateTagPaths();
 		validateCondition();
+	}
+
+	/**
+	 * Validates the configured tags, rejecting a malformed path such as
+	 * {@code (0040,0275).}. A bare tag or a wildcard tag pattern is left to
+	 * {@link TagActionMap}, which has always accepted them.
+	 */
+	protected void validateTagPaths() throws ProfileException {
+		for (TagEntity tag : concat(tagEntities, excludedTagEntities)) {
+			String value = tag.getTagValue();
+			if (TagPathPattern.isPath(value) && !TagPathPattern.isValid(value)) {
+				throw new ProfileException("Cannot build the profile " + codeName + ": invalid tag path " + value);
+			}
+		}
+	}
+
+	/**
+	 * Rejects any configured tag path, for the items that can only work on a tag of the
+	 * top-level dataset. Adding an attribute inside a sequence is not supported yet.
+	 */
+	protected void rejectTagPaths() throws ProfileException {
+		for (TagEntity tag : concat(tagEntities, excludedTagEntities)) {
+			if (TagPathPattern.isPath(tag.getTagValue())) {
+				throw new ProfileException("Cannot build the profile " + codeName + ": the tag path "
+						+ tag.getTagValue() + " is not supported, a tag can only be added to the top-level dataset");
+			}
+		}
+	}
+
+	private static List<? extends TagEntity> concat(@Nullable List<? extends TagEntity> included,
+			@Nullable List<? extends TagEntity> excluded) {
+		return Stream
+			.concat(included == null ? Stream.empty() : included.stream(),
+					excluded == null ? Stream.empty() : excluded.stream())
+			.toList();
 	}
 
 	/** Validates the optional {@link #condition} SpEL expression. */
 	protected void validateCondition() throws ProfileException {
+		if (condition == null) {
+			return;
+		}
 		ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(), Boolean.class);
-		if (condition != null && !expressionError.isValid()) {
+		if (!expressionError.isValid()) {
 			throw new ProfileException(expressionError.getMsg());
 		}
 	}

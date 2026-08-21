@@ -19,6 +19,7 @@ import org.karnak.backend.model.action.AbstractAction;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
+import org.karnak.backend.model.profilepipe.TagPath;
 
 @Slf4j
 public class ActionTags extends AbstractProfileItem {
@@ -59,9 +60,14 @@ public class ActionTags extends AbstractProfileItem {
 	}
 
 	@Override
-	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
-		if (exceptedTagsAction.get(tag) == null) {
-			return tagsAction.get(tag);
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac) {
+		return getAction(dcm, original, tag, hmac, TagPath.ROOT);
+	}
+
+	@Override
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac, TagPath path) {
+		if (exceptedTagsAction.get(tag, path) == null) {
+			return tagsAction.get(tag, path);
 		}
 		return null;
 	}
@@ -81,6 +87,7 @@ public class ActionTags extends AbstractProfileItem {
 			throw new ProfileException(errorMessage + codeName + ": No tags defined");
 		}
 
+		validateTagPaths();
 		validateCondition();
 	}
 

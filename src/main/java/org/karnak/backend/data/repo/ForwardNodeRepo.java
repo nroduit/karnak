@@ -9,11 +9,15 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.Optional;
+import java.util.UUID;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ForwardNodeRepo extends JpaRepository<ForwardNodeEntity, Long> {
+
+	Optional<ForwardNodeEntity> findByUuid(UUID uuid);
 
 }

@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.LocalDate;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.model.profilepipe.PatientMetadata;
 import org.karnak.backend.util.PatientClientUtil;
 
@@ -59,24 +61,24 @@ class PatientClientUtilTest {
 		}
 
 		private static Stream<Arguments> providerGenerateKeyPseudonymPatient() {
-			return Stream.of(Arguments.of(new Patient("pseudo", "123", "456", "789", "101112", null), "123101112"),
-					Arguments.of(new Patient("pseudo", "123", "456", "789", "", null), "123", null),
-					Arguments.of(new Patient("pseudo", "EREN", "Patient", "Name", "PDA", null), "ERENPDA"),
-					Arguments.of(new Patient("pseudo", "EREN", "Patient", "Name", "", null), "EREN"),
-					Arguments.of(new Patient("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", ""), "123"),
-					Arguments.of(new Patient("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", "789"),
+			return Stream.of(Arguments.of(new PatientModel("pseudo", "123", "456", "789", "101112", null, UUID.randomUUID()), "123101112"),
+					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "", null, UUID.randomUUID()), "123", null),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "PDA", null, UUID.randomUUID()), "ERENPDA"),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "", null, UUID.randomUUID()), "EREN"),
+					Arguments.of(new PatientModel("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", ""), "123"),
+					Arguments.of(new PatientModel("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", "789"),
 							"123789"),
 					Arguments.of(
-							new Patient("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", "PDA"),
+							new PatientModel("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", "PDA"),
 							"ERENPDA"),
-					Arguments.of(new Patient("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", ""),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", ""),
 							"EREN"));
 		}
 
 		private static Stream<Arguments> providerGenerateKeyPseudonymPatientAndProjectID() {
-			return Stream.of(Arguments.of(new Patient("pseudo", "123", "456", "789", "101112", 900L), "123101112900"),
-					Arguments.of(new Patient("pseudo", "123", "456", "789", "", 128L), "123128"),
-					Arguments.of(new Patient("pseudo", "EREN", "Patient", "Name", "PDA", 524L), "ERENPDA524"));
+			return Stream.of(Arguments.of(new PatientModel("pseudo", "123", "456", "789", "101112", 900L, UUID.randomUUID()), "123101112900"),
+					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "", 128L, UUID.randomUUID()), "123128"),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "PDA", 524L, UUID.randomUUID()), "ERENPDA524"));
 		}
 
 		private static Stream<Arguments> providerGenerateKeyPatientMetadata() {
@@ -94,13 +96,13 @@ class PatientClientUtilTest {
 
 		@ParameterizedTest
 		@MethodSource("providerGenerateKeyPseudonymPatient")
-		void from_patient(Patient patient, String output) {
+		void from_patient(PatientModel patient, String output) {
 			assertEquals(output, PatientClientUtil.generateKey(patient));
 		}
 
 		@ParameterizedTest
 		@MethodSource("providerGenerateKeyPseudonymPatientAndProjectID")
-		void from_patient_and_project_id(Patient patient, String output) {
+		void from_patient_and_project_id(PatientModel patient, String output) {
 			assertEquals(output, PatientClientUtil.generateKey(patient, patient.getProjectID()));
 		}
 
@@ -115,13 +117,13 @@ class PatientClientUtilTest {
 	@Nested
 	class GetPseudonym {
 
-		private final PatientClient cache = new InMemoryExternalIDCache();
+		private final PseudonymCache cache = new InMemoryExternalIDCache();
 
 		@Test
 		void returns_the_cached_pseudonym_when_id_and_issuer_match() {
 			var metadata = new PatientMetadata(datasetWithIssuer, "");
 			cache.put(PatientClientUtil.generateKey(metadata),
-					new Patient("the-pseudonym", "EREN", "Name", "Patient", "PDA", null));
+					new PatientModel("the-pseudonym", "EREN", "Name", "Patient", "PDA", null, UUID.randomUUID()));
 
 			assertEquals("the-pseudonym", PatientClientUtil.getPseudonym(metadata, cache));
 		}
@@ -138,7 +140,7 @@ class PatientClientUtilTest {
 			var metadata = new PatientMetadata(datasetWithIssuer, "");
 			// Same key but the stored patient does not describe the same person.
 			cache.put(PatientClientUtil.generateKey(metadata),
-					new Patient("other-pseudonym", "OTHER", "Name", "Patient", "PDA", null));
+					new PatientModel("other-pseudonym", "OTHER", "Name", "Patient", "PDA", null, UUID.randomUUID()));
 
 			assertNull(PatientClientUtil.getPseudonym(metadata, cache));
 		}
@@ -154,7 +156,7 @@ class PatientClientUtilTest {
 		void scopes_the_lookup_by_project_id() {
 			var metadata = new PatientMetadata(datasetWithIssuer, "");
 			cache.put(PatientClientUtil.generateKey(metadata, 42L),
-					new Patient("scoped-pseudonym", "EREN", "Name", "Patient", "PDA", 42L));
+					new PatientModel("scoped-pseudonym", "EREN", "Name", "Patient", "PDA", 42L, UUID.randomUUID()));
 
 			assertEquals("scoped-pseudonym", PatientClientUtil.getPseudonym(metadata, cache, 42L));
 			assertNull(PatientClientUtil.getPseudonym(metadata, cache, 99L));

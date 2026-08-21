@@ -19,6 +19,8 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class DicomSourceNodeEntityTest {
 
@@ -74,8 +76,8 @@ class DicomSourceNodeEntityTest {
 
 	@Test
 	void equal_instances_match_and_share_a_hash() {
-		DicomSourceNodeEntity a = node(1L, "AET");
-		DicomSourceNodeEntity b = node(1L, "AET");
+		DicomSourceNodeEntity a = node(1L, "AET", "1.2.3.4");
+		DicomSourceNodeEntity b = node(1L, "AET", "1.2.3.4");
 
 		assertEquals(a, b);
 		assertEquals(a.hashCode(), b.hashCode());
@@ -84,18 +86,19 @@ class DicomSourceNodeEntityTest {
 
 	@Test
 	void differs_by_field_type_or_null() {
-		DicomSourceNodeEntity base = node(1L, "AET");
+		DicomSourceNodeEntity base = node(1L, "AET", "1.2.3.4");
 
-		assertNotEquals(base, node(2L, "AET"));
-		assertNotEquals(base, node(1L, "OTHER"));
+		assertNotEquals(base, node(2L, "AET", "1.2.3.5"));
+		assertNotEquals(base, node(1L, "OTHER", "1.2.3.4"));
 		assertFalse(base.equals(null));
 		assertNotEquals(base, "not-a-node");
 	}
 
-	private static DicomSourceNodeEntity node(Long id, String aeTitle) {
+	private static DicomSourceNodeEntity node(Long id, String aeTitle, String hostName) {
 		DicomSourceNodeEntity entity = new DicomSourceNodeEntity();
 		entity.setId(id);
 		entity.setAeTitle(aeTitle);
+		entity.setHostname(hostName);
 		return entity;
 	}
 

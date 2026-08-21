@@ -11,6 +11,7 @@ package org.karnak.backend.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
@@ -158,7 +159,7 @@ public class ProjectService {
 	 * Retrieve all projects
 	 * @return projects found
 	 */
-	public List<ProjectEntity> getAllProjects() {
+	public List<ProjectEntity> retrieveAllProjects() {
 		List<ProjectEntity> projects = projectRepo.findAll();
 		projects.sort(CollatorUtils.comparing(ProjectEntity::getName));
 		return projects;
@@ -171,6 +172,15 @@ public class ProjectService {
 	 */
 	public ProjectEntity retrieveProject(Long id) {
 		return id == null ? null : projectRepo.findById(id).orElse(null);
+	}
+
+	/**
+	 * Retrieves the Project according to its public uuid, used in the REST API.
+	 * @param uuid the public uuid.
+	 * @return the matching ProjectEntity, or {@code null} when it does not exist.
+	 */
+	public ProjectEntity retrieveProjectByUuid(UUID uuid) {
+		return uuid == null ? null : projectRepo.findByUuid(uuid).orElse(null);
 	}
 
 }

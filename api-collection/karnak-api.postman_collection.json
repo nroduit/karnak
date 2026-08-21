@@ -1,0 +1,847 @@
+{
+	"info": {
+		"name": "Karnak API - ForwardNode, Profile, Project, Monitoring, Pseudonym, Echo",
+		"description": "Collection covering the REST endpoints of the ForwardNodeController, ProfileController, ProjectController, MonitoringController, PseudonymController and EchoController controllers of Karnak.\n\nAuthentication: Basic Auth (variables {{karnakUser}} / {{karnakPassword}}), default values admin/karnak (see application.yml / KARNAK_ADMIN / KARNAK_PASSWORD).\n\nDefault base URL: http://localhost:8081 (server.port in application.yml).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{ "key": "username", "value": "{{karnakUser}}", "type": "string" },
+			{ "key": "password", "value": "{{karnakPassword}}", "type": "string" }
+		]
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8081" },
+		{ "key": "karnakUser", "value": "admin" },
+		{ "key": "karnakPassword", "value": "karnak" },
+		{ "key": "forwardNodeUuid", "value": "" },
+		{ "key": "sourceNodeUuid", "value": "" },
+		{ "key": "destinationUuid", "value": "" },
+		{ "key": "profileUuid", "value": "" },
+		{ "key": "elementUuid", "value": "" },
+		{ "key": "projectUuid", "value": "" },
+		{ "key": "studyUid", "value": "" },
+		{ "key": "serieUid", "value": "" },
+		{ "key": "pseudonym", "value": "" },
+		{ "key": "projectUUID", "value": "" },
+		{ "key": "secretUuid", "value": "" },
+		{ "key": "srcAet", "value": "" }
+	],
+	"item": [
+		{
+			"name": "ForwardNode",
+			"item": [
+				{
+					"name": "List all forward nodes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes" ]
+						}
+					}
+				},
+				{
+					"name": "Create a forward node",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fwdAeTitle\": \"KARNAK_FWD\",\n  \"fwdDescription\": \"Forward node created\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes" ]
+						}
+					}
+				},
+				{
+					"name": "Get a forward node by uuid",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Update a forward node",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fwdAeTitle\": \"FWD_UPDATED\",\n  \"fwdDescription\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete a forward node",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "List source nodes of a forward node",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/source-nodes",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "source-nodes" ]
+						}
+					}
+				},
+				{
+					"name": "Add a source node to a forward node",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Source node created\",\n  \"aeTitle\": \"SRC_AET\",\n  \"hostname\": \"127.0.0.1\",\n  \"checkHostname\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/source-nodes",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "source-nodes" ]
+						}
+					}
+				},
+				{
+					"name": "Remove a source node from a forward node",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/source-nodes/{{sourceNodeUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "source-nodes", "{{sourceNodeUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "List destinations of a forward node",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/destinations",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "destinations" ]
+						}
+					}
+				},
+				{
+					"name": "Add a destination to a forward node (DICOM)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Destination created\",\n  \"destinationType\": \"dicom\",\n  \"activate\": true,\n  \"desidentification\": true,\n  \"aeTitle\": \"DEST_AET\",\n  \"hostname\": \"127.0.0.1\",\n  \"port\": 11112\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/destinations",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "destinations" ]
+						}
+					}
+				},
+				{
+					"name": "Update a destination of a forward node",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Destination updated\",\n  \"destinationType\": \"dicom\",\n  \"activate\": true,\n  \"desidentification\": true,\n  \"aeTitle\": \"DEST_AET\",\n  \"hostname\": \"127.0.0.1\",\n  \"port\": 11113\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/destinations/{{destinationUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "destinations", "{{destinationUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete a destination from a forward node",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/forward-nodes/{{forwardNodeUuid}}/destinations/{{destinationUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "forward-nodes", "{{forwardNodeUuid}}", "destinations", "{{destinationUuid}}" ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "List all profiles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles" ]
+						}
+					}
+				},
+				{
+					"name": "Create a profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Profile\",\n  \"version\": \"1.0\",\n  \"minimumKarnakVersion\": \"3.0\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles" ]
+						}
+					}
+				},
+				{
+					"name": "Get a profile by uuid",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Update a profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Profile Updated\",\n  \"version\": \"1.1\",\n  \"minimumKarnakVersion\": \"3.0\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete a profile",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Upload (import) a profile from a YAML file",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/import",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "import" ]
+						}
+					}
+				},
+				{
+					"name": "Download a profile as a YAML file",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/x-yaml" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}/download",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}", "download" ]
+						}
+					}
+				},
+				{
+					"name": "List elements of a profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}/elements",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}", "elements" ]
+						}
+					}
+				},
+				{
+					"name": "Add an element to a profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Patient Name\",\n  \"codename\": \"patient.name\",\n  \"action\": \"REPLACE\",\n  \"tags\": [\"00100010\"],\n  \"excludedTags\": [],\n  \"arguments\": {}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}/elements",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}", "elements" ]
+						}
+					}
+				},
+				{
+					"name": "Update an element of a profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Patient Name Updated\",\n  \"codename\": \"patient.name\",\n  \"action\": \"REPLACE\",\n  \"tags\": [\"00100010\"],\n  \"excludedTags\": [],\n  \"arguments\": {}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}/elements/{{elementUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}", "elements", "{{elementUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete an element from a profile",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}/elements/{{elementUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}", "elements", "{{elementUuid}}" ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Project",
+			"item": [
+				{
+					"name": "List all projects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects" ]
+						}
+					}
+				},
+				{
+					"name": "Create a project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Project\",\n  \"profileUuid\": \"{{profileUuid}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projects",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects" ]
+						}
+					}
+				},
+				{
+					"name": "Get a project by uuid",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Update a project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Project Updated\",\n  \"profileUuid\": \"{{profileUuid}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete a project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "List secrets of a project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}/secrets",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}", "secrets" ]
+						}
+					}
+				},
+				{
+					"name": "Generate a new secret for a project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}/secrets/generate",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}", "secrets", "generate" ]
+						}
+					}
+				},
+				{
+					"name": "Import a secret for a project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"key\": \"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}/secrets/import",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}", "secrets", "import" ]
+						}
+					}
+				},
+				{
+					"name": "Delete a secret",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}/secrets/{{secretUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}", "secrets", "{{secretUuid}}" ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Monitoring",
+			"item": [
+				{
+					"name": "List all destinations with aggregated transfer activity",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/destinations?statusType=ALL",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "destinations" ],
+							"query": [
+								{ "key": "statusType", "value": "ALL" },
+								{ "key": "start", "value": "", "disabled": true },
+								{ "key": "end", "value": "", "disabled": true }
+							]
+						}
+					}
+				},
+				{
+					"name": "List studies under a destination",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/studies?destinationUuid={{destinationUuid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "studies" ],
+							"query": [
+								{ "key": "destinationUuid", "value": "{{destinationUuid}}" },
+								{ "key": "statusType", "value": "ALL", "disabled": true }
+							]
+						}
+					}
+				},
+				{
+					"name": "List series under a study of a destination",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/series?destinationUuid={{destinationUuid}}&studyUid={{studyUid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "series" ],
+							"query": [
+								{ "key": "destinationUuid", "value": "{{destinationUuid}}" },
+								{ "key": "studyUid", "value": "{{studyUid}}" }
+							]
+						}
+					}
+				},
+				{
+					"name": "List error reasons for a series",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/errors?destinationUuid={{destinationUuid}}&serieUid={{serieUid}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "errors" ],
+							"query": [
+								{ "key": "destinationUuid", "value": "{{destinationUuid}}" },
+								{ "key": "serieUid", "value": "{{serieUid}}" }
+							]
+						}
+					}
+				},
+				{
+					"name": "List per-forward-node activity for the dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/dashboard",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "dashboard" ]
+						}
+					}
+				},
+				{
+					"name": "List transfer models matching the criteria, paginated",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/transfers?page=0&size=20&sort=lastSeen,desc",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "transfers" ],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "lastSeen,desc" },
+								{ "key": "destinationUuid", "value": "{{destinationUuid}}", "disabled": true },
+								{ "key": "studyUid", "value": "{{studyUid}}", "disabled": true },
+								{ "key": "serieUid", "value": "{{serieUid}}", "disabled": true },
+								{ "key": "statusType", "value": "ALL", "disabled": true }
+							]
+						}
+					}
+				},
+				{
+					"name": "Count transfer models matching the criteria",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/transfers/count",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "transfers", "count" ]
+						}
+					}
+				},
+				{
+					"name": "Export transfer models matching the criteria as CSV",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "text/csv" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/transfers/export?delimiter=,",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "transfers", "export" ],
+							"query": [
+								{ "key": "delimiter", "value": "," }
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete all monitoring transfer status records",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/monitoring/all",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "monitoring", "all" ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Pseudonym",
+			"item": [
+				{
+					"name": "List all pseudonyms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pseudonyms",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "pseudonyms" ]
+						}
+					}
+				},
+				{
+					"name": "Get a patient by pseudonym",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pseudonyms/{{pseudonym}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "pseudonyms", "{{pseudonym}}" ]
+						}
+					}
+				},
+				{
+					"name": "Create a pseudonym",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pseudonym\": \"PSY_12345\",\n  \"patientId\": \"PAT_67890\",\n  \"projectUUID\": \"{{projectUuid}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pseudonyms",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "pseudonyms" ]
+						}
+					}
+				},
+				{
+					"name": "Update a pseudonym",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pseudonym\": \"PSY_12345_UPDATED\",\n  \"patientId\": \"PAT_67890\",\n  \"projectUUID\": \"{{projectUuid}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pseudonyms/{{pseudonym}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "pseudonyms", "{{pseudonym}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete a pseudonym",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pseudonyms/{{pseudonym}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "pseudonyms", "{{pseudonym}}" ]
+						}
+					}
+				},
+				{
+					"name": "Delete all pseudonyms for a project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pseudonyms/project/{{projectUUID}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "pseudonyms", "project", "{{projectUUID}}" ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Echo",
+			"item": [
+				{
+					"name": "Retrieve status destinations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/echo/destinations?srcAet={{srcAet}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "echo", "destinations" ],
+							"query": [
+								{ "key": "srcAet", "value": "{{srcAet}}" }
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

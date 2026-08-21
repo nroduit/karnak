@@ -142,7 +142,7 @@ class ProjectServiceTest {
 		projectEntity.setId(1L);
 
 		// Call service
-		List<ProjectEntity> projects = projectService.getAllProjects();
+		List<ProjectEntity> projects = projectService.retrieveAllProjects();
 
 		// Test results
 		Mockito.verify(projectRepositoryMock, Mockito.times(1)).findAll();

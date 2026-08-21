@@ -16,7 +16,11 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,6 +30,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.NamedGroupEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProfileGroupEntity;
@@ -36,12 +41,6 @@ import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.karnak.frontend.util.GroupTreeController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.weasis.core.util.annotations.Generated;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.error.Mark;
-import org.yaml.snakeyaml.error.MarkedYAMLException;
-import org.yaml.snakeyaml.error.YAMLException;
 
 @SpringComponent
 @UIScope
@@ -78,7 +77,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	@Override
 	public void refreshAll() {
 		getItems().clear();
-		getItems().addAll(profilePipeService.getAllProfiles());
+		getItems().addAll(profilePipeService.retrieveAllProfiles());
 		super.refreshAll();
 		if (profileView != null) {
 			profileView.getProfileGrid().reload();
@@ -89,7 +88,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 
 	@Override
 	public List<ProfileEntity> listItems() {
-		return profilePipeService.getAllProfiles();
+		return profilePipeService.retrieveAllProfiles();
 	}
 
 	@Override
@@ -131,7 +130,7 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	 * Initialize the data provider
 	 */
 	private void initDataProvider() {
-		getItems().addAll(profilePipeService.getAllProfiles());
+		getItems().addAll(profilePipeService.retrieveAllProfiles());
 	}
 
 	public Long enter(String dataIdStr) {
@@ -154,10 +153,16 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 		return getItems().stream().filter(project -> project.getId().equals(profileID)).findAny().orElse(null);
 	}
 
-	public void deleteProfile(ProfileEntity profileEntity) {
-		profilePipeService.deleteProfile(profileEntity);
-		profileView.clearRightPanel();
-		refreshAll();
+	public record DeleteProfileResult(boolean success, @Nullable String errorMessage) {
+	}
+
+	public DeleteProfileResult deleteProfile(ProfileEntity profileEntity) {
+		ProfilePipeService.DeleteProfileResult result = profilePipeService.deleteProfile(profileEntity);
+		if (result.success()) {
+			profileView.clearRightPanel();
+			refreshAll();
+		}
+		return new DeleteProfileResult(result.success(), result.errorMessage());
 	}
 
 	public ProfileEntity updateProfile(ProfileEntity profileEntity) {
@@ -220,9 +225,8 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 		refreshProfile(profileId);
 	}
 
-	private ProfilePipeBody readProfileYaml(InputStream stream) {
-		final Yaml yaml = new Yaml(new Constructor(ProfilePipeBody.class, new LoaderOptions()));
-		return yaml.load(stream);
+	private ProfilePipeBody readProfileYaml(InputStream stream) throws IOException {
+		return new YAMLMapper().readValue(stream, ProfilePipeBody.class);
 	}
 
 	public void setProfileComponent(InputStream stream) {
@@ -247,11 +251,11 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 				openWarningIssuerDialog();
 			}
 		}
-		catch (MarkedYAMLException e) {
+		catch (JsonProcessingException e) {
 			log.warn("Invalid YAML in uploaded profile", e);
 			profileView.getProfileErrorView().setView("Unable to read uploaded YAML file.\n" + formatYamlError(e));
 		}
-		catch (YAMLException e) {
+		catch (IOException e) {
 			log.error("Unable to read uploaded YAML", e);
 			profileView.getProfileErrorView()
 				.setView("Unable to read uploaded YAML file.\n"
@@ -293,30 +297,28 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 			}
 			return List.of();
 		}
-		catch (MarkedYAMLException e) {
+		catch (JsonProcessingException e) {
 			log.warn("Invalid YAML in edited profile", e);
 			return List.of(formatYamlError(e));
 		}
-		catch (YAMLException e) {
+		catch (IOException e) {
 			log.error("Unable to read edited YAML", e);
 			return List.of("Unable to read the YAML content. Please check the YAML structure.");
 		}
 	}
 
 	/**
-	 * Build a human-readable, positional message from a SnakeYAML parse error. Uses the
-	 * problem mark (line/column are 0-based in SnakeYAML, shown 1-based to the user) and
-	 * appends the mark's snippet, which underlines the offending column with a caret and
-	 * makes indentation mistakes obvious.
-	 * @param e the marked parse exception
-	 * @return a message such as {@code "Line 5, column 3: <problem>\n<snippet>"}
+	 * Build a human-readable, positional message from a Jackson YAML parse error. Uses
+	 * the error location (line/column, both 1-based) when available.
+	 * @param e the YAML parse exception
+	 * @return a message such as {@code "Line 5, column 3: <problem>"}
 	 */
-	private static String formatYamlError(MarkedYAMLException e) {
-		Mark mark = e.getProblemMark();
-		String where = mark != null ? "Line " + (mark.getLine() + 1) + ", column " + (mark.getColumn() + 1) + ": " : "";
-		String problem = e.getProblem() != null ? e.getProblem() : "invalid YAML structure";
-		String snippet = mark != null ? "\n" + mark.get_snippet() : "";
-		return where + problem + snippet;
+	private static String formatYamlError(JsonProcessingException e) {
+		JsonLocation location = e.getLocation();
+		String where = location != null
+				? "Line " + location.getLineNr() + ", column " + location.getColumnNr() + ": " : "";
+		String problem = e.getOriginalMessage() != null ? e.getOriginalMessage() : "invalid YAML structure";
+		return where + problem;
 	}
 
 	private static String formatError(ProfileError profileError) {

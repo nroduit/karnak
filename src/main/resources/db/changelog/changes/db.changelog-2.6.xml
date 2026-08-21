@@ -1,0 +1,92 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- forward_node -->
+  <changeSet author="karnak" id="2.6-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="forward_node" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="forward_node">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-2" dbms="postgresql">
+    <sql>UPDATE forward_node SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-3" dbms="h2">
+    <sql>UPDATE forward_node SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-4">
+    <addNotNullConstraint tableName="forward_node" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-5">
+    <addUniqueConstraint tableName="forward_node" columnNames="uuid" constraintName="uk_forward_node_uuid"/>
+  </changeSet>
+
+  <!-- dicom_source_node -->
+  <changeSet author="karnak" id="2.6-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="dicom_source_node" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="dicom_source_node">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-7" dbms="postgresql">
+    <sql>UPDATE dicom_source_node SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-8" dbms="h2">
+    <sql>UPDATE dicom_source_node SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-9">
+    <addNotNullConstraint tableName="dicom_source_node" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-10">
+    <addUniqueConstraint tableName="dicom_source_node" columnNames="uuid"
+      constraintName="uk_dicom_source_node_uuid"/>
+  </changeSet>
+
+  <!-- destination -->
+  <changeSet author="karnak" id="2.6-11">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-12" dbms="postgresql">
+    <sql>UPDATE destination SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-13" dbms="h2">
+    <sql>UPDATE destination SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-14">
+    <addNotNullConstraint tableName="destination" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.6-15">
+    <addUniqueConstraint tableName="destination" columnNames="uuid" constraintName="uk_destination_uuid"/>
+  </changeSet>
+
+</databaseChangeLog>
+

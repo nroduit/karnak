@@ -47,8 +47,14 @@ public class AddPrivateTag extends AbstractProfileItem {
 	}
 
 	@Override
-	public @Nullable ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
-		String currentUID = dcm.getString(Tag.SOPInstanceUID);
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac) {
+		// Read from the untouched copy: the pipeline replaces (0008,0018) early in its
+		// ascending walk, so the working dataset would answer with the original UID for
+		// the
+		// first tags and with the pseudonymized one afterwards, which this latch would
+		// read
+		// as a second instance
+		String currentUID = original.getString(Tag.SOPInstanceUID);
 		if (!currentInstanceUID.equals(currentUID) && currentUID != null) {
 			currentInstanceUID = currentUID;
 			tagAdded = false;
@@ -74,13 +80,17 @@ public class AddPrivateTag extends AbstractProfileItem {
 
 			int creatorTag = TagUtils.creatorTagOf(TagUtils.intFromHexString(tagValue));
 
+			// The private creator is read from the working dataset on purpose: the
+			// question
+			// is which creator the object about to be forwarded already holds, not which
+			// one it held before the pipeline started
 			if (privateCreator != null && dcm.contains(creatorTag)
 					&& !dcm.getString(creatorTag).equals(privateCreator)) {
 				// Collision between multiple Private Creator Tags, do not add the current
 				// tag and log a warning
 				tagAdded = true;
 				if (log.isWarnEnabled()) {
-					log.warn(LOG_PATTERN, dcm.getString(Tag.SOPInstanceUID), tagValue, "A",
+					log.warn(LOG_PATTERN, original.getString(Tag.SOPInstanceUID), tagValue, "A",
 							"Tag not added, PrivateCreatorID collision " + TagUtils.toString(creatorTag) + " existing: "
 									+ dcm.getString(creatorTag) + " - new: " + privateCreator);
 				}
@@ -102,6 +112,8 @@ public class AddPrivateTag extends AbstractProfileItem {
 		if (tagEntities == null || tagEntities.size() > 1) {
 			throw new ProfileException("Cannot build the profile " + codeName + ": Exactly one tag is required");
 		}
+
+		rejectTagPaths();
 
 		if (!TagUtils.isPrivateTag(
 				TagUtils.intFromHexString(StandardDICOM.cleanTagPath(tagEntities.getFirst().getTagValue())))) {

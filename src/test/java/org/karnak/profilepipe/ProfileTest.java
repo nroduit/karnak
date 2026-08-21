@@ -9,6 +9,10 @@
  */
 package org.karnak.profilepipe;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
@@ -23,12 +27,7 @@ import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.HashContext;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.karnak.backend.util.DicomObjectTools;
-
 import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class ProfileTest {
@@ -482,6 +481,168 @@ class ProfileTest {
 		final Attributes resultItem = dataset1.getNestedDataset(Tag.RadiopharmaceuticalInformationSequence);
 		assertEquals("20070730131403.000000", resultItem.getString(Tag.RadiopharmaceuticalStartDateTime));
 		assertEquals("131403.000000", resultItem.getString(Tag.RadiopharmaceuticalStartTime));
+	}
+
+	@Test
+	void shiftByTagDateNestedInSequenceProfile() {
+		// The shift amounts live at the top level, while the date to shift is nested: the
+		// option must read each of them from the right dataset.
+		final Attributes dataset1 = new Attributes();
+		dataset1.setString(0x00150010, VR.LT, "ADIS");
+		dataset1.setString(0x00151010, VR.LT, "365");
+		dataset1.setString(0x00151011, VR.LT, "60");
+		Sequence seq = dataset1.newSequence(Tag.RadiopharmaceuticalInformationSequence, 1);
+		final Attributes item = new Attributes();
+		item.setString(Tag.RadiopharmaceuticalStartDateTime, VR.DT, "20080729131503");
+		seq.add(item);
+
+		final ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		final ProfileElementEntity shift = new ProfileElementEntity("Shift Date by tag", "action.on.dates", null, null,
+				"shift_by_tag", 0, profileEntity);
+		shift.addIncludedTag(new IncludedTagEntity("(0018,1078)", shift));
+		shift.addArgument(new ArgumentEntity("days_tag", "(0015,1010)", shift));
+		shift.addArgument(new ArgumentEntity("seconds_tag", "(0015,1011)", shift));
+		final ProfileElementEntity basic = new ProfileElementEntity("DICOM basic profile", "basic.dicom.profile", null,
+				null, null, 1, profileEntity);
+		profileEntity.addProfilePipe(shift);
+		profileEntity.addProfilePipe(basic);
+
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, new Attributes(dataset1), defaultHMAC, null, null, null);
+
+		final Attributes resultItem = dataset1.getNestedDataset(Tag.RadiopharmaceuticalInformationSequence);
+		assertEquals("20070730131403.000000", resultItem.getString(Tag.RadiopharmaceuticalStartDateTime));
+	}
+
+	@Test
+	void shiftByTagDateWithAnAlreadyDeIdentifiedShiftTagProfile() {
+		// The private shift tags sort before the date tags, so they are already removed
+		// when the dates are reached: the option must read their original value from the
+		// copy.
+		final Attributes dataset1 = new Attributes();
+		dataset1.setString(0x00070010, VR.LT, "ADIS");
+		dataset1.setString(0x00071010, VR.LT, "365");
+		dataset1.setString(0x00071011, VR.LT, "60");
+		dataset1.setString(Tag.StudyDate, VR.DA, "20080729");
+		dataset1.setString(Tag.StudyTime, VR.TM, "131503.000000");
+
+		final ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		final ProfileElementEntity privateTags = new ProfileElementEntity("Remove private tags",
+				"action.on.privatetags", null, "X", null, 0, profileEntity);
+		final ProfileElementEntity shift = new ProfileElementEntity("Shift Date by tag", "action.on.dates", null, null,
+				"shift_by_tag", 1, profileEntity);
+		shift.addIncludedTag(new IncludedTagEntity("(0008,0020)", shift));
+		shift.addIncludedTag(new IncludedTagEntity("(0008,0030)", shift));
+		shift.addArgument(new ArgumentEntity("days_tag", "(0007,1010)", shift));
+		shift.addArgument(new ArgumentEntity("seconds_tag", "(0007,1011)", shift));
+		profileEntity.addProfilePipe(privateTags);
+		profileEntity.addProfilePipe(shift);
+
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, new Attributes(dataset1), defaultHMAC, null, null, null);
+
+		assertNull(dataset1.getString(0x00071010));
+		assertEquals("20070730", dataset1.getString(Tag.StudyDate));
+		assertEquals("131403.000000", dataset1.getString(Tag.StudyTime));
+	}
+
+	/**
+	 * Builds a profile removing {@code (0008,1030)} — Study Description, present both at
+	 * the top level and inside the Request Attributes Sequence — under the given
+	 * condition.
+	 */
+	private static Profile studyDescriptionProfileWithCondition(String condition) {
+		final ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		final ProfileElementEntity remove = new ProfileElementEntity("Remove study description",
+				"action.on.specific.tags", condition, "X", null, 0, profileEntity);
+		remove.addIncludedTag(new IncludedTagEntity("(0008,1030)", remove));
+		profileEntity.addProfilePipe(remove);
+		return new Profile(profileEntity);
+	}
+
+	private static Attributes datasetWithNestedStudyDescription() {
+		final Attributes dataset = new Attributes();
+		dataset.setString(Tag.Modality, VR.CS, "CT");
+		dataset.setString(Tag.StudyDescription, VR.LO, "TOP");
+		final Attributes item = new Attributes();
+		item.setString(Tag.RequestedProcedureID, VR.SH, "RP-1");
+		item.setString(Tag.StudyDescription, VR.LO, "NESTED");
+		dataset.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+		return dataset;
+	}
+
+	@Test
+	void conditionOnATopLevelTagStillAppliesInsideASequence() {
+		// A condition is nearly always written against a study level tag: it must keep
+		// gating the profile item for the tags nested in a sequence.
+		final Attributes dataset = datasetWithNestedStudyDescription();
+
+		studyDescriptionProfileWithCondition("tagValueIsPresent(#Tag.Modality, \"CT\")").applyAction(dataset,
+				new Attributes(dataset), defaultHMAC, null, null, null);
+
+		assertNull(dataset.getString(Tag.StudyDescription));
+		assertNull(dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.StudyDescription));
+	}
+
+	@Test
+	void conditionOnATopLevelTagThatDoesNotMatchKeepsTheNestedTag() {
+		final Attributes dataset = datasetWithNestedStudyDescription();
+
+		studyDescriptionProfileWithCondition("tagValueIsPresent(#Tag.Modality, \"MR\")").applyAction(dataset,
+				new Attributes(dataset), defaultHMAC, null, null, null);
+
+		assertEquals("TOP", dataset.getString(Tag.StudyDescription));
+		assertEquals("NESTED", dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.StudyDescription));
+	}
+
+	@Test
+	void conditionOnATagOfTheSequenceItemAppliesToThatItemOnly() {
+		// The item holds the tag the condition reads: it is resolved on the item being
+		// visited, which the top level copy could not see at all.
+		final Attributes dataset = datasetWithNestedStudyDescription();
+
+		studyDescriptionProfileWithCondition("tagValueIsPresent(#Tag.RequestedProcedureID, \"RP-1\")")
+			.applyAction(dataset, new Attributes(dataset), defaultHMAC, null, null, null);
+
+		assertEquals("TOP", dataset.getString(Tag.StudyDescription));
+		assertNull(dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.StudyDescription));
+	}
+
+	@Test
+	void expressionOnANestedTagReadsTheValueOfItsOwnItem() {
+		// The expression replaces the tag by its own value, which is the value held by
+		// the item and not the one held by the top level dataset.
+		final Attributes dataset = datasetWithNestedStudyDescription();
+
+		final ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		final ProfileElementEntity expression = new ProfileElementEntity("Prefix study description",
+				"expression.on.tags", null, null, null, 0, profileEntity);
+		expression.addIncludedTag(new IncludedTagEntity("(0008,1030)", expression));
+		expression.addArgument(new ArgumentEntity("expr", "Replace(\"study \" + stringValue)", expression));
+		profileEntity.addProfilePipe(expression);
+
+		new Profile(profileEntity).applyAction(dataset, new Attributes(dataset), defaultHMAC, null, null, null);
+
+		assertEquals("study TOP", dataset.getString(Tag.StudyDescription));
+		assertEquals("study NESTED",
+				dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.StudyDescription));
+	}
+
+	@Test
+	void expressionOnANestedTagStillSeesTheTagsOfTheStudy() {
+		final Attributes dataset = datasetWithNestedStudyDescription();
+
+		final ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		final ProfileElementEntity expression = new ProfileElementEntity("Replace by the modality",
+				"expression.on.tags", null, null, null, 0, profileEntity);
+		expression.addIncludedTag(new IncludedTagEntity("(0008,1030)", expression));
+		expression.addArgument(new ArgumentEntity("expr", "Replace(getString(#Tag.Modality))", expression));
+		profileEntity.addProfilePipe(expression);
+
+		new Profile(profileEntity).applyAction(dataset, new Attributes(dataset), defaultHMAC, null, null, null);
+
+		assertEquals("CT", dataset.getString(Tag.StudyDescription));
+		assertEquals("CT", dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.StudyDescription));
 	}
 
 	@Test

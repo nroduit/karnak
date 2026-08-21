@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,6 +49,7 @@ public abstract class TagEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "profile_element_id", nullable = false)
+	@JsonIgnore
 	private ProfileElementEntity profileElementEntity;
 
 	private String tagValue;

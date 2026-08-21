@@ -12,9 +12,13 @@ package org.karnak.backend.cache;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
+import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.model.patient.PatientModel;
+import org.karnak.backend.util.PatientClientUtil;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
@@ -22,11 +26,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
-public abstract class PatientClient {
+public abstract class PseudonymCache {
 
 	private final Cache cache;
 
-	private final @Nullable RedisTemplate<String, Patient> redisTemplate;
+	private final @Nullable RedisTemplate<String, PatientModel> redisTemplate;
 
 	private static final String KEY_SEPARATOR = "::";
 
@@ -34,18 +38,18 @@ public abstract class PatientClient {
 
 	private final String patternSearchAllKeysCache;
 
-	public PatientClient(Cache cache, @Nullable RedisTemplate<String, Patient> redisTemplate, String name) {
+	protected PseudonymCache(Cache cache, @Nullable RedisTemplate<String, PatientModel> redisTemplate, String name) {
 		this.cache = cache;
 		this.redisTemplate = redisTemplate;
 		this.prefixKeySearchCache = "%s%s".formatted(name, KEY_SEPARATOR);
 		this.patternSearchAllKeysCache = "%s*".formatted(prefixKeySearchCache);
 	}
 
-	public @Nullable Patient put(String key, Patient patient) {
+	public @Nullable PatientModel put(String key, PatientModel patient) {
 		return unwrap(cache.putIfAbsent(key, patient));
 	}
 
-	public @Nullable Patient get(String key) {
+	public @Nullable PatientModel get(String key) {
 		return unwrap(cache.get(key));
 	}
 
@@ -53,7 +57,7 @@ public abstract class PatientClient {
 		cache.evictIfPresent(key);
 	}
 
-	public Collection<Patient> getAll() {
+	public Collection<PatientModel> getAll() {
 		// In-memory cache (ConcurrentMapCache): iterate the native map keys
 		if (cache instanceof ConcurrentMapCache concurrentMapCache) {
 			return concurrentMapCache.getNativeCache()
@@ -70,6 +74,12 @@ public abstract class PatientClient {
 		return Collections.emptyList();
 	}
 
+	public Optional<PatientModel> findPatientByPseudonym(String pseudonym) {
+		return this.getAll().stream()
+				.filter(p -> Objects.equals(pseudonym, p.getPseudonym()))
+				.findFirst();
+	}
+
 	public void removeAll() {
 		// In-memory cache (ConcurrentMapCache): clear directly
 		if (cache instanceof ConcurrentMapCache concurrentMapCache) {
@@ -82,8 +92,8 @@ public abstract class PatientClient {
 		}
 	}
 
-	private static @Nullable Patient unwrap(@Nullable ValueWrapper wrapper) {
-		return wrapper != null ? (Patient) wrapper.get() : null;
+	private static @Nullable PatientModel unwrap(@Nullable ValueWrapper wrapper) {
+		return wrapper != null ? (PatientModel) wrapper.get() : null;
 	}
 
 	/**
@@ -100,4 +110,14 @@ public abstract class PatientClient {
 			.map(k -> k.substring(prefixKeySearchCache.length()));
 	}
 
+	/**
+	 * Remove all pseudonyms by project
+	 * @param projectEntity Project to evaluate
+	 */
+    public void removeAllPseudonymByProject(ProjectEntity projectEntity) {
+		this.getAll().stream()
+				.filter(p -> p.getProjectID() != null && Objects.equals(p.getProjectID(), projectEntity.getId()))
+				.map(patient -> PatientClientUtil.generateKey(patient, projectEntity.getId()))
+				.forEach(this::remove);
+    }
 }

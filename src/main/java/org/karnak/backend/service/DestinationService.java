@@ -113,7 +113,7 @@ public class DestinationService {
 	 * @return destinations found
 	 */
 	public Collection<DestinationEntity> retrieveDestinations(ForwardNodeEntity forwardNodeEntity) {
-		return forwardNodeService.getAllDestinations(forwardNodeEntity);
+		return forwardNodeService.retrieveAllDestinations(forwardNodeEntity);
 	}
 
 	public List<DestinationEntity> retrieveDestinationsFromIds(List<Long> ids) {

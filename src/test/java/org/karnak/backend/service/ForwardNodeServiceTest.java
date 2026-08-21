@@ -81,7 +81,7 @@ class ForwardNodeServiceTest {
 	@Test
 	void should_retrieve_all_forward_node() {
 		// Call service
-		forwardNodeService.getAllForwardNodes();
+		forwardNodeService.retrieveAllForwardNodes();
 
 		// Test results
 		Mockito.verify(forwardNodeRepoMock, Mockito.times(1)).findAll();
@@ -168,10 +168,12 @@ class ForwardNodeServiceTest {
 		ForwardNodeEntity forwardNodeEntity = new ForwardNodeEntity();
 		DicomSourceNodeEntity dicomSourceNodeEntity = new DicomSourceNodeEntity();
 		dicomSourceNodeEntity.setId(1L);
+		dicomSourceNodeEntity.setAeTitle("SOURCE_A");
 		forwardNodeEntity.addSourceNode(dicomSourceNodeEntity);
 		// Source to add
 		DicomSourceNodeEntity dicomSourceNodeEntityToAdd = new DicomSourceNodeEntity();
 		dicomSourceNodeEntityToAdd.setId(2L);
+		dicomSourceNodeEntityToAdd.setAeTitle("SOURCE_B");
 
 		// Call service
 		DicomSourceNodeEntity sourceAdded = forwardNodeService.updateSourceNode(forwardNodeEntity,
@@ -191,10 +193,12 @@ class ForwardNodeServiceTest {
 		ForwardNodeEntity forwardNodeEntity = new ForwardNodeEntity();
 		DicomSourceNodeEntity dicomSourceNodeEntity = new DicomSourceNodeEntity();
 		dicomSourceNodeEntity.setId(1L);
+		dicomSourceNodeEntity.setAeTitle("SOURCE_A");
 		forwardNodeEntity.addSourceNode(dicomSourceNodeEntity);
 		// Source to add
 		DicomSourceNodeEntity sourceEntityToDelete = new DicomSourceNodeEntity();
 		sourceEntityToDelete.setId(2L);
+		sourceEntityToDelete.setAeTitle("SOURCE_B");
 		forwardNodeEntity.addSourceNode(sourceEntityToDelete);
 
 		// Call service

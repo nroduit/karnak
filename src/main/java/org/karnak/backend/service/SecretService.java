@@ -11,9 +11,17 @@ package org.karnak.backend.service;
 
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
+import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.data.repo.SecretRepo;
+import org.karnak.backend.model.profilepipe.HMAC;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class SecretService {
@@ -21,9 +29,12 @@ public class SecretService {
 	// Repositories
 	private final SecretRepo secretRepo;
 
+	private final ProjectRepo projectRepo;
+
 	@Autowired
-	public SecretService(final SecretRepo secretRepo) {
+	public SecretService(final SecretRepo secretRepo, final ProjectRepo projectRepo) {
 		this.secretRepo = secretRepo;
+		this.projectRepo = projectRepo;
 	}
 
 	/**
@@ -36,15 +47,84 @@ public class SecretService {
 	}
 
 	/**
-	 * Save in db a new active secret for the project in parameter
-	 * @param secretEntity Secret to save
-	 * @param projectEntity Project associated to the secret
-	 * @return Secret saved
+	 * Activate the given secret for the project (deactivating the others) and persist it.
+	 * @param secretEntity Secret to activate
+	 * @param projectEntity Project the secret belongs to
+	 * @return The saved and activated secret
 	 */
 	public SecretEntity saveActiveSecret(SecretEntity secretEntity, ProjectEntity projectEntity) {
 		secretEntity.setProjectEntity(projectEntity);
-		secretEntity.setActive(true);
+		projectEntity.applyActiveSecret(secretEntity);
 		return secretRepo.saveAndFlush(secretEntity);
+	}
+
+	/**
+	 * Generate a new random secret for the given project and activate it.
+	 * @param projectEntity Project to associate the secret with
+	 * @return The newly created and activated secret
+	 */
+	public SecretEntity generateSecret(ProjectEntity projectEntity) {
+		SecretEntity secret = new SecretEntity(projectEntity, HMAC.generateRandomKey());
+		projectEntity.addActiveSecretEntity(secret);
+		return secret;
+	}
+
+	/**
+	 * Import a secret from a hex string for the given project and activate it.
+	 * @param projectEntity Project to associate the secret with
+	 * @param hexKey Hexadecimal key (dashed groups allowed)
+	 * @return The newly created and activated secret
+	 * @throws IllegalArgumentException if the key is not valid
+	 */
+	public SecretEntity importSecret(ProjectEntity projectEntity, String hexKey) {
+		if (!HMAC.validateKey(hexKey)) {
+			throw new IllegalArgumentException("Invalid secret key");
+		}
+		SecretEntity secret = new SecretEntity(projectEntity, HMAC.hexToByte(hexKey));
+		projectEntity.addActiveSecretEntity(secret);
+		return secret;
+	}
+
+	/**
+	 * Retrieve all secrets of a project.
+	 * @param projectEntity Project
+	 * @return List of secrets
+	 */
+	public List<SecretEntity> findSecretsByProject(ProjectEntity projectEntity) {
+		return projectEntity.getSecretEntities();
+	}
+
+	/**
+	 * Find a secret by its public UUID.
+	 * @param uuid Public UUID of the secret
+	 * @return Secret found or null
+	 */
+	@Nullable
+	public SecretEntity findSecretByUuid(UUID uuid) {
+		return secretRepo.findByUuid(uuid).orElse(null);
+	}
+
+	/**
+	 * Delete a secret from the database.
+	 * @param secretEntity Secret to delete
+	 */
+	public void delete(SecretEntity secretEntity) {
+		secretRepo.delete(secretEntity);
+	}
+
+	/**
+	 * Delete a secret and persist the project in a single transaction.
+	 * This ensures Hibernate correctly handles the bidirectional relationship
+	 * (cascade ALL on ProjectEntity.secretEntities) without re-inserting the
+	 * deleted entity during the project merge.
+	 * @param projectEntity Project owning the secret
+	 * @param secretEntity Secret to delete
+	 */
+	@Transactional
+	public void deleteSecret(ProjectEntity projectEntity, SecretEntity secretEntity) {
+		projectEntity.getSecretEntities().removeIf(s -> s.getId() != null && Objects.equals(s.getId(), secretEntity.getId()));
+		secretRepo.delete(secretEntity);
+		projectRepo.saveAndFlush(projectEntity);
 	}
 
 }

@@ -17,6 +17,7 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.ElementDictionary;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.VR;
+import org.dcm4che3.img.util.DicomUtils;
 import org.dcm4che3.util.StringUtils;
 import org.jspecify.annotations.NullUnmarked;
 import org.weasis.core.util.StringUtil;
@@ -29,6 +30,31 @@ public class DicomObjectTools {
 
 	public static boolean dicomObjectEquals(Attributes o1, Attributes o2) {
 		return Objects.equals(o1, o2);
+	}
+
+	/**
+	 * Returns the value of a tag looked up from the given dataset outwards: the dataset
+	 * itself first, then each enclosing dataset up to the root.
+	 *
+	 * <p>
+	 * A sequence item keeps a reference to the dataset owning its sequence, so this
+	 * resolves both the attributes of the item and the study-level attributes that
+	 * surround it, the nearest scope winning. It is what an expression written against a
+	 * tag nested in a sequence expects: {@code (0008,0060)} refers to the Modality of the
+	 * study even when the expression is evaluated for an attribute of an item.
+	 * @param dcm dataset to start from, typically a sequence item
+	 * @param tag tag to look up
+	 * @return the value found in the innermost dataset holding the tag, or {@code null}
+	 * when no enclosing dataset holds it
+	 */
+	public static String getStringInScope(Attributes dcm, int tag) {
+		for (Attributes level = dcm; level != null; level = level.getParent()) {
+			String value = DicomUtils.getStringFromDicomElement(level, tag);
+			if (value != null) {
+				return value;
+			}
+		}
+		return null;
 	}
 
 	public static boolean containsTagFromPath(String path, Attributes dcm) {

@@ -35,7 +35,7 @@ class ExternalIDLogicTest {
 		List<ProjectEntity> projectEntities = externalIDLogic.retrieveProject();
 
 		// Test result
-		Mockito.verify(projectServiceMock, Mockito.times(1)).getAllProjects();
+		Mockito.verify(projectServiceMock, Mockito.times(1)).retrieveAllProjects();
 	}
 
 }

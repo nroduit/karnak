@@ -1,0 +1,35 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- secret -->
+  <changeSet author="karnak" id="2.9-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="secret" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="secret">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.9-2" dbms="postgresql">
+    <sql>UPDATE secret SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.9-3" dbms="h2">
+    <sql>UPDATE secret SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.9-4">
+    <addNotNullConstraint tableName="secret" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.9-5">
+    <addUniqueConstraint tableName="secret" columnNames="uuid" constraintName="uk_secret_uuid"/>
+  </changeSet>
+
+</databaseChangeLog>
+

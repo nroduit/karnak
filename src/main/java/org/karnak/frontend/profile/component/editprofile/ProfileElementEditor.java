@@ -190,15 +190,16 @@ public class ProfileElementEditor extends Dialog {
 		switch (type) {
 			case ACTION_TAGS, ACTION_PRIVATETAGS -> {
 				dynamicSection.add(buildActionComboBox(DeidActionType.values(), existing));
-				includedTags = new TagPickerField(dicomStandardService, "Tags", true);
-				excludedTags = new TagPickerField(dicomStandardService, "Excluded tags", true);
+				includedTags = new TagPickerField(dicomStandardService, "Tags", true, TagPickerField.PathMode.ANY);
+				excludedTags = new TagPickerField(dicomStandardService, "Excluded tags", true,
+						TagPickerField.PathMode.ANY);
 				prefillTags(existing);
 				dynamicSection.add(includedTags, excludedTags);
 			}
 			case REPLACE_UID -> {
 				dynamicSection.add(buildActionComboBox(new DeidActionType[] { DeidActionType.NEW_UID,
 						DeidActionType.REMOVE, DeidActionType.REPLACE_NULL }, existing));
-				includedTags = new TagPickerField(dicomStandardService, "Tags", true);
+				includedTags = new TagPickerField(dicomStandardService, "Tags", true, TagPickerField.PathMode.ANY);
 				prefillTags(existing);
 				dynamicSection.add(includedTags);
 			}
@@ -206,14 +207,15 @@ public class ProfileElementEditor extends Dialog {
 				dateOptionComboBox = new ComboBox<>("Option", DATE_OPTIONS);
 				dateOptionComboBox.setWidthFull();
 				dateOptionComboBox.addValueChangeListener(event -> buildDateArgs(event.getValue(), existing));
-				includedTags = new TagPickerField(dicomStandardService, "Tags (optional)", true);
+				includedTags = new TagPickerField(dicomStandardService, "Tags (optional)", true,
+						TagPickerField.PathMode.ANY);
 				prefillTags(existing);
 				dynamicSection.add(dateOptionComboBox, dateArgsSection, includedTags);
 				dateOptionComboBox
 					.setValue(existing != null && existing.getOption() != null ? existing.getOption() : "shift");
 			}
 			case ADD_TAG -> {
-				singleTag = new TagPickerField(dicomStandardService, "Tag", false);
+				singleTag = new TagPickerField(dicomStandardService, "Tag", false, TagPickerField.PathMode.LITERAL);
 				if (existing != null && !existing.getIncludedTagEntities().isEmpty()) {
 					singleTag.setTags(List.of(existing.getIncludedTagEntities().getFirst().getTagValue()));
 				}

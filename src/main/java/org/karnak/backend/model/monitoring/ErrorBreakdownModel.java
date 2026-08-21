@@ -15,5 +15,5 @@ package org.karnak.backend.model.monitoring;
  * {@code errors} for hard transfer errors, {@code excluded} for excluded (aborted /
  * filtered) outcomes, and {@code retries} for those that hit an already-seen instance.
  */
-public record ErrorBreakdown(String reason, long errors, long excluded, long retries) {
+public record ErrorBreakdownModel(String reason, long errors, long excluded, long retries) {
 }

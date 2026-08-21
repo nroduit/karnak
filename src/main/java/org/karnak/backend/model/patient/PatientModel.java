@@ -7,15 +7,31 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
  */
-package org.karnak.backend.cache;
+package org.karnak.backend.model.patient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
-import org.jspecify.annotations.NullUnmarked;
+import java.util.UUID;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.jspecify.annotations.NullUnmarked;
+import org.springframework.validation.annotation.Validated;
+
+@Setter
+@Getter
+@ToString
 @NullUnmarked
-public class Patient implements Serializable {
+@Validated
+@NoArgsConstructor
+public class PatientModel implements Serializable {
 
 	@Serial
 	private static final long serialVersionUID = -6906583906530083181L;
@@ -24,8 +40,12 @@ public class Patient implements Serializable {
 
 	private static final String NAME_SEPARATOR_REGEX = "\\^";
 
+	private UUID uuid;
+
+	@NotBlank(message = "Pseudonym is mandatory")
 	private String pseudonym;
 
+	@NotBlank(message = "Patient id is mandatory")
 	private String patientId;
 
 	private String patientName;
@@ -40,11 +60,15 @@ public class Patient implements Serializable {
 
 	private String issuerOfPatientId;
 
+	@JsonIgnore
 	private Long projectID;
 
-	public Patient(String pseudonym, String patientId, String patientName, String patientFirstName,
-			String patientLastName, LocalDate patientBirthDate, String patientSex, String issuerOfPatientId,
-			Long projectID) {
+	@NotNull(message = "Project uuid is mandatory")
+	private UUID projectUUID;
+
+	public PatientModel(String pseudonym, String patientId, String patientName, String patientFirstName,
+						String patientLastName, LocalDate patientBirthDate, String patientSex, String issuerOfPatientId,
+						Long projectID, UUID projectUUID) {
 		this.pseudonym = pseudonym;
 		this.patientId = patientId;
 		this.patientName = patientName;
@@ -54,10 +78,11 @@ public class Patient implements Serializable {
 		this.patientSex = patientSex;
 		this.issuerOfPatientId = issuerOfPatientId;
 		this.projectID = projectID;
+		this.projectUUID = projectUUID;
 	}
 
-	public Patient(String pseudonym, String patientId, String patientFirstName, String patientLastName,
-			String issuerOfPatientId, Long projectID) {
+	public PatientModel(String pseudonym, String patientId, String patientFirstName, String patientLastName,
+						String issuerOfPatientId, Long projectID, UUID projectUUID) {
 		this.pseudonym = pseudonym;
 		this.patientId = patientId;
 		this.patientFirstName = emptyStringIfNull(patientFirstName);
@@ -65,10 +90,11 @@ public class Patient implements Serializable {
 		this.patientName = createPatientName(patientFirstName, patientLastName);
 		this.issuerOfPatientId = issuerOfPatientId;
 		this.projectID = projectID;
+		this.projectUUID = projectUUID;
 	}
 
-	public Patient(String pseudonym, String patientId, String patientFirstName, String patientLastName,
-			LocalDate patientBirthDate, String patientSex, String issuerOfPatientId) {
+	public PatientModel(String pseudonym, String patientId, String patientFirstName, String patientLastName,
+						LocalDate patientBirthDate, String patientSex, String issuerOfPatientId) {
 		this.pseudonym = pseudonym;
 		this.patientId = patientId;
 		this.patientFirstName = emptyStringIfNull(patientFirstName);
@@ -79,79 +105,7 @@ public class Patient implements Serializable {
 		this.patientSex = patientSex;
 	}
 
-	public String getPseudonym() {
-		return pseudonym;
-	}
-
-	public void setPseudonym(String pseudonym) {
-		this.pseudonym = pseudonym;
-	}
-
-	public String getPatientId() {
-		return patientId;
-	}
-
-	public void setPatientId(String patientId) {
-		this.patientId = patientId;
-	}
-
-	public String getPatientName() {
-		return patientName;
-	}
-
-	public void setPatientName(String patientName) {
-		this.patientName = patientName;
-	}
-
-	public String getPatientFirstName() {
-		return patientFirstName;
-	}
-
-	public void setPatientFirstName(String patientFirstName) {
-		this.patientFirstName = patientFirstName;
-	}
-
-	public String getPatientLastName() {
-		return patientLastName;
-	}
-
-	public void setPatientLastName(String patientLastName) {
-		this.patientLastName = patientLastName;
-	}
-
-	public LocalDate getPatientBirthDate() {
-		return patientBirthDate;
-	}
-
-	public void setPatientBirthDate(LocalDate patientBirthDate) {
-		this.patientBirthDate = patientBirthDate;
-	}
-
-	public String getPatientSex() {
-		return patientSex;
-	}
-
-	public void setPatientSex(String patientSex) {
-		this.patientSex = patientSex;
-	}
-
-	public String getIssuerOfPatientId() {
-		return issuerOfPatientId;
-	}
-
-	public void setIssuerOfPatientId(String issuerOfPatientId) {
-		this.issuerOfPatientId = issuerOfPatientId;
-	}
-
-	public Long getProjectID() {
-		return projectID;
-	}
-
-	public void setProjectID(Long projectID) {
-		this.projectID = projectID;
-	}
-
-	protected static String createPatientName(String patientFirstName, String patientLastName) {
+    protected static String createPatientName(String patientFirstName, String patientLastName) {
 		if (patientFirstName == null || patientFirstName.isEmpty()) {
 			return patientLastName;
 		}
@@ -187,12 +141,12 @@ public class Patient implements Serializable {
 		return value == null ? "" : value;
 	}
 
-	@Override
-	public String toString() {
-		return "Patient{" + "pseudonym='" + pseudonym + '\'' + ", patientId='" + patientId + '\'' + ", patientName='"
-				+ patientName + '\'' + ", patientFirstName='" + patientFirstName + '\'' + ", patientLastName='"
-				+ patientLastName + '\'' + ", patientBirthDate=" + patientBirthDate + ", patientSex='" + patientSex
-				+ '\'' + ", issuerOfPatientId='" + issuerOfPatientId + '\'' + ", projectID=" + projectID + '}';
+	public void updatePatientModel(@Valid PatientModel patientModel) {
+		this.setPseudonym(patientModel.getPseudonym());
+		this.setPatientId(patientModel.getPatientId());
+		this.setPatientFirstName(patientModel.getPatientFirstName());
+		this.setPatientLastName(patientModel.getPatientLastName());
+		this.setPatientSex(patientModel.getPatientSex());
+		this.setIssuerOfPatientId(patientModel.getIssuerOfPatientId());
 	}
-
 }

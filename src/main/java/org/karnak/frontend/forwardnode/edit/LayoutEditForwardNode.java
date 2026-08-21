@@ -191,11 +191,11 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		newUpdateDestination.getFormDICOM()
 			.getDeIdentificationComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormDICOM()
 			.getTagMorphingComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormDICOM()
 			.getFilterBySOPClassesForm()
 			.getSopFilter()
@@ -210,11 +210,11 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		newUpdateDestination.getFormSTOW()
 			.getDeIdentificationComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormSTOW()
 			.getTagMorphingComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormSTOW()
 			.getFilterBySOPClassesForm()
 			.getSopFilter()
@@ -508,7 +508,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 				if (event.getValue()) {
 					// Deactivate tag morphing
 					tagMorphingComponent.getTagMorphingCheckbox().setValue(false);
-					if (!projectService.getAllProjects().isEmpty()) {
+					if (!projectService.retrieveAllProjects().isEmpty()) {
 						deIdentificationComponent.getDeIdentificationDiv().setVisible(true);
 						deIdentificationComponent.getDestinationComponentUtil()
 							.setTextOnSelectionProject(deIdentificationComponent.getProjectDropDown().getValue(),
@@ -538,7 +538,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 					// Deactivate deidentification
 					deIdentificationComponent.getDeIdentificationCheckbox().setValue(false);
 
-					if (!projectService.getAllProjects().isEmpty()) {
+					if (!projectService.retrieveAllProjects().isEmpty()) {
 						tagMorphingComponent.getTagMorphingDiv().setVisible(true);
 						tagMorphingComponent.getDestinationComponentUtil()
 							.setTextOnSelectionProject(tagMorphingComponent.getProjectDropDown().getValue(),

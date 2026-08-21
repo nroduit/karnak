@@ -9,6 +9,9 @@
  */
 package org.karnak.backend.util;
 
+import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
+import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,18 +19,23 @@ import java.time.DateTimeException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.exception.AbortException;
 import org.karnak.backend.exception.EndpointException;
-import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
-import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
-import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
 import org.springframework.web.client.HttpClientErrorException;
 import org.weasis.dicom.param.AttributeEditorContext;
 
+/**
+ * {@code shift_from_api} option of the {@code action.on.dates} profile item: shifts a
+ * date/time value by the amounts returned by an external endpoint, typically queried per
+ * patient.
+ */
 @Slf4j
+@NullUnmarked
 public class ShiftApiDate {
 
 	private static EndpointService endpointService;
@@ -52,10 +60,10 @@ public class ShiftApiDate {
 				urlProvided = true;
 				String error = validateStringWithExpression(ae.getArgumentValue());
 				if (error != null) {
-					throw new IllegalArgumentException(String.format("Expression is not valid: \n\r%s", error));
+					throw new IllegalArgumentException(error);
 				}
 			}
-            else if ("daysPath".equals(key)) {
+			else if ("daysPath".equals(key)) {
 				daysPathProvided = true;
 			}
 			else if ("method".equals(key)) {
@@ -71,7 +79,7 @@ public class ShiftApiDate {
 				bodyProvided = true;
 				String error = validateStringWithExpression(ae.getArgumentValue());
 				if (error != null) {
-					throw new IllegalArgumentException(String.format("Expression is not valid: \n\r%s", error));
+					throw new IllegalArgumentException(error);
 				}
 			}
 		}
@@ -80,7 +88,7 @@ public class ShiftApiDate {
 			throw new IllegalArgumentException("Cannot build the option ShiftApiDate: url argument is mandatory");
 		}
 		if (!daysPathProvided) {
-            throw new IllegalArgumentException("Cannot build the option ShiftApiDate: daysPath argument is mandatory");
+			throw new IllegalArgumentException("Cannot build the option ShiftApiDate: daysPath argument is mandatory");
 		}
 		if (isPost && !bodyProvided) {
 			throw new IllegalArgumentException(
@@ -88,8 +96,39 @@ public class ShiftApiDate {
 		}
 	}
 
-	public static String shift(Attributes dcmCopy, int tag, List<ArgumentEntity> argumentEntities, HMAC hmac)
-			throws DateTimeException {
+	/**
+	 * Shifts the value of {@code tag} by the amounts returned by the configured endpoint.
+	 *
+	 * <p>
+	 * The two datasets play distinct roles and are <b>not</b> interchangeable:
+	 * <ul>
+	 * <li>{@code dcm} is the dataset currently being de-identified, at the nesting level
+	 * of {@code tag}: during sequence recursion in
+	 * {@link org.karnak.backend.service.profilepipe.Profile#applyAction} it is the
+	 * sequence <i>item</i>. It is the only dataset holding the value to shift and its
+	 * VR.</li>
+	 * <li>{@code original} is the untouched copy of that same dataset, taken before the
+	 * pipeline started, against which the {@code {{...}}} placeholders of the {@code url}
+	 * and {@code body} arguments are resolved — from its own level outwards, so the
+	 * patient identifier of the enclosing study stays visible for a date nested in a
+	 * sequence. Resolving them on {@code dcm} would instead send already pseudonymized
+	 * identifiers to the endpoint, since the patient identifier typically sorts before
+	 * the shifted date tag, defeating the per-patient lookup.</li>
+	 * </ul>
+	 * @param dcm dataset being de-identified, at the nesting level of {@code tag}
+	 * @param original untouched copy of {@code dcm}, used to resolve the placeholders of
+	 * the request
+	 * @param tag tag whose value must be shifted
+	 * @param argumentEntities arguments of the profile item
+	 * @return the shifted value, or {@code null} when the tag holds no value or its VR is
+	 * not a date/time
+	 * @throws DateTimeException if the value of {@code tag} is not a valid date/time
+	 * @throws org.karnak.backend.exception.EndpointException if the endpoint cannot be
+	 * called or its response cannot be parsed
+	 * @throws AbortException if the response holds no usable shift value
+	 */
+	public static @Nullable String shift(Attributes dcm, Attributes original, int tag,
+			List<ArgumentEntity> argumentEntities) throws DateTimeException {
 		verifyShiftArguments(argumentEntities);
 
 		String url = null;
@@ -102,8 +141,8 @@ public class ShiftApiDate {
 		for (ArgumentEntity ae : argumentEntities) {
 			switch (ae.getArgumentKey()) {
 				case "url" -> url = ae.getArgumentValue();
-                case "daysPath" -> daysPath = normalizeJsonPath(ae.getArgumentValue());
-                case "secondsPath" -> secondsPath = normalizeJsonPath(ae.getArgumentValue());
+				case "daysPath" -> daysPath = normalizeJsonPath(ae.getArgumentValue());
+				case "secondsPath" -> secondsPath = normalizeJsonPath(ae.getArgumentValue());
 				case "method" -> method = ae.getArgumentValue();
 				case "body" -> body = ae.getArgumentValue();
 				case "authConfig" -> authConfig = ae.getArgumentValue();
@@ -112,20 +151,20 @@ public class ShiftApiDate {
 			}
 		}
 
-		url = evaluateStringWithExpression(url, dcmCopy);
+		url = evaluateStringWithExpression(url, original);
 		if (body != null) {
-			body = evaluateStringWithExpression(body, dcmCopy);
+			body = evaluateStringWithExpression(body, original);
 		}
 
 		String response = fetchResponse(authConfig, url, method, body);
-        int shiftDays = parseShiftValue(response, daysPath, "daysPath");
+		int shiftDays = parseShiftValue(response, daysPath, "daysPath");
 		int shiftSeconds = 0;
 		if (secondsPath != null) {
-            shiftSeconds = parseShiftValue(response, secondsPath, "secondsPath");
+			shiftSeconds = parseShiftValue(response, secondsPath, "secondsPath");
 		}
 
-		String dcmElValue = dcmCopy.getString(tag);
-		return ShiftDate.shiftValue(dcmCopy, tag, dcmElValue, shiftDays, shiftSeconds);
+		String dcmElValue = dcm.getString(tag);
+		return ShiftDate.shiftValue(dcm, tag, dcmElValue, shiftDays, shiftSeconds);
 	}
 
 	private static String normalizeJsonPath(String path) {

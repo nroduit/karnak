@@ -10,7 +10,7 @@
 package org.karnak.backend.config;
 
 import java.time.Duration;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.cache.autoconfigure.RedisCacheManagerBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -38,10 +38,10 @@ public class RedisConfiguration {
 	}
 
 	@Bean(name = "redisTemplate")
-	public RedisTemplate<String, Patient> redisTemplate(RedisConnectionFactory connectionFactory) {
-		JacksonJsonRedisSerializer<Patient> serializer = new JacksonJsonRedisSerializer<>(Patient.class);
+	public RedisTemplate<String, PatientModel> redisTemplate(RedisConnectionFactory connectionFactory) {
+		JacksonJsonRedisSerializer<PatientModel> serializer = new JacksonJsonRedisSerializer<>(PatientModel.class);
 
-		RedisTemplate<String, Patient> template = new RedisTemplate<>();
+		RedisTemplate<String, PatientModel> template = new RedisTemplate<>();
 		template.setConnectionFactory(connectionFactory);
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(serializer);

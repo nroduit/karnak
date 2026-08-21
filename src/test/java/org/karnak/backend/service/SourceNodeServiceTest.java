@@ -48,7 +48,7 @@ class SourceNodeServiceTest {
 
 		// Test results
 		Mockito.verify(forwardNodeServiceMock, Mockito.times(1))
-			.getAllSourceNodes(Mockito.any(ForwardNodeEntity.class));
+			.retrieveAllSourceNodes(Mockito.any(ForwardNodeEntity.class));
 	}
 
 	@Test

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -29,9 +30,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.converter.ArgumentToMapConverter;
 import org.karnak.backend.data.converter.TagListToStringListConverter;
@@ -51,6 +55,13 @@ public class ProfileElementEntity implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@JsonIgnore
 	private Long id;
+
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	@JsonIgnore
+	private UUID uuid;
 
 	private String name;
 
@@ -83,10 +94,12 @@ public class ProfileElementEntity implements Serializable {
 	private List<ArgumentEntity> argumentEntities = new ArrayList<>();
 
 	public ProfileElementEntity() {
+		this.uuid = UUID.randomUUID();
 	}
 
 	public ProfileElementEntity(String name, String codename, String condition, String action, String option,
 			Integer position, ProfileEntity profileEntity) {
+		this.uuid = UUID.randomUUID();
 		this.name = name;
 		this.codename = codename;
 		this.condition = condition;
@@ -98,6 +111,7 @@ public class ProfileElementEntity implements Serializable {
 
 	public ProfileElementEntity(String name, String codename, String condition, String action, String option,
 			List<ArgumentEntity> argumentEntities, Integer position, ProfileEntity profileEntity) {
+		this.uuid = UUID.randomUUID();
 		this.name = name;
 		this.codename = codename;
 		this.condition = condition;

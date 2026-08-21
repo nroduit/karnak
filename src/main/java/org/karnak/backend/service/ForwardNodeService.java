@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
@@ -101,36 +102,42 @@ public class ForwardNodeService {
 	}
 
 	/**
-	 * Store given ForwardNode.
-	 *
-	 * <p>
-	 * The forward node form only edits the node's own fields (AE title, description). Its
-	 * destinations and sources are persisted through their own save flows. Because those
-	 * collections cascade from the forward node, an in-memory forward node that has not
-	 * been refreshed since a destination/source was edited would otherwise overwrite the
-	 * freshly saved children with a stale state. Reload the children from the database
-	 * first so only the forward node's own fields are updated.
-	 * @param forwardNodeEntity the updated or new forwardNodeEntity
+	 * Retrieves the ForwardNode according to its public uuid.
+	 * @param uuid the public uuid.
+	 * @return the ForwardNodeEntity according to its uuid; null if not found.
 	 */
-	public void save(ForwardNodeEntity forwardNodeEntity) {
-		// Reload sources and destinations to avoid persisting a stale state
-		reloadChildren(forwardNodeEntity);
-		// Save forward node
-		forwardNodeRepo.saveAndFlush(forwardNodeEntity);
+	public ForwardNodeEntity retrieveForwardNodeByUuid(UUID uuid) {
+		return uuid == null ? null : forwardNodeRepo.findByUuid(uuid).orElse(null);
 	}
 
 	/**
-	 * Replaces the in-memory sources and destinations of an existing forward node with
-	 * the persisted ones, so a stale collection cannot overwrite freshly saved children.
-	 * @param forwardNodeEntity the forward node about to be saved
+	 * Store given ForwardNode.
+	 *
+	 * <p>
+	 * The forward node form only edits the node's own fields (AE title, description, group).
+	 * Its destinations and sources are persisted through their own save flows. Because those
+	 * collections cascade from the forward node, an in-memory forward node that has not
+	 * been refreshed since a destination/source was edited would otherwise overwrite the
+	 * freshly saved children with a stale state.
+	 *
+	 * <p>
+	 * For an existing (detached) entity we load the managed instance and copy only the
+	 * scalar fields onto it, so the managed children are never replaced and no
+	 * orphan-removal / transient-value issue can occur.
+	 * @param forwardNodeEntity the updated or new forwardNodeEntity
 	 */
-	private void reloadChildren(ForwardNodeEntity forwardNodeEntity) {
-		if (forwardNodeEntity == null || forwardNodeEntity.getId() == null) {
+	public void save(ForwardNodeEntity forwardNodeEntity) {
+		if (forwardNodeEntity.getId() == null) {
+			// New entity: persist directly (children are already linked via addSourceNode/addDestination)
+			forwardNodeRepo.saveAndFlush(forwardNodeEntity);
 			return;
 		}
+		// Existing entity: update scalar fields on the managed instance
 		forwardNodeRepo.findById(forwardNodeEntity.getId()).ifPresent(persisted -> {
-			forwardNodeEntity.setSourceNodes(new HashSet<>(persisted.getSourceNodes()));
-			forwardNodeEntity.setDestinationEntities(new HashSet<>(persisted.getDestinationEntities()));
+			persisted.setFwdAeTitle(forwardNodeEntity.getFwdAeTitle());
+			persisted.setFwdDescription(forwardNodeEntity.getFwdDescription());
+			persisted.setGroup(forwardNodeEntity.getGroup());
+			forwardNodeRepo.saveAndFlush(persisted);
 		});
 	}
 
@@ -143,11 +150,11 @@ public class ForwardNodeService {
 		forwardNodeRepo.flush();
 	}
 
-	public List<ForwardNodeEntity> getAllForwardNodes() {
+	public List<ForwardNodeEntity> retrieveAllForwardNodes() {
 		return forwardNodeRepo.findAll();
 	}
 
-	public Collection<DestinationEntity> getAllDestinations(ForwardNodeEntity forwardNodeEntity) {
+	public Collection<DestinationEntity> retrieveAllDestinations(ForwardNodeEntity forwardNodeEntity) {
 		if (forwardNodeEntity != null) {
 			return forwardNodeEntity.getDestinationEntities();
 		}
@@ -155,8 +162,24 @@ public class ForwardNodeService {
 	}
 
 	public DestinationEntity getDestinationById(ForwardNodeEntity forwardNodeEntity, Long dataId) {
-		return getAllDestinations(forwardNodeEntity).stream()
+		return retrieveAllDestinations(forwardNodeEntity).stream()
 			.filter(destinationEntity -> Objects.equals(destinationEntity.getId(), dataId))
+			.findFirst()
+			.orElse(null);
+	}
+
+	/**
+	 * Retrieves a destination of the given forward node according to its public uuid.
+	 * @param forwardNodeEntity the parent forward node.
+	 * @param uuid the public uuid of the destination.
+	 * @return the DestinationEntity according to its uuid; null if not found.
+	 */
+	public DestinationEntity retrieveDestinationByUuid(ForwardNodeEntity forwardNodeEntity, UUID uuid) {
+		if (uuid == null) {
+			return null;
+		}
+		return retrieveAllDestinations(forwardNodeEntity).stream()
+			.filter(destinationEntity -> Objects.equals(destinationEntity.getUuid(), uuid))
 			.findFirst()
 			.orElse(null);
 	}
@@ -165,7 +188,7 @@ public class ForwardNodeService {
 		if (forwardNodeEntity == null || data == null) {
 			return null;
 		}
-		Collection<DestinationEntity> destinationEntities = getAllDestinations(forwardNodeEntity);
+		Collection<DestinationEntity> destinationEntities = retrieveAllDestinations(forwardNodeEntity);
 		if (!destinationEntities.contains(data)) {
 			forwardNodeEntity.addDestination(data);
 		}
@@ -180,7 +203,7 @@ public class ForwardNodeService {
 		forwardNodeRepo.saveAndFlush(forwardNodeEntity);
 	}
 
-	public Collection<DicomSourceNodeEntity> getAllSourceNodes(ForwardNodeEntity forwardNodeEntity) {
+	public Collection<DicomSourceNodeEntity> retrieveAllSourceNodes(ForwardNodeEntity forwardNodeEntity) {
 		if (forwardNodeEntity != null) {
 			return forwardNodeEntity.getSourceNodes();
 		}
@@ -188,8 +211,24 @@ public class ForwardNodeService {
 	}
 
 	public DicomSourceNodeEntity getSourceNodeById(ForwardNodeEntity forwardNodeEntity, Long dataId) {
-		return getAllSourceNodes(forwardNodeEntity).stream()
+		return retrieveAllSourceNodes(forwardNodeEntity).stream()
 			.filter(sourceNode -> Objects.equals(sourceNode.getId(), dataId))
+			.findFirst()
+			.orElse(null);
+	}
+
+	/**
+	 * Retrieves a source node of the given forward node according to its public uuid.
+	 * @param forwardNodeEntity the parent forward node.
+	 * @param uuid the public uuid of the source node.
+	 * @return the DicomSourceNodeEntity according to its uuid; null if not found.
+	 */
+	public DicomSourceNodeEntity retrieveSourceNodeByUuid(ForwardNodeEntity forwardNodeEntity, UUID uuid) {
+		if (uuid == null) {
+			return null;
+		}
+		return retrieveAllSourceNodes(forwardNodeEntity).stream()
+			.filter(sourceNode -> Objects.equals(sourceNode.getUuid(), uuid))
 			.findFirst()
 			.orElse(null);
 	}
@@ -198,7 +237,7 @@ public class ForwardNodeService {
 		if (forwardNodeEntity == null || data == null) {
 			return null;
 		}
-		Collection<DicomSourceNodeEntity> sourceNodes = getAllSourceNodes(forwardNodeEntity);
+		Collection<DicomSourceNodeEntity> sourceNodes = retrieveAllSourceNodes(forwardNodeEntity);
 		if (!sourceNodes.contains(data)) {
 			forwardNodeEntity.addSourceNode(data);
 		}

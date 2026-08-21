@@ -13,16 +13,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.karnak.backend.model.action.Keep;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
@@ -99,6 +104,116 @@ class ExpressionResultTest {
 
 			assertFalse(error.isValid());
 			assertTrue(error.getMsg().startsWith("Expression is not valid"));
+		}
+
+		@Test
+		void reports_the_message_of_the_failure_only_once() {
+			ExpressionError error = ExpressionResult.isValid("this is ((( not valid", conditionWithPatientName(),
+					Boolean.class);
+
+			assertEquals(1, error.getMsg().split("Expression is not valid", -1).length - 1);
+		}
+
+		@Test
+		void names_the_unknown_method_of_an_expression() {
+			ExpressionError error = ExpressionResult.isValid("thisMethodDoesNotExist()", conditionWithPatientName(),
+					Boolean.class);
+
+			assertFalse(error.isValid());
+			assertTrue(error.getMsg().contains("thisMethodDoesNotExist"), error.getMsg());
+		}
+
+		@Test
+		void reports_an_expression_that_cannot_be_converted_to_the_expected_type() {
+			// A condition must evaluate to a boolean
+			ExpressionError error = ExpressionResult.isValid("'hello'", conditionWithPatientName(), Boolean.class);
+
+			assertFalse(error.isValid());
+			assertTrue(error.getMsg().contains("Type conversion problem"), error.getMsg());
+		}
+
+		@ParameterizedTest
+		@NullSource
+		@ValueSource(strings = { "", "   " })
+		void reports_a_blank_expression_as_invalid(String condition) {
+			ExpressionError error = ExpressionResult.isValid(condition, conditionWithPatientName(), Boolean.class);
+
+			assertFalse(error.isValid());
+			assertEquals("Expression is not valid: it is empty", error.getMsg());
+		}
+
+		@Test
+		void appends_the_root_cause_of_a_wrapped_failure() {
+			// The SpEL message says which types could not be converted, the cause says
+			// why
+			ExpressionError error = ExpressionResult.isValid("'hello'", conditionWithPatientName(), Boolean.class);
+
+			assertTrue(error.getMsg().contains("Caused by:"), error.getMsg());
+			assertTrue(error.getMsg().contains("Invalid boolean value 'hello'"), error.getMsg());
+		}
+
+		@Test
+		void reports_a_parse_error_without_a_cause() {
+			ExpressionError error = ExpressionResult.isValid("this is ((( not valid", conditionWithPatientName(),
+					Boolean.class);
+
+			assertTrue(error.getMsg().contains("EL1041E"), error.getMsg());
+			assertFalse(error.getMsg().contains("Caused by:"), error.getMsg());
+		}
+
+	}
+
+	@Nested
+	class ParsedExpressionCache {
+
+		@BeforeEach
+		void emptyTheCache() {
+			ExpressionResult.clearCache();
+		}
+
+		@Test
+		void parses_the_same_expression_only_once() {
+			assertSame(ExpressionResult.parse("tagIsPresent('00100010')"),
+					ExpressionResult.parse("tagIsPresent('00100010')"));
+			assertEquals(1, ExpressionResult.cacheSize());
+		}
+
+		@Test
+		void keeps_distinct_expressions_apart() {
+			ExpressionResult.parse("tagIsPresent('00100010')");
+			ExpressionResult.parse("tagIsPresent('00080020')");
+
+			assertEquals(2, ExpressionResult.cacheSize());
+		}
+
+		@Test
+		void does_not_cache_an_expression_that_does_not_parse() {
+			assertThrows(Exception.class, () -> ExpressionResult.parse("this is ((( not valid"));
+
+			assertEquals(0, ExpressionResult.cacheSize());
+		}
+
+		@Test
+		void a_cached_expression_is_evaluated_against_the_object_of_each_call() {
+			// The parsed form must hold nothing of the dataset it was first evaluated on
+			Attributes withName = new Attributes();
+			withName.setString(Tag.PatientName, VR.PN, "Doe^John");
+
+			Object first = ExpressionResult.get("tagIsPresent('00100010')", new ExprCondition(withName), Boolean.class);
+			Object second = ExpressionResult.get("tagIsPresent('00100010')", new ExprCondition(new Attributes()),
+					Boolean.class);
+
+			assertEquals(Boolean.TRUE, first);
+			assertEquals(Boolean.FALSE, second);
+		}
+
+		@Test
+		void empties_the_cache_instead_of_growing_past_the_cap() {
+			for (int i = 0; i < 501; i++) {
+				ExpressionResult.parse("tagIsPresent('%08d')".formatted(i));
+			}
+
+			assertEquals(1, ExpressionResult.cacheSize());
 		}
 
 	}

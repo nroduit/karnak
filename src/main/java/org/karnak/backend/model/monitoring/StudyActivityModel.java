@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
  * the monitoring hierarchy). The study is identified by its original Study Instance UID;
  * the remaining fields are representative values for the detail panel.
  */
-public record StudyActivity(String studyUid, String studyUidToSend, String description, String descriptionToSend,
-		String patientIdOriginal, String patientIdToSend, String accessionNumberOriginal, String accessionNumberToSend,
-		LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend, long series, long instances, long sent,
-		long errors, long retries, long excluded, LocalDateTime firstSeen, LocalDateTime lastSeen) {
+public record StudyActivityModel(String studyUid, String studyUidToSend, String description, String descriptionToSend,
+								 String patientIdOriginal, String patientIdToSend, String accessionNumberOriginal, String accessionNumberToSend,
+								 LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend, long series, long instances, long sent,
+								 long errors, long retries, long excluded, LocalDateTime firstSeen, LocalDateTime lastSeen) {
 }

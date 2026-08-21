@@ -79,7 +79,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 	@Override
 	public void refreshAll() {
 		getItems().clear();
-		getItems().addAll(projectService.getAllProjects());
+		getItems().addAll(projectService.retrieveAllProjects());
 		super.refreshAll();
 		if (projectView != null) {
 			projectView.getGridProject().reload();
@@ -90,7 +90,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 
 	@Override
 	public List<ProjectEntity> listItems() {
-		return projectService.getAllProjects();
+		return projectService.retrieveAllProjects();
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 	 * Initialize the data provider
 	 */
 	private void initDataProvider() {
-		getItems().addAll(projectService.getAllProjects());
+		getItems().addAll(projectService.retrieveAllProjects());
 	}
 
 	public Long enter(String dataIdStr) {
@@ -233,7 +233,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 	}
 
 	private void addDropDownProfileList(ProfileDropDown profileDropDown) {
-		List<ProfileEntity> profiles = profilePipeService.getAllProfiles();
+		List<ProfileEntity> profiles = profilePipeService.retrieveAllProfiles();
 		profiles.sort(CollatorUtils.comparingThen(ProfileEntity::getName, ProfileEntity::getVersion));
 
 		profileDropDown.setItems(profiles);

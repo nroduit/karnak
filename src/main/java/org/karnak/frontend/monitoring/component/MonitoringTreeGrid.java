@@ -307,23 +307,23 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 			if (parent == null) {
 				return logic.listDestinations(filter)
 					.stream()
-					.<MonitoringNode>map(d -> new DestinationNode(d.destinationId(), d.forwardAet(),
+					.<MonitoringNode>map(d -> new DestinationNode(d.destinationUuid(), d.forwardAet(),
 							d.destinationLabel(), d.studies(), d.series(), d.instances(), d.sent(), d.errors(),
 							d.retries(), d.excluded()))
 					.toList();
 			}
 			return switch (parent) {
-				case DestinationNode d -> logic.listStudies(filter, d.destinationId())
+				case DestinationNode d -> logic.listStudies(filter, d.destinationUuid())
 					.stream()
-					.<MonitoringNode>map(s -> new StudyNode(d.destinationId(), s.studyUid(), s.studyUidToSend(),
+					.<MonitoringNode>map(s -> new StudyNode(d.destinationUuid(), s.studyUid(), s.studyUidToSend(),
 							s.description(), s.descriptionToSend(), s.patientIdOriginal(), s.patientIdToSend(),
 							s.accessionNumberOriginal(), s.accessionNumberToSend(), s.studyDateOriginal(),
 							s.studyDateToSend(), s.series(), s.instances(), s.sent(), s.errors(), s.retries(),
 							s.excluded(), s.firstSeen(), s.lastSeen()))
 					.toList();
-				case StudyNode s -> logic.listSeries(filter, s.destinationId(), s.studyUid())
+				case StudyNode s -> logic.listSeries(filter, s.destinationUuid(), s.studyUid())
 					.stream()
-					.<MonitoringNode>map(se -> new SeriesNode(s.destinationId(), s.studyUid(), s.studyUidToSend(),
+					.<MonitoringNode>map(se -> new SeriesNode(s.destinationUuid(), s.studyUid(), s.studyUidToSend(),
 							s.patientIdOriginal(), s.patientIdToSend(), s.accessionNumberOriginal(),
 							s.accessionNumberToSend(), s.description(), s.descriptionToSend(), s.studyDateOriginal(),
 							s.studyDateToSend(), se.serieUid(), se.serieUidToSend(), se.serieDescription(),
@@ -331,7 +331,7 @@ public class MonitoringTreeGrid extends TreeGrid<MonitoringNode> {
 							se.serieDateToSend(), se.instances(), se.sent(), se.errors(), se.retries(), se.excluded(),
 							se.firstSeen(), se.lastSeen()))
 					.toList();
-				case SeriesNode se -> logic.listErrors(filter, se.destinationId(), se.serieUid())
+				case SeriesNode se -> logic.listErrors(filter, se.destinationUuid(), se.serieUid())
 					.stream()
 					.<MonitoringNode>map(
 							er -> new ErrorNode(se.key(), er.reason(), er.errors(), er.excluded(), er.retries()))

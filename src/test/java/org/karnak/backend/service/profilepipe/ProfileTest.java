@@ -9,12 +9,17 @@
  */
 package org.karnak.backend.service.profilepipe;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Fragments;
 import org.dcm4che3.data.Tag;
@@ -36,15 +41,8 @@ import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.PseudonymType;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.mockito.Mockito;
-import org.weasis.dicom.param.AttributeEditorContext;
-
 import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.weasis.dicom.param.AttributeEditorContext;
 
 @SpringBootTest
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -332,8 +330,7 @@ class ProfileTest {
 		AttributeEditorContext context = new AttributeEditorContext("1.2.840.10008.1.2.4.50", null, null);
 
 		DeidentifyImageService deidentifyImageService = Mockito.mock(DeidentifyImageService.class);
-		Mockito
-			.when(deidentifyImageService.callDeidentifyImageApi(Mockito.any(), Mockito.any(), Mockito.any()))
+		Mockito.when(deidentifyImageService.callDeidentifyImageApi(Mockito.any(), Mockito.any(), Mockito.any()))
 			.thenReturn(Collections.<MaskBody>emptyList());
 		Profile profile = new Profile(profileEntity, deidentifyImageService);
 
@@ -376,8 +373,8 @@ class ProfileTest {
 		cleanPixel.setAction("ReplaceNull");
 		cleanPixel.setPosition(1);
 		if (automaticMasksGenerationValue != null) {
-			cleanPixel.addArgument(new ArgumentEntity("automaticMasksGeneration", automaticMasksGenerationValue,
-					cleanPixel));
+			cleanPixel
+				.addArgument(new ArgumentEntity("automaticMasksGeneration", automaticMasksGenerationValue, cleanPixel));
 		}
 		Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
 		profileElementEntities.add(cleanPixel);

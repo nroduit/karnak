@@ -15,27 +15,30 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
+import org.karnak.backend.model.patient.PatientModel;
 
 /**
- * Exercises {@link PatientClient} through the real in-memory implementation (backed by a
+ * Exercises {@link PseudonymCache} through the real in-memory implementation (backed by a
  * Spring {@code ConcurrentMapCache}), so no cache mocking is needed.
  */
 @DisplayNameGeneration(ReplaceUnderscores.class)
-class PatientClientTest {
+class PseudonymCacheTest {
 
-	private PatientClient cache;
+	private PseudonymCache cache;
 
 	@BeforeEach
 	void setUp() {
 		cache = new InMemoryExternalIDCache();
 	}
 
-	private static Patient patient(String key) {
-		return new Patient("pseudo-" + key, key, "John", "Doe", "PDA", 1L);
+	private static PatientModel patient(String key) {
+		return new PatientModel("pseudo-" + key, key, "John", "Doe", "PDA", 1L, UUID.randomUUID());
 	}
 
 	@Test
@@ -52,7 +55,7 @@ class PatientClientTest {
 		var second = patient("EREN");
 		cache.put("EREN", first);
 
-		Patient previous = cache.put("EREN", second);
+		PatientModel previous = cache.put("EREN", second);
 
 		assertSame(first, previous);
 		assertSame(first, cache.get("EREN"));
@@ -84,7 +87,7 @@ class PatientClientTest {
 		cache.put("EREN", eren);
 		cache.put("TEST", test);
 
-		Collection<Patient> all = cache.getAll();
+		Collection<PatientModel> all = cache.getAll();
 
 		assertEquals(2, all.size());
 		assertTrue(all.contains(eren));

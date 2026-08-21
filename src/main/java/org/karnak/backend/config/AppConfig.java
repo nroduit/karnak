@@ -18,7 +18,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.cache.PatientClient;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.backend.model.standard.ConfidentialityProfiles;
@@ -68,11 +68,11 @@ public class AppConfig {
 	private final ProfilePipeService profilePipeService;
 
 	@Getter
-	private final PatientClient externalIDCache;
+	private final PseudonymCache externalIDCache;
 
 	@Autowired
 	public AppConfig(ProfileRepo profileRepo, ProfilePipeService profilePipeService,
-			@Qualifier("patientClient") PatientClient externalIDCache) {
+			@Qualifier("patientClient") PseudonymCache externalIDCache) {
 		this.profileRepo = profileRepo;
 		this.profilePipeService = profilePipeService;
 		this.externalIDCache = externalIDCache;

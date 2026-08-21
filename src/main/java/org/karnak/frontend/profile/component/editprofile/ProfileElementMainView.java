@@ -191,12 +191,10 @@ public class ProfileElementMainView extends VerticalLayout {
 		Button delete = new Button(new Icon(VaadinIcon.TRASH));
 		delete.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		delete.addClickListener(event -> {
-			if (profileEntity.getProjectEntities() != null && !profileEntity.getProjectEntities().isEmpty()) {
-				dialogWarning.setText(profileEntity);
+			ProfileLogic.DeleteProfileResult result = profileLogic.deleteProfile(profileEntity);
+			if (!result.success() && result.errorMessage() != null) {
+				dialogWarning.setErrorMessage(result.errorMessage());
 				dialogWarning.open();
-			}
-			else {
-				profileLogic.deleteProfile(profileEntity);
 			}
 		});
 		return delete;

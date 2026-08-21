@@ -300,6 +300,68 @@ public class ReplaceApiTest {
 		assertThrows(AbortException.class, () -> profile.applyAction(dataset1, dataset1, null, null, null, null));
 	}
 
+	/**
+	 * Builds a profile replacing {@code includedTag} by the {@code value} field of the
+	 * response of an endpoint whose URL carries the patient identifier.
+	 */
+	private static Profile profileWithPatientIdInTheUrl(String includedTag) {
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "action.replace.api", null, null,
+				null, 0, profileEntity);
+		profileElementEntity
+			.addArgument(new ArgumentEntity("url", TEST_URL + "/{{getString(#Tag.PatientID)}}", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("responsePath", "value", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("authConfig", AUTH_CONFIG, profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity(includedTag, profileElementEntity));
+		profileElementEntity.setProfileEntity(profileEntity);
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		return new Profile(profileEntity);
+	}
+
+	@Test
+	public void urlIsResolvedOnTheOriginalCopyNotOnTheDeIdentifiedDataset() {
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/97035674"))
+			.thenReturn("{\"value\": \"from-the-original-id\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/PSEUDO-1"))
+			.thenReturn("{\"value\": \"from-the-pseudonymized-id\"}");
+
+		final Attributes original = new Attributes();
+		original.setString(Tag.PatientID, VR.LO, "97035674");
+		original.setString(Tag.PatientBirthDate, VR.DA, "19800101");
+		final Attributes dataset = new Attributes(original);
+		// (0010,0020) sorts before (0010,0030): by the time the birth date is visited,
+		// the identifier of the working dataset has already been pseudonymized
+		dataset.setString(Tag.PatientID, VR.LO, "PSEUDO-1");
+
+		profileWithPatientIdInTheUrl("(0010,0030)").applyAction(dataset, original, null, null, null, null);
+
+		assertEquals("from-the-original-id", dataset.getString(Tag.PatientBirthDate));
+	}
+
+	@Test
+	public void replacesATagNestedInASequenceUsingTheOriginalCopyForTheUrl() {
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/97035674"))
+			.thenReturn("{\"value\": \"from-the-original-id\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/PSEUDO-1"))
+			.thenReturn("{\"value\": \"from-the-pseudonymized-id\"}");
+
+		final Attributes original = new Attributes();
+		original.setString(Tag.PatientID, VR.LO, "97035674");
+		final Attributes item = new Attributes();
+		item.setString(Tag.RequestedProcedureID, VR.SH, "RP-1");
+		original.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+		final Attributes dataset = new Attributes(original);
+		dataset.setString(Tag.PatientID, VR.LO, "PSEUDO-1");
+
+		// The nested tag is reached through the sequence recursion: the copy passed down
+		// is the copy of the item, from which the identifier of the study is resolved
+		profileWithPatientIdInTheUrl("(0040,1001)").applyAction(dataset, original, null, null, null, null);
+
+		assertEquals("from-the-original-id",
+				dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.RequestedProcedureID));
+	}
+
 	@Test
 	public void replaceZawinIdWithAuthConfig_jsonValueNotFound_shouldSetDefaultValue() {
 		final Attributes dataset1 = new Attributes();

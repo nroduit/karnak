@@ -9,7 +9,9 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -24,9 +26,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilepipe.HMAC;
@@ -46,12 +51,20 @@ public class ProjectEntity implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
+
 	private String name;
 
 	@OneToMany(mappedBy = "projectEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonIgnore
 	private List<SecretEntity> secretEntities;
 
 	@OneToMany(mappedBy = "deIdentificationProjectEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
 	private List<DestinationEntity> destinationEntities;
 
 	@ManyToOne
@@ -64,6 +77,7 @@ public class ProjectEntity implements Serializable {
 	private ProjectGroupEntity group;
 
 	public ProjectEntity() {
+		this.uuid = UUID.randomUUID();
 		this.destinationEntities = new ArrayList<>();
 		this.secretEntities = new ArrayList<>();
 	}

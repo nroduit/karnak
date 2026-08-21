@@ -10,6 +10,7 @@
 package org.karnak.frontend.monitoring.component;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Row model for the monitoring hierarchy tree. A node is a destination, a study, a series
@@ -26,13 +27,14 @@ public sealed interface MonitoringNode {
 
 	/**
 	 * A destination with aggregated counts. {@code forwardAet} is the forward node
-	 * prefix.
+	 * prefix. Identified by its stable {@code destinationUuid}, not its internal db id.
 	 */
-	record DestinationNode(Long destinationId, String forwardAet, String destinationLabel, long studies, long series,
-			long instances, long sent, long errors, long retries, long excluded) implements MonitoringNode {
+	record DestinationNode(UUID destinationUuid, String forwardAet, String destinationLabel, long studies,
+			long series, long instances, long sent, long errors, long retries, long excluded)
+			implements MonitoringNode {
 		@Override
 		public String key() {
-			return "d:" + destinationId;
+			return "d:%s".formatted(destinationUuid);
 		}
 
 		@Override
@@ -42,19 +44,19 @@ public sealed interface MonitoringNode {
 
 		public String displayName() {
 			return forwardAet == null || forwardAet.isBlank() ? destinationLabel
-					: forwardAet + " → " + destinationLabel;
+					: "%s → %s".formatted(forwardAet, destinationLabel);
 		}
 	}
 
 	/** A study under a destination, identified by its original Study Instance UID. */
-	record StudyNode(Long destinationId, String studyUid, String studyUidToSend, String description,
+	record StudyNode(UUID destinationUuid, String studyUid, String studyUidToSend, String description,
 			String descriptionToSend, String patientIdOriginal, String patientIdToSend, String accessionNumberOriginal,
 			String accessionNumberToSend, LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend, long series,
 			long instances, long sent, long errors, long retries, long excluded, LocalDateTime firstSeen,
 			LocalDateTime lastSeen) implements MonitoringNode {
 		@Override
 		public String key() {
-			return "st:" + destinationId + ":" + studyUid;
+			return "st:%s:%s".formatted(destinationUuid, studyUid);
 		}
 
 		@Override
@@ -69,7 +71,7 @@ public sealed interface MonitoringNode {
 	 * the full collected information (and the de-identification original/final values) at
 	 * series level.
 	 */
-	record SeriesNode(Long destinationId, String studyUid, String studyUidToSend, String patientIdOriginal,
+	record SeriesNode(UUID destinationUuid, String studyUid, String studyUidToSend, String patientIdOriginal,
 			String patientIdToSend, String accessionNumberOriginal, String accessionNumberToSend,
 			String studyDescriptionOriginal, String studyDescriptionToSend, LocalDateTime studyDateOriginal,
 			LocalDateTime studyDateToSend, String serieUid, String serieUidToSend, String description,
@@ -78,7 +80,7 @@ public sealed interface MonitoringNode {
 			LocalDateTime firstSeen, LocalDateTime lastSeen) implements MonitoringNode {
 		@Override
 		public String key() {
-			return "se:" + destinationId + ":" + serieUid;
+			return "se:%s:%s".formatted(destinationUuid, serieUid);
 		}
 
 		@Override
@@ -97,7 +99,7 @@ public sealed interface MonitoringNode {
 			long retries) implements MonitoringNode {
 		@Override
 		public String key() {
-			return parentKey + "|err:" + reason;
+			return "%s|err:%s".formatted(parentKey, reason);
 		}
 
 		@Override

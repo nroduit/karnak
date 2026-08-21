@@ -96,7 +96,7 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
 	@Override
 	public void refreshAll() {
 		getItems().clear();
-		getItems().addAll(forwardNodeService.getAllForwardNodes());
+		getItems().addAll(forwardNodeService.retrieveAllForwardNodes());
 		super.refreshAll();
 		if (forwardNodeView != null) {
 			forwardNodeView.getGridForwardNode().reload();
@@ -107,7 +107,7 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
 
 	@Override
 	public List<ForwardNodeEntity> listItems() {
-		return forwardNodeService.getAllForwardNodes();
+		return forwardNodeService.retrieveAllForwardNodes();
 	}
 
 	@Override
@@ -155,7 +155,7 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
 	 * Initialize the data provider
 	 */
 	private void initDataProvider() {
-		getItems().addAll(forwardNodeService.getAllForwardNodes());
+		getItems().addAll(forwardNodeService.retrieveAllForwardNodes());
 	}
 
 	/**

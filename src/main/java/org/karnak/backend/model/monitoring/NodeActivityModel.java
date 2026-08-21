@@ -9,11 +9,13 @@
  */
 package org.karnak.backend.model.monitoring;
 
+import java.util.UUID;
+
 /**
  * Aggregated activity of a forward node over the selected period, for the monitoring
  * dashboard. {@code deidentified} / {@code tagMorphed} count the instances whose
  * destination has de-identification / tag-morphing enabled.
  */
-public record NodeActivity(Long forwardNodeId, String forwardAet, long studies, long series, long instances, long sent,
-		long errors, long retries, long excluded, long deidentified, long tagMorphed) {
+public record NodeActivityModel(UUID forwardNodeUuid, String forwardAet, long studies, long series, long instances, long sent,
+                                long errors, long retries, long excluded, long deidentified, long tagMorphed) {
 }

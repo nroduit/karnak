@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
+import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.data.repo.SecretRepo;
 import org.mockito.Mockito;
 
@@ -22,14 +23,14 @@ class SecretServiceTest {
 
 	// Repositories
 	private final SecretRepo secretRepositoryMock = Mockito.mock(SecretRepo.class);
-
+	private final ProjectRepo projectRepositoryMock = Mockito.mock(ProjectRepo.class);
 	// Service
 	private SecretService secretService;
 
 	@BeforeEach
 	public void setUp() {
 		// Build mocked service
-		secretService = new SecretService(secretRepositoryMock);
+		secretService = new SecretService(secretRepositoryMock, projectRepositoryMock);
 	}
 
 	@Test

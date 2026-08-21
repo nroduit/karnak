@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
@@ -60,8 +61,11 @@ class SecretEntityTest {
 	@Test
 	void equal_instances_match_and_share_a_hash() {
 		LocalDateTime date = LocalDateTime.of(2024, 1, 1, 12, 0);
+		UUID uuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
 		SecretEntity a = secret(1L, new byte[] { 1 }, date, true);
 		SecretEntity b = secret(1L, new byte[] { 1 }, date, true);
+		a.setUuid(uuid);
+		b.setUuid(uuid);
 
 		assertEquals(a, b);
 		assertEquals(a.hashCode(), b.hashCode());

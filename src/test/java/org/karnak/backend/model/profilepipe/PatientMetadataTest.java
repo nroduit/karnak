@@ -22,7 +22,7 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class PatientMetadataTest {
@@ -148,8 +148,8 @@ class PatientMetadataTest {
 	@Nested
 	class CompareCachedPatient {
 
-		private Patient patient(String id, String issuer) {
-			return new Patient("pseudo", id, "John", "Doe", null, "O", issuer);
+		private PatientModel patient(String id, String issuer) {
+			return new PatientModel("pseudo", id, "John", "Doe", null, "O", issuer);
 		}
 
 		@Test

@@ -9,7 +9,9 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,5 +29,8 @@ public interface DestinationRepo extends JpaRepository<DestinationEntity, Long> 
 	 * @return the destinations using it for tag morphing
 	 */
 	List<DestinationEntity> findByTagMorphingProjectEntity(ProjectEntity tagMorphingProjectEntity);
+
+	/** Destinations matching any of the given stable UUIDs (monitoring lookups). */
+	List<DestinationEntity> findByUuidIn(Collection<UUID> uuids);
 
 }

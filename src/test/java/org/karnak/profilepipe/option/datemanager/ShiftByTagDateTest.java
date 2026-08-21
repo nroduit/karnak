@@ -10,6 +10,7 @@
 package org.karnak.profilepipe.option.datemanager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,6 @@ import org.dcm4che3.data.VR;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ArgumentEntity;
-import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.util.ShiftByTagDate;
 
 public class ShiftByTagDateTest {
@@ -31,8 +31,6 @@ public class ShiftByTagDateTest {
 	private static final ArgumentEntity seconds_tag = new ArgumentEntity();
 
 	private static final ArgumentEntity days_tag = new ArgumentEntity();
-
-	private static final HMAC hmac = new HMAC(HMAC.generateRandomKey());
 
 	@BeforeEach
 	protected void setUpBeforeTest() {
@@ -54,12 +52,12 @@ public class ShiftByTagDateTest {
 
 	@Test
 	void shiftNoop() {
-		assertEquals("20180209", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
-		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
+		assertEquals("20180209", ShiftByTagDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
+		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, dataset, Tag.StudyTime, argumentEntities));
+		assertEquals("043Y", ShiftByTagDate.shift(dataset, dataset, Tag.PatientAge, argumentEntities));
 		assertEquals("20180209120854.354000",
-				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+				ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionDateTime, argumentEntities));
+		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionTime, argumentEntities));
 	}
 
 	@Test
@@ -71,16 +69,18 @@ public class ShiftByTagDateTest {
 		argumentEntities.add(seconds_tag);
 		argumentEntities.add(days_tag);
 
-		assertEquals("20180130", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120023.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
-		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
+		assertEquals("20180130", ShiftByTagDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
+		assertEquals("120023.000000", ShiftByTagDate.shift(dataset, dataset, Tag.StudyTime, argumentEntities));
+		assertEquals("043Y", ShiftByTagDate.shift(dataset, dataset, Tag.PatientAge, argumentEntities));
 		assertEquals("20180130120034.354000",
-				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("005314.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+				ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionDateTime, argumentEntities));
+		assertEquals("005314.000000", ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionTime, argumentEntities));
 	}
 
 	@Test
 	void shiftByBadTag() {
+		// The configured shift tags are absent: no value is produced, so that the date is
+		// left to the following profile items instead of being kept unshifted
 		days_tag.setArgumentKey("days_tag");
 		days_tag.setArgumentValue("(0017,1010)");
 		seconds_tag.setArgumentKey("seconds_tag");
@@ -88,16 +88,16 @@ public class ShiftByTagDateTest {
 		argumentEntities.add(seconds_tag);
 		argumentEntities.add(days_tag);
 
-		assertEquals("20180209", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
-		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
-		assertEquals("20180209120854.354000",
-				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.StudyTime, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.PatientAge, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionDateTime, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionTime, argumentEntities));
 	}
 
 	@Test
 	void shiftByBadTag2() {
+		// The configured shift tags hold a non numeric value: same contract as absent
 		days_tag.setArgumentKey("days_tag");
 		days_tag.setArgumentValue("(0015,1012)");
 		seconds_tag.setArgumentKey("seconds_tag");
@@ -105,12 +105,11 @@ public class ShiftByTagDateTest {
 		argumentEntities.add(seconds_tag);
 		argumentEntities.add(days_tag);
 
-		assertEquals("20180209", ShiftByTagDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
-		assertEquals("120843.000000", ShiftByTagDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
-		assertEquals("043Y", ShiftByTagDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
-		assertEquals("20180209120854.354000",
-				ShiftByTagDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
-		assertEquals("010134.000000", ShiftByTagDate.shift(dataset, Tag.AcquisitionTime, argumentEntities, hmac));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.StudyTime, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.PatientAge, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionDateTime, argumentEntities));
+		assertNull(ShiftByTagDate.shift(dataset, dataset, Tag.AcquisitionTime, argumentEntities));
 	}
 
 }

@@ -10,6 +10,8 @@
 package org.karnak.backend.cache;
 
 import java.util.Objects;
+
+import org.karnak.backend.model.patient.PatientModel;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,11 +21,11 @@ import org.weasis.core.util.annotations.Generated;
 @Component("patientClient")
 @Profile("!portable")
 @Generated()
-public class ExternalIDCache extends PatientClient {
+public class ExternalIDCache extends PseudonymCache {
 
 	private static final String NAME = "externalId.cache";
 
-	public ExternalIDCache(RedisCacheManager redisCacheManager, RedisTemplate<String, Patient> redisTemplate) {
+	public ExternalIDCache(RedisCacheManager redisCacheManager, RedisTemplate<String, PatientModel> redisTemplate) {
 		super(Objects.requireNonNull(redisCacheManager.getCache(NAME), "Redis cache '" + NAME + "' not found"),
 				redisTemplate, NAME);
 	}

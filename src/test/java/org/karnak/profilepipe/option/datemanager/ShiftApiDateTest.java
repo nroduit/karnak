@@ -9,13 +9,16 @@
  */
 package org.karnak.profilepipe.option.datemanager;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,8 +35,6 @@ import org.karnak.backend.service.profilepipe.Profile;
 import org.karnak.backend.util.ShiftApiDate;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
@@ -110,7 +111,7 @@ class ShiftApiDateTest {
 	@Test
 	void shiftStudyDateByDaysFromApi() {
 		addDefaultArguments();
-		assertEquals("20180130", ShiftApiDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
+		assertEquals("20180130", ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
 	}
 
 	@Test
@@ -122,20 +123,20 @@ class ShiftApiDateTest {
 		argumentEntities.get(0).setArgumentValue(TEST_URL + "/seconds");
 		argumentEntities.add(secondsPath);
 
-		assertEquals("120023.000000", ShiftApiDate.shift(dataset, Tag.StudyTime, argumentEntities, hmac));
+		assertEquals("120023.000000", ShiftApiDate.shift(dataset, dataset, Tag.StudyTime, argumentEntities));
 	}
 
 	@Test
 	void shiftPatientAgeFromApi() {
 		addDefaultArguments();
-		assertEquals("043Y", ShiftApiDate.shift(dataset, Tag.PatientAge, argumentEntities, hmac));
+		assertEquals("043Y", ShiftApiDate.shift(dataset, dataset, Tag.PatientAge, argumentEntities));
 	}
 
 	@Test
 	void shiftAcquisitionDateTimeFromApi() {
 		addDefaultArguments();
 		assertEquals("20180130120854.354000",
-				ShiftApiDate.shift(dataset, Tag.AcquisitionDateTime, argumentEntities, hmac));
+				ShiftApiDate.shift(dataset, dataset, Tag.AcquisitionDateTime, argumentEntities));
 	}
 
 	@Test
@@ -153,28 +154,29 @@ class ShiftApiDateTest {
 		argumentEntities.add(daysPath);
 		argumentEntities.add(authConfig);
 
-		assertEquals("20180130", ShiftApiDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
+		assertEquals("20180130", ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
 	}
 
 	@Test
 	void httpErrorShouldAbort() {
 		addDefaultArguments();
 		argumentEntities.get(0).setArgumentValue(TEST_UNKNOWN_URL);
-		assertThrows(EndpointException.class, () -> ShiftApiDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
+		assertThrows(EndpointException.class,
+				() -> ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
 	}
 
 	@Test
 	void missingDaysPathInResponseShouldAbort() {
 		addDefaultArguments();
 		argumentEntities.get(0).setArgumentValue(TEST_URL + "/missing");
-		assertThrows(AbortException.class, () -> ShiftApiDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
+		assertThrows(AbortException.class, () -> ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
 	}
 
 	@Test
 	void nonNumericShiftValueShouldAbort() {
 		addDefaultArguments();
 		argumentEntities.get(0).setArgumentValue(TEST_URL + "/invalid");
-		assertThrows(AbortException.class, () -> ShiftApiDate.shift(dataset, Tag.StudyDate, argumentEntities, hmac));
+		assertThrows(AbortException.class, () -> ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
 	}
 
 	@Test
@@ -191,6 +193,59 @@ class ShiftApiDateTest {
 		url.setArgumentKey("url");
 		url.setArgumentValue(TEST_URL);
 		assertThrows(IllegalArgumentException.class, () -> ShiftApiDate.verifyShiftArguments(List.of(url)));
+	}
+
+	@Test
+	void urlTemplateIsResolvedOnTheOriginalCopyNotOnTheDeIdentifiedDataset() {
+		addDefaultArguments();
+		argumentEntities.get(0).setArgumentValue(TEST_URL_TEMPLATE);
+
+		// PatientID (0010,0020) sorts before most date tags, so the pipeline has already
+		// pseudonymized it in the working dataset when the date is reached
+		Attributes deIdentified = new Attributes(dataset);
+		deIdentified.setString(Tag.PatientID, VR.LO, "PSEUDONYM");
+
+		assertEquals("20180130", ShiftApiDate.shift(deIdentified, dataset, Tag.StudyDate, argumentEntities));
+	}
+
+	@Test
+	void shiftsADateNestedInASequenceUsingTheTopLevelCopyForTheUrl() {
+		addDefaultArguments();
+		argumentEntities.get(0).setArgumentValue(TEST_URL_TEMPLATE);
+
+		// During sequence recursion the working dataset is the item, which holds neither
+		// the PatientID of the url template nor any other top-level attribute
+		Attributes item = new Attributes();
+		item.setString(Tag.ScheduledProcedureStepStartDate, VR.DA, "20180209");
+
+		assertEquals("20180130",
+				ShiftApiDate.shift(item, dataset, Tag.ScheduledProcedureStepStartDate, argumentEntities));
+	}
+
+	@Test
+	void profileApplyActionShiftsADateNestedInASequence() {
+		final Attributes dcm = new Attributes();
+		dcm.setString(Tag.PatientID, VR.LO, "97035674");
+		var sequence = dcm.newSequence(Tag.RequestAttributesSequence, 1);
+		final Attributes item = new Attributes();
+		item.setString(Tag.ScheduledProcedureStepStartDate, VR.DA, "20180209");
+		sequence.add(item);
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Shift dates from API", "action.on.dates",
+				null, null, "shift_from_api", 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("url", TEST_URL_TEMPLATE, profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("daysPath", "/value", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("authConfig", AUTH_CONFIG, profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0040,0002)", profileElementEntity));
+		profileElementEntity.setProfileEntity(profileEntity);
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dcm, new Attributes(dcm), hmac, null, null, null);
+
+		assertEquals("20180130",
+				dcm.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.ScheduledProcedureStepStartDate));
 	}
 
 	@Test

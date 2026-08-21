@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.weasis.core.util.StringUtil;
 import org.weasis.core.util.annotations.Generated;
@@ -60,7 +60,7 @@ public class CSVDialog extends Dialog {
 			ISSUER_OF_PATIENT_ID };
 
 	@Getter
-	private final List<Patient> patientsList;
+	private final List<PatientModel> patientsList;
 
 	private NumberField fromLineField;
 
@@ -233,9 +233,9 @@ public class CSVDialog extends Dialog {
 			for (String[] row : allRows.subList(fromLineField.getValue().intValue() - 1, allRows.size())) {
 				String issuerOfPatientID = selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID).equals(-1) ? ""
 						: row[selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID)];
-				final Patient newPatient = new Patient(row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
+				final PatientModel newPatient = new PatientModel(row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
 						row[selectValuesPositionHashMap.get(PATIENT_ID)], "", "", issuerOfPatientID,
-						projectEntity.getId());
+						projectEntity.getId(), projectEntity.getUuid());
 				patientsList.add(newPatient);
 			}
 		}

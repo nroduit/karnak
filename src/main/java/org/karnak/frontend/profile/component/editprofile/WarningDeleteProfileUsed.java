@@ -19,6 +19,8 @@ import org.weasis.core.util.annotations.Generated;
 @Generated()
 public class WarningDeleteProfileUsed extends Dialog {
 
+	private static final long serialVersionUID = 2906158929357513753L;
+
 	public void setText(ProfileEntity profileEntity) {
 		removeAll();
 		Div divTitle = new Div();
@@ -42,6 +44,20 @@ public class WarningDeleteProfileUsed extends Dialog {
 
 		Button cancelButton = new Button("Cancel", event -> close());
 
+		cancelButton.getStyle().set("margin-left", "75%");
+		add(divTitle, divContent, cancelButton);
+	}
+
+	public void setErrorMessage(String errorMessage) {
+		removeAll();
+		Div divTitle = new Div();
+		divTitle.setText("Warning");
+		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
+
+		Div divContent = new Div();
+		divContent.setText(errorMessage);
+
+		Button cancelButton = new Button("Cancel", event -> close());
 		cancelButton.getStyle().set("margin-left", "75%");
 		add(divTitle, divContent, cancelButton);
 	}

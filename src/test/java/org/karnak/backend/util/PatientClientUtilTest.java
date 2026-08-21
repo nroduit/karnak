@@ -20,15 +20,16 @@ import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.cache.InMemoryExternalIDCache;
-import org.karnak.backend.cache.Patient;
-import org.karnak.backend.cache.PatientClient;
+import org.karnak.backend.model.patient.PatientModel;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.model.profilepipe.PatientMetadata;
+import java.util.UUID;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class PatientClientUtilTest {
 
-	private static Patient patient() {
-		return new Patient("PSEUDO", "PID-1", "John", "Doe", null, "M", "ISSUER-1");
+	private static PatientModel patient() {
+		return new PatientModel("PSEUDO", "PID-1", "John", "Doe", null, "M", "ISSUER-1");
 	}
 
 	private static PatientMetadata metadata() {
@@ -83,7 +84,7 @@ class PatientClientUtilTest {
 
 		@Test
 		void returns_the_pseudonym_of_a_matching_cached_patient() {
-			PatientClient cache = new InMemoryExternalIDCache();
+			PseudonymCache cache = new InMemoryExternalIDCache();
 			cache.put(PatientClientUtil.generateKey(patient()), patient());
 
 			assertEquals("PSEUDO", PatientClientUtil.getPseudonym(metadata(), cache));
@@ -91,14 +92,14 @@ class PatientClientUtilTest {
 
 		@Test
 		void returns_null_when_the_patient_is_not_cached() {
-			PatientClient cache = new InMemoryExternalIDCache();
+			PseudonymCache cache = new InMemoryExternalIDCache();
 
 			assertNull(PatientClientUtil.getPseudonym(metadata(), cache));
 		}
 
 		@Test
 		void returns_the_pseudonym_for_a_matching_patient_and_project() {
-			PatientClient cache = new InMemoryExternalIDCache();
+			PseudonymCache cache = new InMemoryExternalIDCache();
 			cache.put(PatientClientUtil.generateKey(patient(), 5L), patient());
 
 			assertEquals("PSEUDO", PatientClientUtil.getPseudonym(metadata(), cache, 5L));
@@ -109,8 +110,8 @@ class PatientClientUtilTest {
 	@Nested
 	class SkipIssuerLookup {
 
-		private static Patient patientWithProject() {
-			return new Patient("PSEUDO", "PID-1", "John", "Doe", "ISSUER-1", 5L);
+		private static PatientModel patientWithProject() {
+			return new PatientModel("PSEUDO", "PID-1", "John", "Doe", "ISSUER-1", 5L, UUID.randomUUID());
 		}
 
 		private static PatientMetadata metadataWithoutIssuer() {
@@ -121,7 +122,7 @@ class PatientClientUtilTest {
 
 		@Test
 		void recovers_a_pseudonym_stored_with_an_issuer_when_skipping_the_issuer() {
-			PatientClient cache = new InMemoryExternalIDCache();
+			PseudonymCache cache = new InMemoryExternalIDCache();
 			// The populate side embeds the issuer in the key.
 			cache.put(PatientClientUtil.generateKey(patientWithProject(), 5L), patientWithProject());
 
@@ -133,7 +134,7 @@ class PatientClientUtilTest {
 
 		@Test
 		void does_not_match_across_project_boundaries() {
-			PatientClient cache = new InMemoryExternalIDCache();
+			PseudonymCache cache = new InMemoryExternalIDCache();
 			cache.put(PatientClientUtil.generateKey(patientWithProject(), 5L), patientWithProject());
 
 			assertNull(PatientClientUtil.getPseudonym(metadataWithoutIssuer(), cache, 9L, true));
@@ -141,7 +142,7 @@ class PatientClientUtilTest {
 
 		@Test
 		void does_not_match_a_different_patient_id() {
-			PatientClient cache = new InMemoryExternalIDCache();
+			PseudonymCache cache = new InMemoryExternalIDCache();
 			cache.put(PatientClientUtil.generateKey(patientWithProject(), 5L), patientWithProject());
 
 			Attributes dcm = new Attributes();

@@ -11,8 +11,8 @@ package org.karnak.backend.util;
 
 import java.util.Objects;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.cache.Patient;
-import org.karnak.backend.cache.PatientClient;
+import org.karnak.backend.model.patient.PatientModel;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.model.profilepipe.PatientMetadata;
 
 @NullUnmarked
@@ -22,7 +22,7 @@ public class PatientClientUtil {
 		throw new IllegalStateException("Utility class");
 	}
 
-	public static String getPseudonym(PatientMetadata patientMetadata, PatientClient cache) {
+	public static String getPseudonym(PatientMetadata patientMetadata, PseudonymCache cache) {
 		if (cache != null) {
 			final String key = generateKey(patientMetadata);
 			return getCachedKey(key, patientMetadata, cache);
@@ -30,7 +30,7 @@ public class PatientClientUtil {
 		return null;
 	}
 
-	public static String getPseudonym(PatientMetadata patientMetadata, PatientClient cache, Long projectID) {
+	public static String getPseudonym(PatientMetadata patientMetadata, PseudonymCache cache, Long projectID) {
 		if (cache != null) {
 			final String key = generateKey(patientMetadata, projectID);
 			return getCachedKey(key, patientMetadata, cache);
@@ -38,8 +38,8 @@ public class PatientClientUtil {
 		return null;
 	}
 
-	public static String getPseudonym(PatientMetadata patientMetadata, PatientClient cache, Long projectID,
-			boolean skipIssuerOfPatientId) {
+	public static String getPseudonym(PatientMetadata patientMetadata, PseudonymCache cache, Long projectID,
+									  boolean skipIssuerOfPatientId) {
 		if (cache != null) {
 			final String key = generateKey(patientMetadata, projectID, skipIssuerOfPatientId);
 			final String pseudonym = getCachedKey(key, patientMetadata, cache, skipIssuerOfPatientId);
@@ -55,28 +55,28 @@ public class PatientClientUtil {
 		return null;
 	}
 
-	private static String findPseudonymIgnoringIssuer(PatientMetadata patientMetadata, PatientClient cache,
+	private static String findPseudonymIgnoringIssuer(PatientMetadata patientMetadata, PseudonymCache cache,
 			Long projectID) {
 		return cache.getAll()
 			.stream()
 			.filter(patient -> Objects.equals(patient.getProjectID(), projectID))
 			.filter(patient -> patientMetadata.compareCachedPatient(patient, true))
-			.map(Patient::getPseudonym)
+			.map(PatientModel::getPseudonym)
 			.findFirst()
 			.orElse(null);
 	}
 
-	private static String getCachedKey(String key, PatientMetadata patientMetadata, PatientClient cache) {
-		final Patient patient = cache.get(key);
+	private static String getCachedKey(String key, PatientMetadata patientMetadata, PseudonymCache cache) {
+		final PatientModel patient = cache.get(key);
 		if (patient != null && patientMetadata.compareCachedPatient(patient)) {
 			return patient.getPseudonym();
 		}
 		return null;
 	}
 
-	private static String getCachedKey(String key, PatientMetadata patientMetadata, PatientClient cache,
+	private static String getCachedKey(String key, PatientMetadata patientMetadata, PseudonymCache cache,
 			boolean skipIssuerOfPatientId) {
-		final Patient patient = cache.get(key);
+		final PatientModel patient = cache.get(key);
 		if (patient != null && patientMetadata.compareCachedPatient(patient, skipIssuerOfPatientId)) {
 			return patient.getPseudonym();
 		}
@@ -94,7 +94,7 @@ public class PatientClientUtil {
 		return generateKey(patientID, issuerOfPatientID);
 	}
 
-	public static String generateKey(Patient patient) {
+	public static String generateKey(PatientModel patient) {
 		String patientID = patient.getPatientId();
 		String issuerOfPatientID = patient.getIssuerOfPatientId();
 		return generateKey(patientID, issuerOfPatientID);
@@ -122,7 +122,7 @@ public class PatientClientUtil {
 		return key.concat(projectID == null ? "" : projectID.toString());
 	}
 
-	public static String generateKey(Patient patient, Long projectID) {
+	public static String generateKey(PatientModel patient, Long projectID) {
 		final String key = generateKey(patient);
 		return key.concat(projectID == null ? "" : projectID.toString());
 	}

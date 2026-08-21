@@ -11,6 +11,7 @@ package org.karnak.backend.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -149,6 +150,68 @@ class DicomObjectToolsTest {
 		@Test
 		void returns_false_for_an_absent_tag() {
 			assertFalse(DicomObjectTools.containsTagInAllAttributes(Tag.StudyDate, patient()));
+		}
+
+	}
+
+	@Nested
+	class ScopedLookup {
+
+		private static Attributes study() {
+			Attributes dcm = patient();
+			dcm.setString(Tag.Modality, VR.CS, "CT");
+			return dcm;
+		}
+
+		private static Attributes itemOf(Attributes dcm) {
+			Attributes item = new Attributes();
+			item.setString(Tag.ScheduledProcedureStepStartDate, VR.DA, "20200110");
+			dcm.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+			return item;
+		}
+
+		@Test
+		void finds_a_tag_of_the_dataset_itself() {
+			assertEquals("CT", DicomObjectTools.getStringInScope(study(), Tag.Modality));
+		}
+
+		@Test
+		void finds_a_tag_of_the_enclosing_dataset_from_a_sequence_item() {
+			Attributes item = itemOf(study());
+
+			assertEquals("CT", DicomObjectTools.getStringInScope(item, Tag.Modality));
+		}
+
+		@Test
+		void finds_a_tag_of_the_root_from_a_deeply_nested_item() {
+			Attributes dcm = study();
+			Attributes inner = new Attributes();
+			itemOf(dcm).newSequence(Tag.ReferencedImageSequence, 1).add(inner);
+
+			assertEquals("CT", DicomObjectTools.getStringInScope(inner, Tag.Modality));
+		}
+
+		@Test
+		void the_nearest_scope_wins() {
+			Attributes dcm = study();
+			Attributes item = itemOf(dcm);
+			item.setString(Tag.Modality, VR.CS, "MR");
+
+			assertEquals("MR", DicomObjectTools.getStringInScope(item, Tag.Modality));
+			assertEquals("CT", DicomObjectTools.getStringInScope(dcm, Tag.Modality));
+		}
+
+		@Test
+		void does_not_look_into_the_sequences_of_the_dataset() {
+			Attributes dcm = study();
+			itemOf(dcm);
+
+			assertNull(DicomObjectTools.getStringInScope(dcm, Tag.ScheduledProcedureStepStartDate));
+		}
+
+		@Test
+		void returns_null_for_a_tag_no_enclosing_dataset_holds() {
+			assertNull(DicomObjectTools.getStringInScope(itemOf(study()), Tag.StudyDate));
 		}
 
 	}

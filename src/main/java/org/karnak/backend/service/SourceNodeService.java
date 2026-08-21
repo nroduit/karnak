@@ -34,7 +34,7 @@ public class SourceNodeService {
 	}
 
 	public Collection<DicomSourceNodeEntity> retrieveSourceNodes(ForwardNodeEntity forwardNodeEntity) {
-		return forwardNodeService.getAllSourceNodes(forwardNodeEntity);
+		return forwardNodeService.retrieveAllSourceNodes(forwardNodeEntity);
 	}
 
 	/**

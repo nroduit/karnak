@@ -63,14 +63,14 @@ public record MetadataSnapshot(Attributes metadata, Set<Integer> bulkPresentTags
 	}
 
 	private static Attributes copyWithoutBulkData(Attributes source, Set<Integer> bulkTags, int depth,
-	                                              int maxSequenceDepth) {
+			int maxSequenceDepth) {
 		Attributes copy = new Attributes(source.bigEndian(), source.size());
 		copyInto(source, copy, bulkTags, depth, maxSequenceDepth);
 		return copy;
 	}
 
 	private static void copyInto(Attributes source, Attributes copy, Set<Integer> bulkTags, int depth,
-	                             int maxSequenceDepth) {
+			int maxSequenceDepth) {
 		for (int tag : source.tags()) {
 			if (TagUtils.isGroupLength(tag)) {
 				continue;

@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -27,11 +28,12 @@ import org.karnak.backend.data.repo.ForwardNodeRepo;
 import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
 import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
 import org.karnak.backend.enums.TransferStatusType;
-import org.karnak.backend.model.monitoring.DestinationActivity;
-import org.karnak.backend.model.monitoring.ErrorBreakdown;
-import org.karnak.backend.model.monitoring.NodeActivity;
-import org.karnak.backend.model.monitoring.SeriesActivity;
-import org.karnak.backend.model.monitoring.StudyActivity;
+import org.karnak.backend.model.monitoring.DestinationActivityModel;
+import org.karnak.backend.model.monitoring.ErrorBreakdownModel;
+import org.karnak.backend.model.monitoring.MonitoringSearchCriteria;
+import org.karnak.backend.model.monitoring.NodeActivityModel;
+import org.karnak.backend.model.monitoring.SeriesActivityModel;
+import org.karnak.backend.model.monitoring.StudyActivityModel;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -78,22 +80,29 @@ class MonitoringAggregationServiceTest {
 
 	private Long forwardNodeId;
 
-	private Long destDeidId;
+	private ForwardNodeEntity forwardNode;
 
-	private Long destMorphId;
+	private UUID forwardNodeUuid;
+
+	private UUID destDeidUuid;
+
+	private UUID destMorphUuid;
 
 	@BeforeEach
 	void seed() {
 		ForwardNodeEntity node = ForwardNodeEntity.ofEmpty();
 		node.setFwdAeTitle("FWD-AET");
+		node.setUuid(UUID.fromString("11111111-2222-3333-4444-555555555555"));
 		node.setFwdDescription("forward node");
 
 		DestinationEntity deid = DestinationEntity.ofDicom("primary", "AET-DEID", "host-a", 104, null);
 		deid.setDesidentification(true);
+		deid.setUuid(UUID.fromString("22222222-3333-4444-5555-666666666666"));
 		deid.setActivateTagMorphing(false);
 
 		DestinationEntity morph = DestinationEntity.ofDicom(null, "AET-MORPH", "host-b", 105, null);
 		morph.setDesidentification(false);
+		morph.setUuid(UUID.fromString("33333333-4444-5555-6666-777777777777"));
 		morph.setActivateTagMorphing(true);
 
 		node.addDestination(deid);
@@ -103,15 +112,17 @@ class MonitoringAggregationServiceTest {
 		destinationRepo.saveAndFlush(morph);
 
 		forwardNodeId = node.getId();
-		destDeidId = deid.getId();
-		destMorphId = morph.getId();
+		forwardNode = node;
+		forwardNodeUuid = node.getUuid();
+		destDeidUuid = deid.getUuid();
+		destMorphUuid = morph.getUuid();
 
 		// Study 1 on the de-identified destination: one clean series (with a re-send),
 		// one failing series (with one excluded/filtered instance).
-		Long errRowId = persistStatus(destDeidId, STUDY_1, SERIE_OK, "CT", 10, 10, 0, 1, 0, DAY1);
-		errRowId = persistStatus(destDeidId, STUDY_1, SERIE_ERR, "CT", 5, 3, 2, 0, 1, DAY2);
+		persistStatus(deid, STUDY_1, SERIE_OK, "CT", 10, 10, 0, 1, 0, DAY1);
+		Long errRowId = persistStatus(deid, STUDY_1, SERIE_ERR, "CT", 5, 3, 2, 0, 1, DAY2);
 		// Study 2 on the tag-morphing destination: clean, with two re-sends.
-		persistStatus(destMorphId, STUDY_2, "1.2.2.1", "MR", 4, 4, 0, 2, 0, DAY2);
+		persistStatus(morph, STUDY_2, "1.2.2.1", "MR", 4, 4, 0, 2, 0, DAY2);
 
 		// Two error outcomes carry "timeout" (one of them a retry); the single excluded
 		// outcome carries "association-rejected" — mirroring the series counters.
@@ -119,11 +130,13 @@ class MonitoringAggregationServiceTest {
 		reasonRepo.saveAndFlush(new TransferSeriesReasonEntity(errRowId, "association-rejected", 0, 1, 0));
 	}
 
-	private Long persistStatus(Long destinationId, String studyUid, String serieUid, String modality, long instances,
+	private Long persistStatus(DestinationEntity destination, String studyUid, String serieUid, String modality, long instances,
 			long sent, long errors, long retries, long excluded, LocalDateTime seen) {
 		TransferSeriesStatusEntity row = new TransferSeriesStatusEntity();
 		row.setForwardNodeId(forwardNodeId);
-		row.setDestinationId(destinationId);
+		row.setForwardNodeEntity(forwardNode);
+		row.setDestinationId(destination.getId());
+		row.setDestinationEntity(destination);
 		row.setStudyUidOriginal(studyUid);
 		row.setStudyUidToSend(studyUid);
 		row.setSerieUidOriginal(serieUid);
@@ -143,14 +156,18 @@ class MonitoringAggregationServiceTest {
 		return new TransferStatusFilter();
 	}
 
+	private MonitoringSearchCriteria criteria(TransferStatusFilter filter) {
+		return MonitoringSearchCriteria.from(filter);
+	}
+
 	@Test
 	void list_destinations_groups_counters_and_orders_errors_first() {
-		List<DestinationActivity> result = service.listDestinations(noFilter());
+		List<DestinationActivityModel> result = service.searchDestinations(criteria(noFilter()));
 
 		assertEquals(2, result.size());
 		// The de-identified destination has the failing series, so it sorts first.
-		DestinationActivity first = result.get(0);
-		assertEquals(destDeidId, first.destinationId());
+		DestinationActivityModel first = result.get(0);
+		assertEquals(destDeidUuid, first.destinationUuid());
 		assertEquals("FWD-AET", first.forwardAet());
 		assertEquals("AET-DEID (primary)", first.destinationLabel());
 		assertEquals(1, first.studies());
@@ -161,8 +178,8 @@ class MonitoringAggregationServiceTest {
 		assertEquals(1, first.retries());
 		assertEquals(1, first.excluded());
 
-		DestinationActivity second = result.get(1);
-		assertEquals(destMorphId, second.destinationId());
+		DestinationActivityModel second = result.get(1);
+		assertEquals(destMorphUuid, second.destinationUuid());
 		// Blank description falls back to the bare reference (AE Title).
 		assertEquals("AET-MORPH", second.destinationLabel());
 		assertEquals(0, second.errors());
@@ -173,10 +190,10 @@ class MonitoringAggregationServiceTest {
 
 	@Test
 	void list_studies_for_a_destination_aggregates_series_counts() {
-		List<StudyActivity> result = service.listStudies(noFilter(), destDeidId);
+		List<StudyActivityModel> result = service.searchStudies(criteria(noFilter()).withDestinationUuid(destDeidUuid));
 
 		assertEquals(1, result.size());
-		StudyActivity study = result.getFirst();
+		StudyActivityModel study = result.getFirst();
 		assertEquals(STUDY_1, study.studyUid());
 		assertEquals(15, study.instances());
 		assertEquals(13, study.sent());
@@ -189,7 +206,8 @@ class MonitoringAggregationServiceTest {
 
 	@Test
 	void list_series_orders_the_failing_series_first() {
-		List<SeriesActivity> result = service.listSeries(noFilter(), destDeidId, STUDY_1);
+		List<SeriesActivityModel> result = service
+			.searchSeries(criteria(noFilter()).withDestinationUuid(destDeidUuid).withStudyUid(STUDY_1));
 
 		assertEquals(2, result.size());
 		assertEquals(SERIE_ERR, result.get(0).serieUid());
@@ -201,16 +219,17 @@ class MonitoringAggregationServiceTest {
 
 	@Test
 	void list_errors_sums_reason_counters_per_bucket_for_a_series() {
-		List<ErrorBreakdown> result = service.listErrors(noFilter(), destDeidId, SERIE_ERR);
+		List<ErrorBreakdownModel> result = service
+			.searchErrors(criteria(noFilter()).withDestinationUuid(destDeidUuid).withSerieUid(SERIE_ERR));
 
 		assertEquals(2, result.size());
-		assertEquals(2, result.stream().mapToLong(ErrorBreakdown::errors).sum());
-		assertEquals(1, result.stream().mapToLong(ErrorBreakdown::excluded).sum());
-		ErrorBreakdown timeout = result.stream().filter(e -> "timeout".equals(e.reason())).findFirst().orElseThrow();
+		assertEquals(2, result.stream().mapToLong(ErrorBreakdownModel::errors).sum());
+		assertEquals(1, result.stream().mapToLong(ErrorBreakdownModel::excluded).sum());
+		ErrorBreakdownModel timeout = result.stream().filter(e -> "timeout".equals(e.reason())).findFirst().orElseThrow();
 		assertEquals(2, timeout.errors());
 		assertEquals(0, timeout.excluded());
 		assertEquals(1, timeout.retries());
-		ErrorBreakdown rejected = result.stream()
+		ErrorBreakdownModel rejected = result.stream()
 			.filter(e -> "association-rejected".equals(e.reason()))
 			.findFirst()
 			.orElseThrow();
@@ -221,16 +240,18 @@ class MonitoringAggregationServiceTest {
 
 	@Test
 	void list_errors_returns_empty_when_no_series_matches() {
-		assertTrue(service.listErrors(noFilter(), destDeidId, "no-such-serie").isEmpty());
+		assertTrue(service
+			.searchErrors(criteria(noFilter()).withDestinationUuid(destDeidUuid).withSerieUid("no-such-serie"))
+			.isEmpty());
 	}
 
 	@Test
 	void list_node_activity_splits_deidentified_and_tag_morphed_instances() {
-		List<NodeActivity> result = service.listNodeActivity(noFilter());
+		List<NodeActivityModel> result = service.searchNodeActivity(criteria(noFilter()));
 
 		assertEquals(1, result.size());
-		NodeActivity node = result.getFirst();
-		assertEquals(forwardNodeId, node.forwardNodeId());
+		NodeActivityModel node = result.getFirst();
+		assertEquals(forwardNodeUuid, node.forwardNodeUuid());
 		assertEquals("FWD-AET", node.forwardAet());
 		assertEquals(2, node.studies());
 		assertEquals(3, node.series());
@@ -249,10 +270,10 @@ class MonitoringAggregationServiceTest {
 		TransferStatusFilter filter = noFilter();
 		filter.setTransferStatusType(TransferStatusType.ERROR);
 
-		List<DestinationActivity> result = service.listDestinations(filter);
+		List<DestinationActivityModel> result = service.searchDestinations(criteria(filter));
 
 		assertEquals(1, result.size());
-		assertEquals(destDeidId, result.getFirst().destinationId());
+		assertEquals(destDeidUuid, result.getFirst().destinationUuid());
 		assertEquals(2, result.getFirst().errors());
 	}
 
@@ -261,7 +282,7 @@ class MonitoringAggregationServiceTest {
 		TransferStatusFilter filter = noFilter();
 		filter.setTransferStatusType(TransferStatusType.SENT);
 
-		assertEquals(2, service.listDestinations(filter).size());
+		assertEquals(2, service.searchDestinations(criteria(filter)).size());
 	}
 
 	@Test
@@ -269,10 +290,10 @@ class MonitoringAggregationServiceTest {
 		TransferStatusFilter filter = noFilter();
 		filter.setStudyUid(STUDY_2);
 
-		List<DestinationActivity> result = service.listDestinations(filter);
+		List<DestinationActivityModel> result = service.searchDestinations(criteria(filter));
 
 		assertEquals(1, result.size());
-		assertEquals(destMorphId, result.getFirst().destinationId());
+		assertEquals(destMorphUuid, result.getFirst().destinationUuid());
 	}
 
 	@Test
@@ -281,7 +302,7 @@ class MonitoringAggregationServiceTest {
 		filter.setStart(DAY2.minusDays(1));
 		filter.setEnd(DAY2.plusDays(1));
 
-		List<NodeActivity> result = service.listNodeActivity(filter);
+		List<NodeActivityModel> result = service.searchNodeActivity(criteria(filter));
 
 		assertEquals(1, result.size());
 		// Only the DAY2 rows survive: the failing CT series (5) and the MR series (4).

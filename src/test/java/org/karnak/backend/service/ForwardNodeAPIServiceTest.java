@@ -46,7 +46,7 @@ class ForwardNodeAPIServiceTest {
 		forwardNodeAPIService.addForwardNode(forwardNodeEntity);
 
 		// Test results
-		Mockito.verify(forwardNodeServiceMock, Mockito.times(1)).getAllForwardNodes();
+		Mockito.verify(forwardNodeServiceMock, Mockito.times(1)).retrieveAllForwardNodes();
 		Mockito.verify(forwardNodeServiceMock, Mockito.times(1)).save(Mockito.any(ForwardNodeEntity.class));
 		Mockito.verify(applicationEventPublisherMock, Mockito.times(1)).publishEvent(Mockito.any(NodeEvent.class));
 	}
@@ -61,7 +61,7 @@ class ForwardNodeAPIServiceTest {
 		forwardNodeAPIService.addForwardNode(forwardNodeEntity);
 
 		// Test results
-		Mockito.verify(forwardNodeServiceMock, Mockito.times(0)).getAllForwardNodes();
+		Mockito.verify(forwardNodeServiceMock, Mockito.times(0)).retrieveAllForwardNodes();
 		Mockito.verify(forwardNodeServiceMock, Mockito.times(1)).save(Mockito.any(ForwardNodeEntity.class));
 		Mockito.verify(applicationEventPublisherMock, Mockito.times(1)).publishEvent(Mockito.any(NodeEvent.class));
 	}

@@ -24,12 +24,12 @@ import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
 import org.karnak.backend.data.repo.TransferSeriesInstanceRepo;
 import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
 import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
-import org.karnak.backend.data.repo.specification.TransferSeriesSpecification;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.mockito.Mockito;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.domain.Specification;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class TransferMonitoringServiceTest {
@@ -93,13 +93,13 @@ class TransferMonitoringServiceTest {
 	void should_retrieve_series_with_filter() {
 		TransferStatusFilter filter = new TransferStatusFilter();
 		filter.setStudyUid("studyUid");
-		when(seriesRepoMock.findAll(any(TransferSeriesSpecification.class)))
+		when(seriesRepoMock.findAll(any(Specification.class)))
 			.thenReturn(Collections.singletonList(new TransferSeriesStatusEntity()));
 
 		List<TransferSeriesStatusEntity> result = transferMonitoringService.retrieveSeries(filter);
 
 		assertEquals(1, result.size());
-		Mockito.verify(seriesRepoMock, Mockito.times(1)).findAll(any(TransferSeriesSpecification.class));
+		Mockito.verify(seriesRepoMock, Mockito.times(1)).findAll(any(Specification.class));
 	}
 
 	@Test

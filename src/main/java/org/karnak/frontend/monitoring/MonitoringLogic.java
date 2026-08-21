@@ -16,15 +16,17 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.model.monitoring.DestinationActivity;
-import org.karnak.backend.model.monitoring.ErrorBreakdown;
-import org.karnak.backend.model.monitoring.NodeActivity;
-import org.karnak.backend.model.monitoring.SeriesActivity;
-import org.karnak.backend.model.monitoring.StudyActivity;
+import org.karnak.backend.model.monitoring.DestinationActivityModel;
+import org.karnak.backend.model.monitoring.ErrorBreakdownModel;
+import org.karnak.backend.model.monitoring.MonitoringSearchCriteria;
+import org.karnak.backend.model.monitoring.NodeActivityModel;
+import org.karnak.backend.model.monitoring.SeriesActivityModel;
+import org.karnak.backend.model.monitoring.StudyActivityModel;
 import org.karnak.backend.service.MonitoringAggregationService;
 import org.karnak.backend.service.TransferMonitoringService;
 import org.karnak.frontend.monitoring.component.ExportSettings;
@@ -64,26 +66,29 @@ public class MonitoringLogic {
 
 	// --- Hierarchy aggregation (Destination / Study / Series / errors) ---------------
 
-	public List<DestinationActivity> listDestinations(TransferStatusFilter filter) {
-		return monitoringAggregationService.listDestinations(filter);
+	public List<DestinationActivityModel> listDestinations(TransferStatusFilter filter) {
+		return monitoringAggregationService.searchDestinations(MonitoringSearchCriteria.from(filter));
 	}
 
-	public List<StudyActivity> listStudies(TransferStatusFilter filter, Long destinationId) {
-		return monitoringAggregationService.listStudies(filter, destinationId);
+	public List<StudyActivityModel> listStudies(TransferStatusFilter filter, UUID destinationUuid) {
+		return monitoringAggregationService
+			.searchStudies(MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid));
 	}
 
-	public List<SeriesActivity> listSeries(TransferStatusFilter filter, Long destinationId, String studyUid) {
-		return monitoringAggregationService.listSeries(filter, destinationId, studyUid);
+	public List<SeriesActivityModel> listSeries(TransferStatusFilter filter, UUID destinationUuid, String studyUid) {
+		return monitoringAggregationService.searchSeries(
+				MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid).withStudyUid(studyUid));
 	}
 
-	public List<ErrorBreakdown> listErrors(TransferStatusFilter filter, Long destinationId, String serieUid) {
-		return monitoringAggregationService.listErrors(filter, destinationId, serieUid);
+	public List<ErrorBreakdownModel> listErrors(TransferStatusFilter filter, UUID destinationUuid, String serieUid) {
+		return monitoringAggregationService.searchErrors(
+				MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid).withSerieUid(serieUid));
 	}
 
 	// --- Forward node dashboard ------------------------------------------------------
 
-	public List<NodeActivity> listNodeActivity(TransferStatusFilter filter) {
-		return monitoringAggregationService.listNodeActivity(filter);
+	public List<NodeActivityModel> listNodeActivity(TransferStatusFilter filter) {
+		return monitoringAggregationService.searchNodeActivity(MonitoringSearchCriteria.from(filter));
 	}
 
 	// --- Maintenance & export --------------------------------------------------------

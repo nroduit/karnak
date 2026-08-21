@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.service;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -18,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,6 +39,7 @@ import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
 import org.karnak.backend.dicom.Params;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.DicomNode;
@@ -69,6 +72,25 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 	private final ScheduledExecutorService executorService;
 
+	// Maximum number of C-STORE transfers processed concurrently; 0 means auto
+	// (2 x CPU cores, minimum 8)
+	@Value("${gateway.max-concurrent-transfers:0}")
+	private int maxConcurrentTransfers;
+
+	// How long an incoming transfer waits for a permit before being refused with
+	// A700 (out of resources)
+	@Value("${gateway.transfer-permit-timeout-seconds:300}")
+	private long transferPermitTimeoutSeconds;
+
+	// Admission control: bounds how many C-STOREs are processed at the same time.
+	// The listener device serves every association with its own thread (cached
+	// thread pool), and a transfer that de-identifies or transcodes holds the whole
+	// pixel data of the object in heap, so without a bound the peak heap grows
+	// linearly with the number of concurrent clients. Blocking in store() applies
+	// backpressure through the DICOM protocol itself: the PDVs of the association
+	// are simply not consumed until a permit is available.
+	private Semaphore transferPermits;
+
 	@Autowired
 	public CStoreSCPService(DestinationRepo destinationRepo, ForwardService forwardService) {
 		super("*");
@@ -83,6 +105,15 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 	public void init(Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
 		this.destinations = destinations;
+	}
+
+	@PostConstruct
+	void initTransferPermits() {
+		int permits = maxConcurrentTransfers > 0 ? maxConcurrentTransfers
+				: Math.max(8, 2 * Runtime.getRuntime().availableProcessors());
+		// Fair, so waiting associations get permits in arrival order instead of
+		// letting a busy sender starve the others
+		this.transferPermits = new Semaphore(permits, true);
 	}
 
 	@Override
@@ -114,6 +145,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 		rsp.setInt(Tag.Status, VR.US, status);
 
+		acquireTransferPermit(rq);
 		try {
 			Params p = new Params(rq.getString(Tag.AffectedSOPInstanceUID), rq.getString(Tag.AffectedSOPClassUID),
 					pc.getTransferSyntax(), priority, data, as);
@@ -125,6 +157,29 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 		}
 		catch (Exception e) {
+			throw new DicomServiceException(Status.ProcessingFailure, e);
+		}
+		finally {
+			transferPermits.release();
+		}
+	}
+
+	/**
+	 * Blocks until a transfer permit is available (backpressure on the sending
+	 * association) or the timeout elapses, in which case the C-STORE is refused with A700
+	 * (out of resources) so the sender can retry later.
+	 */
+	private void acquireTransferPermit(Attributes rq) throws DicomServiceException {
+		try {
+			if (!transferPermits.tryAcquire(transferPermitTimeoutSeconds, TimeUnit.SECONDS)) {
+				log.error("Refused: too many concurrent transfers (A700). SopUID: {}",
+						rq.getString(Tag.AffectedSOPInstanceUID));
+				throw new DicomServiceException(Status.OutOfResources,
+						"No transfer permit within " + transferPermitTimeoutSeconds + "s");
+			}
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new DicomServiceException(Status.ProcessingFailure, e);
 		}
 	}

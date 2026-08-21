@@ -36,6 +36,7 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProfileGroupRepo;
 import org.karnak.backend.data.repo.ProfileRepo;
+import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilebody.ProfileElementBody;
@@ -54,6 +55,8 @@ class ProfilePipeServiceTest {
 
 	private final DestinationRepo destinationRepositoryMock = Mockito.mock(DestinationRepo.class);
 
+	private final ProjectRepo projectRepositoryMock = Mockito.mock(ProjectRepo.class);
+
 	// Event publisher
 	private final ApplicationEventPublisher applicationEventPublisherMock = Mockito
 		.mock(ApplicationEventPublisher.class);
@@ -65,7 +68,7 @@ class ProfilePipeServiceTest {
 	public void setUp() {
 		// Build mocked service
 		profilePipeService = new ProfilePipeService(profileRepositoryMock, profileGroupRepositoryMock,
-				destinationRepositoryMock, applicationEventPublisherMock);
+				destinationRepositoryMock, projectRepositoryMock, applicationEventPublisherMock);
 		// saveAndFlush returns the entity it was given, like the real repository
 		Mockito.when(profileRepositoryMock.saveAndFlush(Mockito.any(ProfileEntity.class)))
 			.thenAnswer(invocation -> invocation.getArgument(0));
@@ -75,7 +78,7 @@ class ProfilePipeServiceTest {
 	void should_retrieve_all_profiles() {
 
 		// Call service
-		List<ProfileEntity> allProfiles = profilePipeService.getAllProfiles();
+		profilePipeService.retrieveAllProfiles();
 
 		// Test results
 		Mockito.verify(profileRepositoryMock, Mockito.times(1)).findAll();
@@ -141,9 +144,10 @@ class ProfilePipeServiceTest {
 		profileEntity.setId(1L);
 
 		// Call service
-		profilePipeService.deleteProfile(profileEntity);
+		ProfilePipeService.DeleteProfileResult result = profilePipeService.deleteProfile(profileEntity);
 
 		// Test results
+		assertTrue(result.success());
 		Mockito.verify(profileRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyLong());
 	}
 

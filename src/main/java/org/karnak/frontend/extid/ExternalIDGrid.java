@@ -30,8 +30,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.cache.Patient;
-import org.karnak.backend.cache.PatientClient;
+import org.karnak.backend.model.patient.PatientModel;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.util.PatientClientUtil;
@@ -40,7 +40,7 @@ import org.weasis.core.util.annotations.Generated;
 
 @Generated()
 @NullUnmarked
-public class ExternalIDGrid extends Grid<Patient> {
+public class ExternalIDGrid extends Grid<PatientModel> {
 
 	private static final String ERROR_MESSAGE_PATIENT = "Length must be between 1 and 50.";
 
@@ -50,15 +50,15 @@ public class ExternalIDGrid extends Grid<Patient> {
 
 	private static final String LABEL_FILTER = "Filter";
 
-	private final Binder<Patient> binder;
+	private final Binder<PatientModel> binder;
 
 	private final PatientFilter patientFilter = new PatientFilter();
 
-	private GridListDataView<Patient> dataView;
+	private GridListDataView<PatientModel> dataView;
 
 	@Getter
 	@Setter
-	private transient PatientClient externalIDCache;
+	private transient PseudonymCache externalIDCache;
 
 	@Getter
 	@Setter
@@ -68,13 +68,13 @@ public class ExternalIDGrid extends Grid<Patient> {
 
 	private Button deleteAllSelectedPatientsButton;
 
-	private List<Patient> selectedPatients;
+	private List<PatientModel> selectedPatients;
 
 	private Button saveEditPatientButton;
 
 	private Button cancelEditPatientButton;
 
-	private Editor<Patient> editor;
+	private Editor<PatientModel> editor;
 
 	private Collection<Button> editButtons;
 
@@ -88,17 +88,17 @@ public class ExternalIDGrid extends Grid<Patient> {
 
 	private TextField issuerOfPatientIdField;
 
-	private Grid.Column<Patient> deleteColumn;
+	private Grid.Column<PatientModel> deleteColumn;
 
-	private Grid.Column<Patient> extidColumn;
+	private Grid.Column<PatientModel> extidColumn;
 
-	private Grid.Column<Patient> patientIdColumn;
+	private Grid.Column<PatientModel> patientIdColumn;
 
-	private Grid.Column<Patient> patientFirstNameColumn;
+	private Grid.Column<PatientModel> patientFirstNameColumn;
 
-	private Grid.Column<Patient> patientLastNameColumn;
+	private Grid.Column<PatientModel> patientLastNameColumn;
 
-	private Grid.Column<Patient> issuerOfPatientIDColumn;
+	private Grid.Column<PatientModel> issuerOfPatientIDColumn;
 
 	private TextField patientIdFilter;
 
@@ -111,14 +111,14 @@ public class ExternalIDGrid extends Grid<Patient> {
 	private TextField issuerOfPatientIDFilter;
 
 	@Getter
-	private List<Patient> patientsListInCache = new ArrayList<>();
+	private List<PatientModel> patientsListInCache = new ArrayList<>();
 
 	@Getter
 	@Setter
-	private transient Collection<Patient> duplicatePatientsList = new ArrayList<>();
+	private transient Collection<PatientModel> duplicatePatientsList = new ArrayList<>();
 
 	public ExternalIDGrid() {
-		binder = new Binder<>(Patient.class);
+		binder = new Binder<>(PatientModel.class);
 		this.externalIDCache = AppConfig.getInstance().getExternalIDCache();
 
 		setSelectionMode(Grid.SelectionMode.MULTI);
@@ -146,9 +146,9 @@ public class ExternalIDGrid extends Grid<Patient> {
 		});
 
 		saveEditPatientButton.addClickListener(e -> {
-			final Patient patientEdit = new Patient(externalIdField.getValue(), patientIdField.getValue(),
+			final PatientModel patientEdit = new PatientModel(externalIdField.getValue(), patientIdField.getValue(),
 					patientFirstNameField.getValue(), patientLastNameField.getValue(),
-					issuerOfPatientIdField.getValue(), projectEntity.getId());
+					issuerOfPatientIdField.getValue(), projectEntity.getId(), projectEntity.getUuid());
 			externalIDCache.remove(PatientClientUtil.generateKey(editor.getItem(), projectEntity.getId()));
 			externalIDCache.put(PatientClientUtil.generateKey(patientEdit, projectEntity.getId()), patientEdit);
 			editor.save();
@@ -159,14 +159,14 @@ public class ExternalIDGrid extends Grid<Patient> {
 	}
 
 	private void setElements() {
-		extidColumn = addColumn(Patient::getPseudonym).setHeader("External Pseudonym").setSortable(true);
-		patientIdColumn = addColumn(Patient::getPatientId).setHeader("Patient ID").setSortable(true);
-		patientFirstNameColumn = addColumn(Patient::getPatientFirstName).setHeader("Patient first name")
+		extidColumn = addColumn(PatientModel::getPseudonym).setHeader("External Pseudonym").setSortable(true);
+		patientIdColumn = addColumn(PatientModel::getPatientId).setHeader("Patient ID").setSortable(true);
+		patientFirstNameColumn = addColumn(PatientModel::getPatientFirstName).setHeader("Patient first name")
 			.setSortable(true);
-		patientLastNameColumn = addColumn(Patient::getPatientLastName).setHeader("Patient last name").setSortable(true);
-		issuerOfPatientIDColumn = addColumn(Patient::getIssuerOfPatientId).setHeader("Issuer of patient ID")
+		patientLastNameColumn = addColumn(PatientModel::getPatientLastName).setHeader("Patient last name").setSortable(true);
+		issuerOfPatientIDColumn = addColumn(PatientModel::getIssuerOfPatientId).setHeader("Issuer of patient ID")
 			.setSortable(true);
-		Grid.Column<Patient> editorColumn = addComponentColumn(patient -> {
+		Grid.Column<PatientModel> editorColumn = addComponentColumn(patient -> {
 			Button edit = new Button("Edit");
 			edit.addClassName("edit");
 			edit.addClickListener(e -> {
@@ -206,7 +206,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 						"Do you confirm the deletion of the " + selectedPatients.size() + " selected patients ?"));
 				WarningConfirmDialog dialog = new WarningConfirmDialog(dialogContent);
 				dialog.addConfirmationListener(componentEvent -> {
-					for (Patient p : selectedPatients) {
+					for (PatientModel p : selectedPatients) {
 						externalIDCache.remove(PatientClientUtil.generateKey(p, projectEntity.getId()));
 					}
 					readAllCacheValue();
@@ -247,7 +247,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 		issuerOfPatientIDFilter = createAndConfigureFilterTextField(filterRow, issuerOfPatientIDColumn, false);
 	}
 
-	private TextField createAndConfigureFilterTextField(HeaderRow filterRow, Grid.Column<Patient> column,
+	private TextField createAndConfigureFilterTextField(HeaderRow filterRow, Grid.Column<PatientModel> column,
 			boolean required) {
 		TextField filterField = new TextField();
 		filterField.setRequired(required);
@@ -297,7 +297,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 	public void readAllCacheValue() {
 		if (externalIDCache != null) {
 			patientsListInCache.clear();
-			for (final Patient patient : externalIDCache.getAll()) {
+			for (final PatientModel patient : externalIDCache.getAll()) {
 				if (projectEntity != null && patient.getProjectID() != null
 						&& patient.getProjectID().equals(projectEntity.getId())) {
 					patientsListInCache.add(patient);
@@ -307,19 +307,19 @@ public class ExternalIDGrid extends Grid<Patient> {
 		dataView.refreshAll();
 	}
 
-	public void addPatient(Patient newPatient) {
+	public void addPatient(PatientModel newPatient) {
 		if (!patientExist(newPatient)) {
 			externalIDCache.put(PatientClientUtil.generateKey(newPatient, projectEntity.getId()), newPatient);
 		}
 	}
 
-	public void addPatientList(List<Patient> patientList) {
+	public void addPatientList(List<PatientModel> patientList) {
 		patientList.forEach(this::addPatient);
 		readAllCacheValue();
 	}
 
-	public boolean patientExist(Patient patient) {
-		final Patient duplicatePatient = externalIDCache
+	public boolean patientExist(PatientModel patient) {
+		final PatientModel duplicatePatient = externalIDCache
 			.get(PatientClientUtil.generateKey(patient, projectEntity.getId()));
 		if (duplicatePatient != null) {
 			duplicatePatientsList.add(duplicatePatient);
@@ -337,7 +337,7 @@ public class ExternalIDGrid extends Grid<Patient> {
 		dataView.refreshAll();
 	}
 
-	private boolean matchesFilter(Patient patient) {
+	private boolean matchesFilter(PatientModel patient) {
 		return matches(patient.getPseudonym(), patientFilter.getExtidFilter())
 				&& matches(patient.getPatientId(), patientFilter.getPatientIdFilter())
 				&& matches(patient.getPatientFirstName(), patientFilter.getPatientFirstNameFilter())

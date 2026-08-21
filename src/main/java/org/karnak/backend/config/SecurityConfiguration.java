@@ -12,6 +12,7 @@ package org.karnak.backend.config;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.karnak.backend.constant.EndPoint;
 import org.karnak.backend.security.OidcRoleAuthoritiesMapper;
 import org.karnak.backend.security.OpenIdConnectLogoutHandler;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,8 +80,13 @@ public class SecurityConfiguration {
 				.requestMatchers(EndpointRequest.to(HealthEndpoint.class, InfoEndpoint.class))
 				.permitAll()
 				// Allow endpoints
-				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
-				.permitAll())
+				.requestMatchers(HttpMethod.GET, EndPoint.ECHO_PATH + EndPoint.DESTINATIONS_PATH)
+				.permitAll()
+				// Api endpoints
+				.requestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
+				.authenticated())
+				.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH
+						+ EndPoint.ALL_REMAINING_PATH))
 			// OpenId connect login: map the IDP realm/client roles to the Karnak roles
 			// so that @RolesAllowed annotations on the views work with OIDC users. The
 			// roles are read from the Bearer/access token (not the ID token) via a

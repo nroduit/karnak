@@ -26,8 +26,11 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "ForwardNode")
@@ -43,6 +46,12 @@ public class ForwardNodeEntity implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
 
 	@Column(name = "description")
 	private String fwdDescription;
@@ -70,11 +79,13 @@ public class ForwardNodeEntity implements Serializable {
 	private ForwardNodeGroupEntity group;
 
 	public ForwardNodeEntity() {
+		this.uuid = UUID.randomUUID();
 		this.fwdAeTitle = "";
 		this.fwdDescription = "";
 	}
 
 	public ForwardNodeEntity(String fwdAeTitle) {
+		this.uuid = UUID.randomUUID();
 		this.fwdAeTitle = fwdAeTitle;
 		this.fwdDescription = "";
 	}

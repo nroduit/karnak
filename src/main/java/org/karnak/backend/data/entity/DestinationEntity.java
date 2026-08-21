@@ -10,6 +10,7 @@
 package org.karnak.backend.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -36,9 +37,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.validator.group.GroupSequenceProvider;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider;
@@ -53,14 +59,19 @@ import org.karnak.backend.enums.PseudonymType;
 @NullUnmarked
 @Getter
 @Setter
+@EqualsAndHashCode
 public class DestinationEntity implements Serializable {
 
 	@Serial
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1218477670532121223L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
 
 	private String description;
 
@@ -120,6 +131,7 @@ public class DestinationEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "forward_node_id")
+	@JsonIgnore
 	private ForwardNodeEntity forwardNodeEntity;
 
 	// Activate notification
@@ -237,6 +249,7 @@ public class DestinationEntity implements Serializable {
 	}
 
 	protected DestinationEntity(DestinationType destinationType) {
+		this.uuid = UUID.randomUUID();
 		this.destinationType = destinationType;
 		this.activate = true;
 		this.condition = "";
@@ -300,10 +313,6 @@ public class DestinationEntity implements Serializable {
 		return destinationEntity;
 	}
 
-	@JsonGetter("forwardNode")
-	public ForwardNodeEntity getForwardNodeEntity() {
-		return forwardNodeEntity;
-	}
 
 	@JsonSetter("forwardNode")
 	public void setForwardNodeEntity(ForwardNodeEntity forwardNodeEntity) {
@@ -404,23 +413,6 @@ public class DestinationEntity implements Serializable {
 			case dicom -> getAeTitle();
 			case stow -> getUrl() + ":" + getPort();
 		};
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		DestinationEntity that = (DestinationEntity) o;
-		return Objects.equals(id, that.id);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(id);
 	}
 
 	public String toStringDicomNotificationDestination() {

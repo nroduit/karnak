@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.util.TagUtils;
 import org.jspecify.annotations.Nullable;
-import org.karnak.backend.cache.PatientClient;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.exception.EndpointException;
@@ -32,7 +32,7 @@ public class Pseudonym {
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private final PatientClient externalIdCache;
+	private final PseudonymCache externalIdCache;
 
 	private @Nullable EndpointService endpointService;
 

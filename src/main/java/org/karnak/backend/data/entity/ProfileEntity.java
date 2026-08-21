@@ -32,8 +32,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Profile")
@@ -47,11 +50,18 @@ import org.jspecify.annotations.NullUnmarked;
 public class ProfileEntity implements Serializable {
 
 	@Serial
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -6455739222045193583L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	@JsonIgnore
+	private UUID uuid;
 
 	private String name;
 
@@ -74,6 +84,7 @@ public class ProfileEntity implements Serializable {
 	private Set<MaskEntity> maskEntities = new HashSet<>();
 
 	@OneToMany(mappedBy = "profileEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
 	private List<ProjectEntity> projectEntities;
 
 	// Optional organizational group (null = shown at the root of the list)
@@ -82,9 +93,11 @@ public class ProfileEntity implements Serializable {
 	private ProfileGroupEntity group;
 
 	public ProfileEntity() {
+		this.uuid = UUID.randomUUID();
 	}
 
 	public ProfileEntity(String name, String version, String minimumKarnakVersion, String defaultIssuerOfPatientId) {
+		this.uuid = UUID.randomUUID();
 		this.name = name;
 		this.version = version;
 		this.minimumKarnakVersion = minimumKarnakVersion;
@@ -94,6 +107,7 @@ public class ProfileEntity implements Serializable {
 
 	public ProfileEntity(String name, String version, String minimumKarnakVersion, String defaultIssuerOfPatientId,
 			Boolean byDefault) {
+		this.uuid = UUID.randomUUID();
 		this.name = name;
 		this.version = version;
 		this.minimumKarnakVersion = minimumKarnakVersion;

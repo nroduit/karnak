@@ -9,6 +9,13 @@
  */
 package org.karnak.backend.model.profilepipe;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.dcm4che3.data.Tag;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -16,12 +23,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.model.action.Keep;
 import org.karnak.backend.model.action.Remove;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class TagActionMapTest {
@@ -151,6 +152,76 @@ class TagActionMapTest {
 			map.put("(0010, XXXX)", remove);
 
 			assertSame(remove, map.get(Tag.PatientName));
+		}
+
+	}
+
+	@Nested
+	class PathScoping {
+
+		private static final TagPath IN_REQUEST_ATTRIBUTES = TagPath.ROOT.descend(Tag.RequestAttributesSequence);
+
+		@Test
+		void a_path_matches_only_inside_the_named_sequence() {
+			TagActionMap map = new TagActionMap();
+			Remove remove = new Remove("X");
+
+			map.put("(0040,0275).(0020,0010)", remove);
+
+			assertSame(remove, map.get(Tag.StudyID, IN_REQUEST_ATTRIBUTES));
+			assertNull(map.get(Tag.StudyID, TagPath.ROOT));
+		}
+
+		@Test
+		void a_flat_tag_keeps_matching_at_every_depth() {
+			TagActionMap map = new TagActionMap();
+			Keep keep = new Keep("K");
+
+			map.put("(0020,0010)", keep);
+
+			assertSame(keep, map.get(Tag.StudyID, TagPath.ROOT));
+			assertSame(keep, map.get(Tag.StudyID, IN_REQUEST_ATTRIBUTES));
+		}
+
+		@Test
+		void a_path_takes_precedence_over_a_flat_tag() {
+			TagActionMap map = new TagActionMap();
+			Keep anywhere = new Keep("K");
+			Remove inSequence = new Remove("X");
+
+			map.put("(0020,0010)", anywhere);
+			map.put("(0040,0275).(0020,0010)", inSequence);
+
+			assertSame(inSequence, map.get(Tag.StudyID, IN_REQUEST_ATTRIBUTES));
+			assertSame(anywhere, map.get(Tag.StudyID, TagPath.ROOT));
+		}
+
+		@Test
+		void the_most_specific_path_wins_when_several_match() {
+			TagActionMap map = new TagActionMap();
+			Keep wildcard = new Keep("K");
+			Remove named = new Remove("X");
+
+			map.put("*.(0020,0010)", wildcard);
+			map.put("(0040,0275).(0020,0010)", named);
+
+			assertSame(named, map.get(Tag.StudyID, IN_REQUEST_ATTRIBUTES));
+			assertSame(wildcard, map.get(Tag.StudyID, TagPath.ROOT.descend(Tag.ReferencedStudySequence)));
+		}
+
+		@Test
+		void path_entries_are_skipped_when_the_location_is_unknown() {
+			TagActionMap map = new TagActionMap();
+			map.put("(0040,0275).(0020,0010)", new Remove("X"));
+
+			assertNull(map.get(Tag.StudyID));
+		}
+
+		@Test
+		void rejects_a_malformed_path() {
+			TagActionMap map = new TagActionMap();
+
+			assertThrows(IllegalArgumentException.class, () -> map.put("(0040,0275).", new Keep("K")));
 		}
 
 	}

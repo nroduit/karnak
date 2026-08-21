@@ -43,6 +43,7 @@ public class ArgumentEntity implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "profile_element_id", nullable = false)
+	@JsonIgnore
 	private ProfileElementEntity profileElementEntity;
 
 	private String argumentKey;

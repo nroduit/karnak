@@ -12,9 +12,24 @@ package org.karnak.backend.constant;
 public class EndPoint {
 
 	// Paths
-	public static final String ECHO_PATH = "/api/echo";
 
 	public static final String DESTINATIONS_PATH = "/destinations";
+
+	public static final String API_PATH = "/api";
+
+	public static final String ECHO_PATH = API_PATH + "/echo";
+
+	public static final String FORWARD_NODES_PATH = API_PATH + "/forward-nodes";
+
+	public static final String PROFILES_PATH = API_PATH + "/profiles";
+
+	public static final String PROJECTS_PATH = API_PATH + "/projects";
+
+	public static final String MONITORING_PATH = API_PATH + "/monitoring";
+
+	public static final String PSEUDONYMS_PATH = API_PATH + "/pseudonyms";
+
+	public static final String ALL_REMAINING_PATH = "/**";
 
 	// Params
 	public static final String SRC_AET_PARAM = "srcAet";

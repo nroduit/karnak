@@ -85,7 +85,7 @@ class DestinationServiceTest {
 
 		// Test results
 		Mockito.verify(forwardNodeServiceMock, Mockito.times(1))
-			.getAllDestinations(Mockito.any(ForwardNodeEntity.class));
+			.retrieveAllDestinations(Mockito.any(ForwardNodeEntity.class));
 	}
 
 }

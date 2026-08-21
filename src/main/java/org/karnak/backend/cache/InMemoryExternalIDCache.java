@@ -19,7 +19,7 @@ import org.weasis.core.util.annotations.Generated;
 @Profile("portable")
 @Primary
 @Generated()
-public class InMemoryExternalIDCache extends PatientClient {
+public class InMemoryExternalIDCache extends PseudonymCache {
 
 	private static final String NAME = "externalId.cache";
 

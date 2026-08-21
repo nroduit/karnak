@@ -10,6 +10,8 @@
 package org.karnak.backend.config;
 
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+import java.util.List;
+import org.karnak.backend.constant.EndPoint;
 import org.karnak.backend.enums.SecurityRole;
 import org.karnak.backend.security.DefaultIdpLoadCondition;
 import org.karnak.frontend.authentication.LoginScreen;
@@ -22,9 +24,12 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -39,6 +44,17 @@ import org.weasis.core.util.annotations.Generated;
 public class SecurityInMemoryConfig {
 
 	private static final String LOGIN_URL = "/login";
+
+	// Fine-grained authorities
+	private static final String API_READ_AUTHORITY = "karnak_read";
+
+	private static final String API_SEARCH_AUTHORITY = "karnak_search";
+
+	private static final String API_CREATE_AUTHORITY = "karnak_create";
+
+	private static final String API_UPDATE_AUTHORITY = "karnak_update";
+
+	private static final String API_DELETE_AUTHORITY = "karnak_delete";
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -61,7 +77,13 @@ public class SecurityInMemoryConfig {
 				.permitAll()
 				// Allow endpoints
 				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
-				.permitAll())
+				.permitAll()
+				// Api endpoints
+				.requestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
+				.authenticated())
+				.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH
+						+ EndPoint.ALL_REMAINING_PATH))
+				.httpBasic(Customizer.withDefaults())
 			// Vaadin/Spring Security integration: permits the framework internal
 			// requests and the @AnonymousAllowed views, scopes CSRF, configures the
 			// request cache, the form login on the login view and requires
@@ -80,12 +102,19 @@ public class SecurityInMemoryConfig {
 
 	@Bean
 	public UserDetailsService userDetailsService() {
-		// Configure users and roles in memory
+		// Configure users and roles in memory.
+		// In addition to the navigation roles (used by the @RolesAllowed
+		// annotations of the Vaadin views), the admin user is granted the
+		// fine-grained authorities required by the @PreAuthorize annotations
+		// of the REST API controllers.
+		List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(SecurityRole.ADMIN_ROLE.getRole(),
+				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(), API_READ_AUTHORITY,
+				API_CREATE_AUTHORITY, API_UPDATE_AUTHORITY, API_DELETE_AUTHORITY, API_SEARCH_AUTHORITY);
+
 		UserDetails userDetails = User.builder()
 			.username(AppConfig.getInstance().getKarnakAdmin())
 			.password("{noop}" + AppConfig.getInstance().getKarnakPassword())
-			.roles(SecurityRole.ADMIN_ROLE.getType(), SecurityRole.INVESTIGATOR_ROLE.getType(),
-					SecurityRole.USER_ROLE.getType())
+			.authorities(authorities)
 			.build();
 
 		return new InMemoryUserDetailsManager(userDetails);

@@ -17,7 +17,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import java.util.List;
 import java.util.function.Supplier;
-import org.karnak.backend.model.monitoring.NodeActivity;
+import org.karnak.backend.model.monitoring.NodeActivityModel;
 import org.karnak.frontend.monitoring.MonitoringLogic;
 import org.weasis.core.util.annotations.Generated;
 
@@ -36,7 +36,7 @@ public class NodeActivityDashboard extends VerticalLayout {
 
 	private final HorizontalLayout cards = new HorizontalLayout();
 
-	private final Grid<NodeActivity> grid = new Grid<>(NodeActivity.class, false);
+	private final Grid<NodeActivityModel> grid = new Grid<>(NodeActivityModel.class, false);
 
 	public NodeActivityDashboard(MonitoringLogic monitoringLogic, Supplier<TransferStatusFilter> filterSupplier) {
 		this.monitoringLogic = monitoringLogic;
@@ -45,16 +45,16 @@ public class NodeActivityDashboard extends VerticalLayout {
 		cards.setWidthFull();
 		cards.getStyle().set("flex-wrap", "wrap");
 
-		grid.addColumn(NodeActivity::forwardAet).setHeader("Forward AETitle").setSortable(true).setFlexGrow(20);
-		grid.addColumn(NodeActivity::studies).setHeader("Studies").setSortable(true);
-		grid.addColumn(NodeActivity::series).setHeader("Series").setSortable(true);
-		grid.addColumn(NodeActivity::instances).setHeader("Instances").setSortable(true);
-		grid.addColumn(NodeActivity::retries).setHeader("Retries").setSortable(true);
-		grid.addColumn(NodeActivity::sent).setHeader("Sent").setSortable(true);
-		grid.addColumn(NodeActivity::errors).setHeader("Errors").setSortable(true);
-		grid.addColumn(NodeActivity::excluded).setHeader("Excluded").setSortable(true);
-		grid.addColumn(NodeActivity::deidentified).setHeader("De-identified").setSortable(true);
-		grid.addColumn(NodeActivity::tagMorphed).setHeader("Tag-morphed").setSortable(true);
+		grid.addColumn(NodeActivityModel::forwardAet).setHeader("Forward AETitle").setSortable(true).setFlexGrow(20);
+		grid.addColumn(NodeActivityModel::studies).setHeader("Studies").setSortable(true);
+		grid.addColumn(NodeActivityModel::series).setHeader("Series").setSortable(true);
+		grid.addColumn(NodeActivityModel::instances).setHeader("Instances").setSortable(true);
+		grid.addColumn(NodeActivityModel::retries).setHeader("Retries").setSortable(true);
+		grid.addColumn(NodeActivityModel::sent).setHeader("Sent").setSortable(true);
+		grid.addColumn(NodeActivityModel::errors).setHeader("Errors").setSortable(true);
+		grid.addColumn(NodeActivityModel::excluded).setHeader("Excluded").setSortable(true);
+		grid.addColumn(NodeActivityModel::deidentified).setHeader("De-identified").setSortable(true);
+		grid.addColumn(NodeActivityModel::tagMorphed).setHeader("Tag-morphed").setSortable(true);
 		grid.setWidthFull();
 
 		add(cards, grid);
@@ -63,22 +63,22 @@ public class NodeActivityDashboard extends VerticalLayout {
 
 	/** Recompute the dashboard for the current filter range. */
 	public void refresh() {
-		List<NodeActivity> nodes = monitoringLogic.listNodeActivity(filterSupplier.get());
+		List<NodeActivityModel> nodes = monitoringLogic.listNodeActivity(filterSupplier.get());
 		grid.setItems(nodes);
 
 		cards.removeAll();
-		cards.add(card("Studies", sum(nodes, NodeActivity::studies), false),
-				card("Series", sum(nodes, NodeActivity::series), false),
-				card("Instances", sum(nodes, NodeActivity::instances), false),
-				card("Retries", sum(nodes, NodeActivity::retries), false),
-				card("Sent", sum(nodes, NodeActivity::sent), false),
-				card("Errors", sum(nodes, NodeActivity::errors), true),
-				card("Excluded", sum(nodes, NodeActivity::excluded), false),
-				card("De-identified", sum(nodes, NodeActivity::deidentified), false),
-				card("Tag-morphed", sum(nodes, NodeActivity::tagMorphed), false));
+		cards.add(card("Studies", sum(nodes, NodeActivityModel::studies), false),
+				card("Series", sum(nodes, NodeActivityModel::series), false),
+				card("Instances", sum(nodes, NodeActivityModel::instances), false),
+				card("Retries", sum(nodes, NodeActivityModel::retries), false),
+				card("Sent", sum(nodes, NodeActivityModel::sent), false),
+				card("Errors", sum(nodes, NodeActivityModel::errors), true),
+				card("Excluded", sum(nodes, NodeActivityModel::excluded), false),
+				card("De-identified", sum(nodes, NodeActivityModel::deidentified), false),
+				card("Tag-morphed", sum(nodes, NodeActivityModel::tagMorphed), false));
 	}
 
-	private long sum(List<NodeActivity> nodes, java.util.function.ToLongFunction<NodeActivity> extractor) {
+	private long sum(List<NodeActivityModel> nodes, java.util.function.ToLongFunction<NodeActivityModel> extractor) {
 		return nodes.stream().mapToLong(extractor).sum();
 	}
 

@@ -9,276 +9,289 @@
  */
 package org.karnak.backend.service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
 import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
-import org.karnak.backend.data.repo.specification.TransferSeriesPredicates;
-import org.karnak.backend.model.monitoring.DestinationActivity;
-import org.karnak.backend.model.monitoring.ErrorBreakdown;
-import org.karnak.backend.model.monitoring.NodeActivity;
-import org.karnak.backend.model.monitoring.SeriesActivity;
-import org.karnak.backend.model.monitoring.StudyActivity;
-import org.karnak.frontend.monitoring.component.TransferStatusFilter;
+import org.karnak.backend.data.repo.TransferSeriesReasonRepo;
+import org.karnak.backend.data.repo.TransferSeriesStatusRepo;
+import org.karnak.backend.data.repo.specification.TransferSeriesSpecifications;
+import org.karnak.backend.model.monitoring.DestinationActivityModel;
+import org.karnak.backend.model.monitoring.ErrorBreakdownModel;
+import org.karnak.backend.model.monitoring.MonitoringSearchCriteria;
+import org.karnak.backend.model.monitoring.NodeActivityModel;
+import org.karnak.backend.model.monitoring.SeriesActivityModel;
+import org.karnak.backend.model.monitoring.StudyActivityModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Aggregates the per-series {@code transfer_series_status} rows into the monitoring
  * hierarchy (Destination / Study / Series / error breakdown) and into per-forward-node
- * activity for the dashboard. Because the rows are already per series, each level is a
- * light grouped query summing the counters; the same filter predicates as the CSV export
- * are reused ({@link TransferSeriesPredicates}).
+ * activity for the dashboard.
  */
 @Service
 @NullUnmarked
 public class MonitoringAggregationService {
 
-	@PersistenceContext
-	private EntityManager entityManager;
-
 	private final DestinationRepo destinationRepo;
 
+	private final TransferSeriesStatusRepo seriesStatusRepo;
+
+	private final TransferSeriesReasonRepo seriesReasonRepo;
+
 	@Autowired
-	public MonitoringAggregationService(final DestinationRepo destinationRepo) {
+	public MonitoringAggregationService(final DestinationRepo destinationRepo,
+			final TransferSeriesStatusRepo seriesStatusRepo, final TransferSeriesReasonRepo seriesReasonRepo) {
 		this.destinationRepo = destinationRepo;
+		this.seriesStatusRepo = seriesStatusRepo;
+		this.seriesReasonRepo = seriesReasonRepo;
+	}
+
+	/** Base filter (search criteria only) shared by every level. */
+	private Specification<@NonNull TransferSeriesStatusEntity> baseFilter(MonitoringSearchCriteria criteria) {
+		return Specification
+			.where(TransferSeriesSpecifications.matchesFilter(MonitoringSearchCriteria.toTransferStatusFilter(criteria)));
+	}
+
+	/** Base filter scoped to {@code criteria.destinationUuid()}. */
+	private Specification<@NonNull TransferSeriesStatusEntity> destinationScopedFilter(MonitoringSearchCriteria criteria) {
+		UUID destinationUuid = criteria == null ? null : criteria.destinationUuid();
+		return baseFilter(criteria).and(TransferSeriesSpecifications.hasDestinationUuid(destinationUuid));
+	}
+
+	/** Destination-scoped filter further scoped to {@code criteria.studyUid()}. */
+	private Specification<@NonNull TransferSeriesStatusEntity> studyScopedFilter(MonitoringSearchCriteria criteria) {
+		String studyUid = criteria == null ? null : criteria.studyUid();
+		return destinationScopedFilter(criteria).and(TransferSeriesSpecifications.hasStudyUidOriginal(studyUid));
+	}
+
+	/** Destination-scoped filter further scoped to {@code criteria.serieUid()}. */
+	private Specification<@NonNull TransferSeriesStatusEntity> seriesScopedFilter(MonitoringSearchCriteria criteria) {
+		String serieUid = criteria == null ? null : criteria.serieUid();
+		return destinationScopedFilter(criteria).and(TransferSeriesSpecifications.hasSerieUidOriginal(serieUid));
 	}
 
 	/** Destinations with their aggregated counts, errors first. */
 	@Transactional(readOnly = true)
-	public List<DestinationActivity> listDestinations(TransferStatusFilter filter) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Tuple> query = cb.createTupleQuery();
-		Root<TransferSeriesStatusEntity> root = query.from(TransferSeriesStatusEntity.class);
-		List<Predicate> predicates = TransferSeriesPredicates.build(root, cb, filter);
+	public List<DestinationActivityModel> searchDestinations(MonitoringSearchCriteria criteria) {
+		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(destinationScopedFilter(criteria));
+		Map<UUID, List<TransferSeriesStatusEntity>> byDestination = rows.stream()
+			.collect(Collectors.groupingBy(row -> row.getDestinationEntity().getUuid()));
+		Map<UUID, DestinationEntity> destinations = loadDestinations(byDestination.keySet());
 
-		query.multiselect(root.get("destinationId"), cb.countDistinct(root.get("studyUidOriginal")), cb.count(root),
-				cb.sum(root.<Long>get("instances")), cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
-				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
-		query.where(predicates.toArray(new Predicate[0]));
-		query.groupBy(root.get("destinationId"));
-
-		List<Tuple> rows = entityManager.createQuery(query).getResultList();
-		Map<Long, DestinationEntity> destinations = loadDestinations(rows);
-
-		List<DestinationActivity> result = new ArrayList<>();
-		for (Tuple row : rows) {
-			Long destinationId = row.get(0, Long.class);
-			DestinationEntity destination = destinations.get(destinationId);
-			result.add(new DestinationActivity(destinationId, forwardAet(destination), destinationLabel(destination),
-					value(row, 1), value(row, 2), value(row, 3), value(row, 4), value(row, 5), value(row, 6),
-					value(row, 7)));
-		}
-		result.sort(Comparator.comparingLong(DestinationActivity::errors)
-			.reversed()
-			.thenComparing(d -> StringUtils.defaultString(d.destinationLabel())));
-		return result;
+		return byDestination.entrySet().stream().map(entry -> {
+            UUID destinationUuid = entry.getKey();
+            List<TransferSeriesStatusEntity> group = entry.getValue();
+            DestinationEntity destination = destinations.get(destinationUuid);
+            return new DestinationActivityModel(destinationUuid, forwardAet(destination), destinationLabel(destination),
+                    distinctStudyCount(group), group.size(), sumLong(group, TransferSeriesStatusEntity::getInstances),
+                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
+                    sumLong(group, TransferSeriesStatusEntity::getRetries),
+                    sumLong(group, TransferSeriesStatusEntity::getExcluded));
+        }).sorted(Comparator.comparingLong(DestinationActivityModel::errors)
+                .reversed()
+                .thenComparing(d -> StringUtils.defaultString(d.destinationLabel()))).collect(Collectors.toCollection(ArrayList::new));
 	}
 
-	/** Studies under a destination, errors first. */
+	/** Studies under a destination, errors first. Scoped by {@code criteria.destinationUuid()}. */
 	@Transactional(readOnly = true)
-	public List<StudyActivity> listStudies(TransferStatusFilter filter, Long destinationId) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Tuple> query = cb.createTupleQuery();
-		Root<TransferSeriesStatusEntity> root = query.from(TransferSeriesStatusEntity.class);
-		List<Predicate> predicates = TransferSeriesPredicates.build(root, cb, filter);
-		predicates.add(equalOrNull(cb, root.get("destinationId"), destinationId));
+	public List<StudyActivityModel> searchStudies(MonitoringSearchCriteria criteria) {
+		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(destinationScopedFilter(criteria));
+		Map<String, List<TransferSeriesStatusEntity>> byStudy = rows.stream()
+			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getStudyUidOriginal));
 
-		query.multiselect(root.get("studyUidOriginal"), cb.greatest(root.<String>get("studyUidToSend")),
-				cb.greatest(root.<String>get("studyDescriptionOriginal")),
-				cb.greatest(root.<String>get("studyDescriptionToSend")),
-				cb.greatest(root.<String>get("patientIdOriginal")), cb.greatest(root.<String>get("patientIdToSend")),
-				cb.greatest(root.<String>get("accessionNumberOriginal")),
-				cb.greatest(root.<String>get("accessionNumberToSend")),
-				cb.greatest(root.<LocalDateTime>get("studyDateOriginal")),
-				cb.greatest(root.<LocalDateTime>get("studyDateToSend")), cb.count(root),
-				cb.sum(root.<Long>get("instances")), cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
-				cb.least(root.<LocalDateTime>get("firstSeen")), cb.greatest(root.<LocalDateTime>get("lastSeen")),
-				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
-		query.where(predicates.toArray(new Predicate[0]));
-		query.groupBy(root.get("studyUidOriginal"));
+		return byStudy.entrySet().stream().map(entry -> {
+            String studyUid = entry.getKey();
+            List<TransferSeriesStatusEntity> group = entry.getValue();
+            return new StudyActivityModel(studyUid, maxString(group, TransferSeriesStatusEntity::getStudyUidToSend),
+                    maxString(group, TransferSeriesStatusEntity::getStudyDescriptionOriginal),
+                    maxString(group, TransferSeriesStatusEntity::getStudyDescriptionToSend),
+                    maxString(group, TransferSeriesStatusEntity::getPatientIdOriginal),
+                    maxString(group, TransferSeriesStatusEntity::getPatientIdToSend),
+                    maxString(group, TransferSeriesStatusEntity::getAccessionNumberOriginal),
+                    maxString(group, TransferSeriesStatusEntity::getAccessionNumberToSend),
+                    maxDateTime(group, TransferSeriesStatusEntity::getStudyDateOriginal),
+                    maxDateTime(group, TransferSeriesStatusEntity::getStudyDateToSend), group.size(),
+                    sumLong(group, TransferSeriesStatusEntity::getInstances),
+                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
+                    sumLong(group, TransferSeriesStatusEntity::getRetries),
+                    sumLong(group, TransferSeriesStatusEntity::getExcluded),
+                    minDateTime(group, TransferSeriesStatusEntity::getFirstSeen),
+                    maxDateTime(group, TransferSeriesStatusEntity::getLastSeen));
+        }).sorted(Comparator.comparingLong(StudyActivityModel::errors)
+                .reversed()
+                .thenComparing(s -> StringUtils.defaultString(s.studyUid()))).collect(Collectors.toCollection(ArrayList::new));
+	}
 
-		List<StudyActivity> result = entityManager.createQuery(query)
-			.getResultList()
+	/**
+	 * Series under a study of a destination, errors first. Scoped by
+	 * {@code criteria.destinationUuid()} and {@code criteria.studyUid()}.
+	 */
+	@Transactional(readOnly = true)
+	public List<SeriesActivityModel> searchSeries(MonitoringSearchCriteria criteria) {
+		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(studyScopedFilter(criteria));
+		Map<String, List<TransferSeriesStatusEntity>> bySeries = rows.stream()
+			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getSerieUidOriginal));
+
+		return bySeries.entrySet().stream().map(entry -> {
+            String serieUid = entry.getKey();
+            List<TransferSeriesStatusEntity> group = entry.getValue();
+            return new SeriesActivityModel(serieUid, maxString(group, TransferSeriesStatusEntity::getSerieUidToSend),
+                    maxString(group, TransferSeriesStatusEntity::getSerieDescriptionOriginal),
+                    maxString(group, TransferSeriesStatusEntity::getSerieDescriptionToSend),
+                    maxString(group, TransferSeriesStatusEntity::getModality),
+                    maxString(group, TransferSeriesStatusEntity::getSopClassUids),
+                    maxDateTime(group, TransferSeriesStatusEntity::getSerieDateOriginal),
+                    maxDateTime(group, TransferSeriesStatusEntity::getSerieDateToSend),
+                    sumLong(group, TransferSeriesStatusEntity::getInstances),
+                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
+                    sumLong(group, TransferSeriesStatusEntity::getRetries),
+                    sumLong(group, TransferSeriesStatusEntity::getExcluded),
+                    minDateTime(group, TransferSeriesStatusEntity::getFirstSeen),
+                    maxDateTime(group, TransferSeriesStatusEntity::getLastSeen));
+        }).sorted(Comparator.comparingLong(SeriesActivityModel::errors)
+                .reversed()
+                .thenComparing(s -> StringUtils.defaultString(s.serieUid()))).collect(Collectors.toCollection(ArrayList::new));
+
+	}
+
+	/**
+	 * Distinct reasons of a series with their error / excluded outcome counts. Scoped by
+	 * {@code criteria.destinationUuid()} and {@code criteria.serieUid()}.
+	 */
+	@Transactional(readOnly = true)
+	public List<ErrorBreakdownModel> searchErrors(MonitoringSearchCriteria criteria) {
+		List<Long> seriesIds = seriesStatusRepo.findAll(seriesScopedFilter(criteria))
 			.stream()
-			.map(row -> new StudyActivity(row.get(0, String.class), row.get(1, String.class), row.get(2, String.class),
-					row.get(3, String.class), row.get(4, String.class), row.get(5, String.class),
-					row.get(6, String.class), row.get(7, String.class), row.get(8, LocalDateTime.class),
-					row.get(9, LocalDateTime.class), value(row, 10), value(row, 11), value(row, 12), value(row, 13),
-					value(row, 16), value(row, 17), row.get(14, LocalDateTime.class), row.get(15, LocalDateTime.class)))
-			.collect(Collectors.toCollection(ArrayList::new));
-		result.sort(Comparator.comparingLong(StudyActivity::errors)
-			.reversed()
-			.thenComparing(s -> StringUtils.defaultString(s.studyUid())));
-		return result;
-	}
-
-	/** Series under a study of a destination, errors first. */
-	@Transactional(readOnly = true)
-	public List<SeriesActivity> listSeries(TransferStatusFilter filter, Long destinationId, String studyUid) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Tuple> query = cb.createTupleQuery();
-		Root<TransferSeriesStatusEntity> root = query.from(TransferSeriesStatusEntity.class);
-		List<Predicate> predicates = TransferSeriesPredicates.build(root, cb, filter);
-		predicates.add(equalOrNull(cb, root.get("destinationId"), destinationId));
-		predicates.add(equalOrNull(cb, root.get("studyUidOriginal"), studyUid));
-
-		query.multiselect(root.get("serieUidOriginal"), cb.greatest(root.<String>get("serieUidToSend")),
-				cb.greatest(root.<String>get("serieDescriptionOriginal")),
-				cb.greatest(root.<String>get("serieDescriptionToSend")), cb.greatest(root.<String>get("modality")),
-				cb.greatest(root.<String>get("sopClassUids")),
-				cb.greatest(root.<LocalDateTime>get("serieDateOriginal")),
-				cb.greatest(root.<LocalDateTime>get("serieDateToSend")), cb.sum(root.<Long>get("instances")),
-				cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
-				cb.least(root.<LocalDateTime>get("firstSeen")), cb.greatest(root.<LocalDateTime>get("lastSeen")),
-				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
-		query.where(predicates.toArray(new Predicate[0]));
-		query.groupBy(root.get("serieUidOriginal"));
-
-		List<SeriesActivity> result = entityManager.createQuery(query)
-			.getResultList()
-			.stream()
-			.map(row -> new SeriesActivity(row.get(0, String.class), row.get(1, String.class), row.get(2, String.class),
-					row.get(3, String.class), row.get(4, String.class), row.get(5, String.class),
-					row.get(6, LocalDateTime.class), row.get(7, LocalDateTime.class), value(row, 8), value(row, 9),
-					value(row, 10), value(row, 13), value(row, 14), row.get(11, LocalDateTime.class),
-					row.get(12, LocalDateTime.class)))
-			.collect(Collectors.toCollection(ArrayList::new));
-		result.sort(Comparator.comparingLong(SeriesActivity::errors)
-			.reversed()
-			.thenComparing(s -> StringUtils.defaultString(s.serieUid())));
-		return result;
-	}
-
-	/** Distinct reasons of a series with their error / excluded outcome counts. */
-	@Transactional(readOnly = true)
-	public List<ErrorBreakdown> listErrors(TransferStatusFilter filter, Long destinationId, String serieUid) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Long> idQuery = cb.createQuery(Long.class);
-		Root<TransferSeriesStatusEntity> seriesRoot = idQuery.from(TransferSeriesStatusEntity.class);
-		List<Predicate> predicates = TransferSeriesPredicates.build(seriesRoot, cb, filter);
-		predicates.add(equalOrNull(cb, seriesRoot.get("destinationId"), destinationId));
-		predicates.add(equalOrNull(cb, seriesRoot.get("serieUidOriginal"), serieUid));
-		idQuery.select(seriesRoot.get("id")).where(predicates.toArray(new Predicate[0]));
-		List<Long> seriesIds = entityManager.createQuery(idQuery).getResultList();
+			.map(TransferSeriesStatusEntity::getId)
+			.toList();
 		if (seriesIds.isEmpty()) {
 			return List.of();
 		}
 
-		CriteriaQuery<Tuple> reasonQuery = cb.createTupleQuery();
-		Root<TransferSeriesReasonEntity> reasonRoot = reasonQuery.from(TransferSeriesReasonEntity.class);
-		reasonQuery.multiselect(reasonRoot.get("reason"), cb.sum(reasonRoot.<Long>get("errorCount")),
-				cb.sum(reasonRoot.<Long>get("excludedCount")), cb.sum(reasonRoot.<Long>get("retryCount")));
-		reasonQuery.where(reasonRoot.get("seriesStatusId").in(seriesIds));
-		reasonQuery.groupBy(reasonRoot.get("reason"));
-
-		List<ErrorBreakdown> result = entityManager.createQuery(reasonQuery)
-			.getResultList()
+		Map<String, List<TransferSeriesReasonEntity>> byReason = seriesReasonRepo.findBySeriesStatusIdIn(seriesIds)
 			.stream()
-			.map(row -> new ErrorBreakdown(row.get(0, String.class), value(row, 1), value(row, 2), value(row, 3)))
-			.collect(Collectors.toCollection(ArrayList::new));
-		// Busiest reason first (errors weigh before exclusions on ties).
-		result.sort(Comparator.comparingLong((ErrorBreakdown e) -> e.errors() + e.excluded())
-			.thenComparingLong(ErrorBreakdown::errors)
-			.reversed());
-		return result;
+			.collect(Collectors.groupingBy(TransferSeriesReasonEntity::getReason));
+
+		return byReason.entrySet().stream().map(entry -> {
+            String reason = entry.getKey();
+            List<TransferSeriesReasonEntity> group = entry.getValue();
+            return new ErrorBreakdownModel(reason, group.stream().mapToLong(TransferSeriesReasonEntity::getErrorCount).sum(),
+                    group.stream().mapToLong(TransferSeriesReasonEntity::getExcludedCount).sum(),
+                    group.stream().mapToLong(TransferSeriesReasonEntity::getRetryCount).sum());
+        }).sorted(Comparator.comparingLong((ErrorBreakdownModel e) -> e.errors() + e.excluded())
+                .thenComparingLong(ErrorBreakdownModel::errors)
+                .reversed()).collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/** Per-forward-node activity for the dashboard, busiest first. */
 	@Transactional(readOnly = true)
-	public List<NodeActivity> listNodeActivity(TransferStatusFilter filter) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Tuple> query = cb.createTupleQuery();
-		Root<TransferSeriesStatusEntity> root = query.from(TransferSeriesStatusEntity.class);
-		Join<TransferSeriesStatusEntity, ForwardNodeEntity> forwardNode = root.join("forwardNodeEntity", JoinType.LEFT);
-		Join<TransferSeriesStatusEntity, DestinationEntity> destination = root.join("destinationEntity", JoinType.LEFT);
-		List<Predicate> predicates = TransferSeriesPredicates.build(root, cb, filter);
+	public List<NodeActivityModel> searchNodeActivity(MonitoringSearchCriteria criteria) {
+		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(baseFilter(criteria));
+		Map<Long, List<TransferSeriesStatusEntity>> byNode = rows.stream()
+			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getForwardNodeId));
 
-		query.multiselect(root.get("forwardNodeId"), forwardNode.get("fwdAeTitle"),
-				cb.countDistinct(root.get("studyUidOriginal")), cb.count(root), cb.sum(root.<Long>get("instances")),
-				cb.sum(root.<Long>get("sent")), cb.sum(root.<Long>get("errors")),
-				sumInstancesWhenTrue(cb, root, destination.get("desidentification")),
-				sumInstancesWhenTrue(cb, root, destination.get("activateTagMorphing")),
-				cb.sum(root.<Long>get("retries")), cb.sum(root.<Long>get("excluded")));
-		query.where(predicates.toArray(new Predicate[0]));
-		query.groupBy(root.get("forwardNodeId"), forwardNode.get("fwdAeTitle"));
+		return byNode.values().stream().map(group -> {
+            UUID forwardNodeUuid = group.getFirst().getForwardNodeEntity().getUuid();
+            return new NodeActivityModel(forwardNodeUuid, forwardAet(group), distinctStudyCount(group), group.size(),
+                    sumLong(group, TransferSeriesStatusEntity::getInstances),
+                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
+                    sumLong(group, TransferSeriesStatusEntity::getRetries),
+                    sumLong(group, TransferSeriesStatusEntity::getExcluded), sumInstancesWhenTrue(group,
+                    TransferSeriesStatusEntity::getDestinationEntity, DestinationEntity::isDesidentification),
+                    sumInstancesWhenTrue(group, TransferSeriesStatusEntity::getDestinationEntity,
+                            DestinationEntity::isActivateTagMorphing));
+        }).sorted(Comparator.comparingLong(NodeActivityModel::instances)
+                .reversed()
+                .thenComparing(n -> StringUtils.defaultString(n.forwardAet()))).collect(Collectors.toCollection(ArrayList::new));
+	}
 
-		List<NodeActivity> result = entityManager.createQuery(query)
-			.getResultList()
+	// --- helpers ------
+
+	private static long sumLong(List<TransferSeriesStatusEntity> rows, ToLongFunction<TransferSeriesStatusEntity> extractor) {
+		return rows.stream().mapToLong(extractor).sum();
+	}
+
+	private static long distinctStudyCount(List<TransferSeriesStatusEntity> rows) {
+		return rows.stream().map(TransferSeriesStatusEntity::getStudyUidOriginal).distinct().count();
+	}
+
+	/** SUM of instances over rows whose related entity (via {@code relation}) matches {@code test}. */
+	private static <T> long sumInstancesWhenTrue(List<TransferSeriesStatusEntity> rows,
+			Function<TransferSeriesStatusEntity, T> relation, java.util.function.Predicate<T> test) {
+		return rows.stream()
+			.filter(row -> Optional.ofNullable(relation.apply(row)).filter(test).isPresent())
+			.mapToLong(TransferSeriesStatusEntity::getInstances)
+			.sum();
+	}
+
+	/** Greatest non-null string value among the rows (mirrors SQL {@code MAX}). */
+	private static String maxString(List<TransferSeriesStatusEntity> rows, Function<TransferSeriesStatusEntity, String> extractor) {
+		return rows.stream().map(extractor).filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
+	}
+
+	/** Greatest non-null date among the rows (mirrors SQL {@code MAX}). */
+	private static LocalDateTime maxDateTime(List<TransferSeriesStatusEntity> rows,
+			Function<TransferSeriesStatusEntity, LocalDateTime> extractor) {
+		return rows.stream().map(extractor).filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
+	}
+
+	/** Least non-null date among the rows (mirrors SQL {@code MIN}). */
+	private static LocalDateTime minDateTime(List<TransferSeriesStatusEntity> rows,
+			Function<TransferSeriesStatusEntity, LocalDateTime> extractor) {
+		return rows.stream().map(extractor).filter(Objects::nonNull).min(Comparator.naturalOrder()).orElse(null);
+	}
+
+	private Map<UUID, DestinationEntity> loadDestinations(Collection<UUID> uuids) {
+		return destinationRepo.findByUuidIn(uuids)
 			.stream()
-			.map(row -> new NodeActivity(row.get(0, Long.class), row.get(1, String.class), value(row, 2), value(row, 3),
-					value(row, 4), value(row, 5), value(row, 6), value(row, 9), value(row, 10), value(row, 7),
-					value(row, 8)))
-			.collect(Collectors.toCollection(ArrayList::new));
-		result.sort(Comparator.comparingLong(NodeActivity::instances)
-			.reversed()
-			.thenComparing(n -> StringUtils.defaultString(n.forwardAet())));
-		return result;
+			.collect(Collectors.toMap(DestinationEntity::getUuid, Function.identity()));
 	}
 
-	// --- helpers ---------------------------------------------------------------------
-
-	/** SUM of instances over rows whose given boolean destination flag is true. */
-	private Expression<Long> sumInstancesWhenTrue(CriteriaBuilder cb, Root<TransferSeriesStatusEntity> root,
-			Path<?> booleanColumn) {
-		return cb
-			.sum(cb.<Long>selectCase().when(cb.equal(booleanColumn, true), root.<Long>get("instances")).otherwise(0L));
-	}
-
-	private Predicate equalOrNull(CriteriaBuilder cb, Path<?> path, Object value) {
-		return value == null ? cb.isNull(path) : cb.equal(path, value);
-	}
-
-	/** Reads a numeric aggregate tuple element, treating a null aggregate as 0. */
-	private long value(Tuple tuple, int index) {
-		Long element = tuple.get(index, Long.class);
-		return element == null ? 0L : element;
-	}
-
-	private Map<Long, DestinationEntity> loadDestinations(List<Tuple> rows) {
-		List<Long> ids = rows.stream().map(row -> row.get(0, Long.class)).filter(java.util.Objects::nonNull).toList();
-		return destinationRepo.findAllById(ids)
-			.stream()
-			.collect(Collectors.toMap(DestinationEntity::getId, Function.identity()));
-	}
-
-	private String forwardAet(DestinationEntity destination) {
+	private static String forwardAet(DestinationEntity destination) {
 		return Optional.ofNullable(destination)
 			.map(DestinationEntity::getForwardNodeEntity)
 			.map(ForwardNodeEntity::getFwdAeTitle)
 			.orElse("");
 	}
 
-	private String destinationLabel(DestinationEntity destination) {
+	/** Forward node AE Title, read off the first row of the group that carries it (LEFT-join semantics). */
+	private static String forwardAet(List<TransferSeriesStatusEntity> rows) {
+		return rows.stream()
+			.map(TransferSeriesStatusEntity::getForwardNodeEntity)
+			.filter(Objects::nonNull)
+			.map(ForwardNodeEntity::getFwdAeTitle)
+			.filter(Objects::nonNull)
+			.findFirst()
+			.orElse("");
+	}
+
+	private static String destinationLabel(DestinationEntity destination) {
 		if (destination == null) {
 			return "Unknown destination";
 		}
 		String reference = destination.retrieveStringReference();
 		String description = destination.getDescription();
-		return StringUtils.isBlank(description) ? reference : reference + " (" + description + ")";
+		return StringUtils.isBlank(description) ? reference : "%s (%s)".formatted(reference, description);
 	}
 
 }

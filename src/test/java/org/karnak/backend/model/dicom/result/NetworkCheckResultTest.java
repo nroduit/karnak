@@ -37,6 +37,58 @@ class NetworkCheckResultTest {
 	}
 
 	@Test
+	void host_dropping_ping_is_successful_when_the_port_is_open() {
+		NetworkCheckResult result = NetworkCheckResult.builder()
+			.hostname("pacs")
+			.hostAddress("10.0.0.1")
+			.port(11112)
+			.hostnameReachable(false)
+			.portOpen(true)
+			.build();
+
+		assertTrue(result.isSuccessful());
+		assertEquals("pacs/10.0.0.1 machine does not answer to ping (ICMP is likely blocked or filtered), "
+				+ "but it accepts connections on port 11112", result.getCheckHostnameMessage());
+		assertEquals("pacs is listening on port 11112", result.getCheckPortMessage());
+	}
+
+	@Test
+	void host_answering_ping_is_successful_even_when_the_port_is_closed() {
+		NetworkCheckResult result = NetworkCheckResult.builder()
+			.hostname("pacs")
+			.hostAddress("10.0.0.1")
+			.port(104)
+			.hostnameReachable(true)
+			.portOpen(false)
+			.build();
+
+		assertTrue(result.isSuccessful());
+	}
+
+	@Test
+	void host_failing_both_probes_is_not_successful() {
+		NetworkCheckResult result = NetworkCheckResult.builder()
+			.hostname("pacs")
+			.hostAddress("10.0.0.1")
+			.port(104)
+			.build();
+
+		assertFalse(result.isSuccessful());
+	}
+
+	@Test
+	void unexpected_error_is_not_successful() {
+		NetworkCheckResult result = NetworkCheckResult.builder()
+			.hostname("pacs")
+			.port(104)
+			.unexpectedError(true)
+			.unexpectedErrorMessage("Unknown Host")
+			.build();
+
+		assertFalse(result.isSuccessful());
+	}
+
+	@Test
 	void unresolved_host_reports_resolution_failure() {
 		NetworkCheckResult result = NetworkCheckResult.builder()
 			.hostname("pacs")

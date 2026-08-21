@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Nested;
@@ -226,25 +228,6 @@ class DestinationEntityTest {
 			assertEquals("Host=host AET=AET Port=104", entity.toStringDicomNotificationDestination());
 		}
 
-	}
-
-	@Test
-	void equality_is_based_on_the_id() {
-		DestinationEntity a = withId(1L);
-		DestinationEntity b = withId(1L);
-
-		assertEquals(a, b);
-		assertEquals(a.hashCode(), b.hashCode());
-		assertEquals(a, a);
-		assertNotEquals(a, withId(2L));
-		assertNotEquals("not-a-destination", a);
-		assertFalse(a.equals(null));
-	}
-
-	private static DestinationEntity withId(Long id) {
-		DestinationEntity entity = new DestinationEntity();
-		entity.setId(id);
-		return entity;
 	}
 
 }

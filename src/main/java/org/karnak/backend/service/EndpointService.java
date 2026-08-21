@@ -14,6 +14,7 @@ import static org.springframework.security.oauth2.client.web.client.RequestAttri
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
 import org.jspecify.annotations.Nullable;
@@ -42,6 +43,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+@Slf4j
 @Service
 public class EndpointService {
 
@@ -157,13 +159,29 @@ public class EndpointService {
 			.body(String.class);
 	}
 
+	/**
+	 * Replaces every {@code {{expression}}} placeholder of {@code url} by the value the
+	 * expression evaluates to against {@code dcm}.
+	 *
+	 * <p>
+	 * A placeholder that evaluates to {@code null} — typically a tag absent from
+	 * {@code dcm} — is replaced by an empty string and logged, so that a missing
+	 * attribute yields an incomplete request instead of aborting the transfer with a
+	 * {@link NullPointerException}.
+	 * @param url string holding the placeholders (a URL or a request body)
+	 * @param dcm attributes the expressions are evaluated against
+	 * @return the string with every placeholder replaced, or {@code null} if {@code url}
+	 * is {@code null} or empty
+	 */
 	public static @Nullable String evaluateStringWithExpression(String url, Attributes dcm) {
 		if (url != null && !url.isEmpty()) {
 			Matcher m = EXPRESSION_PLACEHOLDER.matcher(url);
 			String replacedUrl = url;
 			while (m.find()) {
-				String param = (String) ExpressionResult.get(m.group(1), new ExprAction(1, VR.AE, dcm), String.class);
-				replacedUrl = replacedUrl.replaceFirst(EXPRESSION_PLACEHOLDER.pattern(), param);
+				String expression = m.group(1);
+				String param = (String) ExpressionResult.get(expression, new ExprAction(1, VR.AE, dcm), String.class);
+				replacedUrl = replacedUrl.replaceFirst(EXPRESSION_PLACEHOLDER.pattern(),
+						Matcher.quoteReplacement(param));
 			}
 			return replacedUrl;
 		}

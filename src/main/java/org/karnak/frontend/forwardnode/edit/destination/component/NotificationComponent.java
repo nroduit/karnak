@@ -322,6 +322,7 @@ public class NotificationComponent extends VerticalLayout {
 
 		// Interval
 		binder.forField(getNotifyInterval()) //
+			.withNullRepresentation("") //
 			.withConverter(new HStringToIntegerConverter()) //
 			.bind(DestinationEntity::getNotifyInterval, DestinationEntity::setNotifyInterval);
 

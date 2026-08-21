@@ -9,11 +9,15 @@
  */
 package org.karnak.backend.model.monitoring;
 
+import java.util.UUID;
+
 /**
  * Aggregated transfer activity for a single destination over the selected period (top
  * level of the monitoring hierarchy). {@code forwardAet} is the forward node AE Title
  * used as a prefix in the UI; {@code destinationLabel} is the destination display string.
+ * The destination is identified by its stable {@code destinationUuid} rather than its
+ * internal database id.
  */
-public record DestinationActivity(Long destinationId, String forwardAet, String destinationLabel, long studies,
-		long series, long instances, long sent, long errors, long retries, long excluded) {
+public record DestinationActivityModel(UUID destinationUuid, String forwardAet, String destinationLabel, long studies,
+									   long series, long instances, long sent, long errors, long retries, long excluded) {
 }

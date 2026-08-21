@@ -17,9 +17,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.karnak.backend.cache.ExternalIDCache;
-import org.karnak.backend.cache.Patient;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -52,8 +53,8 @@ class ExternalIDGridTest {
 	// @Test
 	void should_read_cache() {
 		// Mock
-		Patient patient = new Patient("pseudonym", "patientId", "patientFirstName", "patientLastName",
-				"issuerOfPatientId", 1L);
+		PatientModel patient = new PatientModel("pseudonym", "patientId", "patientFirstName", "patientLastName",
+				"issuerOfPatientId", 1L, UUID.randomUUID());
 
 		when(externalIDCache.getAll()).thenReturn(List.of(patient));
 
@@ -80,8 +81,8 @@ class ExternalIDGridTest {
 	void should_add_patient_and_check_existence() {
 
 		// Mock
-		Patient patient = new Patient("pseudonym", "patientId", "patientFirstName", "patientLastName",
-				"issuerOfPatientId", 1L);
+		PatientModel patient = new PatientModel("pseudonym", "patientId", "patientFirstName", "patientLastName",
+				"issuerOfPatientId", 1L, UUID.randomUUID());
 		when(externalIDCache.getAll()).thenReturn(List.of(patient));
 
 		patient.setProjectID(1L);

@@ -23,6 +23,7 @@ import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.standard.StandardDICOM;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -157,6 +158,40 @@ public class AddPrivateTagTest {
 		assertNull(attributes.getString(TagUtils.intFromHexString(StandardDICOM.cleanTagPath("(0021,1000)"))));
 		assertEquals("SIEMENS",
 				attributes.getString(TagUtils.intFromHexString(StandardDICOM.cleanTagPath("(0021,0010)"))));
+	}
+
+	@Test
+	void addsThePrivateTagOnceWhenTheInstanceUidIsReplacedDuringTheWalk() throws ProfileException {
+		// The profile item is built alone, so that the walk can be driven tag by tag
+		ProfileElementEntity element = new ProfileElementEntity();
+		element.setCodename("action.add.private.tag");
+		element.setName("Add private tag");
+		element.addArgument(new ArgumentEntity("value", "PrivateValue", element));
+		element.addArgument(new ArgumentEntity("vr", "LO", element));
+		element.addArgument(new ArgumentEntity("privateCreator", "SIEMENS", element));
+		element.addIncludedTag(new IncludedTagEntity("(0021,1000)", element));
+		element.setPosition(1);
+		AddPrivateTag item = new AddPrivateTag(element);
+
+		Attributes original = new Attributes();
+		original.setString(Tag.SOPClassUID, VR.UI, "1.2.840.10008.5.1.4.1.1.12.1");
+		original.setString(Tag.SOPInstanceUID, VR.UI, "1.2.3.4");
+		Attributes working = new Attributes(original);
+
+		int adds = 0;
+		for (int tag : new int[] { Tag.SOPClassUID, Tag.SOPInstanceUID, Tag.StudyDate, Tag.PatientName }) {
+			if (tag == Tag.StudyDate) {
+				// The pipeline walks the tags in ascending order: (0008,0018) has just
+				// been
+				// replaced by a new UID
+				working.setString(Tag.SOPInstanceUID, VR.UI, "9.9.9.9");
+			}
+			if (item.getAction(working, original, tag, null) != null) {
+				adds++;
+			}
+		}
+
+		assertEquals(1, adds);
 	}
 
 }

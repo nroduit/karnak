@@ -32,6 +32,8 @@ public class NetworkCheckResult {
 
 	private static final String UNREACHABLE_HOSTNAME_TEXT = "{0}/{1} machine is known in a DNS lookup but cannot be pinged";
 
+	private static final String NOT_PINGABLE_BUT_PORT_OPEN_TEXT = "{0}/{1} machine does not answer to ping (ICMP is likely blocked or filtered), but it accepts connections on port {2}";
+
 	private static final String PORT_OPEN_TEXT = "{0} is listening on port {1}";
 
 	private static final String PORT_CLOSED_TEXT = "{0} is not listening on port {1}";
@@ -60,8 +62,13 @@ public class NetworkCheckResult {
 	 */
 	private @Nullable ConnectionLatency connectionLatency;
 
+	/**
+	 * The node is considered reachable as soon as one of the two probes succeeds. An open
+	 * DICOM port is the decisive test: servers commonly drop ICMP, so a failed ping alone
+	 * must not be reported as an error.
+	 */
 	public boolean isSuccessful() {
-		return this.hostnameReachable;
+		return !this.unexpectedError && (this.portOpen || this.hostnameReachable);
 	}
 
 	public String getCheckHostnameMessage() {
@@ -69,6 +76,10 @@ public class NetworkCheckResult {
 
 		if (this.hostnameReachable) {
 			message = MessageFormat.format(REACHABLE_HOSTNAME_TEXT, this.hostname, this.hostAddress);
+		}
+		else if (this.portOpen) {
+			message = MessageFormat.format(NOT_PINGABLE_BUT_PORT_OPEN_TEXT, this.hostname, this.hostAddress,
+					String.valueOf(this.port));
 		}
 		else if (this.unexpectedError) {
 			message = MessageFormat.format(UNEXPECTED_ERROR_TEXT, this.unexpectedErrorMessage);
@@ -87,10 +98,10 @@ public class NetworkCheckResult {
 		String message;
 
 		if (this.portOpen) {
-			message = MessageFormat.format(PORT_OPEN_TEXT, this.hostname, this.port);
+			message = MessageFormat.format(PORT_OPEN_TEXT, this.hostname, String.valueOf(this.port));
 		}
 		else {
-			message = MessageFormat.format(PORT_CLOSED_TEXT, this.hostname, this.port);
+			message = MessageFormat.format(PORT_CLOSED_TEXT, this.hostname, String.valueOf(this.port));
 		}
 
 		return message;
