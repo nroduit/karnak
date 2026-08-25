@@ -43,6 +43,17 @@ The report is configured **per destination**.
      CT/MR/PET (per-frame functional groups), Segmentation, RT objects. Off by
      default: deeper recursion makes each report take a little more time and
      memory (see [Scope & limitations](#6-scope--limitations)).
+   - Optionally tick **Check for identifying data burned into the image** to run
+     OCR on each forwarded image and list, in the report, which
+     patient-identifying DICOM tag values are still visible in the pixel data
+     (burned-in text). The OCR runs on the **image actually sent** — that is, on
+     the pixels the receiver gets, after any masking or defacing the destination
+     applies. It therefore verifies that no identifying text remains in the
+     outgoing image. To instead audit the **incoming** image (before Karnak masks
+     it), enable this option on a **virtual destination**, which processes the
+     object but forwards nothing. Off by default. **This option requires the
+     external de-identification image service to be running** — see the
+     prerequisite below.
 4. Save the destination.
 
 Conformance reporting is independent from the *Activate notification* feature
@@ -55,6 +66,15 @@ dropped (a warning is logged).
 > by email, so Karnak's mail server settings (`spring.mail.*` and the
 > `mail.sender` / sender address) must be set, exactly as for the existing
 > error/rejection notifications. If mail is not configured, no report is sent.
+
+> **Prerequisite — de-identification image service (only for the burned-in
+> identity check).** The **Check for identifying data burned into the image**
+> option calls the external de-identification image (OCR) service, so that
+> service must be running and reachable from Karnak at `OCR_URL` (default
+> `http://localhost:8000`). When it is unreachable the images cannot be analysed
+> and the report notes them as *not analysed*. The rest of the conformance report
+> is unaffected. This prerequisite does **not** apply to the other report
+> options.
 
 ---
 
@@ -187,6 +207,17 @@ is the default; a few checks are **optional** (value-conformity option) or
 Cross-dataset checks that only make sense across the whole study: a single
 Study UID, a single Patient identity, consistent Frame of Reference within a
 series, Modality ↔ SOP Class coherence and non-retired transfer syntaxes.
+
+### Identifying data on image
+
+Shown only when **Check for identifying data burned into the image** is enabled
+for the destination. Karnak runs OCR (via the de-identification image service) on
+each forwarded image and lists the patient-identifying DICOM tags whose value was
+found **burned into the pixel data**, with the number of images affected. When
+nothing is found it states how many images were analysed; when the service could
+not be reached it reports how many images **could not be analysed** — a sign that
+the de-identification image service is down or unreachable (see the prerequisite
+in [Enabling the report](#1-enabling-the-report)).
 
 ### How to read this report
 

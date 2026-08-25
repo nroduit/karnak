@@ -241,6 +241,7 @@ public class GatewaySetUpService {
 					fwd.setCheckValueConformity(dstNode.isCheckValueConformity());
 					fwd.setDeepSequenceValidation(dstNode.isDeepSequenceValidation());
 					fwd.setDeidentified(dstNode.isDesidentification());
+					fwd.setImageIdentityCheck(dstNode.isImageIdentityCheck());
 					dstList.add(fwd);
 				}
 				else if (dstNode.getDestinationType() == DestinationType.stow) {
@@ -252,6 +253,7 @@ public class GatewaySetUpService {
 					fwd.setCheckValueConformity(dstNode.isCheckValueConformity());
 					fwd.setDeepSequenceValidation(dstNode.isDeepSequenceValidation());
 					fwd.setDeidentified(dstNode.isDesidentification());
+					fwd.setImageIdentityCheck(dstNode.isImageIdentityCheck());
 
 					if (kheopsAlbumEntities != null && !kheopsAlbumEntities.isEmpty()) {
 						progress.addProgressListener((DicomProgress dicomProgress) -> {
@@ -273,6 +275,7 @@ public class GatewaySetUpService {
 					dest.setCheckValueConformity(dstNode.isCheckValueConformity());
 					dest.setDeepSequenceValidation(dstNode.isDeepSequenceValidation());
 					dest.setDeidentified(dstNode.isDesidentification());
+					dest.setImageIdentityCheck(dstNode.isImageIdentityCheck());
 
 					preNegotiateCommonSopClasses(dest);
 					dstList.add(dest);

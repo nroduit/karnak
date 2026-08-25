@@ -24,4 +24,9 @@ public class TransformedPlanarImage {
 
 	private PlanarImage planarImage;
 
+	private byte[] pixelDataBytes;
+
+	// Whether a mask/defacing transformation was configured for this image.
+	private boolean transformApplied;
+
 }

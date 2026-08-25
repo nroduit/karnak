@@ -49,7 +49,7 @@ class TransferSyntaxNegotiationIntegrationTest extends GatewayItTestSupport {
 	void setUp() throws Exception {
 		scp = startScp();
 		fwdNode = new ForwardDicomNode("SOURCE-IT");
-		forwardService = new ForwardService(mock(ApplicationEventPublisher.class));
+		forwardService = new ForwardService(mock(ApplicationEventPublisher.class), null);
 	}
 
 	@ParameterizedTest

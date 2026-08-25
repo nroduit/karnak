@@ -24,6 +24,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -38,8 +40,10 @@ import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.standard.StandardDICOM;
+import org.karnak.backend.model.validation.ImageIdentityCheckInput;
 import org.karnak.backend.model.validation.InstanceConformanceData;
 import org.karnak.backend.model.validation.MetadataSnapshot;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -60,6 +64,8 @@ class ConformanceReportServiceTest {
 	private final JavaMailSender javaMailSenderMock = Mockito.mock(JavaMailSender.class);
 
 	private final DestinationRepo destinationRepoMock = Mockito.mock(DestinationRepo.class);
+
+	private final DeidentifyImageService deidentifyImageServiceMock = Mockito.mock(DeidentifyImageService.class);
 
 	private ConformanceReportService service;
 
@@ -82,7 +88,7 @@ class ConformanceReportServiceTest {
 			.thenReturn("<html/>");
 
 		service = new ConformanceReportService(templateEngineMock, javaMailSenderMock, standardDICOM,
-				destinationRepoMock);
+				destinationRepoMock, deidentifyImageServiceMock);
 		ReflectionTestUtils.setField(service, "mailSender", "karnak@karnak.org");
 		ReflectionTestUtils.setField(service, "karnakVersion", "test");
 		ReflectionTestUtils.setField(service, "idleTimeoutSeconds", 300L);
@@ -101,6 +107,21 @@ class ConformanceReportServiceTest {
 		dcm.setString(Tag.Modality, VR.CS, "CT");
 		return new ConformanceCollectEvent(InstanceConformanceData.of(1L, 2L, "SRC_AET", UID.ExplicitVRLittleEndian,
 				true, null, false, false, true, MetadataSnapshot.of(dcm)));
+	}
+
+	private static ConformanceCollectEvent eventWithImageIdentity(String sopInstanceUid) {
+		var dcm = new Attributes();
+		dcm.setString(Tag.SOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage);
+		dcm.setString(Tag.SOPInstanceUID, VR.UI, sopInstanceUid);
+		dcm.setString(Tag.StudyInstanceUID, VR.UI, "1.2.3.4");
+		dcm.setString(Tag.SeriesInstanceUID, VR.UI, "1.2.3.4.5");
+		dcm.setString(Tag.PatientID, VR.LO, "PSEUDO-1");
+		dcm.setString(Tag.PatientName, VR.PN, "PSEUDO^A");
+		dcm.setString(Tag.Modality, VR.CS, "OT");
+		var input = new ImageIdentityCheckInput(new byte[] { 1, 2, 3 }, Map.of("PatientName", "Doe^John"),
+				UID.ExplicitVRLittleEndian);
+		return new ConformanceCollectEvent(InstanceConformanceData.of(1L, 2L, "SRC_AET", UID.ExplicitVRLittleEndian,
+				true, null, false, false, true, MetadataSnapshot.of(dcm), input));
 	}
 
 	@Test
@@ -186,7 +207,7 @@ class ConformanceReportServiceTest {
 		var realEngine = new SpringTemplateEngine();
 		realEngine.setTemplateResolver(resolver);
 		var realService = new ConformanceReportService(realEngine, javaMailSenderMock, standardDICOM,
-				destinationRepoMock);
+				destinationRepoMock, deidentifyImageServiceMock);
 		ReflectionTestUtils.setField(realService, "karnakVersion", "test-version");
 		realService.setClock(Clock.fixed(NOW, ZoneOffset.UTC));
 
@@ -202,6 +223,49 @@ class ConformanceReportServiceTest {
 
 		// Dump for manual inspection
 		Files.writeString(Path.of("target", "conformance-report-sample.html"), html);
+	}
+
+	@Test
+	void image_identity_check_lists_detected_tags_in_the_report() {
+		when(deidentifyImageServiceMock.callReportingApi(any(), any(), any(), any(), any()))
+			.thenReturn(List.of("PatientName", "PatientID"));
+
+		var resolver = new ClassLoaderTemplateResolver();
+		resolver.setPrefix("templates/");
+		resolver.setSuffix(".html");
+		resolver.setCharacterEncoding("UTF-8");
+		var realEngine = new SpringTemplateEngine();
+		realEngine.setTemplateResolver(resolver);
+		var realService = new ConformanceReportService(realEngine, javaMailSenderMock, standardDICOM,
+				destinationRepoMock, deidentifyImageServiceMock);
+		ReflectionTestUtils.setField(realService, "karnakVersion", "test-version");
+		realService.setClock(Clock.fixed(NOW, ZoneOffset.UTC));
+
+		destinationEntity.setImageIdentityCheck(true);
+		realService.onConformanceCollect(eventWithImageIdentity("1.2.3.4.5.1"));
+		var accumulator = realService.getStudies().values().iterator().next();
+		var report = accumulator.close();
+		String html = realService.renderReport(report, destinationEntity);
+
+		assertEquals(1, report.detectedIdentityTags().get("PatientName"));
+		assertEquals(1, report.detectedIdentityTags().get("PatientID"));
+		assertEquals(1, report.imageIdentityCheckedInstances());
+		assertTrue(html.contains("Identifying data on image"));
+		assertTrue(html.contains("PatientName"));
+		assertTrue(html.contains("PatientID"));
+	}
+
+	@Test
+	void image_identity_check_failure_is_reported_without_detected_tags() {
+		when(deidentifyImageServiceMock.callReportingApi(any(), any(), any(), any(), any()))
+			.thenThrow(new RuntimeException("service down"));
+
+		service.onConformanceCollect(eventWithImageIdentity("1.2.3.4.5.1"));
+		var report = service.getStudies().values().iterator().next().close();
+
+		assertTrue(report.detectedIdentityTags().isEmpty());
+		assertEquals(0, report.imageIdentityCheckedInstances());
+		assertEquals(1, report.imageIdentityCheckErrors());
 	}
 
 }

@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,10 +33,13 @@ import org.karnak.backend.model.standard.StandardDICOM;
 import org.karnak.backend.model.validation.ConformanceReport;
 import org.karnak.backend.model.validation.CuratedValidationRules;
 import org.karnak.backend.model.validation.DicomConformanceValidator;
+import org.karnak.backend.model.validation.ImageIdentityCheckInput;
+import org.karnak.backend.model.validation.ImageIdentityCheckOutcome;
 import org.karnak.backend.model.validation.InstanceConformanceData;
 import org.karnak.backend.model.validation.InstanceValidationResult;
 import org.karnak.backend.model.validation.StudyConformanceAccumulator;
 import org.karnak.backend.model.validation.StudyKey;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
@@ -67,6 +71,8 @@ public class ConformanceReportService {
 	private final JavaMailSender javaMailSender;
 
 	private final StandardDICOM standardDICOM;
+
+	private final DeidentifyImageService deidentifyImageService;
 
 	// Repositories
 	private final DestinationRepo destinationRepo;
@@ -102,11 +108,13 @@ public class ConformanceReportService {
 
 	@Autowired
 	public ConformanceReportService(final TemplateEngine templateEngine, final JavaMailSender javaMailSender,
-			final StandardDICOM standardDICOM, final DestinationRepo destinationRepo) {
+			final StandardDICOM standardDICOM, final DestinationRepo destinationRepo,
+			final DeidentifyImageService deidentifyImageService) {
 		this.templateEngine = templateEngine;
 		this.javaMailSender = javaMailSender;
 		this.standardDICOM = standardDICOM;
 		this.destinationRepo = destinationRepo;
+		this.deidentifyImageService = deidentifyImageService;
 		this.rules = CuratedValidationRules.load();
 		this.validator = new DicomConformanceValidator(standardDICOM, rules);
 	}
@@ -125,13 +133,14 @@ public class ConformanceReportService {
 					? validator.validate(data.snapshot().metadata(), data.snapshot().bulkPresentTags(),
 							data.transferSyntaxUid(), data.checkValueConformity(), depth, data.deidentified())
 					: null;
+			ImageIdentityCheckOutcome identityOutcome = checkImageIdentity(data);
 			Instant now = clock.instant();
 			// A concurrent flush may close the accumulator between lookup and add: retry
 			// with a fresh one (the late instances produce a small follow-up report)
 			while (true) {
 				StudyConformanceAccumulator accumulator = studies.computeIfAbsent(data.studyKey(),
 						key -> new StudyConformanceAccumulator(key, data.sourceAet(), data.deidentified(), rules, now));
-				if (accumulator.add(data, result, now)) {
+				if (accumulator.add(data, result, identityOutcome, now)) {
 					return;
 				}
 				studies.remove(data.studyKey(), accumulator);
@@ -139,6 +148,27 @@ public class ConformanceReportService {
 		}
 		catch (Exception e) {
 			log.error("Cannot collect conformance data of instance {}", data.sopInstanceUid(), e);
+		}
+	}
+
+	/**
+	 * Queries the de-identification image API for identifying data still burned into the
+	 * forwarded image. Returns {@code null} when the destination did not request the
+	 * check, and a failed outcome when the API could not be reached.
+	 */
+	private ImageIdentityCheckOutcome checkImageIdentity(InstanceConformanceData data) {
+		ImageIdentityCheckInput input = data.imageIdentityCheckInput();
+		if (input == null) {
+			return null;
+		}
+		try {
+			List<String> detectedTags = deidentifyImageService.callReportingApi(data.snapshot().metadata(),
+					input.imageBytes(), input.sensitiveData(), input.transferSyntaxUid(), data.sopInstanceUid());
+			return ImageIdentityCheckOutcome.detected(detectedTags);
+		}
+		catch (Exception e) {
+			log.warn("Image identity check failed for instance {}: {}", data.sopInstanceUid(), e.getMessage());
+			return ImageIdentityCheckOutcome.failure();
 		}
 	}
 
@@ -217,6 +247,7 @@ public class ConformanceReportService {
 		context.setVariable("generatedAt", TIMESTAMP_FORMAT.withZone(ZoneId.systemDefault()).format(clock.instant()));
 		context.setVariable("sopClassNames", uidNames(report.sopClassUids()));
 		context.setVariable("transferSyntaxNames", uidNames(report.transferSyntaxUids()));
+		context.setVariable("imageIdentityCheckEnabled", destinationEntity.isImageIdentityCheck());
 		return templateEngine.process(TEMPLATE_THYMELEAF, context);
 	}
 

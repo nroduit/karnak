@@ -19,17 +19,25 @@ import org.dcm4che3.data.Tag;
 public record InstanceConformanceData(Long forwardNodeId, Long destinationId, String sourceAet, String studyUid,
 		String seriesUid, String sopClassUid, String sopInstanceUid, String modality, String transferSyntaxUid,
 		boolean sent, String failureReason, boolean checkValueConformity, boolean deepSequenceValidation,
-		boolean deidentified, MetadataSnapshot snapshot) {
+		boolean deidentified, MetadataSnapshot snapshot, ImageIdentityCheckInput imageIdentityCheckInput) {
 
 	public static InstanceConformanceData of(Long forwardNodeId, Long destinationId, String sourceAet,
 			String transferSyntaxUid, boolean sent, String failureReason, boolean checkValueConformity,
 			boolean deepSequenceValidation, boolean deidentified, MetadataSnapshot snapshot) {
+		return of(forwardNodeId, destinationId, sourceAet, transferSyntaxUid, sent, failureReason, checkValueConformity,
+				deepSequenceValidation, deidentified, snapshot, null);
+	}
+
+	public static InstanceConformanceData of(Long forwardNodeId, Long destinationId, String sourceAet,
+			String transferSyntaxUid, boolean sent, String failureReason, boolean checkValueConformity,
+			boolean deepSequenceValidation, boolean deidentified, MetadataSnapshot snapshot,
+			ImageIdentityCheckInput imageIdentityCheckInput) {
 		var metadata = snapshot.metadata();
 		return new InstanceConformanceData(forwardNodeId, destinationId, sourceAet,
 				metadata.getString(Tag.StudyInstanceUID, ""), metadata.getString(Tag.SeriesInstanceUID, ""),
 				metadata.getString(Tag.SOPClassUID, ""), metadata.getString(Tag.SOPInstanceUID, ""),
 				metadata.getString(Tag.Modality, ""), transferSyntaxUid, sent, failureReason, checkValueConformity,
-				deepSequenceValidation, deidentified, snapshot);
+				deepSequenceValidation, deidentified, snapshot, imageIdentityCheckInput);
 	}
 
 	public StudyKey studyKey() {

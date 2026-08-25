@@ -141,7 +141,7 @@ class GatewayScaleMatrixTest extends GatewayItTestSupport {
 	}
 
 	private static ForwardService parallelForwardService() {
-		ForwardService forwardService = new ForwardService(mock(ApplicationEventPublisher.class));
+		ForwardService forwardService = new ForwardService(mock(ApplicationEventPublisher.class), null);
 		ReflectionTestUtils.setField(forwardService, "parallelFanout", true);
 		forwardService.initFanoutExecutor();
 		return forwardService;

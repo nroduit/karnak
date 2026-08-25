@@ -72,8 +72,9 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 	private final ScheduledExecutorService executorService;
 
-	// Maximum number of C-STORE transfers processed concurrently; 0 means auto
-	// (2 x CPU cores, minimum 8)
+	// Maximum number of C-STORE transfers processed concurrently; 0 means auto:
+	// the limit scales with the resources actually available, between 2 x CPU
+	// cores (minimum 8) and 8 x CPU cores depending on the heap headroom
 	@Value("${gateway.max-concurrent-transfers:0}")
 	private int maxConcurrentTransfers;
 
@@ -88,8 +89,27 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	// pixel data of the object in heap, so without a bound the peak heap grows
 	// linearly with the number of concurrent clients. Blocking in store() applies
 	// backpressure through the DICOM protocol itself: the PDVs of the association
-	// are simply not consumed until a permit is available.
-	private Semaphore transferPermits;
+	// are simply not consumed until a permit is available. The permit count is not
+	// fixed: it is adjusted between minTransferPermits and maxTransferPermits
+	// according to the heap headroom, so the gateway scales up when memory is
+	// available and only throttles under actual memory pressure.
+	private AdjustableSemaphore transferPermits;
+
+	// Heap usage fractions steering the adaptive permit count: below the grow
+	// threshold the limit increases, above the shrink threshold it decreases
+	private static final double GROW_HEAP_USAGE = 0.60;
+
+	private static final double SHRINK_HEAP_USAGE = 0.80;
+
+	private final Object permitLock = new Object();
+
+	private int permitLimit;
+
+	private int minTransferPermits;
+
+	private int maxTransferPermits;
+
+	private int permitStep;
 
 	@Autowired
 	public CStoreSCPService(DestinationRepo destinationRepo, ForwardService forwardService) {
@@ -109,11 +129,21 @@ public class CStoreSCPService extends BasicCStoreSCP {
 
 	@PostConstruct
 	void initTransferPermits() {
-		int permits = maxConcurrentTransfers > 0 ? maxConcurrentTransfers
-				: Math.max(8, 2 * Runtime.getRuntime().availableProcessors());
+		int cores = Runtime.getRuntime().availableProcessors();
+		if (maxConcurrentTransfers > 0) {
+			// Explicit configuration: fixed limit, no adaptation
+			this.minTransferPermits = maxConcurrentTransfers;
+			this.maxTransferPermits = maxConcurrentTransfers;
+		}
+		else {
+			this.minTransferPermits = Math.max(8, 2 * cores);
+			this.maxTransferPermits = Math.max(minTransferPermits, 8 * cores);
+		}
+		this.permitStep = Math.max(1, cores / 2);
+		this.permitLimit = minTransferPermits;
 		// Fair, so waiting associations get permits in arrival order instead of
 		// letting a busy sender starve the others
-		this.transferPermits = new Semaphore(permits, true);
+		this.transferPermits = new AdjustableSemaphore(permitLimit, true);
 	}
 
 	@Override
@@ -170,6 +200,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	 * (out of resources) so the sender can retry later.
 	 */
 	private void acquireTransferPermit(Attributes rq) throws DicomServiceException {
+		adjustTransferPermits();
 		try {
 			if (!transferPermits.tryAcquire(transferPermitTimeoutSeconds, TimeUnit.SECONDS)) {
 				log.error("Refused: too many concurrent transfers (A700). SopUID: {}",
@@ -181,6 +212,39 @@ public class CStoreSCPService extends BasicCStoreSCP {
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new DicomServiceException(Status.ProcessingFailure, e);
+		}
+	}
+
+	/**
+	 * Adapts the concurrent transfer limit to the current heap headroom. Called on every
+	 * incoming C-STORE, so the limit follows the load closely: while heap usage stays
+	 * below the grow threshold the limit rises by one step toward the CPU-based ceiling,
+	 * and once usage exceeds the shrink threshold it falls back toward the floor. A
+	 * shrink never interrupts admitted transfers; it only reduces the permits available
+	 * to new ones.
+	 */
+	private void adjustTransferPermits() {
+		if (minTransferPermits == maxTransferPermits) {
+			return;
+		}
+		Runtime runtime = Runtime.getRuntime();
+		long usedHeap = runtime.totalMemory() - runtime.freeMemory();
+		double heapUsage = (double) usedHeap / runtime.maxMemory();
+		synchronized (permitLock) {
+			if (heapUsage < GROW_HEAP_USAGE && permitLimit < maxTransferPermits) {
+				int step = Math.min(permitStep, maxTransferPermits - permitLimit);
+				permitLimit += step;
+				transferPermits.release(step);
+				log.debug("Transfer permit limit raised to {} (heap usage {}%)", permitLimit,
+						Math.round(heapUsage * 100));
+			}
+			else if (heapUsage > SHRINK_HEAP_USAGE && permitLimit > minTransferPermits) {
+				int step = Math.min(permitStep, permitLimit - minTransferPermits);
+				permitLimit -= step;
+				transferPermits.reduce(step);
+				log.debug("Transfer permit limit lowered to {} (heap usage {}%)", permitLimit,
+						Math.round(heapUsage * 100));
+			}
 		}
 	}
 
@@ -210,6 +274,22 @@ public class CStoreSCPService extends BasicCStoreSCP {
 				destinationRepo.save(destinationEntity);
 			}
 		});
+	}
+
+	// Semaphore.reducePermits is protected; expose it so the adaptive controller can
+	// shrink the limit without interrupting the transfers already admitted
+	private static final class AdjustableSemaphore extends Semaphore {
+
+		private static final long serialVersionUID = 1L;
+
+		AdjustableSemaphore(int permits, boolean fair) {
+			super(permits, fair);
+		}
+
+		void reduce(int reduction) {
+			super.reducePermits(reduction);
+		}
+
 	}
 
 }

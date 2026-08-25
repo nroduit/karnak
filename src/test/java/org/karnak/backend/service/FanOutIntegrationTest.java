@@ -119,7 +119,7 @@ class FanOutIntegrationTest extends GatewayItTestSupport {
 	}
 
 	private static ForwardService forwardService(boolean parallel) {
-		ForwardService service = new ForwardService(mock(ApplicationEventPublisher.class));
+		ForwardService service = new ForwardService(mock(ApplicationEventPublisher.class), null);
 		if (parallel) {
 			ReflectionTestUtils.setField(service, "parallelFanout", true);
 			ReflectionTestUtils.setField(service, "fanoutMaxThreads", 4);

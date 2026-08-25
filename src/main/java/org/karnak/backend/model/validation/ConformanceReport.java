@@ -24,7 +24,8 @@ public record ConformanceReport(StudyKey key, String sourceAet, boolean deidenti
 		Set<String> sopClassUids, Set<String> transferSyntaxUids, List<SeriesSummary> series,
 		Map<String, List<FindingSummary>> findingsBySopClass, List<ConformanceFinding> consistencyFindings,
 		int errorCount, int warningCount, int infoCount, boolean passed, Instant firstInstanceAt,
-		Instant lastInstanceAt) {
+		Instant lastInstanceAt, Map<String, Integer> detectedIdentityTags, int imageIdentityCheckedInstances,
+		int imageIdentityCheckErrors) {
 
 	/** Per-series content summary. */
 	public record SeriesSummary(String seriesInstanceUid, String modality, Set<String> sopClassUids,

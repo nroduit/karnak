@@ -57,7 +57,7 @@ class GatewaySaturationTest extends GatewayItTestSupport {
 	@BeforeEach
 	void setUp() {
 		fwdNode = new ForwardDicomNode("SOURCE-IT");
-		forwardService = new ForwardService(mock(ApplicationEventPublisher.class));
+		forwardService = new ForwardService(mock(ApplicationEventPublisher.class), null);
 	}
 
 	@Test

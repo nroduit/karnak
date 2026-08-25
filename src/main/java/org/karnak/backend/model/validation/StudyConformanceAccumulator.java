@@ -82,6 +82,13 @@ public class StudyConformanceAccumulator {
 
 	private final Set<String> failureReasons = new LinkedHashSet<>();
 
+	// Burned-in identity check: tag name -> number of instances it was detected in
+	private final Map<String, Integer> detectedIdentityTags = new LinkedHashMap<>();
+
+	private int imageIdentityCheckedInstances;
+
+	private int imageIdentityCheckErrors;
+
 	public StudyConformanceAccumulator(StudyKey key, String sourceAet, boolean deidentified,
 			CuratedValidationRules rules, Instant now) {
 		this.key = key;
@@ -98,6 +105,16 @@ public class StudyConformanceAccumulator {
 	 * @return false when this accumulator is already closed — the instance was not added
 	 */
 	public synchronized boolean add(InstanceConformanceData data, InstanceValidationResult result, Instant now) {
+		return add(data, result, null, now);
+	}
+
+	/**
+	 * Adds one forwarded instance, its validation result and the outcome of the burned-in
+	 * identity OCR check (null when the check was not run for this instance).
+	 * @return false when this accumulator is already closed - the instance was not added
+	 */
+	public synchronized boolean add(InstanceConformanceData data, InstanceValidationResult result,
+			ImageIdentityCheckOutcome identityOutcome, Instant now) {
 		if (closed) {
 			return false;
 		}
@@ -138,21 +155,46 @@ public class StudyConformanceAccumulator {
 			series.frameOfReferenceUids.add(frameOfReferenceUid);
 		}
 
-		if (!data.sent()) {
-			failedInstanceCount++;
-			if (data.failureReason() != null && failureReasons.size() < MAX_FAILURE_REASONS) {
-				failureReasons.add(data.failureReason());
-			}
-		}
-
-		if (result != null) {
-			Map<ConformanceFinding, FindingStats> findings = findingsBySopClass.computeIfAbsent(data.sopClassUid(),
-					uid -> new LinkedHashMap<>());
-			for (ConformanceFinding finding : result.findings()) {
-				findings.computeIfAbsent(finding, f -> new FindingStats(data.sopInstanceUid())).count++;
-			}
-		}
+		recordFailure(data);
+		recordFindings(data, result);
+		recordIdentityOutcome(identityOutcome);
 		return true;
+	}
+
+	// Called only from the synchronized add(...) overload, so no extra locking is needed.
+	private void recordFailure(InstanceConformanceData data) {
+		if (data.sent()) {
+			return;
+		}
+		failedInstanceCount++;
+		if (data.failureReason() != null && failureReasons.size() < MAX_FAILURE_REASONS) {
+			failureReasons.add(data.failureReason());
+		}
+	}
+
+	private void recordFindings(InstanceConformanceData data, InstanceValidationResult result) {
+		if (result == null) {
+			return;
+		}
+		Map<ConformanceFinding, FindingStats> findings = findingsBySopClass.computeIfAbsent(data.sopClassUid(),
+				uid -> new LinkedHashMap<>());
+		for (ConformanceFinding finding : result.findings()) {
+			findings.computeIfAbsent(finding, f -> new FindingStats(data.sopInstanceUid())).count++;
+		}
+	}
+
+	private void recordIdentityOutcome(ImageIdentityCheckOutcome identityOutcome) {
+		if (identityOutcome == null) {
+			return;
+		}
+		if (identityOutcome.failed()) {
+			imageIdentityCheckErrors++;
+			return;
+		}
+		imageIdentityCheckedInstances++;
+		for (String tag : identityOutcome.detectedTags()) {
+			detectedIdentityTags.merge(tag, 1, Integer::sum);
+		}
 	}
 
 	/**
@@ -184,10 +226,11 @@ public class StudyConformanceAccumulator {
 			.toList();
 
 		return new ConformanceReport(key, sourceAet, deidentified, patientId, patientName, studyDate, studyDescription,
-				accessionNumber, seriesByUid.size(), instanceCount, failedInstanceCount, List.copyOf(failureReasons),
+			accessionNumber, seriesByUid.size(), instanceCount, failedInstanceCount, List.copyOf(failureReasons),
 				Set.copyOf(modalities), Set.copyOf(sopClassUids), Set.copyOf(transferSyntaxUids), series,
 				summariesBySopClass, consistencyFindings, errorCount, warningCount, infoCount, errorCount == 0,
-				createdAt, lastUpdatedAt);
+			createdAt, lastUpdatedAt, Map.copyOf(detectedIdentityTags), imageIdentityCheckedInstances,
+			imageIdentityCheckErrors);
 	}
 
 	public synchronized Instant getLastUpdatedAt() {

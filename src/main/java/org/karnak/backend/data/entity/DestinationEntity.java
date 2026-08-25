@@ -149,6 +149,11 @@ public class DestinationEntity implements Serializable {
 	// Off by default: deeper recursion enlarges the snapshot kept in memory.
 	private boolean deepSequenceValidation;
 
+	// When true, each forwarded image is OCR-checked (via the de-identification image
+	// service) for identifying data still burned into the pixel data; the detected
+	// tags are listed in the conformance report. Off by default.
+	private boolean imageIdentityCheck;
+
 	// When true, this destination is a virtual "report-only" destination: the
 	// de-identified / tag-morphed dataset is validated and a conformance report is
 	// emailed, but nothing is forwarded to a real node (the DICOM is routed to

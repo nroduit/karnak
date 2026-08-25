@@ -49,6 +49,7 @@ import org.karnak.backend.exception.AbortException;
 import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -79,7 +80,7 @@ class ForwardServiceTest {
 	@BeforeEach
 	void setUp() {
 		publisher = mock(ApplicationEventPublisher.class);
-		forwardService = new ForwardService(publisher);
+		forwardService = new ForwardService(publisher, mock(DeidentifyImageService.class));
 		fwdNode = new ForwardDicomNode("SOURCE");
 	}
 

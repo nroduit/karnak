@@ -14,9 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.mock;
 
-import java.awt.Color;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -75,7 +73,7 @@ class ImageProcessingForwardIntegrationTest extends GatewayItTestSupport {
 	@BeforeEach
 	void setUp() {
 		fwdNode = new ForwardDicomNode("SOURCE-IT");
-		forwardService = new ForwardService(mock(ApplicationEventPublisher.class));
+		forwardService = new ForwardService(mock(ApplicationEventPublisher.class), null);
 	}
 
 	@Test
@@ -172,7 +170,7 @@ class ImageProcessingForwardIntegrationTest extends GatewayItTestSupport {
 	// ------------------------------------------------------------
 
 	private DicomForwardDestination destination(Scp scp, String outputTs, AttributeEditor editor) throws IOException {
-		return new DicomForwardDestination(scp.port() + 0L, advancedParams(), fwdNode, scp.node(), false, null,
+		return new DicomForwardDestination((long) scp.port(), advancedParams(), fwdNode, scp.node(), false, null,
 				List.of(editor), outputTs, true, 1);
 	}
 

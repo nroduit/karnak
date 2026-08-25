@@ -29,10 +29,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {
 
-	@Value("${async-events.core-pool-size:8}")
+	// 0 means auto: scale the pool with the CPU cores actually available
+	@Value("${async-events.core-pool-size:0}")
 	private int corePoolSize;
 
-	@Value("${async-events.max-pool-size:16}")
+	@Value("${async-events.max-pool-size:0}")
 	private int maxPoolSize;
 
 	@Value("${async-events.queue-capacity:10000}")
@@ -40,9 +41,12 @@ public class AsyncConfig implements AsyncConfigurer {
 
 	@Bean
 	public ThreadPoolTaskExecutor asyncEventExecutor() {
+		int cores = Runtime.getRuntime().availableProcessors();
+		int core = corePoolSize > 0 ? corePoolSize : Math.max(8, cores);
+		int max = maxPoolSize > 0 ? maxPoolSize : Math.max(16, 2 * cores);
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(corePoolSize);
-		executor.setMaxPoolSize(maxPoolSize);
+		executor.setCorePoolSize(core);
+		executor.setMaxPoolSize(Math.max(core, max));
 		executor.setQueueCapacity(queueCapacity);
 		executor.setThreadNamePrefix("karnak-async-");
 		executor.setAllowCoreThreadTimeOut(true);

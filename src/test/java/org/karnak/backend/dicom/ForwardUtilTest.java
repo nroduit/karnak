@@ -34,7 +34,7 @@ class ForwardUtilTest {
 		final ApplicationEventPublisher applicationEventPublisher = mock(ApplicationEventPublisher.class);
 
 		// Build mocked service
-		forwardService = new ForwardService(applicationEventPublisher);
+		forwardService = new ForwardService(applicationEventPublisher, null);
 	}
 
 	@Test

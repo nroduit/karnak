@@ -64,7 +64,7 @@ class GatewayThroughputTest extends GatewayItTestSupport {
 	void throughput_is_reported_across_growing_pool_sizes() throws Exception {
 		int count = 300;
 		int senderThreads = 8;
-		ForwardService forwardService = new ForwardService(mock(ApplicationEventPublisher.class));
+		ForwardService forwardService = new ForwardService(mock(ApplicationEventPublisher.class), null);
 		for (int poolSize : new int[] { 1, 2, 4, 8 }) {
 			Scp scp = startScp();
 			DicomForwardDestination dest = dicomDestination(fwdNode, scp, poolSize);
@@ -85,7 +85,7 @@ class GatewayThroughputTest extends GatewayItTestSupport {
 		// sleeps: far more sends are submitted than the queue holds, so caller-runs
 		// back-pressure
 		// kicks in. Nothing may be dropped and it must not deadlock.
-		ForwardService forwardService = new ForwardService(mock(ApplicationEventPublisher.class));
+		ForwardService forwardService = new ForwardService(mock(ApplicationEventPublisher.class), null);
 		ReflectionTestUtils.setField(forwardService, "parallelFanout", true);
 		ReflectionTestUtils.setField(forwardService, "fanoutMaxThreads", 2);
 		forwardService.initFanoutExecutor();

@@ -57,6 +57,13 @@ public abstract class ForwardDestination {
 	private boolean deidentified;
 
 	/**
+	 * When true, each forwarded image is OCR-checked for identifying data still burned
+	 * into the pixel data, and the findings are added to the conformance report.
+	 */
+	@Setter
+	private boolean imageIdentityCheck;
+
+	/**
 	 * When true, this is a virtual "report-only" destination: the dataset is processed
 	 * (editors applied) and a conformance report is produced, but it is never forwarded
 	 * to a real node — the DICOM is discarded (devnull).

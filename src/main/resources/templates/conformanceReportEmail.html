@@ -150,7 +150,7 @@
             <!-- Findings per SOP Class -->
             <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Conformance findings per SOP Class</h2>
             <p th:if="${report.findingsBySopClass().isEmpty()}"
-               style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf;">
+               style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
               No conformance finding.</p>
             <div th:each="sopEntry : ${report.findingsBySopClass()}" style="margin-bottom: 20px;">
               <p style="margin: 0 0 6px 0; font-size: 14px;">
@@ -158,7 +158,7 @@
                 <span style="font-family: Consolas, monospace; font-size: 11px; color: #7f8c8d;" th:text="' ' + ${sopEntry.key}"></span>
               </p>
               <p th:if="${sopEntry.value.isEmpty()}"
-                 style="margin: 0; padding: 6px 12px; background-color: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf;">
+                 style="margin: 0; padding: 6px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
                 No finding for this SOP Class.</p>
               <table th:if="${!sopEntry.value.isEmpty()}" style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -192,7 +192,7 @@
             <!-- Consistency -->
             <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Study consistency</h2>
             <p th:if="${report.consistencyFindings().isEmpty()}"
-               style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf;">
+               style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
               No consistency issue across the dataset.</p>
             <table th:if="${!report.consistencyFindings().isEmpty()}" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
               <tr>
@@ -217,6 +217,29 @@
                 <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${finding.found()}"></td>
               </tr>
             </table>
+
+            <!-- Identifying data on image -->
+            <th:block th:if="${imageIdentityCheckEnabled}">
+              <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Identifying data on image</h2>
+              <p th:if="${report.detectedIdentityTags().isEmpty()}"
+                 style="margin: 0 0 8px 0; padding: 8px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
+                No identifying data detected on the <b th:text="${report.imageIdentityCheckedInstances()}"></b> image(s) analyzed.</p>
+              <table th:unless="${report.detectedIdentityTags().isEmpty()}" style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                <tr>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Identifying attribute</th>
+                  <th style="padding: 6px 8px; text-align: right; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Images affected</th>
+                </tr>
+                <tr th:each="entry, rowStat : ${report.detectedIdentityTags()}"
+                    th:style="${rowStat.odd} ? 'background-color: #fdeaea;' : 'background-color: #fbdcdc;'">
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; color: #922b21;" th:text="${entry.key}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; text-align: right; color: #922b21;" th:text="${entry.value}"></td>
+                </tr>
+              </table>
+              <p th:if="${report.imageIdentityCheckErrors() > 0}"
+                 style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #fef5e7; color: #8a5709; border: 1px solid #f5cba7;">
+                <b th:text="${report.imageIdentityCheckErrors()}"></b> image(s) could not be analyzed (de-identification image service unavailable).</p>
+              <div th:unless="${report.imageIdentityCheckErrors() > 0}" style="font-size: 0; line-height: 12px; mso-line-height-rule: exactly;">&nbsp;</div>
+            </th:block>
 
             <!-- Legend -->
             <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">How to read this report</h2>

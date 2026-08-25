@@ -9,11 +9,11 @@
  */
 package org.karnak.backend.service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +25,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -55,13 +58,14 @@ import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.image.TransformedPlanarImage;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
+import org.karnak.backend.model.profilepipe.SensitiveTagDefinition;
+import org.karnak.backend.model.validation.ImageIdentityCheckInput;
 import org.karnak.backend.model.validation.InstanceConformanceData;
 import org.karnak.backend.model.validation.MetadataSnapshot;
+import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.karnak.backend.service.profilepipe.Profile;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
 import org.weasis.core.util.FileUtil;
 import org.weasis.core.util.LangUtil;
 import org.weasis.core.util.StreamUtil;
@@ -75,6 +79,11 @@ import org.weasis.dicom.web.DicomStowRS;
 import org.weasis.dicom.web.HttpException;
 import org.weasis.opencv.data.PlanarImage;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+
 @Service
 @Slf4j
 @NullUnmarked
@@ -83,6 +92,8 @@ public class ForwardService {
 	private static final String ERROR_WHEN_FORWARDING = "Error when forwarding to the final destination";
 
 	private final ApplicationEventPublisher applicationEventPublisher;
+
+	private final DeidentifyImageService deidentifyImageService;
 
 	@Value("${forward.parallel-fanout:true}")
 	private boolean parallelFanout;
@@ -99,8 +110,10 @@ public class ForwardService {
 	private ExecutorService fanoutExecutor;
 
 	@Autowired
-	public ForwardService(final ApplicationEventPublisher applicationEventPublisher) {
+	public ForwardService(final ApplicationEventPublisher applicationEventPublisher,
+			final DeidentifyImageService deidentifyImageService) {
 		this.applicationEventPublisher = applicationEventPublisher;
+		this.deidentifyImageService = deidentifyImageService;
 	}
 
 	@PostConstruct
@@ -369,14 +382,17 @@ public class ForwardService {
 				}
 
 				abortIfRequested(context, p, true, "DICOM association abort: ");
-				dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes, transformedPlanarImage);
+				dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes, transformedPlanarImage,
+						destination.isImageIdentityCheck());
 			}
 
 			launchCStore(p, streamSCU, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
 
 			progressNotify(destination, p.iuid(), p.cuid(), false, streamSCU);
-			monitor(sourceNode, destination, attributesOriginal, attributesToSend, true, false, null,
-					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable());
+			monitor(sourceNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable(),
+					buildImageIdentityCheckInput(destination, attributesOriginal, attributesToSend,
+							transformedPlanarImage, p.tsuid()));
 		}
 		catch (AbortException e) {
 			progressNotify(destination, p.iuid(), p.cuid(), true, streamSCU);
@@ -422,10 +438,11 @@ public class ForwardService {
 	}
 
 	private DataWriter buildDataWriterFromTransformedImage(AdaptTransferSyntax syntax, AttributeEditorContext context,
-			Attributes attributes, TransformedPlanarImage transformedPlanarImage) throws IOException {
+			Attributes attributes, TransformedPlanarImage transformedPlanarImage, boolean captureOutputImage)
+			throws IOException {
 		DataWriter dataWriter;
 		BytesWithImageDescriptor desc = ImageAdapter.imageTranscode(attributes, syntax, context);
-		boolean transformed = transformImage(attributes, context, transformedPlanarImage);
+		boolean transformed = transformImage(attributes, context, transformedPlanarImage, captureOutputImage);
 		dataWriter = ImageAdapter.buildDataWriter(attributes, syntax,
 				transformed ? transformedPlanarImage.getEditablePlanarImage() : null, desc);
 		return dataWriter;
@@ -436,12 +453,14 @@ public class ForwardService {
 	 * {@link TransformedPlanarImage} in place. The realized {@link PlanarImage} is
 	 * produced lazily by the editable when the data writer is consumed and stored back on
 	 * the same instance, so the caller that owns {@code transformedPlanarImage} is
-	 * responsible for releasing it.
+	 * responsible for releasing it. When {@code captureOutputImage} is {@code true}, the
+	 * masked output pixels are also captured (as raw little-endian samples) at realization
+	 * time for the conformance image-identity check.
 	 * @return {@code true} if a transformation (mask or defacing) was configured,
 	 * {@code false} otherwise
 	 */
 	private static boolean transformImage(Attributes attributes, AttributeEditorContext context,
-			TransformedPlanarImage transformedPlanarImage) {
+			TransformedPlanarImage transformedPlanarImage, boolean captureOutputImage) {
 		MaskArea m = context.getMaskArea();
 		boolean defacing = LangUtil.emptyToFalse(context.getProperties().getProperty(Defacer.APPLY_DEFACING));
 
@@ -452,18 +471,24 @@ public class ForwardService {
 
 		if (m != null || defacing || (additionalMasks != null && !additionalMasks.isEmpty())) {
 			Editable<PlanarImage> editablePlanarImage = buildEditablePlanarImage(attributes, m, additionalMasks,
-					defacing, transformedPlanarImage);
+					defacing, transformedPlanarImage, captureOutputImage);
 			transformedPlanarImage.setEditablePlanarImage(editablePlanarImage);
+			transformedPlanarImage.setTransformApplied(true);
 			return true;
 		}
 		return false;
 	}
 
 	private static Editable<PlanarImage> buildEditablePlanarImage(Attributes attributes, MaskArea m,
-			List<MaskArea> additionalMasks, boolean defacing, TransformedPlanarImage transformedPlanarImage) {
+			List<MaskArea> additionalMasks, boolean defacing, TransformedPlanarImage transformedPlanarImage,
+			boolean captureOutputImage) {
 		return img -> {
 			PlanarImage planarImage = buildPlanarImage(attributes, m, additionalMasks, defacing, img);
 			transformedPlanarImage.setPlanarImage(planarImage);
+			if (captureOutputImage) {
+				// Capture the output pixels here, while the masked image is still alive
+				transformedPlanarImage.setPixelDataBytes(rawBytesFromPlanarImage(planarImage));
+			}
 			return planarImage;
 		};
 	}
@@ -474,17 +499,68 @@ public class ForwardService {
 		if (defacing) {
 			image = Defacer.apply(attributes, image);
 		}
-		// Apply the primary mask (from static config or the first API mask)
+		// Apply the primary mask (from static config or the first API mask). Each draw
+		// returns a new image, so the previous intermediate must be released or its native
+		// OpenCV Mat leaks (off-heap, invisible to the JVM). The source image (img) is owned
+		// by the ImageAdapter pipeline and must never be released here.
 		if (m != null) {
-			image = MaskArea.drawShape(image.toMat(), m);
+			PlanarImage masked = MaskArea.drawShape(image.toMat(), m);
+			releaseIntermediate(image, img, masked);
+			image = masked;
 		}
 		// Apply each additional mask (from the de-identification image API).
 		if (additionalMasks != null) {
 			for (MaskArea additional : additionalMasks) {
-				image = MaskArea.drawShape(image.toMat(), additional);
+				PlanarImage masked = MaskArea.drawShape(image.toMat(), additional);
+				releaseIntermediate(image, img, masked);
+				image = masked;
 			}
 		}
 		return image;
+	}
+
+	/**
+	 * Releases an intermediate image produced while chaining transformations, unless it is
+	 * the source image (owned by the {@link ImageAdapter} pipeline) or the freshly produced
+	 * image that is kept for the next step / final output.
+	 */
+	private static void releaseIntermediate(PlanarImage current, PlanarImage source, PlanarImage next) {
+		if (current != source && current != next && !current.isReleased()) {
+			current.release();
+		}
+	}
+
+	/**
+	 * Serializes the realized (masked/defaced) output image to raw little-endian DICOM
+	 * pixel bytes for the conformance image-identity check. Supports 8- and 16-bit samples
+	 * (the depths of the modalities that carry burned-in identity); returns an empty array
+	 * for anything else so the caller falls back to the sent dataset's own pixel data.
+	 */
+	private static byte[] rawBytesFromPlanarImage(PlanarImage image) {
+		if (image == null) {
+			return new byte[0];
+		}
+		Mat mat = image.toMat();
+		if (mat == null || mat.empty()) {
+			return new byte[0];
+		}
+		// A single Mat.get over the whole buffer requires a continuous layout.
+		Mat continuous = mat.isContinuous() ? mat : mat.clone();
+		int count = (int) continuous.total() * continuous.channels();
+		int depth = CvType.depth(continuous.type());
+		if (depth == CvType.CV_8U || depth == CvType.CV_8S) {
+			byte[] data = new byte[count];
+			continuous.get(0, 0, data);
+			return data;
+		}
+		if (depth == CvType.CV_16U || depth == CvType.CV_16S) {
+			short[] samples = new short[count];
+			continuous.get(0, 0, samples);
+			ByteBuffer buffer = ByteBuffer.allocate(count * 2).order(ByteOrder.LITTLE_ENDIAN);
+			buffer.asShortBuffer().put(samples);
+			return buffer.array();
+		}
+		return new byte[0];
 	}
 
 	private static List<File> cleanOrGetBulkDataFiles(DicomInputStream in, boolean clean) {
@@ -536,14 +612,17 @@ public class ForwardService {
 				}
 
 				abortIfRequested(context, p, false, "DICOM association abort. ");
-				dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes, transformedPlanarImage);
+				dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes, transformedPlanarImage,
+						destination.isImageIdentityCheck());
 			}
 
 			launchCStore(p, streamSCU, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
 
 			progressNotify(destination, p.iuid(), p.cuid(), false, streamSCU);
-			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, null,
-					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable());
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable(),
+					buildImageIdentityCheckInput(destination, attributesOriginal, attributesToSend,
+							transformedPlanarImage, p.tsuid()));
 		}
 		catch (AbortException e) {
 			progressNotify(destination, p.iuid(), p.cuid(), true, streamSCU);
@@ -579,6 +658,7 @@ public class ForwardService {
 		List<File> files;
 		Attributes attributesToSend = new Attributes();
 		Attributes attributesOriginal = new Attributes();
+		TransformedPlanarImage transformedPlanarImage = new TransformedPlanarImage();
 		try {
 			List<AttributeEditor> editors = destination.getDicomEditors();
 			DicomStowRS stow = destination.getStowrsSingleFile();
@@ -621,12 +701,15 @@ public class ForwardService {
 					stow.uploadDicom(attributes, syntax.getOriginal());
 				}
 				else {
-					uploadPayLoadFromTransformedImage(stow, syntax, context, attributes, desc);
+					uploadPayLoadFromTransformedImage(stow, syntax, context, attributes, desc, transformedPlanarImage,
+							destination.isImageIdentityCheck());
 				}
 			}
 			progressNotify(destination, p.iuid(), p.cuid(), false, 0);
-			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, null,
-					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable());
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable(),
+					buildImageIdentityCheckInput(destination, attributesOriginal, attributesToSend,
+							transformedPlanarImage, p.tsuid()));
 		}
 		catch (AbortException e) {
 			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
@@ -655,10 +738,10 @@ public class ForwardService {
 	}
 
 	private void uploadPayLoadFromTransformedImage(DicomStowRS stow, AdaptTransferSyntax syntax,
-			AttributeEditorContext context, Attributes attributes, BytesWithImageDescriptor desc) throws Exception {
-		TransformedPlanarImage transformedPlanarImage = new TransformedPlanarImage();
+			AttributeEditorContext context, Attributes attributes, BytesWithImageDescriptor desc,
+			TransformedPlanarImage transformedPlanarImage, boolean captureOutputImage) throws Exception {
 		try {
-			if (!transformImage(attributes, context, transformedPlanarImage)) {
+			if (!transformImage(attributes, context, transformedPlanarImage, captureOutputImage)) {
 				throw new IllegalStateException("Cannot transcode image for STOW-RS upload.");
 			}
 			stow.uploadPayload(DicomStowRS.createCompressedImagePayload(attributes, syntax, desc,
@@ -675,6 +758,7 @@ public class ForwardService {
 			throws IOException {
 		Attributes attributesToSend = new Attributes();
 		Attributes attributesOriginal = new Attributes();
+		TransformedPlanarImage transformedPlanarImage = new TransformedPlanarImage();
 		try {
 			List<AttributeEditor> editors = destination.getDicomEditors();
 			DicomStowRS stow = destination.getStowrsSingleFile();
@@ -698,12 +782,15 @@ public class ForwardService {
 					stow.uploadDicom(attributes, syntax.getOriginal());
 				}
 				else {
-					uploadPayLoadFromTransformedImage(stow, syntax, context, attributes, desc);
+					uploadPayLoadFromTransformedImage(stow, syntax, context, attributes, desc, transformedPlanarImage,
+							destination.isImageIdentityCheck());
 				}
 			}
 			progressNotify(destination, p.iuid(), p.cuid(), false, 0);
-			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, null,
-					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable());
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), syntax.getSuitable(),
+					buildImageIdentityCheckInput(destination, attributesOriginal, attributesToSend,
+							transformedPlanarImage, p.tsuid()));
 		}
 		catch (HttpException httpException) {
 			if (httpException.getStatusCode() != 409) {
@@ -772,8 +859,9 @@ public class ForwardService {
 			abortIfRequested(context, p, true, "Virtual destination abort: ");
 			// No network send: the dataset is routed to devnull.
 			progressNotify(destination, p.iuid(), p.cuid(), false, 0);
-			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, null,
-					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
+			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
+					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid(),
+					buildImageIdentityCheckInput(destination, attributesOriginal, attributesToSend, null, p.tsuid()));
 		}
 		catch (AbortException e) {
 			progressNotify(destination, p.iuid(), p.cuid(), true, 0);
@@ -959,6 +1047,13 @@ public class ForwardService {
 	private void monitor(ForwardDicomNode sourceNode, ForwardDestination destination, Attributes attributesOriginal,
 			Attributes attributesToSend, boolean sent, boolean error, boolean duplicate, String reason, String modality,
 			String sopClassUid, String tsuidSent) {
+		monitor(sourceNode, destination, attributesOriginal, attributesToSend, sent, error, duplicate, reason, modality,
+				sopClassUid, tsuidSent, null);
+	}
+
+	private void monitor(ForwardDicomNode sourceNode, ForwardDestination destination, Attributes attributesOriginal,
+			Attributes attributesToSend, boolean sent, boolean error, boolean duplicate, String reason, String modality,
+			String sopClassUid, String tsuidSent, ImageIdentityCheckInput imageIdentityCheckInput) {
 		applicationEventPublisher
 			.publishEvent(new TransferMonitoringEvent(MonitoringEntry.of(sourceNode.getId(), destination.getId(),
 					attributesOriginal, attributesToSend, sent, error, duplicate, reason, modality, sopClassUid)));
@@ -977,16 +1072,63 @@ public class ForwardService {
 				boolean deep = destination.isDeepSequenceValidation();
 				int snapshotDepth = deep ? conformanceMaxSequenceDepth : MetadataSnapshot.DEFAULT_MAX_SEQUENCE_DEPTH;
 				MetadataSnapshot snapshot = MetadataSnapshot.of(attributesToSend, snapshotDepth);
-				applicationEventPublisher
-					.publishEvent(new ConformanceCollectEvent(InstanceConformanceData.of(sourceNode.getId(),
-							destination.getId(), sourceNode.getAet(), tsuidSent, sent, reason,
-							destination.isCheckValueConformity(), deep, destination.isDeidentified(), snapshot)));
+				applicationEventPublisher.publishEvent(
+						new ConformanceCollectEvent(InstanceConformanceData.of(sourceNode.getId(), destination.getId(),
+								sourceNode.getAet(), tsuidSent, sent, reason, destination.isCheckValueConformity(),
+								deep, destination.isDeidentified(), snapshot, imageIdentityCheckInput)));
 			}
 			catch (RuntimeException e) {
 				log.error("Cannot build conformance snapshot for instance {}: {}",
 						attributesToSend.getString(Tag.SOPInstanceUID), e.getMessage());
 			}
 		}
+	}
+
+	/**
+	 * Captures, on the forwarding thread, the encoded pixel data the receiver gets and the
+	 * original identifying values so the conformance report pipeline can later query the
+	 * de-identification image API for burned-in identity. When the destination masked or
+	 * defaced the image, the check runs on the realized <em>output</em> pixels captured at
+	 * transformation time (raw little-endian, hence {@link UID#ExplicitVRLittleEndian});
+	 * When no image transformation was applied (metadata-only de-identification,
+	 * pass-through, or a virtual destination), the sent pixels equal {@code attributesToSend}'s
+	 * own pixel data, which is read here. The pixel bytes must be read on this thread because
+	 * their bulk-data temp files are cleaned right after the transfer.
+	 * Returns {@code null} when the check is disabled or
+	 * the instance carries no readable pixel data.
+	 */
+	private ImageIdentityCheckInput buildImageIdentityCheckInput(ForwardDestination destination,
+			Attributes attributesOriginal, Attributes attributesToSend, TransformedPlanarImage transformedPlanarImage,
+			String originalTsuid) {
+		if (!destination.isImageIdentityCheck()) {
+			return null;
+		}
+		byte[] imageBytes;
+		String tsuid;
+		boolean transformApplied = transformedPlanarImage != null && transformedPlanarImage.isTransformApplied();
+		if (transformApplied) {
+			// The image was masked/defaced: the check must run on the transformed output
+			// pixels the receiver gets. The sent dataset (attributesToSend) still holds the
+			// original, unmasked PixelData bulk reference (the mask is drawn lazily into the
+			// encoded stream, never written back).
+			// If the output pixels could not be captured, skip the check.
+			byte[] outputPixels = transformedPlanarImage.getPixelDataBytes();
+			if (outputPixels == null || outputPixels.length == 0) {
+				return null;
+			}
+			imageBytes = outputPixels;
+			tsuid = UID.ExplicitVRLittleEndian;
+		}
+		else {
+			// No image transformation: the sent pixels equal the sent dataset's own pixels.
+			imageBytes = deidentifyImageService.extractPixelDataBytes(attributesToSend);
+			if (imageBytes.length == 0) {
+				return null;
+			}
+			tsuid = originalTsuid;
+		}
+		return new ImageIdentityCheckInput(imageBytes, SensitiveTagDefinition.extractSensitiveData(attributesOriginal),
+				tsuid);
 	}
 
 }

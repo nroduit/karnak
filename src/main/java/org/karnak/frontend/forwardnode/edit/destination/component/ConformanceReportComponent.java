@@ -51,6 +51,10 @@ public class ConformanceReportComponent extends VerticalLayout {
 	@Getter
 	private Checkbox deepSequenceValidation;
 
+	@Setter
+	@Getter
+	private Checkbox imageIdentityCheck;
+
 	private Div optionsDiv;
 
 	public ConformanceReportComponent() {
@@ -69,6 +73,7 @@ public class ConformanceReportComponent extends VerticalLayout {
 		buildConformanceReportNotify();
 		buildCheckValueConformity();
 		buildDeepSequenceValidation();
+		buildImageIdentityCheck();
 	}
 
 	private void buildVirtualDestination() {
@@ -114,6 +119,21 @@ public class ConformanceReportComponent extends VerticalLayout {
 				"Recurse the conformance checks through every sequence level (e.g. the SR content tree or enhanced multiframe functional groups) instead of only the first one");
 	}
 
+	private void buildImageIdentityCheck() {
+		imageIdentityCheck = new Checkbox("Check for identifying data burned into the image");
+		// By default deactivate: relies on the external de-identification image service
+		imageIdentityCheck.setValue(false);
+		// Always-visible reminder: this option calls out to the external OCR service
+		imageIdentityCheck.setHelperText(
+				"Requires the de-identification image service to be running and reachable at OCR_URL (default http://localhost:8000)");
+		UIS.setTooltip(imageIdentityCheck,
+				"Run OCR on each forwarded image (via the de-identification image service) and list, in the conformance "
+						+ "report, which patient-identifying DICOM tag values are still visible in the pixel data. "
+						+ "This requires the external de-identification image service to be running and reachable at OCR_URL "
+						+ "(default http://localhost:8000). When it is unavailable, the images cannot be analysed and the "
+						+ "report notes them as not analysed; the rest of the conformance report is unaffected.");
+	}
+
 	private void buildOptionsDiv() {
 		optionsDiv = new Div();
 		// By default hide
@@ -148,7 +168,8 @@ public class ConformanceReportComponent extends VerticalLayout {
 		optionsDiv
 			.add(UIS.setWidthFull(new VerticalLayout(UIS.setWidthFull(new HorizontalLayout(conformanceReportNotify)),
 					UIS.setWidthFull(new HorizontalLayout(checkValueConformity)),
-					UIS.setWidthFull(new HorizontalLayout(deepSequenceValidation)))));
+					UIS.setWidthFull(new HorizontalLayout(deepSequenceValidation)),
+					UIS.setWidthFull(new HorizontalLayout(imageIdentityCheck)))));
 		add(UIS.setWidthFull(new HorizontalLayout(virtualDestination)),
 				UIS.setWidthFull(new HorizontalLayout(buildConformanceReport)), optionsDiv);
 	}
@@ -172,6 +193,9 @@ public class ConformanceReportComponent extends VerticalLayout {
 
 		binder.forField(getDeepSequenceValidation())
 			.bind(DestinationEntity::isDeepSequenceValidation, DestinationEntity::setDeepSequenceValidation);
+
+		binder.forField(getImageIdentityCheck())
+			.bind(DestinationEntity::isImageIdentityCheck, DestinationEntity::setImageIdentityCheck);
 	}
 
 }

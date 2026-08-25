@@ -26,6 +26,7 @@ import org.dcm4che3.data.VR;
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
+import org.karnak.backend.model.profilepipe.ReportingResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -125,7 +126,7 @@ public class DeidentifyImageService {
 	public List<MaskBody> callDeidentifyImageApi(Attributes dcmAttributes, Map<String, String> sensitiveData,
 			String tsuid) {
 		// Extract pixel data bytes from the DICOM instance
-		byte[] imageBytes = this.extractPixelDataBytes(dcmAttributes);
+		byte[] imageBytes = extractPixelDataBytes(dcmAttributes);
 		if (imageBytes.length == 0) {
 			log.warn("Could not extract pixel data from DICOM instance — skipping API call");
 			return Collections.emptyList();
@@ -134,7 +135,7 @@ public class DeidentifyImageService {
 		// Serialize the sensitive data map to JSON
 		String sensitiveDataJson;
 		try {
-			sensitiveDataJson = this.objectMapper.writeValueAsString(sensitiveData);
+			sensitiveDataJson = objectMapper.writeValueAsString(sensitiveData);
 		}
 		catch (JsonProcessingException ex) {
 			log.error("Failed to serialize sensitive data to JSON", ex);
@@ -142,43 +143,11 @@ public class DeidentifyImageService {
 		}
 
 		// Build the multipart request body
-		MultiValueMap<String, HttpEntity<?>> multipartBody = this.generateMultipartBody(dcmAttributes, imageBytes,
+		MultiValueMap<String, HttpEntity<?>> multipartBody = generateMultipartBody(dcmAttributes, imageBytes,
 				sensitiveDataJson, tsuid);
 
 		// Send the POST request and get the JSON response
-		String jsonResponse;
-		try {
-			jsonResponse = this.restClient.post()
-				.uri("/deidentify-image")
-				.contentType(MediaType.MULTIPART_FORM_DATA)
-				.body(multipartBody)
-				.accept(MediaType.parseMediaType("application/json; version=1"))
-				.retrieve()
-				.body(String.class);
-		}
-		catch (HttpClientErrorException ex) {
-			// Errors 4xx
-			throw new DeidentifyImageException(
-					String.format("Client error %s from de-identification image API — check the request format: %s",
-							ex.getStatusCode(), ex.getMessage()),
-					ex);
-		}
-		catch (HttpServerErrorException ex) {
-			// Errors 5xx
-			throw new DeidentifyImageException(String.format(
-					"Server error %s from de-identification image API — service may be temporarily unavailable",
-					ex.getStatusCode()), ex);
-		}
-		catch (ResourceAccessException ex) {
-			throw new DeidentifyImageException(
-					String.format("Cannot reach de-identification image API at %s — service is unavailable: %s",
-							this.apiBaseUrl, ex.getMessage()),
-					ex);
-		}
-		catch (Exception ex) {
-			throw new DeidentifyImageException(
-					"Unexpected error calling de-identification image API: " + ex.getMessage(), ex);
-		}
+		String jsonResponse = postMultipart("/deidentify-image", "de-identification image API", multipartBody);
 
 		if (jsonResponse == null) {
 			log.warn("Empty response body from de-identification image API — no masks to apply");
@@ -188,14 +157,119 @@ public class DeidentifyImageService {
 		// Parse the JSON response
 		// Check the SOP UID
 		// Extract the masks field
-		return this.extractMasksFromJson(jsonResponse, dcmAttributes.getString(Tag.SOPInstanceUID));
+		return extractMasksFromJson(jsonResponse, dcmAttributes.getString(Tag.SOPInstanceUID));
+	}
+
+	/**
+	 * Sends the received image and its original identifying values to the external
+	 * {@code /reporting} endpoint and returns the names of the DICOM tags whose value was
+	 * found burned into the pixel data.
+	 * @param metadata the (metadata-only) DICOM attributes describing the image geometry
+	 * @param imageBytes the encoded pixel data
+	 * @param sensitiveData a map of tag name to tag value for the identifying information
+	 * to look for
+	 * @param tsuid the transfer syntax the {@code imageBytes} are encoded with
+	 * @param sopInstanceUid the SOP Instance UID echoed back for concurrency safety
+	 * @throws DeidentifyImageException if there is a problem when calling the reporting
+	 * API
+	 * @return the detected identifying tag names, or an empty list when none were found
+	 */
+	public List<String> callReportingApi(Attributes metadata, byte[] imageBytes, Map<String, String> sensitiveData,
+			String tsuid, String sopInstanceUid) {
+		if (imageBytes == null || imageBytes.length == 0) {
+			log.warn("No pixel data to inspect - skipping reporting API call");
+			return Collections.emptyList();
+		}
+
+		String sensitiveDataJson;
+		try {
+			sensitiveDataJson = objectMapper.writeValueAsString(sensitiveData);
+		}
+		catch (JsonProcessingException ex) {
+			throw new DeidentifyImageException("Failed to serialize sensitive data to JSON for the reporting API", ex);
+		}
+
+		MultiValueMap<String, HttpEntity<?>> multipartBody = generateMultipartBody(metadata, imageBytes,
+				sensitiveDataJson, tsuid);
+
+		String jsonResponse = postMultipart("/reporting", "reporting API", multipartBody);
+
+		return extractDetectedTagsFromJson(jsonResponse, sopInstanceUid);
+	}
+
+	/**
+	 * Sends the multipart body to {@code endpoint} and returns the raw JSON response body.
+	 * Transport failures and HTTP error responses are translated into
+	 * {@link DeidentifyImageException}, with {@code apiLabel} identifying the target API in
+	 * the message.
+	 * @return the response body, or {@code null} when the API returned an empty body
+	 */
+	private @Nullable String postMultipart(String endpoint, String apiLabel,
+			MultiValueMap<String, HttpEntity<?>> multipartBody) {
+		try {
+			return restClient.post()
+				.uri(endpoint)
+				.contentType(MediaType.MULTIPART_FORM_DATA)
+				.body(multipartBody)
+				.accept(MediaType.parseMediaType("application/json; version=1"))
+				.retrieve()
+				.body(String.class);
+		}
+		catch (HttpClientErrorException ex) {
+			// Errors 4xx
+			throw new DeidentifyImageException(String.format("Client error %s from %s - check the request format: %s",
+					ex.getStatusCode(), apiLabel, ex.getMessage()), ex);
+		}
+		catch (HttpServerErrorException ex) {
+			// Errors 5xx
+			throw new DeidentifyImageException(String.format(
+					"Server error %s from %s - service may be temporarily unavailable", ex.getStatusCode(), apiLabel),
+					ex);
+		}
+		catch (ResourceAccessException ex) {
+			throw new DeidentifyImageException(String.format("Cannot reach %s at %s - service is unavailable: %s",
+					apiLabel, apiBaseUrl, ex.getMessage()), ex);
+		}
+		catch (Exception ex) {
+			throw new DeidentifyImageException("Unexpected error calling " + apiLabel + ": " + ex.getMessage(), ex);
+		}
+	}
+
+	/**
+	 * Parses the JSON string returned by the {@code /reporting} endpoint and extracts the
+	 * {@code detected_tags} field.
+	 * @param jsonContent the raw JSON string returned by the API
+	 * @return the detected identifying tag names, or an empty list if none found
+	 */
+	List<String> extractDetectedTagsFromJson(String jsonContent, String expectedSopInstanceUID) {
+		if (jsonContent == null || jsonContent.isBlank()) {
+			log.debug("Empty JSON response from reporting API - no identifying data reported");
+			return Collections.emptyList();
+		}
+
+		ReportingResponse response;
+		try {
+			response = objectMapper.readValue(jsonContent, ReportingResponse.class);
+		}
+		catch (Exception ex) {
+			throw new DeidentifyImageException("Failed to parse JSON response from the reporting API", ex);
+		}
+
+		if (response.sopInstanceUid() != null && !response.sopInstanceUid().equals(expectedSopInstanceUID)) {
+			log.error(
+					"The SOP Instance UID in the reporting API response ({}) does not match the expected UID ({}) - ignoring detected tags",
+					response.sopInstanceUid(), expectedSopInstanceUID);
+			return Collections.emptyList();
+		}
+
+		return response.detectedTags() == null ? Collections.emptyList() : response.detectedTags();
 	}
 
 	MultiValueMap<String, HttpEntity<?>> generateMultipartBody(Attributes dcmAttributes, byte[] imageBytes,
 			String sensitiveDataJson, String tsuid) {
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
-		TransferSyntaxMapping mapping = this.resolveMapping(tsuid);
+		TransferSyntaxMapping mapping = resolveMapping(tsuid);
 		bodyBuilder.part("image", new ByteArrayResource(imageBytes) {
 			@Override
 			public String getFilename() {
@@ -203,40 +277,40 @@ public class DeidentifyImageService {
 			}
 		}).contentType(mapping.mediaType());
 
-		this.addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
-		this.addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
-		this.addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
+		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
+		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
+		addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
 
-		this.addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));
-		this.addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
-		this.addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
-		this.addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
-		this.addTextPart(bodyBuilder, "photometric_interpretation",
+		addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));
+		addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
+		addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
+		addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
+		addTextPart(bodyBuilder, "photometric_interpretation",
 				dcmAttributes.getString(Tag.PhotometricInterpretation));
 
 		if (mapping.filename().endsWith(".raw")) {
-			this.addRawPixelDataParts(bodyBuilder, dcmAttributes);
+			addRawPixelDataParts(bodyBuilder, dcmAttributes);
 		}
 
 		return bodyBuilder.build();
 	}
 
 	private void addRawPixelDataParts(MultipartBodyBuilder bodyBuilder, Attributes attrs) {
-		this.addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
-		this.addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
-		this.addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
-		this.addOptionalDoublePart(bodyBuilder, attrs, "window_width", Tag.WindowWidth, 0.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
+		addOptionalDoublePart(bodyBuilder, attrs, "window_width", Tag.WindowWidth, 0.0);
 
-		String paletteLutJson = this.buildPaletteColorLutJson(attrs);
+		String paletteLutJson = buildPaletteColorLutJson(attrs);
 		if (paletteLutJson != null) {
-			this.addTextPart(bodyBuilder, "palette_color_lut", paletteLutJson);
+			addTextPart(bodyBuilder, "palette_color_lut", paletteLutJson);
 		}
 	}
 
 	private void addOptionalDoublePart(MultipartBodyBuilder bodyBuilder, Attributes attrs, String name, int tag,
 			double defaultValue) {
 		if (attrs.containsValue(tag)) {
-			this.addTextPart(bodyBuilder, name, attrs.getDouble(tag, defaultValue));
+			addTextPart(bodyBuilder, name, attrs.getDouble(tag, defaultValue));
 		}
 	}
 
@@ -257,7 +331,7 @@ public class DeidentifyImageService {
 		}
 
 		try {
-			DeidentifyImageResponse response = this.objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
+			DeidentifyImageResponse response = objectMapper.readValue(jsonContent, DeidentifyImageResponse.class);
 
 			if (response.sopInstanceUid() == null) {
 				log.error("The SOP Instance UID in the API response is null");
@@ -290,7 +364,7 @@ public class DeidentifyImageService {
 	 * @param dcmAttributes the DICOM attributes containing pixel data
 	 * @return the pixel data as a byte array, or an empty array if extraction fails
 	 */
-	byte[] extractPixelDataBytes(Attributes dcmAttributes) {
+	public byte[] extractPixelDataBytes(Attributes dcmAttributes) {
 		if (dcmAttributes == null) {
 			log.error("The passed DCMAttributes is null !");
 			return EMPTY_BYTE_ARRAY;
@@ -298,7 +372,11 @@ public class DeidentifyImageService {
 
 		Object pixelData = dcmAttributes.getValue(Tag.PixelData);
 
-		if (pixelData instanceof BulkData bulkData) {
+		if (pixelData instanceof byte[] rawBytes) {
+			// Uncompressed pixel data read fully in memory.
+			return rawBytes;
+		}
+		else if (pixelData instanceof BulkData bulkData) {
 			// BulkData = uncompressed pixel data stored as raw bytes.
 			try {
 				return bulkData.toBytes(VR.OW, bulkData.bigEndian());
@@ -309,27 +387,33 @@ public class DeidentifyImageService {
 			}
 		}
 		else if (pixelData instanceof Fragments fragments) {
-			// Fragments = compressed pixel data (JPEG, JPEG2000, etc.).
-			// Index 0 is the offset table (usually empty bytes), index 1+ are the
-			// actual compressed image frames. We extract the first actual frame.
-			if (fragments.size() > 1) {
-				Object frame = fragments.get(1);
-				if (frame instanceof byte[] bytes) {
-					return bytes;
+			return extractPixelDataBytesFromFragments(fragments);
+		}
+
+		log.warn("Pixel data is not BulkData or Fragments — cannot extract image bytes");
+		return EMPTY_BYTE_ARRAY;
+	}
+
+	private byte[] extractPixelDataBytesFromFragments(Fragments fragments) {
+		// Fragments = compressed pixel data (JPEG, JPEG2000, etc.).
+		// Index 0 is the offset table (usually empty bytes), index 1+ are the
+		// actual compressed image frames. We extract the first actual frame.
+		if (fragments.size() > 1) {
+			Object frame = fragments.get(1);
+			if (frame instanceof byte[] bytes) {
+				return bytes;
+			}
+			else if (frame instanceof BulkData frameBulkData) {
+				try {
+					return frameBulkData.toBytes(fragments.vr(), frameBulkData.bigEndian());
 				}
-				else if (frame instanceof BulkData frameBulkData) {
-					try {
-						return frameBulkData.toBytes(fragments.vr(), frameBulkData.bigEndian());
-					}
-					catch (IOException ex) {
-						log.error("Failed to read Fragments frame BulkData bytes", ex);
-						return EMPTY_BYTE_ARRAY;
-					}
+				catch (IOException ex) {
+					log.error("Failed to read Fragments frame BulkData bytes", ex);
+					return EMPTY_BYTE_ARRAY;
 				}
 			}
 		}
 
-		log.warn("Pixel data is not BulkData or Fragments — cannot extract image bytes");
 		return EMPTY_BYTE_ARRAY;
 	}
 
@@ -362,9 +446,9 @@ public class DeidentifyImageService {
 			return null;
 		}
 
-		int[] redLut = this.extractLutData(dcmAttributes, Tag.RedPaletteColorLookupTableData, redDesc);
-		int[] greenLut = this.extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
-		int[] blueLut = this.extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
+		int[] redLut = extractLutData(dcmAttributes, Tag.RedPaletteColorLookupTableData, redDesc);
+		int[] greenLut = extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
+		int[] blueLut = extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
 		if (redLut.length == 0 || greenLut.length == 0 || blueLut.length == 0) {
 			log.warn("PALETTE COLOR photometric but missing LUT data");
 			return null;
@@ -376,7 +460,7 @@ public class DeidentifyImageService {
 		lutMap.put("blue", blueLut);
 
 		try {
-			return this.objectMapper.writeValueAsString(lutMap);
+			return objectMapper.writeValueAsString(lutMap);
 		}
 		catch (JsonProcessingException ex) {
 			log.error("Failed to serialize Palette Color LUT to JSON", ex);
