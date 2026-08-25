@@ -13,22 +13,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * One aggregated row per (forward node, destination, series) matching the search criteria.
- * Exposed to the API as a plain model: the internal database ids are not leaked, only the
- * stable {@code forwardNodeUuid} / {@code destinationUuid} identifiers.
+ * One aggregated row per (forward node, destination, series) matching the search
+ * criteria. Exposed to the API as a plain model: the internal database ids are not
+ * leaked, only the stable {@code forwardNodeUuid} / {@code destinationUuid} identifiers.
  */
-public record TransferSeriesStatusModel(UUID forwardNodeUuid, UUID destinationUuid,
-										String forwardAeTitle, String forwardDescription,
-										String destinationDescription,
-										String patientIdOriginal, String patientIdToSend,
-										String accessionNumberOriginal, String accessionNumberToSend,
-										String studyDescriptionOriginal, String studyDescriptionToSend,
-										LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend,
-										String studyUidOriginal, String studyUidToSend,
-										String serieDescriptionOriginal, String serieDescriptionToSend,
-										LocalDateTime serieDateOriginal, LocalDateTime serieDateToSend,
-										String serieUidOriginal, String serieUidToSend,
-										String modality, String sopClassUids,
-										long instances, long retries, long sent, long errors, long excluded,
-										LocalDateTime firstSeen, LocalDateTime lastSeen) {
+public record TransferSeriesStatusModel(UUID forwardNodeUuid, UUID destinationUuid, String forwardAeTitle,
+		String forwardDescription, String destinationDescription, String patientIdOriginal, String patientIdToSend,
+		String accessionNumberOriginal, String accessionNumberToSend, String studyDescriptionOriginal,
+		String studyDescriptionToSend, LocalDateTime studyDateOriginal, LocalDateTime studyDateToSend,
+		String studyUidOriginal, String studyUidToSend, String serieDescriptionOriginal, String serieDescriptionToSend,
+		LocalDateTime serieDateOriginal, LocalDateTime serieDateToSend, String serieUidOriginal, String serieUidToSend,
+		String modality, String sopClassUids, long instances, long retries, long sent, long errors, long excluded,
+		LocalDateTime firstSeen, LocalDateTime lastSeen) {
 }

@@ -454,8 +454,8 @@ public class ForwardService {
 	 * produced lazily by the editable when the data writer is consumed and stored back on
 	 * the same instance, so the caller that owns {@code transformedPlanarImage} is
 	 * responsible for releasing it. When {@code captureOutputImage} is {@code true}, the
-	 * masked output pixels are also captured (as raw little-endian samples) at realization
-	 * time for the conformance image-identity check.
+	 * masked output pixels are also captured (as raw little-endian samples) at
+	 * realization time for the conformance image-identity check.
 	 * @return {@code true} if a transformation (mask or defacing) was configured,
 	 * {@code false} otherwise
 	 */
@@ -500,8 +500,10 @@ public class ForwardService {
 			image = Defacer.apply(attributes, image);
 		}
 		// Apply the primary mask (from static config or the first API mask). Each draw
-		// returns a new image, so the previous intermediate must be released or its native
-		// OpenCV Mat leaks (off-heap, invisible to the JVM). The source image (img) is owned
+		// returns a new image, so the previous intermediate must be released or its
+		// native
+		// OpenCV Mat leaks (off-heap, invisible to the JVM). The source image (img) is
+		// owned
 		// by the ImageAdapter pipeline and must never be released here.
 		if (m != null) {
 			PlanarImage masked = MaskArea.drawShape(image.toMat(), m);
@@ -520,9 +522,9 @@ public class ForwardService {
 	}
 
 	/**
-	 * Releases an intermediate image produced while chaining transformations, unless it is
-	 * the source image (owned by the {@link ImageAdapter} pipeline) or the freshly produced
-	 * image that is kept for the next step / final output.
+	 * Releases an intermediate image produced while chaining transformations, unless it
+	 * is the source image (owned by the {@link ImageAdapter} pipeline) or the freshly
+	 * produced image that is kept for the next step / final output.
 	 */
 	private static void releaseIntermediate(PlanarImage current, PlanarImage source, PlanarImage next) {
 		if (current != source && current != next && !current.isReleased()) {
@@ -532,9 +534,10 @@ public class ForwardService {
 
 	/**
 	 * Serializes the realized (masked/defaced) output image to raw little-endian DICOM
-	 * pixel bytes for the conformance image-identity check. Supports 8- and 16-bit samples
-	 * (the depths of the modalities that carry burned-in identity); returns an empty array
-	 * for anything else so the caller falls back to the sent dataset's own pixel data.
+	 * pixel bytes for the conformance image-identity check. Supports 8- and 16-bit
+	 * samples (the depths of the modalities that carry burned-in identity); returns an
+	 * empty array for anything else so the caller falls back to the sent dataset's own
+	 * pixel data.
 	 */
 	private static byte[] rawBytesFromPlanarImage(PlanarImage image) {
 		if (image == null) {
@@ -1085,17 +1088,17 @@ public class ForwardService {
 	}
 
 	/**
-	 * Captures, on the forwarding thread, the encoded pixel data the receiver gets and the
-	 * original identifying values so the conformance report pipeline can later query the
-	 * de-identification image API for burned-in identity. When the destination masked or
-	 * defaced the image, the check runs on the realized <em>output</em> pixels captured at
-	 * transformation time (raw little-endian, hence {@link UID#ExplicitVRLittleEndian});
-	 * When no image transformation was applied (metadata-only de-identification,
-	 * pass-through, or a virtual destination), the sent pixels equal {@code attributesToSend}'s
-	 * own pixel data, which is read here. The pixel bytes must be read on this thread because
-	 * their bulk-data temp files are cleaned right after the transfer.
-	 * Returns {@code null} when the check is disabled or
-	 * the instance carries no readable pixel data.
+	 * Captures, on the forwarding thread, the encoded pixel data the receiver gets and
+	 * the original identifying values so the conformance report pipeline can later query
+	 * the de-identification image API for burned-in identity. When the destination masked
+	 * or defaced the image, the check runs on the realized <em>output</em> pixels
+	 * captured at transformation time (raw little-endian, hence
+	 * {@link UID#ExplicitVRLittleEndian}); When no image transformation was applied
+	 * (metadata-only de-identification, pass-through, or a virtual destination), the sent
+	 * pixels equal {@code attributesToSend}'s own pixel data, which is read here. The
+	 * pixel bytes must be read on this thread because their bulk-data temp files are
+	 * cleaned right after the transfer. Returns {@code null} when the check is disabled
+	 * or the instance carries no readable pixel data.
 	 */
 	private ImageIdentityCheckInput buildImageIdentityCheckInput(ForwardDestination destination,
 			Attributes attributesOriginal, Attributes attributesToSend, TransformedPlanarImage transformedPlanarImage,
@@ -1108,8 +1111,10 @@ public class ForwardService {
 		boolean transformApplied = transformedPlanarImage != null && transformedPlanarImage.isTransformApplied();
 		if (transformApplied) {
 			// The image was masked/defaced: the check must run on the transformed output
-			// pixels the receiver gets. The sent dataset (attributesToSend) still holds the
-			// original, unmasked PixelData bulk reference (the mask is drawn lazily into the
+			// pixels the receiver gets. The sent dataset (attributesToSend) still holds
+			// the
+			// original, unmasked PixelData bulk reference (the mask is drawn lazily into
+			// the
 			// encoded stream, never written back).
 			// If the output pixels could not be captured, skip the check.
 			byte[] outputPixels = transformedPlanarImage.getPixelDataBytes();
@@ -1120,7 +1125,8 @@ public class ForwardService {
 			tsuid = UID.ExplicitVRLittleEndian;
 		}
 		else {
-			// No image transformation: the sent pixels equal the sent dataset's own pixels.
+			// No image transformation: the sent pixels equal the sent dataset's own
+			// pixels.
 			imageBytes = deidentifyImageService.extractPixelDataBytes(attributesToSend);
 			if (imageBytes.length == 0) {
 				return null;

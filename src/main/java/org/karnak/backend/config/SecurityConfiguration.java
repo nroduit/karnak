@@ -84,9 +84,11 @@ public class SecurityConfiguration {
 				.permitAll()
 				// Api endpoints
 				.requestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
-				.authenticated())
-				.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH
-						+ EndPoint.ALL_REMAINING_PATH))
+				// TODO: temporary deactivate security: waiting for the OIDC roles to be
+				// configured in the IDP
+				// .authenticated())
+				.permitAll())
+			.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH))
 			// OpenId connect login: map the IDP realm/client roles to the Karnak roles
 			// so that @RolesAllowed annotations on the views work with OIDC users. The
 			// roles are read from the Bearer/access token (not the ID token) via a

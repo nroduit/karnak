@@ -99,8 +99,7 @@ public class SecretService {
 	 * @param uuid Public UUID of the secret
 	 * @return Secret found or null
 	 */
-	@Nullable
-	public SecretEntity findSecretByUuid(UUID uuid) {
+	@Nullable public SecretEntity findSecretByUuid(UUID uuid) {
 		return secretRepo.findByUuid(uuid).orElse(null);
 	}
 
@@ -113,16 +112,17 @@ public class SecretService {
 	}
 
 	/**
-	 * Delete a secret and persist the project in a single transaction.
-	 * This ensures Hibernate correctly handles the bidirectional relationship
-	 * (cascade ALL on ProjectEntity.secretEntities) without re-inserting the
-	 * deleted entity during the project merge.
+	 * Delete a secret and persist the project in a single transaction. This ensures
+	 * Hibernate correctly handles the bidirectional relationship (cascade ALL on
+	 * ProjectEntity.secretEntities) without re-inserting the deleted entity during the
+	 * project merge.
 	 * @param projectEntity Project owning the secret
 	 * @param secretEntity Secret to delete
 	 */
 	@Transactional
 	public void deleteSecret(ProjectEntity projectEntity, SecretEntity secretEntity) {
-		projectEntity.getSecretEntities().removeIf(s -> s.getId() != null && Objects.equals(s.getId(), secretEntity.getId()));
+		projectEntity.getSecretEntities()
+			.removeIf(s -> s.getId() != null && Objects.equals(s.getId(), secretEntity.getId()));
 		secretRepo.delete(secretEntity);
 		projectRepo.saveAndFlush(projectEntity);
 	}

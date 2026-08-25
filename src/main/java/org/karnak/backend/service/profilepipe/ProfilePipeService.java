@@ -422,8 +422,7 @@ public class ProfilePipeService {
 				.map(ProjectEntity::getName)
 				.reduce((a, b) -> a + ", " + b)
 				.orElse("");
-			return new DeleteProfileResult(false,
-				"Cannot delete profile: it is used by project(s): " + projectNames);
+			return new DeleteProfileResult(false, "Cannot delete profile: it is used by project(s): " + projectNames);
 		}
 
 		profileRepo.deleteById(profileEntity.getId());

@@ -8,7 +8,6 @@ public final class ApiVersion {
 	// V1
 	public static final String V1_APPLICATION_JSON_VALUE = "application/json;version=1";
 
-
 	/**
 	 * Private constructor to hide the implicit public one
 	 */

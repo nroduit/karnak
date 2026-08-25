@@ -46,6 +46,3 @@ public class ForwardNodeModel implements Serializable {
 	private Set<DestinationModel> destinations = new HashSet<>();
 
 }
-
-
-

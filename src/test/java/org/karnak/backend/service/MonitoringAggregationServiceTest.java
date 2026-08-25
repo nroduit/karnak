@@ -130,8 +130,8 @@ class MonitoringAggregationServiceTest {
 		reasonRepo.saveAndFlush(new TransferSeriesReasonEntity(errRowId, "association-rejected", 0, 1, 0));
 	}
 
-	private Long persistStatus(DestinationEntity destination, String studyUid, String serieUid, String modality, long instances,
-			long sent, long errors, long retries, long excluded, LocalDateTime seen) {
+	private Long persistStatus(DestinationEntity destination, String studyUid, String serieUid, String modality,
+			long instances, long sent, long errors, long retries, long excluded, LocalDateTime seen) {
 		TransferSeriesStatusEntity row = new TransferSeriesStatusEntity();
 		row.setForwardNodeId(forwardNodeId);
 		row.setForwardNodeEntity(forwardNode);
@@ -225,7 +225,10 @@ class MonitoringAggregationServiceTest {
 		assertEquals(2, result.size());
 		assertEquals(2, result.stream().mapToLong(ErrorBreakdownModel::errors).sum());
 		assertEquals(1, result.stream().mapToLong(ErrorBreakdownModel::excluded).sum());
-		ErrorBreakdownModel timeout = result.stream().filter(e -> "timeout".equals(e.reason())).findFirst().orElseThrow();
+		ErrorBreakdownModel timeout = result.stream()
+			.filter(e -> "timeout".equals(e.reason()))
+			.findFirst()
+			.orElseThrow();
 		assertEquals(2, timeout.errors());
 		assertEquals(0, timeout.excluded());
 		assertEquals(1, timeout.retries());

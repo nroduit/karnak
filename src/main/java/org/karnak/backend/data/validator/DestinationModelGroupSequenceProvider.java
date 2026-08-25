@@ -20,6 +20,7 @@ import org.karnak.backend.model.forwardnode.DestinationModel;
  * Same conditional (per {@link DestinationType}) group-sequence logic as
  * {@link DestinationGroupSequenceProvider}, applied to the REST API
  * {@link DestinationModel} instead of the JPA entity.
+ *
  * @see DestinationGroupSequenceProvider
  */
 public class DestinationModelGroupSequenceProvider implements DefaultGroupSequenceProvider<DestinationModel> {
@@ -50,4 +51,3 @@ public class DestinationModelGroupSequenceProvider implements DefaultGroupSequen
 	}
 
 }
-

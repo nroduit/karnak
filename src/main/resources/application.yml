@@ -24,9 +24,11 @@ logging:
          cpr:
            # Suppress WARN  a.c.c.AtmosphereFramework - No BroadcasterCache configured
            AtmosphereFramework: ERROR
+      apache:
+        kafka: ERROR
     com:
       vaadin:
-          copilot:
+        copilot:
           # Copilot's release-note fetch fails behind TLS-inspecting proxies (PKIX
           # path building failed). The call is cosmetic, so silence its logger to
           # drop the noisy stack trace.
@@ -61,14 +63,17 @@ spring:
   cloud:
     config:
       #    Currently no cs configured in docker deploy/ vault
+      uri: ${CONFIGSERVER_URI}
       fail-fast: true
       name: ${spring.application.name}
       label: ${ENVIRONMENT}
+  config:
+    import: 'optional:configserver:'
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
   profiles:
-    active: docker,redis,eureka
+    active: docker,redis
   datasource:
     url: 'jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:karnak}'
     driver-class-name: org.postgresql.Driver
@@ -112,52 +117,6 @@ info:
     name: Karnak
     description: Karnak
   environment: ${ENVIRONMENT}
-  tags:
-    eureka.datacenter: ${eureka.datacenter}
-    eureka.instance-id: ${eureka.instance.instance-id}
-management:
-  endpoint:
-    health:
-      show-details: always
-    # https://github.com/spring-projects/spring-boot/issues/20509
-    env:
-      post.enabled: true
-    #issue with spring cloud Hoxton.SR10 and sup
-    restart:
-      enabled: false
-    pause:
-      enabled: false
-    shutdown:
-      enabled: false
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-    enabled-by-default: true
-  health:
-    config:
-      enabled: false
-  server:
-    port: ${SERVER_MANAGEMENT_PORT:18089}
-  info:
-    env:
-      enabled: true #disabled by default in springboot 2.6
-  metrics:
-    distribution:
-      percentiles-histogram:
-        '[http.server.requests]': true
-      percentiles:
-        '[http.server.requests]': 0.5, 0.9, 0.95, 0.99, 0.999
-      slo:
-        '[http.server.requests]': 50ms, 150ms, 250ms, 400ms
-    tags:
-      application: ${spring.application.name}
-      instance: ${eureka.instance.instance-id}
-      team: ${application.team}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
 
 monitoring:
   # Maximum number of days in the monitoring history

@@ -226,11 +226,11 @@ public class StudyConformanceAccumulator {
 			.toList();
 
 		return new ConformanceReport(key, sourceAet, deidentified, patientId, patientName, studyDate, studyDescription,
-			accessionNumber, seriesByUid.size(), instanceCount, failedInstanceCount, List.copyOf(failureReasons),
+				accessionNumber, seriesByUid.size(), instanceCount, failedInstanceCount, List.copyOf(failureReasons),
 				Set.copyOf(modalities), Set.copyOf(sopClassUids), Set.copyOf(transferSyntaxUids), series,
 				summariesBySopClass, consistencyFindings, errorCount, warningCount, infoCount, errorCount == 0,
-			createdAt, lastUpdatedAt, Map.copyOf(detectedIdentityTags), imageIdentityCheckedInstances,
-			imageIdentityCheckErrors);
+				createdAt, lastUpdatedAt, Map.copyOf(detectedIdentityTags), imageIdentityCheckedInstances,
+				imageIdentityCheckErrors);
 	}
 
 	public synchronized Instant getLastUpdatedAt() {

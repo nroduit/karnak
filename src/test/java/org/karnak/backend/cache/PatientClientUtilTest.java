@@ -61,24 +61,34 @@ class PatientClientUtilTest {
 		}
 
 		private static Stream<Arguments> providerGenerateKeyPseudonymPatient() {
-			return Stream.of(Arguments.of(new PatientModel("pseudo", "123", "456", "789", "101112", null, UUID.randomUUID()), "123101112"),
-					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "", null, UUID.randomUUID()), "123", null),
-					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "PDA", null, UUID.randomUUID()), "ERENPDA"),
-					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "", null, UUID.randomUUID()), "EREN"),
-					Arguments.of(new PatientModel("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", ""), "123"),
+			return Stream.of(
+					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "101112", null, UUID.randomUUID()),
+							"123101112"),
+					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "", null, UUID.randomUUID()), "123",
+							null),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "PDA", null, UUID.randomUUID()),
+							"ERENPDA"),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "", null, UUID.randomUUID()),
+							"EREN"),
+					Arguments.of(new PatientModel("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", ""),
+							"123"),
 					Arguments.of(new PatientModel("pseudo", "123", "", "456", LocalDate.of(1993, 2, 16), "M", "789"),
 							"123789"),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M",
+							"PDA"), "ERENPDA"),
 					Arguments.of(
-							new PatientModel("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", "PDA"),
-							"ERENPDA"),
-					Arguments.of(new PatientModel("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", ""),
+							new PatientModel("pseudo", "EREN", "Name", "Patient", LocalDate.of(1993, 2, 16), "M", ""),
 							"EREN"));
 		}
 
 		private static Stream<Arguments> providerGenerateKeyPseudonymPatientAndProjectID() {
-			return Stream.of(Arguments.of(new PatientModel("pseudo", "123", "456", "789", "101112", 900L, UUID.randomUUID()), "123101112900"),
-					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "", 128L, UUID.randomUUID()), "123128"),
-					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "PDA", 524L, UUID.randomUUID()), "ERENPDA524"));
+			return Stream.of(
+					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "101112", 900L, UUID.randomUUID()),
+							"123101112900"),
+					Arguments.of(new PatientModel("pseudo", "123", "456", "789", "", 128L, UUID.randomUUID()),
+							"123128"),
+					Arguments.of(new PatientModel("pseudo", "EREN", "Patient", "Name", "PDA", 524L, UUID.randomUUID()),
+							"ERENPDA524"));
 		}
 
 		private static Stream<Arguments> providerGenerateKeyPatientMetadata() {

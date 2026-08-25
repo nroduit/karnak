@@ -163,7 +163,8 @@ public class ExternalIDGrid extends Grid<PatientModel> {
 		patientIdColumn = addColumn(PatientModel::getPatientId).setHeader("Patient ID").setSortable(true);
 		patientFirstNameColumn = addColumn(PatientModel::getPatientFirstName).setHeader("Patient first name")
 			.setSortable(true);
-		patientLastNameColumn = addColumn(PatientModel::getPatientLastName).setHeader("Patient last name").setSortable(true);
+		patientLastNameColumn = addColumn(PatientModel::getPatientLastName).setHeader("Patient last name")
+			.setSortable(true);
 		issuerOfPatientIDColumn = addColumn(PatientModel::getIssuerOfPatientId).setHeader("Issuer of patient ID")
 			.setSortable(true);
 		Grid.Column<PatientModel> editorColumn = addComponentColumn(patient -> {

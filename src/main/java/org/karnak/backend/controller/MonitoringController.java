@@ -76,7 +76,8 @@ public class MonitoringController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Destinations found"),
 			@ApiResponse(responseCode = "204", description = "No destinations configured", content = @Content) })
 	@GetMapping(value = "/destinations", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<List<DestinationActivityModel>> searchDestinations(
 			@ModelAttribute MonitoringSearchCriteria criteria) {
 		List<DestinationActivityModel> result = monitoringAggregationService.searchDestinations(criteria);
@@ -92,7 +93,8 @@ public class MonitoringController {
 			@ApiResponse(responseCode = "204", description = "No studies found", content = @Content),
 			@ApiResponse(responseCode = "400", description = "destinationUuid is missing", content = @Content) })
 	@GetMapping(value = "/studies", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<?> searchStudies(@ModelAttribute MonitoringSearchCriteria criteria) {
 		ResponseEntity<?> missing = requireDestinationUuid(criteria);
 		if (missing != null) {
@@ -113,7 +115,8 @@ public class MonitoringController {
 			@ApiResponse(responseCode = "400", description = "destinationUuid or studyUid is missing",
 					content = @Content) })
 	@GetMapping(value = "/series", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<?> searchSeries(@ModelAttribute MonitoringSearchCriteria criteria) {
 		ResponseEntity<?> missing = requireDestinationUuid(criteria);
 		if (missing != null) {
@@ -137,7 +140,8 @@ public class MonitoringController {
 			@ApiResponse(responseCode = "400", description = "destinationUuid or serieUid is missing",
 					content = @Content) })
 	@GetMapping(value = "/errors", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<?> searchErrors(@ModelAttribute MonitoringSearchCriteria criteria) {
 		ResponseEntity<?> missing = requireDestinationUuid(criteria);
 		if (missing != null) {
@@ -158,7 +162,8 @@ public class MonitoringController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Node activity found"),
 			@ApiResponse(responseCode = "204", description = "No node activity found", content = @Content) })
 	@GetMapping(value = "/dashboard", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<List<NodeActivityModel>> searchNodeActivity(
 			@ModelAttribute MonitoringSearchCriteria criteria) {
 		List<NodeActivityModel> result = monitoringAggregationService.searchNodeActivity(criteria);
@@ -175,7 +180,8 @@ public class MonitoringController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Transfers found"),
 			@ApiResponse(responseCode = "204", description = "No transfer found", content = @Content) })
 	@GetMapping(value = "/transfers", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<Page<TransferSeriesStatusModel>> searchTransfers(
 			@ModelAttribute MonitoringSearchCriteria criteria, Pageable pageable) {
 		Page<TransferSeriesStatusModel> page = transferMonitoringService.retrieveSeries(criteria, pageable);
@@ -186,7 +192,8 @@ public class MonitoringController {
 	@Operation(summary = "Count transfer models matching the criteria")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Count computed") })
 	@GetMapping(value = "/transfers/count", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<Long> countTransfers(@ModelAttribute MonitoringSearchCriteria criteria) {
 		return ResponseEntity.ok(transferMonitoringService.countSeries(criteria));
 	}
@@ -196,7 +203,8 @@ public class MonitoringController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "CSV export built"),
 			@ApiResponse(responseCode = "500", description = "Error building the CSV export", content = @Content) })
 	@GetMapping(value = "/transfers/export", produces = "text/csv")
-	@PreAuthorize("hasAuthority('karnak_search')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_search')")
 	public ResponseEntity<byte[]> exportTransfers(@ModelAttribute MonitoringSearchCriteria criteria,
 			@ModelAttribute ExportSettings exportSettings) {
 		try {
@@ -217,7 +225,8 @@ public class MonitoringController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "All monitoring records deleted"),
 			@ApiResponse(responseCode = "404", description = "No records to delete", content = @Content) })
 	@DeleteMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteAllMonitoring() {
 		transferMonitoringService.deleteAllTransferStatus();
 		return ResponseEntity.noContent().build();

@@ -68,12 +68,13 @@ public class MonitoringAggregationService {
 
 	/** Base filter (search criteria only) shared by every level. */
 	private Specification<@NonNull TransferSeriesStatusEntity> baseFilter(MonitoringSearchCriteria criteria) {
-		return Specification
-			.where(TransferSeriesSpecifications.matchesFilter(MonitoringSearchCriteria.toTransferStatusFilter(criteria)));
+		return Specification.where(
+				TransferSeriesSpecifications.matchesFilter(MonitoringSearchCriteria.toTransferStatusFilter(criteria)));
 	}
 
 	/** Base filter scoped to {@code criteria.destinationUuid()}. */
-	private Specification<@NonNull TransferSeriesStatusEntity> destinationScopedFilter(MonitoringSearchCriteria criteria) {
+	private Specification<@NonNull TransferSeriesStatusEntity> destinationScopedFilter(
+			MonitoringSearchCriteria criteria) {
 		UUID destinationUuid = criteria == null ? null : criteria.destinationUuid();
 		return baseFilter(criteria).and(TransferSeriesSpecifications.hasDestinationUuid(destinationUuid));
 	}
@@ -99,20 +100,26 @@ public class MonitoringAggregationService {
 		Map<UUID, DestinationEntity> destinations = loadDestinations(byDestination.keySet());
 
 		return byDestination.entrySet().stream().map(entry -> {
-            UUID destinationUuid = entry.getKey();
-            List<TransferSeriesStatusEntity> group = entry.getValue();
-            DestinationEntity destination = destinations.get(destinationUuid);
-            return new DestinationActivityModel(destinationUuid, forwardAet(destination), destinationLabel(destination),
-                    distinctStudyCount(group), group.size(), sumLong(group, TransferSeriesStatusEntity::getInstances),
-                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
-                    sumLong(group, TransferSeriesStatusEntity::getRetries),
-                    sumLong(group, TransferSeriesStatusEntity::getExcluded));
-        }).sorted(Comparator.comparingLong(DestinationActivityModel::errors)
-                .reversed()
-                .thenComparing(d -> StringUtils.defaultString(d.destinationLabel()))).collect(Collectors.toCollection(ArrayList::new));
+			UUID destinationUuid = entry.getKey();
+			List<TransferSeriesStatusEntity> group = entry.getValue();
+			DestinationEntity destination = destinations.get(destinationUuid);
+			return new DestinationActivityModel(destinationUuid, forwardAet(destination), destinationLabel(destination),
+					distinctStudyCount(group), group.size(), sumLong(group, TransferSeriesStatusEntity::getInstances),
+					sumLong(group, TransferSeriesStatusEntity::getSent),
+					sumLong(group, TransferSeriesStatusEntity::getErrors),
+					sumLong(group, TransferSeriesStatusEntity::getRetries),
+					sumLong(group, TransferSeriesStatusEntity::getExcluded));
+		})
+			.sorted(Comparator.comparingLong(DestinationActivityModel::errors)
+				.reversed()
+				.thenComparing(d -> StringUtils.defaultString(d.destinationLabel())))
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
-	/** Studies under a destination, errors first. Scoped by {@code criteria.destinationUuid()}. */
+	/**
+	 * Studies under a destination, errors first. Scoped by
+	 * {@code criteria.destinationUuid()}.
+	 */
 	@Transactional(readOnly = true)
 	public List<StudyActivityModel> searchStudies(MonitoringSearchCriteria criteria) {
 		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(destinationScopedFilter(criteria));
@@ -120,26 +127,29 @@ public class MonitoringAggregationService {
 			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getStudyUidOriginal));
 
 		return byStudy.entrySet().stream().map(entry -> {
-            String studyUid = entry.getKey();
-            List<TransferSeriesStatusEntity> group = entry.getValue();
-            return new StudyActivityModel(studyUid, maxString(group, TransferSeriesStatusEntity::getStudyUidToSend),
-                    maxString(group, TransferSeriesStatusEntity::getStudyDescriptionOriginal),
-                    maxString(group, TransferSeriesStatusEntity::getStudyDescriptionToSend),
-                    maxString(group, TransferSeriesStatusEntity::getPatientIdOriginal),
-                    maxString(group, TransferSeriesStatusEntity::getPatientIdToSend),
-                    maxString(group, TransferSeriesStatusEntity::getAccessionNumberOriginal),
-                    maxString(group, TransferSeriesStatusEntity::getAccessionNumberToSend),
-                    maxDateTime(group, TransferSeriesStatusEntity::getStudyDateOriginal),
-                    maxDateTime(group, TransferSeriesStatusEntity::getStudyDateToSend), group.size(),
-                    sumLong(group, TransferSeriesStatusEntity::getInstances),
-                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
-                    sumLong(group, TransferSeriesStatusEntity::getRetries),
-                    sumLong(group, TransferSeriesStatusEntity::getExcluded),
-                    minDateTime(group, TransferSeriesStatusEntity::getFirstSeen),
-                    maxDateTime(group, TransferSeriesStatusEntity::getLastSeen));
-        }).sorted(Comparator.comparingLong(StudyActivityModel::errors)
-                .reversed()
-                .thenComparing(s -> StringUtils.defaultString(s.studyUid()))).collect(Collectors.toCollection(ArrayList::new));
+			String studyUid = entry.getKey();
+			List<TransferSeriesStatusEntity> group = entry.getValue();
+			return new StudyActivityModel(studyUid, maxString(group, TransferSeriesStatusEntity::getStudyUidToSend),
+					maxString(group, TransferSeriesStatusEntity::getStudyDescriptionOriginal),
+					maxString(group, TransferSeriesStatusEntity::getStudyDescriptionToSend),
+					maxString(group, TransferSeriesStatusEntity::getPatientIdOriginal),
+					maxString(group, TransferSeriesStatusEntity::getPatientIdToSend),
+					maxString(group, TransferSeriesStatusEntity::getAccessionNumberOriginal),
+					maxString(group, TransferSeriesStatusEntity::getAccessionNumberToSend),
+					maxDateTime(group, TransferSeriesStatusEntity::getStudyDateOriginal),
+					maxDateTime(group, TransferSeriesStatusEntity::getStudyDateToSend), group.size(),
+					sumLong(group, TransferSeriesStatusEntity::getInstances),
+					sumLong(group, TransferSeriesStatusEntity::getSent),
+					sumLong(group, TransferSeriesStatusEntity::getErrors),
+					sumLong(group, TransferSeriesStatusEntity::getRetries),
+					sumLong(group, TransferSeriesStatusEntity::getExcluded),
+					minDateTime(group, TransferSeriesStatusEntity::getFirstSeen),
+					maxDateTime(group, TransferSeriesStatusEntity::getLastSeen));
+		})
+			.sorted(Comparator.comparingLong(StudyActivityModel::errors)
+				.reversed()
+				.thenComparing(s -> StringUtils.defaultString(s.studyUid())))
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/**
@@ -153,24 +163,27 @@ public class MonitoringAggregationService {
 			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getSerieUidOriginal));
 
 		return bySeries.entrySet().stream().map(entry -> {
-            String serieUid = entry.getKey();
-            List<TransferSeriesStatusEntity> group = entry.getValue();
-            return new SeriesActivityModel(serieUid, maxString(group, TransferSeriesStatusEntity::getSerieUidToSend),
-                    maxString(group, TransferSeriesStatusEntity::getSerieDescriptionOriginal),
-                    maxString(group, TransferSeriesStatusEntity::getSerieDescriptionToSend),
-                    maxString(group, TransferSeriesStatusEntity::getModality),
-                    maxString(group, TransferSeriesStatusEntity::getSopClassUids),
-                    maxDateTime(group, TransferSeriesStatusEntity::getSerieDateOriginal),
-                    maxDateTime(group, TransferSeriesStatusEntity::getSerieDateToSend),
-                    sumLong(group, TransferSeriesStatusEntity::getInstances),
-                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
-                    sumLong(group, TransferSeriesStatusEntity::getRetries),
-                    sumLong(group, TransferSeriesStatusEntity::getExcluded),
-                    minDateTime(group, TransferSeriesStatusEntity::getFirstSeen),
-                    maxDateTime(group, TransferSeriesStatusEntity::getLastSeen));
-        }).sorted(Comparator.comparingLong(SeriesActivityModel::errors)
-                .reversed()
-                .thenComparing(s -> StringUtils.defaultString(s.serieUid()))).collect(Collectors.toCollection(ArrayList::new));
+			String serieUid = entry.getKey();
+			List<TransferSeriesStatusEntity> group = entry.getValue();
+			return new SeriesActivityModel(serieUid, maxString(group, TransferSeriesStatusEntity::getSerieUidToSend),
+					maxString(group, TransferSeriesStatusEntity::getSerieDescriptionOriginal),
+					maxString(group, TransferSeriesStatusEntity::getSerieDescriptionToSend),
+					maxString(group, TransferSeriesStatusEntity::getModality),
+					maxString(group, TransferSeriesStatusEntity::getSopClassUids),
+					maxDateTime(group, TransferSeriesStatusEntity::getSerieDateOriginal),
+					maxDateTime(group, TransferSeriesStatusEntity::getSerieDateToSend),
+					sumLong(group, TransferSeriesStatusEntity::getInstances),
+					sumLong(group, TransferSeriesStatusEntity::getSent),
+					sumLong(group, TransferSeriesStatusEntity::getErrors),
+					sumLong(group, TransferSeriesStatusEntity::getRetries),
+					sumLong(group, TransferSeriesStatusEntity::getExcluded),
+					minDateTime(group, TransferSeriesStatusEntity::getFirstSeen),
+					maxDateTime(group, TransferSeriesStatusEntity::getLastSeen));
+		})
+			.sorted(Comparator.comparingLong(SeriesActivityModel::errors)
+				.reversed()
+				.thenComparing(s -> StringUtils.defaultString(s.serieUid())))
+			.collect(Collectors.toCollection(ArrayList::new));
 
 	}
 
@@ -193,14 +206,17 @@ public class MonitoringAggregationService {
 			.collect(Collectors.groupingBy(TransferSeriesReasonEntity::getReason));
 
 		return byReason.entrySet().stream().map(entry -> {
-            String reason = entry.getKey();
-            List<TransferSeriesReasonEntity> group = entry.getValue();
-            return new ErrorBreakdownModel(reason, group.stream().mapToLong(TransferSeriesReasonEntity::getErrorCount).sum(),
-                    group.stream().mapToLong(TransferSeriesReasonEntity::getExcludedCount).sum(),
-                    group.stream().mapToLong(TransferSeriesReasonEntity::getRetryCount).sum());
-        }).sorted(Comparator.comparingLong((ErrorBreakdownModel e) -> e.errors() + e.excluded())
-                .thenComparingLong(ErrorBreakdownModel::errors)
-                .reversed()).collect(Collectors.toCollection(ArrayList::new));
+			String reason = entry.getKey();
+			List<TransferSeriesReasonEntity> group = entry.getValue();
+			return new ErrorBreakdownModel(reason,
+					group.stream().mapToLong(TransferSeriesReasonEntity::getErrorCount).sum(),
+					group.stream().mapToLong(TransferSeriesReasonEntity::getExcludedCount).sum(),
+					group.stream().mapToLong(TransferSeriesReasonEntity::getRetryCount).sum());
+		})
+			.sorted(Comparator.comparingLong((ErrorBreakdownModel e) -> e.errors() + e.excluded())
+				.thenComparingLong(ErrorBreakdownModel::errors)
+				.reversed())
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/** Per-forward-node activity for the dashboard, busiest first. */
@@ -211,23 +227,28 @@ public class MonitoringAggregationService {
 			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getForwardNodeId));
 
 		return byNode.values().stream().map(group -> {
-            UUID forwardNodeUuid = group.getFirst().getForwardNodeEntity().getUuid();
-            return new NodeActivityModel(forwardNodeUuid, forwardAet(group), distinctStudyCount(group), group.size(),
-                    sumLong(group, TransferSeriesStatusEntity::getInstances),
-                    sumLong(group, TransferSeriesStatusEntity::getSent), sumLong(group, TransferSeriesStatusEntity::getErrors),
-                    sumLong(group, TransferSeriesStatusEntity::getRetries),
-                    sumLong(group, TransferSeriesStatusEntity::getExcluded), sumInstancesWhenTrue(group,
-                    TransferSeriesStatusEntity::getDestinationEntity, DestinationEntity::isDesidentification),
-                    sumInstancesWhenTrue(group, TransferSeriesStatusEntity::getDestinationEntity,
-                            DestinationEntity::isActivateTagMorphing));
-        }).sorted(Comparator.comparingLong(NodeActivityModel::instances)
-                .reversed()
-                .thenComparing(n -> StringUtils.defaultString(n.forwardAet()))).collect(Collectors.toCollection(ArrayList::new));
+			UUID forwardNodeUuid = group.getFirst().getForwardNodeEntity().getUuid();
+			return new NodeActivityModel(forwardNodeUuid, forwardAet(group), distinctStudyCount(group), group.size(),
+					sumLong(group, TransferSeriesStatusEntity::getInstances),
+					sumLong(group, TransferSeriesStatusEntity::getSent),
+					sumLong(group, TransferSeriesStatusEntity::getErrors),
+					sumLong(group, TransferSeriesStatusEntity::getRetries),
+					sumLong(group, TransferSeriesStatusEntity::getExcluded),
+					sumInstancesWhenTrue(group, TransferSeriesStatusEntity::getDestinationEntity,
+							DestinationEntity::isDesidentification),
+					sumInstancesWhenTrue(group, TransferSeriesStatusEntity::getDestinationEntity,
+							DestinationEntity::isActivateTagMorphing));
+		})
+			.sorted(Comparator.comparingLong(NodeActivityModel::instances)
+				.reversed()
+				.thenComparing(n -> StringUtils.defaultString(n.forwardAet())))
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	// --- helpers ------
 
-	private static long sumLong(List<TransferSeriesStatusEntity> rows, ToLongFunction<TransferSeriesStatusEntity> extractor) {
+	private static long sumLong(List<TransferSeriesStatusEntity> rows,
+			ToLongFunction<TransferSeriesStatusEntity> extractor) {
 		return rows.stream().mapToLong(extractor).sum();
 	}
 
@@ -235,7 +256,10 @@ public class MonitoringAggregationService {
 		return rows.stream().map(TransferSeriesStatusEntity::getStudyUidOriginal).distinct().count();
 	}
 
-	/** SUM of instances over rows whose related entity (via {@code relation}) matches {@code test}. */
+	/**
+	 * SUM of instances over rows whose related entity (via {@code relation}) matches
+	 * {@code test}.
+	 */
 	private static <T> long sumInstancesWhenTrue(List<TransferSeriesStatusEntity> rows,
 			Function<TransferSeriesStatusEntity, T> relation, java.util.function.Predicate<T> test) {
 		return rows.stream()
@@ -245,7 +269,8 @@ public class MonitoringAggregationService {
 	}
 
 	/** Greatest non-null string value among the rows (mirrors SQL {@code MAX}). */
-	private static String maxString(List<TransferSeriesStatusEntity> rows, Function<TransferSeriesStatusEntity, String> extractor) {
+	private static String maxString(List<TransferSeriesStatusEntity> rows,
+			Function<TransferSeriesStatusEntity, String> extractor) {
 		return rows.stream().map(extractor).filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
 	}
 
@@ -274,7 +299,10 @@ public class MonitoringAggregationService {
 			.orElse("");
 	}
 
-	/** Forward node AE Title, read off the first row of the group that carries it (LEFT-join semantics). */
+	/**
+	 * Forward node AE Title, read off the first row of the group that carries it
+	 * (LEFT-join semantics).
+	 */
 	private static String forwardAet(List<TransferSeriesStatusEntity> rows) {
 		return rows.stream()
 			.map(TransferSeriesStatusEntity::getForwardNodeEntity)

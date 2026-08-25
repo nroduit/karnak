@@ -233,7 +233,8 @@ public class CSVDialog extends Dialog {
 			for (String[] row : allRows.subList(fromLineField.getValue().intValue() - 1, allRows.size())) {
 				String issuerOfPatientID = selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID).equals(-1) ? ""
 						: row[selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID)];
-				final PatientModel newPatient = new PatientModel(row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
+				final PatientModel newPatient = new PatientModel(
+						row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
 						row[selectValuesPositionHashMap.get(PATIENT_ID)], "", "", issuerOfPatientID,
 						projectEntity.getId(), projectEntity.getUuid());
 				patientsList.add(newPatient);

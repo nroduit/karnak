@@ -32,26 +32,19 @@ public record ImageIdentityCheckInput(byte[] imageBytes, Map<String, String> sen
 		if (!(o instanceof ImageIdentityCheckInput(byte[] bytes, Map<String, String> data, String syntaxUid))) {
 			return false;
 		}
-		return Arrays.equals(imageBytes, bytes)
-			&& Objects.equals(sensitiveData, data)
-			&& Objects.equals(transferSyntaxUid, syntaxUid);
+		return Arrays.equals(imageBytes, bytes) && Objects.equals(sensitiveData, data)
+				&& Objects.equals(transferSyntaxUid, syntaxUid);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(
-			Arrays.hashCode(imageBytes),
-			sensitiveData,
-			transferSyntaxUid
-		);
+		return Objects.hash(Arrays.hashCode(imageBytes), sensitiveData, transferSyntaxUid);
 	}
 
 	@Override
 	public String toString() {
-		return "ImageIdentityCheckInput{" +
-				"imageBytes=" + (imageBytes == null ? null : imageBytes.length + " bytes") +
-				", sensitiveData=" + (sensitiveData == null ? null : sensitiveData.keySet()) +
-				", transferSyntaxUid='" + transferSyntaxUid + '\'' +
-				'}';
+		return "ImageIdentityCheckInput{" + "imageBytes=" + (imageBytes == null ? null : imageBytes.length + " bytes")
+				+ ", sensitiveData=" + (sensitiveData == null ? null : sensitiveData.keySet()) + ", transferSyntaxUid='"
+				+ transferSyntaxUid + '\'' + '}';
 	}
 }

@@ -39,7 +39,7 @@ public class PatientClientUtil {
 	}
 
 	public static String getPseudonym(PatientMetadata patientMetadata, PseudonymCache cache, Long projectID,
-									  boolean skipIssuerOfPatientId) {
+			boolean skipIssuerOfPatientId) {
 		if (cache != null) {
 			final String key = generateKey(patientMetadata, projectID, skipIssuerOfPatientId);
 			final String pseudonym = getCachedKey(key, patientMetadata, cache, skipIssuerOfPatientId);

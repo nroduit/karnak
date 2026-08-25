@@ -87,8 +87,8 @@ public class SecretEntity implements Serializable {
 		}
 		SecretEntity that = (SecretEntity) o;
 		return active == that.active && Objects.equals(id, that.id) && Objects.equals(uuid, that.uuid)
-				&& Objects.equals(projectEntity, that.projectEntity)
-				&& Arrays.equals(secretKey, that.secretKey) && Objects.equals(creationDate, that.creationDate);
+				&& Objects.equals(projectEntity, that.projectEntity) && Arrays.equals(secretKey, that.secretKey)
+				&& Objects.equals(creationDate, that.creationDate);
 	}
 
 	@Override

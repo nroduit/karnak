@@ -40,7 +40,8 @@ public final class ProfileElementMapper {
 		model.setTags(entity.getIncludedTagEntities().stream().map(IncludedTagEntity::getTagValue).toList());
 		model.setExcludedTags(entity.getExcludedTagEntities().stream().map(ExcludedTagEntity::getTagValue).toList());
 		Map<String, String> arguments = new LinkedHashMap<>();
-		entity.getArgumentEntities().forEach(argument -> arguments.put(argument.getArgumentKey(), argument.getArgumentValue()));
+		entity.getArgumentEntities()
+			.forEach(argument -> arguments.put(argument.getArgumentKey(), argument.getArgumentValue()));
 		model.setArguments(arguments);
 		return model;
 	}
@@ -67,8 +68,7 @@ public final class ProfileElementMapper {
 		entity.setExcludedTagEntities(excludedTagEntities);
 		List<ArgumentEntity> argumentEntities = new ArrayList<>();
 		if (model.getArguments() != null) {
-			model.getArguments()
-				.forEach((key, value) -> argumentEntities.add(new ArgumentEntity(key, value, null)));
+			model.getArguments().forEach((key, value) -> argumentEntities.add(new ArgumentEntity(key, value, null)));
 		}
 		entity.setArgumentEntities(argumentEntities);
 		// uuid, id, position and the parent profile association are set by the entity
@@ -78,4 +78,3 @@ public final class ProfileElementMapper {
 	}
 
 }
-

@@ -28,14 +28,10 @@ public final class ForwardNodeMapper {
 		model.setUuid(entity.getUuid());
 		model.setFwdDescription(entity.getFwdDescription());
 		model.setFwdAeTitle(entity.getFwdAeTitle());
-		model.setSourceNodes(entity.getSourceNodes()
-			.stream()
-			.map(DicomSourceNodeMapper::toModel)
-			.collect(Collectors.toSet()));
-		model.setDestinations(entity.getDestinationEntities()
-			.stream()
-			.map(DestinationMapper::toModel)
-			.collect(Collectors.toSet()));
+		model.setSourceNodes(
+				entity.getSourceNodes().stream().map(DicomSourceNodeMapper::toModel).collect(Collectors.toSet()));
+		model.setDestinations(
+				entity.getDestinationEntities().stream().map(DestinationMapper::toModel).collect(Collectors.toSet()));
 		return model;
 	}
 
@@ -50,7 +46,3 @@ public final class ForwardNodeMapper {
 	}
 
 }
-
-
-
-

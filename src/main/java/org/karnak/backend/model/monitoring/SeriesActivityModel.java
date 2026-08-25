@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * the remaining fields are representative values for the detail panel.
  */
 public record SeriesActivityModel(String serieUid, String serieUidToSend, String serieDescription,
-                                  String serieDescriptionToSend, String modality, String sopClassUids, LocalDateTime serieDateOriginal,
-                                  LocalDateTime serieDateToSend, long instances, long sent, long errors, long retries, long excluded,
-                                  LocalDateTime firstSeen, LocalDateTime lastSeen) {
+		String serieDescriptionToSend, String modality, String sopClassUids, LocalDateTime serieDateOriginal,
+		LocalDateTime serieDateToSend, long instances, long sent, long errors, long retries, long excluded,
+		LocalDateTime firstSeen, LocalDateTime lastSeen) {
 }

@@ -67,8 +67,8 @@ public class PatientModel implements Serializable {
 	private UUID projectUUID;
 
 	public PatientModel(String pseudonym, String patientId, String patientName, String patientFirstName,
-						String patientLastName, LocalDate patientBirthDate, String patientSex, String issuerOfPatientId,
-						Long projectID, UUID projectUUID) {
+			String patientLastName, LocalDate patientBirthDate, String patientSex, String issuerOfPatientId,
+			Long projectID, UUID projectUUID) {
 		this.pseudonym = pseudonym;
 		this.patientId = patientId;
 		this.patientName = patientName;
@@ -82,7 +82,7 @@ public class PatientModel implements Serializable {
 	}
 
 	public PatientModel(String pseudonym, String patientId, String patientFirstName, String patientLastName,
-						String issuerOfPatientId, Long projectID, UUID projectUUID) {
+			String issuerOfPatientId, Long projectID, UUID projectUUID) {
 		this.pseudonym = pseudonym;
 		this.patientId = patientId;
 		this.patientFirstName = emptyStringIfNull(patientFirstName);
@@ -94,7 +94,7 @@ public class PatientModel implements Serializable {
 	}
 
 	public PatientModel(String pseudonym, String patientId, String patientFirstName, String patientLastName,
-						LocalDate patientBirthDate, String patientSex, String issuerOfPatientId) {
+			LocalDate patientBirthDate, String patientSex, String issuerOfPatientId) {
 		this.pseudonym = pseudonym;
 		this.patientId = patientId;
 		this.patientFirstName = emptyStringIfNull(patientFirstName);
@@ -105,7 +105,7 @@ public class PatientModel implements Serializable {
 		this.patientSex = patientSex;
 	}
 
-    protected static String createPatientName(String patientFirstName, String patientLastName) {
+	protected static String createPatientName(String patientFirstName, String patientLastName) {
 		if (patientFirstName == null || patientFirstName.isEmpty()) {
 			return patientLastName;
 		}
@@ -149,4 +149,5 @@ public class PatientModel implements Serializable {
 		this.setPatientSex(patientModel.getPatientSex());
 		this.setIssuerOfPatientId(patientModel.getIssuerOfPatientId());
 	}
+
 }

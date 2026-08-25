@@ -68,8 +68,8 @@ class PatientTest {
 
 		@Test
 		void keeps_explicit_patient_name_with_the_full_constructor() {
-			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, "Doe^John", "John", "Doe", LocalDate.of(1993, 2, 16), "M",
-					ISSUER, 1L, UUID.randomUUID());
+			var patient = new PatientModel(PSEUDONYM, PATIENT_ID, "Doe^John", "John", "Doe", LocalDate.of(1993, 2, 16),
+					"M", ISSUER, 1L, UUID.randomUUID());
 
 			assertEquals("Doe^John", patient.getPatientName());
 			assertEquals(LocalDate.of(1993, 2, 16), patient.getPatientBirthDate());

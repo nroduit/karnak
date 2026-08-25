@@ -84,7 +84,8 @@ public class ForwardNodeController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Forward nodes found"),
 			@ApiResponse(responseCode = "204", description = "No forward nodes configured", content = @Content) })
 	@GetMapping(produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_read')")
 	public ResponseEntity<List<ForwardNodeModel>> retrieveAllForwardNodes() {
 		List<ForwardNodeEntity> nodes = forwardNodeService.retrieveAllForwardNodes();
 		if (nodes.isEmpty()) {
@@ -99,11 +100,12 @@ public class ForwardNodeController {
 			@ApiResponse(responseCode = "400", description = "Missing or invalid fwdAeTitle", content = @Content),
 			@ApiResponse(responseCode = "409", description = "AE Title already exists", content = @Content) })
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_create')")
 	public ResponseEntity<ForwardNodeModel> createForwardNode(@Valid @RequestBody ForwardNodeModel forwardNodeModel) {
 		if (forwardNodeService.retrieveAllForwardNodes()
-				.stream()
-				.anyMatch(f -> Objects.equals(f.getFwdAeTitle(), forwardNodeModel.getFwdAeTitle()))) {
+			.stream()
+			.anyMatch(f -> Objects.equals(f.getFwdAeTitle(), forwardNodeModel.getFwdAeTitle()))) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
 		}
 		ForwardNodeEntity forwardNodeEntity = ForwardNodeMapper.toEntity(forwardNodeModel);
@@ -115,7 +117,8 @@ public class ForwardNodeController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Forward node found"),
 			@ApiResponse(responseCode = "404", description = "Forward node not found", content = @Content) })
 	@GetMapping(value = "/{forwardNodeUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_read')")
 	public ResponseEntity<ForwardNodeModel> retrieveForwardNode(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
 		return node == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(ForwardNodeMapper.toModel(node));
@@ -128,7 +131,8 @@ public class ForwardNodeController {
 			@ApiResponse(responseCode = "404", description = "Forward node not found", content = @Content) })
 	@PutMapping(value = "/{forwardNodeUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_update')")
 	public ResponseEntity<ForwardNodeModel> updateForwardNode(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@RequestBody ForwardNodeModel forwardNodeModel) {
 		ForwardNodeEntity existing = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
@@ -152,7 +156,8 @@ public class ForwardNodeController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Forward node deleted"),
 			@ApiResponse(responseCode = "404", description = "Forward node not found", content = @Content) })
 	@DeleteMapping(value = "/{forwardNodeUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteForwardNode(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid) {
 		ForwardNodeEntity existing = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
 		if (existing == null) {
@@ -169,7 +174,8 @@ public class ForwardNodeController {
 			@ApiResponse(responseCode = "204", description = "No source nodes configured", content = @Content),
 			@ApiResponse(responseCode = "404", description = "Forward node not found", content = @Content) })
 	@GetMapping(value = "/{forwardNodeUuid}/source-nodes", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_read')")
 	public ResponseEntity<Collection<DicomSourceNodeModel>> retrieveSourceNodes(
 			@PathVariable("forwardNodeUuid") UUID forwardNodeUuid) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
@@ -179,10 +185,7 @@ public class ForwardNodeController {
 		if (node.getSourceNodes() == null || node.getSourceNodes().isEmpty()) {
 			return ResponseEntity.noContent().build();
 		}
-		return ResponseEntity.ok(node.getSourceNodes()
-				.stream()
-				.map(DicomSourceNodeMapper::toModel)
-				.toList());
+		return ResponseEntity.ok(node.getSourceNodes().stream().map(DicomSourceNodeMapper::toModel).toList());
 	}
 
 	@Operation(summary = "Add a source node to a forward node")
@@ -192,7 +195,8 @@ public class ForwardNodeController {
 					content = @Content) })
 	@PostMapping(value = "/{forwardNodeUuid}/source-nodes", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_update')")
 	public ResponseEntity<DicomSourceNodeModel> addSourceNode(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@Valid @RequestBody DicomSourceNodeModel sourceNodeModel) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
@@ -213,7 +217,8 @@ public class ForwardNodeController {
 					content = @Content) })
 	@DeleteMapping(value = "/{forwardNodeUuid}/source-nodes/{sourceNodeUuid}",
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteSourceNode(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@PathVariable("sourceNodeUuid") UUID sourceNodeUuid) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
@@ -235,7 +240,8 @@ public class ForwardNodeController {
 			@ApiResponse(responseCode = "204", description = "No destinations configured", content = @Content),
 			@ApiResponse(responseCode = "404", description = "Forward node not found", content = @Content) })
 	@GetMapping(value = "/{forwardNodeUuid}/destinations", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_read')")
 	public ResponseEntity<Collection<DestinationModel>> retrieveDestinations(
 			@PathVariable("forwardNodeUuid") UUID forwardNodeUuid) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
@@ -246,10 +252,7 @@ public class ForwardNodeController {
 		if (destinations == null || destinations.isEmpty()) {
 			return ResponseEntity.noContent().build();
 		}
-		return ResponseEntity.ok(destinations
-				.stream()
-				.map(DestinationMapper::toModel)
-				.toList());
+		return ResponseEntity.ok(destinations.stream().map(DestinationMapper::toModel).toList());
 	}
 
 	@Operation(summary = "Add a destination to a forward node")
@@ -257,7 +260,8 @@ public class ForwardNodeController {
 			@ApiResponse(responseCode = "404", description = "Forward node not found", content = @Content) })
 	@PostMapping(value = "/{forwardNodeUuid}/destinations", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_create')")
 	public ResponseEntity<DestinationModel> addDestination(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@Valid @RequestBody DestinationModel destinationModel) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
@@ -274,9 +278,10 @@ public class ForwardNodeController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Destination updated"),
 			@ApiResponse(responseCode = "404", description = "Forward node or destination not found",
 					content = @Content) })
-	@PutMapping(value = "/{forwardNodeUuid}/destinations/{destinationUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
-			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	@PutMapping(value = "/{forwardNodeUuid}/destinations/{destinationUuid}",
+			consumes = MediaType.APPLICATION_JSON_VALUE, produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_update')")
 	public ResponseEntity<DestinationModel> updateDestination(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@PathVariable("destinationUuid") UUID destinationUuid,
 			@Valid @RequestBody DestinationModel destinationModel) {
@@ -302,7 +307,8 @@ public class ForwardNodeController {
 					content = @Content) })
 	@DeleteMapping(value = "/{forwardNodeUuid}/destinations/{destinationUuid}",
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteDestination(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@PathVariable("destinationUuid") UUID destinationUuid) {
 		ForwardNodeEntity node = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);

@@ -417,7 +417,7 @@ public class Profile {
 				// Manual mask should be applied only if automatic mask generation is not
 				// enabled
 				mask = this.getMask(new MaskStationCondition(original.getString(Tag.StationName),
-					original.getString(Tag.Columns), original.getString(Tag.Rows)));
+						original.getString(Tag.Columns), original.getString(Tag.Rows)));
 			}
 
 			// A mask must be applied with all the US and Secondary Capture sopClassUID,

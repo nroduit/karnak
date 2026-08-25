@@ -21,14 +21,8 @@ import org.karnak.frontend.monitoring.component.TransferStatusFilter;
  * drill into) instead of dedicated path variables, so a single criteria object is enough
  * to call every monitoring endpoint.
  */
-public record MonitoringSearchCriteria(
-		TransferStatusType statusType,
-		UUID destinationUuid,
-		String studyUid,
-		String serieUid,
-		String sopInstanceUid,
-		LocalDateTime start,
-		LocalDateTime end) {
+public record MonitoringSearchCriteria(TransferStatusType statusType, UUID destinationUuid, String studyUid,
+		String serieUid, String sopInstanceUid, LocalDateTime start, LocalDateTime end) {
 
 	/** Returns true when at least one filter criterion is specified. */
 	public boolean hasCriteria() {
