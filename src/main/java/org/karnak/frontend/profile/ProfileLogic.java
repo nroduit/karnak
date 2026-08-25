@@ -315,8 +315,8 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	 */
 	private static String formatYamlError(JsonProcessingException e) {
 		JsonLocation location = e.getLocation();
-		String where = location != null
-				? "Line " + location.getLineNr() + ", column " + location.getColumnNr() + ": " : "";
+		String where = location != null ? "Line " + location.getLineNr() + ", column " + location.getColumnNr() + ": "
+				: "";
 		String problem = e.getOriginalMessage() != null ? e.getOriginalMessage() : "invalid YAML structure";
 		return where + problem;
 	}

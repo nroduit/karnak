@@ -23,7 +23,9 @@ class SecretServiceTest {
 
 	// Repositories
 	private final SecretRepo secretRepositoryMock = Mockito.mock(SecretRepo.class);
+
 	private final ProjectRepo projectRepositoryMock = Mockito.mock(ProjectRepo.class);
+
 	// Service
 	private SecretService secretService;
 

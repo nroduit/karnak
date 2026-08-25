@@ -45,7 +45,3 @@ public final class DicomSourceNodeMapper {
 	}
 
 }
-
-
-
-

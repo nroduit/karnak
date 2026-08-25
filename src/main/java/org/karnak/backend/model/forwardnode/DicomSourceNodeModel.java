@@ -19,10 +19,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * API model exposed by the REST layer for a DICOM source node. Decouples the wire
- * format from {@link org.karnak.backend.data.entity.DicomSourceNodeEntity}. The
- * technical database id is not exposed: the public {@code uuid} is the identifier
- * conveyed by the URL path.
+ * API model exposed by the REST layer for a DICOM source node. Decouples the wire format
+ * from {@link org.karnak.backend.data.entity.DicomSourceNodeEntity}. The technical
+ * database id is not exposed: the public {@code uuid} is the identifier conveyed by the
+ * URL path.
  */
 @Getter
 @Setter

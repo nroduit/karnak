@@ -198,10 +198,10 @@ public class DeidentifyImageService {
 	}
 
 	/**
-	 * Sends the multipart body to {@code endpoint} and returns the raw JSON response body.
-	 * Transport failures and HTTP error responses are translated into
-	 * {@link DeidentifyImageException}, with {@code apiLabel} identifying the target API in
-	 * the message.
+	 * Sends the multipart body to {@code endpoint} and returns the raw JSON response
+	 * body. Transport failures and HTTP error responses are translated into
+	 * {@link DeidentifyImageException}, with {@code apiLabel} identifying the target API
+	 * in the message.
 	 * @return the response body, or {@code null} when the API returned an empty body
 	 */
 	private @Nullable String postMultipart(String endpoint, String apiLabel,
@@ -222,8 +222,9 @@ public class DeidentifyImageService {
 		}
 		catch (HttpServerErrorException ex) {
 			// Errors 5xx
-			throw new DeidentifyImageException(String.format(
-					"Server error %s from %s - service may be temporarily unavailable", ex.getStatusCode(), apiLabel),
+			throw new DeidentifyImageException(
+					String.format("Server error %s from %s - service may be temporarily unavailable",
+							ex.getStatusCode(), apiLabel),
 					ex);
 		}
 		catch (ResourceAccessException ex) {
@@ -285,8 +286,7 @@ public class DeidentifyImageService {
 		addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
 		addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
 		addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
-		addTextPart(bodyBuilder, "photometric_interpretation",
-				dcmAttributes.getString(Tag.PhotometricInterpretation));
+		addTextPart(bodyBuilder, "photometric_interpretation", dcmAttributes.getString(Tag.PhotometricInterpretation));
 
 		if (mapping.filename().endsWith(".raw")) {
 			addRawPixelDataParts(bodyBuilder, dcmAttributes);

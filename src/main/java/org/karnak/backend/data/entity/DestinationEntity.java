@@ -318,7 +318,6 @@ public class DestinationEntity implements Serializable {
 		return destinationEntity;
 	}
 
-
 	@JsonSetter("forwardNode")
 	public void setForwardNodeEntity(ForwardNodeEntity forwardNodeEntity) {
 		this.forwardNodeEntity = forwardNodeEntity;

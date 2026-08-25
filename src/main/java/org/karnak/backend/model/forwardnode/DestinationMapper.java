@@ -13,10 +13,10 @@ import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.enums.PseudonymType;
 
 /**
- * Maps between {@link DestinationEntity} and {@link DestinationModel}. Nested
- * relations (forward node, projects, SOP class filters) and the
- * resource id are not exposed by this mapper: they are managed through their own
- * endpoints/services or conveyed by the URL path.
+ * Maps between {@link DestinationEntity} and {@link DestinationModel}. Nested relations
+ * (forward node, projects, SOP class filters) and the resource id are not exposed by this
+ * mapper: they are managed through their own endpoints/services or conveyed by the URL
+ * path.
  */
 public final class DestinationMapper {
 
@@ -35,12 +35,10 @@ public final class DestinationMapper {
 		model.setCondition(entity.getCondition());
 		model.setActivateTagMorphing(entity.isActivateTagMorphing());
 		model.setTagMorphingProjectUuid(
-				entity.getTagMorphingProjectEntity() != null
-						? entity.getTagMorphingProjectEntity().getUuid() : null);
+				entity.getTagMorphingProjectEntity() != null ? entity.getTagMorphingProjectEntity().getUuid() : null);
 		model.setDesidentification(entity.isDesidentification());
-		model.setDeIdentificationProjectUuid(
-				entity.getDeIdentificationProjectEntity() != null
-						? entity.getDeIdentificationProjectEntity().getUuid() : null);
+		model.setDeIdentificationProjectUuid(entity.getDeIdentificationProjectEntity() != null
+				? entity.getDeIdentificationProjectEntity().getUuid() : null);
 		model.setIssuerByDefault(entity.getIssuerByDefault());
 		model.setSkipIssuerOfPatientId(entity.isSkipIssuerOfPatientId());
 		model.setPseudonymType(entity.getPseudonymType());
@@ -69,8 +67,7 @@ public final class DestinationMapper {
 		model.setAeTitle(entity.getAeTitle());
 		model.setHostname(entity.getHostname());
 		model.setPort(entity.getPort());
-		model.setUseaetdest(
-				entity.getUseaetdest() != null ? entity.getUseaetdest() : Boolean.FALSE);
+		model.setUseaetdest(entity.getUseaetdest() != null ? entity.getUseaetdest() : Boolean.FALSE);
 		model.setUrl(entity.getUrl());
 		model.setHeaders(entity.getHeaders());
 		model.setTransferSyntax(entity.getTransferSyntax());
@@ -96,8 +93,8 @@ public final class DestinationMapper {
 		entity.setDesidentification(model.isDesidentification());
 		entity.setIssuerByDefault(defaultString(model.getIssuerByDefault()));
 		entity.setSkipIssuerOfPatientId(model.isSkipIssuerOfPatientId());
-		entity.setPseudonymType(
-				model.getPseudonymType() != null ? model.getPseudonymType() : PseudonymType.CACHE_EXTID);
+		entity
+			.setPseudonymType(model.getPseudonymType() != null ? model.getPseudonymType() : PseudonymType.CACHE_EXTID);
 		entity.setTag(model.getTag());
 		entity.setDelimiter(model.getDelimiter());
 		entity.setPosition(model.getPosition());
@@ -106,8 +103,7 @@ public final class DestinationMapper {
 		entity.setBody(model.getBody());
 		entity.setMethod(model.getMethod());
 		entity.setAuthConfig(model.getAuthConfig());
-		entity.setSavePseudonym(
-				model.getSavePseudonym() != null ? model.getSavePseudonym() : Boolean.FALSE);
+		entity.setSavePseudonym(model.getSavePseudonym() != null ? model.getSavePseudonym() : Boolean.FALSE);
 		entity.setFilterBySOPClasses(model.isFilterBySOPClasses());
 		entity.setActivateNotification(model.isActivateNotification());
 		entity.setBuildConformanceReport(model.isBuildConformanceReport());
@@ -124,14 +120,13 @@ public final class DestinationMapper {
 		entity.setAeTitle(defaultString(model.getAeTitle()));
 		entity.setHostname(defaultString(model.getHostname()));
 		entity.setPort(model.getPort());
-		entity.setUseaetdest(
-				model.getUseaetdest() != null ? model.getUseaetdest() : Boolean.FALSE);
+		entity.setUseaetdest(model.getUseaetdest() != null ? model.getUseaetdest() : Boolean.FALSE);
 		entity.setUrl(defaultString(model.getUrl()));
 		entity.setHeaders(defaultString(model.getHeaders()));
 		entity.setTransferSyntax(model.getTransferSyntax());
 		entity.setTranscodeOnlyUncompressed(model.isTranscodeOnlyUncompressed());
-		entity.setConcurrentConnections(
-				model.getConcurrentConnections() != null ? model.getConcurrentConnections() : 1);
+		entity
+			.setConcurrentConnections(model.getConcurrentConnections() != null ? model.getConcurrentConnections() : 1);
 		entity.setHttp2(model.isHttp2());
 		entity.setTransferInProgress(model.isTransferInProgress());
 		entity.setLastTransfer(model.getLastTransfer());
@@ -140,10 +135,10 @@ public final class DestinationMapper {
 	}
 
 	/**
-	 * Several TextField-bound String columns are NOT NULL (or the UI binder rejects
-	 * null for that widget); fall back to an empty string, mirroring
-	 * {@link DestinationEntity}'s own constructor defaults, instead of propagating a
-	 * null value coming from an incomplete payload.
+	 * Several TextField-bound String columns are NOT NULL (or the UI binder rejects null
+	 * for that widget); fall back to an empty string, mirroring
+	 * {@link DestinationEntity}'s own constructor defaults, instead of propagating a null
+	 * value coming from an incomplete payload.
 	 */
 	private static String defaultString(String value) {
 		return value != null ? value : "";

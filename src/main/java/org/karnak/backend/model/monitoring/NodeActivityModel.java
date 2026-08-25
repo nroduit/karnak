@@ -16,6 +16,6 @@ import java.util.UUID;
  * dashboard. {@code deidentified} / {@code tagMorphed} count the instances whose
  * destination has de-identification / tag-morphing enabled.
  */
-public record NodeActivityModel(UUID forwardNodeUuid, String forwardAet, long studies, long series, long instances, long sent,
-                                long errors, long retries, long excluded, long deidentified, long tagMorphed) {
+public record NodeActivityModel(UUID forwardNodeUuid, String forwardAet, long studies, long series, long instances,
+		long sent, long errors, long retries, long excluded, long deidentified, long tagMorphed) {
 }

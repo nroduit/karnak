@@ -81,9 +81,8 @@ public class SecurityInMemoryConfig {
 				// Api endpoints
 				.requestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
 				.authenticated())
-				.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH
-						+ EndPoint.ALL_REMAINING_PATH))
-				.httpBasic(Customizer.withDefaults())
+			.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH))
+			.httpBasic(Customizer.withDefaults())
 			// Vaadin/Spring Security integration: permits the framework internal
 			// requests and the @AnonymousAllowed views, scopes CSRF, configures the
 			// request cache, the form login on the login view and requires

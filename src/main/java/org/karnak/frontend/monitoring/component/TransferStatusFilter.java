@@ -44,7 +44,7 @@ public class TransferStatusFilter {
 		this.transferStatusType = TransferStatusType.ALL;
 	}
 
-    public boolean hasFilter() {
+	public boolean hasFilter() {
 		return StringUtils.isNotBlank(studyUid) || StringUtils.isNotBlank(serieUid)
 				|| StringUtils.isNotBlank(sopInstanceUid) || !Objects.equals(TransferStatusType.ALL, transferStatusType)
 				|| start != null || end != null;

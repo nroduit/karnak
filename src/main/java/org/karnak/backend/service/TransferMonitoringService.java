@@ -129,7 +129,10 @@ public class TransferMonitoringService {
 				: seriesRepo.findAll();
 	}
 
-	/** Retrieve a page of series rows (the per-series transfer models) matching the criteria. */
+	/**
+	 * Retrieve a page of series rows (the per-series transfer models) matching the
+	 * criteria.
+	 */
 	@Transactional(readOnly = true)
 	public Page<TransferSeriesStatusModel> retrieveSeries(MonitoringSearchCriteria criteria, Pageable pageable) {
 		Page<TransferSeriesStatusEntity> entityPage = seriesRepo.findAll(specificationOf(criteria), pageable);
@@ -207,23 +210,15 @@ public class TransferMonitoringService {
 	private TransferSeriesStatusModel toModel(TransferSeriesStatusEntity e) {
 		var fn = e.getForwardNodeEntity();
 		var dest = e.getDestinationEntity();
-		return new TransferSeriesStatusModel(
-				fn != null ? fn.getUuid() : null,
-				dest != null ? dest.getUuid() : null,
-				fn != null ? fn.getFwdAeTitle() : null,
-				fn != null ? fn.getFwdDescription() : null,
-				dest != null ? dest.getDescription() : null,
-				e.getPatientIdOriginal(), e.getPatientIdToSend(),
-				e.getAccessionNumberOriginal(), e.getAccessionNumberToSend(),
-				e.getStudyDescriptionOriginal(), e.getStudyDescriptionToSend(),
-				e.getStudyDateOriginal(), e.getStudyDateToSend(),
-				e.getStudyUidOriginal(), e.getStudyUidToSend(),
-				e.getSerieDescriptionOriginal(), e.getSerieDescriptionToSend(),
-				e.getSerieDateOriginal(), e.getSerieDateToSend(),
-				e.getSerieUidOriginal(), e.getSerieUidToSend(),
-				e.getModality(), e.getSopClassUids(),
-				e.getInstances(), e.getRetries(), e.getSent(), e.getErrors(), e.getExcluded(),
-				e.getFirstSeen(), e.getLastSeen());
+		return new TransferSeriesStatusModel(fn != null ? fn.getUuid() : null, dest != null ? dest.getUuid() : null,
+				fn != null ? fn.getFwdAeTitle() : null, fn != null ? fn.getFwdDescription() : null,
+				dest != null ? dest.getDescription() : null, e.getPatientIdOriginal(), e.getPatientIdToSend(),
+				e.getAccessionNumberOriginal(), e.getAccessionNumberToSend(), e.getStudyDescriptionOriginal(),
+				e.getStudyDescriptionToSend(), e.getStudyDateOriginal(), e.getStudyDateToSend(),
+				e.getStudyUidOriginal(), e.getStudyUidToSend(), e.getSerieDescriptionOriginal(),
+				e.getSerieDescriptionToSend(), e.getSerieDateOriginal(), e.getSerieDateToSend(),
+				e.getSerieUidOriginal(), e.getSerieUidToSend(), e.getModality(), e.getSopClassUids(), e.getInstances(),
+				e.getRetries(), e.getSent(), e.getErrors(), e.getExcluded(), e.getFirstSeen(), e.getLastSeen());
 	}
 
 }

@@ -75,9 +75,7 @@ public abstract class PseudonymCache {
 	}
 
 	public Optional<PatientModel> findPatientByPseudonym(String pseudonym) {
-		return this.getAll().stream()
-				.filter(p -> Objects.equals(pseudonym, p.getPseudonym()))
-				.findFirst();
+		return this.getAll().stream().filter(p -> Objects.equals(pseudonym, p.getPseudonym())).findFirst();
 	}
 
 	public void removeAll() {
@@ -114,10 +112,12 @@ public abstract class PseudonymCache {
 	 * Remove all pseudonyms by project
 	 * @param projectEntity Project to evaluate
 	 */
-    public void removeAllPseudonymByProject(ProjectEntity projectEntity) {
-		this.getAll().stream()
-				.filter(p -> p.getProjectID() != null && Objects.equals(p.getProjectID(), projectEntity.getId()))
-				.map(patient -> PatientClientUtil.generateKey(patient, projectEntity.getId()))
-				.forEach(this::remove);
-    }
+	public void removeAllPseudonymByProject(ProjectEntity projectEntity) {
+		this.getAll()
+			.stream()
+			.filter(p -> p.getProjectID() != null && Objects.equals(p.getProjectID(), projectEntity.getId()))
+			.map(patient -> PatientClientUtil.generateKey(patient, projectEntity.getId()))
+			.forEach(this::remove);
+	}
+
 }

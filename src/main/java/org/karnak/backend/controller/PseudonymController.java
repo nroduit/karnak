@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST controller managing pseudonyms. 
+ * REST controller managing pseudonyms.
  */
 @RestController
 @RequestMapping(EndPoint.PSEUDONYMS_PATH)
@@ -64,7 +64,8 @@ public class PseudonymController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Pseudonyms found"),
 			@ApiResponse(responseCode = "204", description = "No pseudonym configured", content = @Content) })
 	@GetMapping(produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_read')")
 	public ResponseEntity<List<PatientModel>> retrieveAllPatients() {
 		List<PatientModel> patients = pseudonymCache.getAll().stream().toList();
 		if (patients.isEmpty()) {
@@ -77,25 +78,25 @@ public class PseudonymController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Patient found"),
 			@ApiResponse(responseCode = "404", description = "Patient not found", content = @Content) })
 	@GetMapping(value = "/{pseudonym}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_read')")
 	public ResponseEntity<PatientModel> retrievePatient(@PathVariable("pseudonym") String pseudonym) {
-        return pseudonymCache.findPatientByPseudonym(pseudonym)
-				.map(ResponseEntity::ok)
-				.orElseGet(() -> ResponseEntity.notFound().build());
-    }
+		return pseudonymCache.findPatientByPseudonym(pseudonym)
+			.map(ResponseEntity::ok)
+			.orElseGet(() -> ResponseEntity.notFound().build());
+	}
 
 	@Operation(summary = "Create a pseudonym",
 			description = "The pseudonym will be stored in the external ID cache for the given project.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Pseudonym created"),
-			@ApiResponse(responseCode = "400",
-					description = "Missing or invalid pseudonym, patientId, or projectUUID",
+			@ApiResponse(responseCode = "400", description = "Missing or invalid pseudonym, patientId, or projectUUID",
 					content = @Content),
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content),
-			@ApiResponse(responseCode = "409",
-					description = "A pseudonym already exists for this patient and project",
+			@ApiResponse(responseCode = "409", description = "A pseudonym already exists for this patient and project",
 					content = @Content) })
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_create')")
 	public ResponseEntity<PatientModel> createPatient(@Valid @RequestBody PatientModel patientModel) {
 		ProjectEntity existing = projectService.retrieveProjectByUuid(patientModel.getProjectUUID());
 		if (existing == null) {
@@ -112,14 +113,14 @@ public class PseudonymController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(patientModel);
 	}
 
-	@Operation(summary = "Update a pseudonym/patient",
-			description = "Update the patient identified by pseudonym.")
+	@Operation(summary = "Update a pseudonym/patient", description = "Update the patient identified by pseudonym.")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Patient updated"),
 			@ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content),
 			@ApiResponse(responseCode = "404", description = "Patient not found", content = @Content) })
 	@PutMapping(value = "/{pseudonym}", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = org.karnak.backend.constant.ApiVersion.V1_APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_update')")
 	public ResponseEntity<PatientModel> updatePatient(@PathVariable("pseudonym") String pseudonym,
 			@Valid @RequestBody PatientModel patientModel) {
 		Optional<PatientModel> existingOpt = pseudonymCache.findPatientByPseudonym(pseudonym);
@@ -138,7 +139,8 @@ public class PseudonymController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Patient deleted"),
 			@ApiResponse(responseCode = "404", description = "Patient not found", content = @Content) })
 	@DeleteMapping(value = "/{pseudonym}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deletePatient(@PathVariable("pseudonym") String pseudonym) {
 		Optional<PatientModel> patientOpt = pseudonymCache.findPatientByPseudonym(pseudonym);
 		if (patientOpt.isEmpty()) {
@@ -153,7 +155,8 @@ public class PseudonymController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "All pseudonym deleted"),
 			@ApiResponse(responseCode = "404", description = "No project found", content = @Content) })
 	@DeleteMapping(value = "/project/{projectUUID}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND
+	// hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteAllPseudonymByProject(@NotNull @PathVariable("projectUUID") UUID projectUUID) {
 		ProjectEntity projectFound = projectService.retrieveProjectByUuid(projectUUID);
 		if (projectFound == null) {

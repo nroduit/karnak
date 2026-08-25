@@ -29,7 +29,9 @@ public final class TransferSeriesSpecifications {
 	private TransferSeriesSpecifications() {
 	}
 
-	/** Restricts to rows matching the given search filter (status, dates, UID patterns). */
+	/**
+	 * Restricts to rows matching the given search filter (status, dates, UID patterns).
+	 */
 	public static Specification<TransferSeriesStatusEntity> matchesFilter(TransferStatusFilter filter) {
 		return (root, query, criteriaBuilder) -> {
 			List<Predicate> predicates = TransferSeriesPredicates.build(root, criteriaBuilder, filter);
@@ -56,4 +58,3 @@ public final class TransferSeriesSpecifications {
 	}
 
 }
-

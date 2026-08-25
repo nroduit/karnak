@@ -24,8 +24,8 @@ import org.springframework.validation.annotation.Validated;
 /**
  * API model exposed by the REST layer for a profile element. Decouples the wire format
  * from {@link org.karnak.backend.data.entity.ProfileElementEntity}. The technical
- * database id and the position (managed by the reorder logic) are not exposed: the
- * public {@code uuid}, conveyed by the URL path, identifies the resource.
+ * database id and the position (managed by the reorder logic) are not exposed: the public
+ * {@code uuid}, conveyed by the URL path, identifies the resource.
  */
 @Getter
 @Setter
@@ -57,4 +57,3 @@ public class ProfileElementModel implements Serializable {
 	private Map<String, String> arguments = new LinkedHashMap<>();
 
 }
-

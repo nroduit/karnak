@@ -52,4 +52,3 @@ public class ProfileModel implements Serializable {
 	private Set<ProfileElementModel> profileElements = new LinkedHashSet<>();
 
 }
-

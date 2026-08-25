@@ -19,5 +19,5 @@ import java.util.UUID;
  * internal database id.
  */
 public record DestinationActivityModel(UUID destinationUuid, String forwardAet, String destinationLabel, long studies,
-									   long series, long instances, long sent, long errors, long retries, long excluded) {
+		long series, long instances, long sent, long errors, long retries, long excluded) {
 }

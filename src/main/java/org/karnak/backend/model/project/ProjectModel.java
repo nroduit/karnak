@@ -54,4 +54,3 @@ public class ProjectModel implements Serializable {
 	private Set<UUID> destinationUuids = new HashSet<>();
 
 }
-

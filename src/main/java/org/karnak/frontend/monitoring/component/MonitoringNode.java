@@ -29,9 +29,8 @@ public sealed interface MonitoringNode {
 	 * A destination with aggregated counts. {@code forwardAet} is the forward node
 	 * prefix. Identified by its stable {@code destinationUuid}, not its internal db id.
 	 */
-	record DestinationNode(UUID destinationUuid, String forwardAet, String destinationLabel, long studies,
-			long series, long instances, long sent, long errors, long retries, long excluded)
-			implements MonitoringNode {
+	record DestinationNode(UUID destinationUuid, String forwardAet, String destinationLabel, long studies, long series,
+			long instances, long sent, long errors, long retries, long excluded) implements MonitoringNode {
 		@Override
 		public String key() {
 			return "d:%s".formatted(destinationUuid);
