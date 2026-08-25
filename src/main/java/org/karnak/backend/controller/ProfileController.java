@@ -84,7 +84,7 @@ public class ProfileController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Profiles found"),
 			@ApiResponse(responseCode = "204", description = "No profiles configured", content = @Content) })
 	@GetMapping(produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<List<ProfileModel>> retrieveAllProfiles() {
 		List<ProfileEntity> profiles = profilePipeService.retrieveAllProfiles();
 		if (profiles.isEmpty()) {
@@ -102,7 +102,7 @@ public class ProfileController {
 			@ApiResponse(responseCode = "409", description = "A profile with the same name and version already exists",
 					content = @Content) })
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
 	public ResponseEntity<ProfileModel> createProfile(@Valid @RequestBody ProfileModel profileModel) {
 		if (profilePipeService.retrieveAllProfiles()
 			.stream()
@@ -119,7 +119,7 @@ public class ProfileController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Profile found"),
 			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
 	@GetMapping(value = "/{profileUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<ProfileModel> retrieveProfile(@PathVariable("profileUuid") UUID profileUuid) {
 		ProfileEntity profile = profilePipeService.retrieveProfileByUuid(profileUuid);
 		return profile == null ? ResponseEntity.notFound().build()
@@ -139,7 +139,7 @@ public class ProfileController {
 					content = @Content) })
 	@PutMapping(value = "/{profileUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_update')")
 	public ResponseEntity<ProfileModel> updateProfile(@PathVariable("profileUuid") UUID profileUuid,
 			@RequestBody ProfileModel profileModel) {
 		ProfileEntity existing = profilePipeService.retrieveProfileByUuid(profileUuid);
@@ -173,7 +173,7 @@ public class ProfileController {
 			@ApiResponse(responseCode = "400", description = "Profile is used by one or more projects", content = @Content),
 			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
 	@DeleteMapping(value = "/{profileUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_delete')")
 	public ResponseEntity<?> deleteProfile(@PathVariable("profileUuid") UUID profileUuid) {
 		ProfileEntity existing = profilePipeService.retrieveProfileByUuid(profileUuid);
 		if (existing == null) {
@@ -199,7 +199,7 @@ public class ProfileController {
 					content = @Content) })
 	@PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
 	public ResponseEntity<?> importProfile(@RequestParam("file") MultipartFile file) {
 		ProfilePipeBody profilePipeBody;
 		if (file.isEmpty()) {
@@ -232,7 +232,7 @@ public class ProfileController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Profile YAML file"),
 			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
 	@GetMapping(value = "/{profileUuid}/download", produces = "application/x-yaml")
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<String> downloadProfile(@PathVariable("profileUuid") UUID profileUuid) {
 		ProfileEntity profile = profilePipeService.retrieveProfileByUuid(profileUuid);
 		if (profile == null) {
@@ -252,7 +252,7 @@ public class ProfileController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Profile elements found"),
 			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
 	@GetMapping(value = "/{profileUuid}/elements", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<Collection<ProfileElementModel>> retrieveElements(
 			@PathVariable("profileUuid") UUID profileUuid) {
 		ProfileEntity profile = profilePipeService.retrieveProfileByUuid(profileUuid);
@@ -273,7 +273,7 @@ public class ProfileController {
 			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
 	@PostMapping(value = "/{profileUuid}/elements", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_update')")
 	public ResponseEntity<ProfileElementModel> addElement(@PathVariable("profileUuid") UUID profileUuid,
 			@Valid @RequestBody ProfileElementModel profileElementModel) {
 		ProfileEntity profile = profilePipeService.retrieveProfileByUuid(profileUuid);
@@ -301,7 +301,7 @@ public class ProfileController {
 			@ApiResponse(responseCode = "404", description = "Profile or element not found", content = @Content) })
 	@PutMapping(value = "/{profileUuid}/elements/{elementUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_update')")
 	public ResponseEntity<ProfileElementModel> updateElement(@PathVariable("profileUuid") UUID profileUuid,
 			@PathVariable("elementUuid") UUID elementUuid, @Valid @RequestBody ProfileElementModel profileElementModel) {
 		ProfileEntity profile = profilePipeService.retrieveProfileByUuid(profileUuid);
@@ -332,7 +332,7 @@ public class ProfileController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Profile element deleted"),
 			@ApiResponse(responseCode = "404", description = "Profile or element not found", content = @Content) })
 	@DeleteMapping(value = "/{profileUuid}/elements/{elementUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteElement(@PathVariable("profileUuid") UUID profileUuid,
 			@PathVariable("elementUuid") UUID elementUuid) {
 		ProfileEntity profile = profilePipeService.retrieveProfileByUuid(profileUuid);

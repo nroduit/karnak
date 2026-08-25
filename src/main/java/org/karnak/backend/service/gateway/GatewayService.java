@@ -101,12 +101,12 @@ public class GatewayService implements ApplicationListener<ContextRefreshedEvent
 	public void init() {
 		log.info("Start the gateway manager running as a background process");
 		// DEACTIVATED for HUG
-//		try {
-//			NativeLibraryManager.initNativeLibs();
-//		}
-//		catch (Exception e) {
-//			throw new IllegalStateException("Cannot register DICOM native libraries", e);
-//		}
+		// try {
+		// NativeLibraryManager.initNativeLibs();
+		// }
+		// catch (Exception e) {
+		// throw new IllegalStateException("Cannot register DICOM native libraries", e);
+		// }
 		initGateway();
 	}
 

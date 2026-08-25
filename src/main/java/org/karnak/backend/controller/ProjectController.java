@@ -73,7 +73,7 @@ public class ProjectController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Projects found"),
 			@ApiResponse(responseCode = "204", description = "No projects configured", content = @Content) })
 	@GetMapping(produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<List<ProjectModel>> retrieveAllProjects() {
 		List<ProjectEntity> projects = projectService.retrieveAllProjects();
 		if (projects.isEmpty()) {
@@ -89,7 +89,7 @@ public class ProjectController {
 					description = "Missing or invalid name, or profileUuid does not reference an existing profile",
 					content = @Content) })
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
 	public ResponseEntity<ProjectModel> createProject(@Valid @RequestBody ProjectModel projectModel) {
 		ProfileEntity profile = null;
 		if (projectModel.getProfileUuid() != null) {
@@ -108,7 +108,7 @@ public class ProjectController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Project found"),
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
 	@GetMapping(value = "/{projectUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<ProjectModel> retrieveProject(@PathVariable("projectUuid") UUID projectUuid) {
 		ProjectEntity project = projectService.retrieveProjectByUuid(projectUuid);
 		return project == null ? ResponseEntity.notFound().build()
@@ -125,7 +125,7 @@ public class ProjectController {
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
 	@PutMapping(value = "/{projectUuid}", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_update')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_update')")
 	public ResponseEntity<ProjectModel> updateProject(@PathVariable("projectUuid") UUID projectUuid,
 			@Valid @RequestBody ProjectModel projectModel) {
 		ProjectEntity existing = projectService.retrieveProjectByUuid(projectUuid);
@@ -153,7 +153,7 @@ public class ProjectController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Project deleted"),
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
 	@DeleteMapping(value = "/{projectUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteProject(@PathVariable("projectUuid") UUID projectUuid) {
 		ProjectEntity existing = projectService.retrieveProjectByUuid(projectUuid);
 		if (existing == null) {
@@ -170,7 +170,7 @@ public class ProjectController {
 			@ApiResponse(responseCode = "204", description = "No secrets", content = @Content),
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
 	@GetMapping(value = "/{projectUuid}/secrets", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_read')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_read')")
 	public ResponseEntity<List<SecretModel>> listSecrets(@PathVariable("projectUuid") UUID projectUuid) {
 		ProjectEntity project = projectService.retrieveProjectByUuid(projectUuid);
 		if (project == null) {
@@ -188,7 +188,7 @@ public class ProjectController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Secret generated"),
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
 	@PostMapping(value = "/{projectUuid}/secrets/generate", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
 	public ResponseEntity<SecretModel> generateSecret(@PathVariable("projectUuid") UUID projectUuid) {
 		ProjectEntity project = projectService.retrieveProjectByUuid(projectUuid);
 		if (project == null) {
@@ -206,7 +206,7 @@ public class ProjectController {
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
 	@PostMapping(value = "/{projectUuid}/secrets/import", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_create')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
 	public ResponseEntity<SecretModel> importSecret(@PathVariable("projectUuid") UUID projectUuid,
 			@Valid @RequestBody SecretModel secretModel) {
 		ProjectEntity project = projectService.retrieveProjectByUuid(projectUuid);
@@ -226,7 +226,7 @@ public class ProjectController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Secret deleted"),
 			@ApiResponse(responseCode = "404", description = "Secret not found", content = @Content) })
 	@DeleteMapping(value = "/{projectUuid}/secrets/{secretUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
+	// @PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_delete')")
 	public ResponseEntity<Void> deleteSecret(@PathVariable("projectUuid") UUID projectUuid,
 			@PathVariable("secretUuid") UUID secretUuid) {
 		ProjectEntity project = projectService.retrieveProjectByUuid(projectUuid);

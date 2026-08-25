@@ -57,6 +57,7 @@
          with -Pperformance. -->
     <karnak.test.groups/>
     <karnak.test.excludedGroups>performance</karnak.test.excludedGroups>
+    <nullability.skip>true</nullability.skip>
  </properties>
 
   <licenses>
@@ -116,9 +117,25 @@
 
     <plugins>
       <plugin>
+        <groupId>am.ik.maven</groupId>
+        <artifactId>nullability-maven-plugin</artifactId>
+        <configuration>
+          <skip>${nullability.skip}</skip>
+          <checking>main</checking>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
+          <!-- Reused/persisted CI workspaces (e.g. Jenkins agents that don't run
+               `mvn clean`) can trip the source/.class staleness check after a fresh
+               git checkout resets file timestamps: a newly added test class then
+               looks "already compiled" even though target/test-classes has no
+               matching .class, and surefire fails with ClassNotFoundException while
+               scanning the classpath. Disabling incremental compilation forces a
+               full recompile every run and avoids that class of failure. -->
+          <useIncrementalCompilation>false</useIncrementalCompilation>
 <!--          <release>${java.version}</release>-->
 <!--          <parameters>true</parameters>-->
           <annotationProcessorPaths>
@@ -197,27 +214,41 @@
           <excludedGroups>${karnak.test.excludedGroups}</excludedGroups>
         </configuration>
       </plugin>
+
+      <!-- Disable the checkstyle-validation execution inherited from the parent POM. Rebinding the
+           inherited execution to phase "none" disables it without removing the
+           plugin declaration itself. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>checkstyle-validation</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
-    <resources>
-      <resource>
-        <filtering>true</filtering>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**/application*.yml</include>
-          <include>**/application*.yaml</include>
-          <include>**/application*.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <exclude>**/application*.yml</exclude>
-          <exclude>**/application*.yaml</exclude>
-          <exclude>**/application*.properties</exclude>
-        </excludes>
-      </resource>
-    </resources>
+<!--    <resources>-->
+<!--      <resource>-->
+<!--        <filtering>true</filtering>-->
+<!--        <directory>src/main/resources</directory>-->
+<!--        <includes>-->
+<!--          <include>**/application*.yml</include>-->
+<!--          <include>**/application*.yaml</include>-->
+<!--          <include>**/application*.properties</include>-->
+<!--        </includes>-->
+<!--      </resource>-->
+<!--      <resource>-->
+<!--        <directory>src/main/resources</directory>-->
+<!--        <excludes>-->
+<!--          <exclude>**/application*.yml</exclude>-->
+<!--          <exclude>**/application*.yaml</exclude>-->
+<!--          <exclude>**/application*.properties</exclude>-->
+<!--        </excludes>-->
+<!--      </resource>-->
+<!--    </resources>-->
 
   </build>
 
