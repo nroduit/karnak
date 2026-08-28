@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,6 +39,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.weasis.core.util.annotations.Generated;
 
 @EnableWebSecurity
+@EnableMethodSecurity
 @Configuration
 @Conditional(value = DefaultIdpLoadCondition.class)
 @Generated
@@ -45,16 +47,10 @@ public class SecurityInMemoryConfig {
 
 	private static final String LOGIN_URL = "/login";
 
-	// Fine-grained authorities
-	private static final String API_READ_AUTHORITY = "karnak_read";
-
-	private static final String API_SEARCH_AUTHORITY = "karnak_search";
-
-	private static final String API_CREATE_AUTHORITY = "karnak_create";
-
-	private static final String API_UPDATE_AUTHORITY = "karnak_update";
-
-	private static final String API_DELETE_AUTHORITY = "karnak_delete";
+	// Role required by the hasAnyAuthority('collaborator','backend') check of the
+	// @PreAuthorize annotations of the REST API controllers (fine-grained
+	// authorities are the karnak_* entries of {@link SecurityRole})
+	private static final String API_CLIENT_ROLE = SecurityRole.BACKEND_ROLE.getRole();
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -107,8 +103,10 @@ public class SecurityInMemoryConfig {
 		// fine-grained authorities required by the @PreAuthorize annotations
 		// of the REST API controllers.
 		List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(SecurityRole.ADMIN_ROLE.getRole(),
-				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(), API_READ_AUTHORITY,
-				API_CREATE_AUTHORITY, API_UPDATE_AUTHORITY, API_DELETE_AUTHORITY, API_SEARCH_AUTHORITY);
+				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(), API_CLIENT_ROLE,
+				SecurityRole.API_READ_ROLE.getRole(), SecurityRole.API_CREATE_ROLE.getRole(),
+				SecurityRole.API_UPDATE_ROLE.getRole(), SecurityRole.API_DELETE_ROLE.getRole(),
+				SecurityRole.API_SEARCH_ROLE.getRole());
 
 		UserDetails userDetails = User.builder()
 			.username(AppConfig.getInstance().getKarnakAdmin())
