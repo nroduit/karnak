@@ -18,10 +18,9 @@ public enum SecurityRole {
 
 	ADMIN_ROLE("ROLE_admin", "admin"), INVESTIGATOR_ROLE("ROLE_investigator", "investigator"),
 	USER_ROLE("ROLE_user", "user"), COLLABORATOR_ROLE("collaborator", "collaborator"),
-	BACKEND_ROLE("backend", "backend"),
-	API_READ_ROLE("karnak_read", "karnak_read"), API_SEARCH_ROLE("karnak_search", "karnak_search"),
-	API_CREATE_ROLE("karnak_create", "karnak_create"), API_UPDATE_ROLE("karnak_update", "karnak_update"),
-	API_DELETE_ROLE("karnak_delete", "karnak_delete");
+	BACKEND_ROLE("backend", "backend"), API_READ_ROLE("karnak_read", "karnak_read"),
+	API_SEARCH_ROLE("karnak_search", "karnak_search"), API_CREATE_ROLE("karnak_create", "karnak_create"),
+	API_UPDATE_ROLE("karnak_update", "karnak_update"), API_DELETE_ROLE("karnak_delete", "karnak_delete");
 
 	private final String role;
 

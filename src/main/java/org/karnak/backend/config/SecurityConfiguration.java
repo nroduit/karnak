@@ -149,7 +149,8 @@ public class SecurityConfiguration {
 	}
 
 	/**
-	 * Maps the roles of a validated Bearer token to the granted authorities required by the
+	 * Maps the roles of a validated Bearer token to the granted authorities required by
+	 * the
 	 * @PreAuthorize annotations of the controllers .
 	 * @return the JWT authentication converter
 	 */
