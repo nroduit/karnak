@@ -68,7 +68,7 @@ class OidcRoleAuthoritiesMapperTest {
 	}
 
 	@Test
-	void should_only_map_karnak_client_roles_ignoring_realm_and_other_clients() {
+	void should_map_realm_and_karnak_client_roles_ignoring_other_clients() {
 		// Init data
 		Jwt accessToken = jwtWithClaims(Map.of("realm_access", Map.of("roles", List.of("admin")), "resource_access", Map
 			.of("karnak", Map.of("roles", List.of("user")), "other-client", Map.of("roles", List.of("investigator")))));
@@ -78,7 +78,9 @@ class OidcRoleAuthoritiesMapperTest {
 
 		// Test results
 		assertTrue(containsAuthority(mapped, "ROLE_user"));
-		assertEquals(1, mapped.size());
+		assertTrue(containsAuthority(mapped, "ROLE_admin"));
+		// Roles of other clients are not mapped
+		assertEquals(2, mapped.size());
 	}
 
 	@Test
