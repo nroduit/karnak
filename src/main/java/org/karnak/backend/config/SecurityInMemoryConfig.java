@@ -47,11 +47,6 @@ public class SecurityInMemoryConfig {
 
 	private static final String LOGIN_URL = "/login";
 
-	// Role required by the hasAnyAuthority('collaborator','backend') check of the
-	// @PreAuthorize annotations of the REST API controllers (fine-grained
-	// authorities are the karnak_* entries of {@link SecurityRole})
-	private static final String API_CLIENT_ROLE = SecurityRole.BACKEND_ROLE.getRole();
-
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
@@ -103,7 +98,7 @@ public class SecurityInMemoryConfig {
 		// fine-grained authorities required by the @PreAuthorize annotations
 		// of the REST API controllers.
 		List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(SecurityRole.ADMIN_ROLE.getRole(),
-				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(), API_CLIENT_ROLE,
+				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(), SecurityRole.BACKEND_ROLE.getRole(),
 				SecurityRole.API_READ_ROLE.getRole(), SecurityRole.API_CREATE_ROLE.getRole(),
 				SecurityRole.API_UPDATE_ROLE.getRole(), SecurityRole.API_DELETE_ROLE.getRole(),
 				SecurityRole.API_SEARCH_ROLE.getRole());
