@@ -18,18 +18,18 @@
     <enforcer.jdk-version>[${java.version},)</enforcer.jdk-version>
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
 
-    <springframework.version>4.1.0</springframework.version>
+    <springframework.version>4.1.1</springframework.version>
     <springdoc.version>1.8.0</springdoc.version>
-    <vaadin.version>25.2.4</vaadin.version>
-    <org.json.version>20260719</org.json.version>
+    <vaadin.version>25.2.6</vaadin.version>
+    <org.json.version>20260814</org.json.version>
     <opencsv.version>5.12.0</opencsv.version>
 
-    <weasis-dicom-tools.version>5.34.3.3</weasis-dicom-tools.version>
+    <weasis-dicom-tools.version>5.35.0</weasis-dicom-tools.version>
     <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
 
     <h2.version>2.4.240</h2.version>
     <mockito.version>5.23.0</mockito.version>
-    <swagger.version>2.2.52</swagger.version>
+    <swagger.version>2.2.54</swagger.version>
 
     <sonar.organization>nroduit-github</sonar.organization>
     <sonar.projectKey>nroduit_karnak</sonar.projectKey>
@@ -269,12 +269,12 @@
       <plugin>
         <groupId>io.spring.javaformat</groupId>
         <artifactId>spring-javaformat-maven-plugin</artifactId>
-        <version>0.0.47</version>
+        <version>0.0.48</version>
       </plugin>
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>3.9.0</version>
+        <version>3.10.1</version>
         <configuration>
           <!-- define a language-specific format -->
           <java>
@@ -522,7 +522,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.6.0-jre</version>
+      <version>33.7.1-jre</version>
     </dependency>
 
     <dependency>
