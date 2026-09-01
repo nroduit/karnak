@@ -33,7 +33,6 @@
     <org.json.version>20260719</org.json.version>
     <gson.version>2.10.1</gson.version>
     <opencsv.version>5.12.0</opencsv.version>
-<!--    <node.version>v22.13.0</node.version>-->
     <node.version>v24.14.0</node.version>
     <weasis-dicom-tools.version>5.34.3.3</weasis-dicom-tools.version>
     <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
@@ -365,10 +364,10 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>org.springframework.boot</groupId>-->
-<!--      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>-->
-<!--    </dependency>-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
 
     <!-- Eureka -->
     <dependency>
