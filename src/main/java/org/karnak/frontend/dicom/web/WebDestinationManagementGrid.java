@@ -100,7 +100,8 @@ public class WebDestinationManagementGrid extends Grid<WebDestinationConfigEntit
 
 			actions.add(editBtn, deleteBtn);
 			if (!editablePredicate.test(endpoint)) {
-				// Keep the icons but hide them in order for the row height to remain consistent with editable rows.
+				// Keep the icons but hide them in order for the row height to remain
+				// consistent with editable rows.
 				editBtn.getStyle().set("visibility", "hidden");
 				deleteBtn.getStyle().set("visibility", "hidden");
 			}

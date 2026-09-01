@@ -183,18 +183,28 @@ public class TagPickerDialog extends Dialog {
 		}
 		// Re-evaluates the enabled provider against the current mode
 		scopeGroup.getDataProvider().refreshAll();
-		// Call to refreshAll resets the selected value so we refresh and then set the correct value
+		// Call to refreshAll resets the selected value so we refresh and then set the
+		// correct value
 		scopeGroup.setValue(selectedValue);
 	}
 
 	private void buildGrid(boolean multiSelect) {
 		grid.setSelectionMode(multiSelect ? SelectionMode.MULTI : SelectionMode.SINGLE);
 		grid.addColumn(TagRow::tagValue).setHeader("Tag").setWidth("105px").setFlexGrow(0);
-		grid.addColumn(this::displayNameWithIndent).setTooltipGenerator(this::displayName).setHeader("Attribute").setAutoWidth(true).setFlexGrow(1);
+		grid.addColumn(this::displayNameWithIndent)
+			.setTooltipGenerator(this::displayName)
+			.setHeader("Attribute")
+			.setAutoWidth(true)
+			.setFlexGrow(1);
 		grid.addColumn(TagRow::vr).setHeader("VR").setWidth("85px").setFlexGrow(0);
 		if (allowPaths) {
-			grid.addColumn(this::enclosingSequences).setTooltipGenerator(this::enclosingSequences).setHeader("In sequence").setAutoWidth(true).setFlexGrow(2);
-			// Create a hidden column containing the full path (ancestors + tag name) for sorting purposes
+			grid.addColumn(this::enclosingSequences)
+				.setTooltipGenerator(this::enclosingSequences)
+				.setHeader("In sequence")
+				.setAutoWidth(true)
+				.setFlexGrow(2);
+			// Create a hidden column containing the full path (ancestors + tag name) for
+			// sorting purposes
 			Grid.Column<TagRow> fullPath = grid.addColumn(this::generateFullPath).setHeader("Full path");
 			fullPath.setVisible(false);
 			grid.sort(GridSortOrder.asc(fullPath).build());
@@ -205,7 +215,8 @@ public class TagPickerDialog extends Dialog {
 	/**
 	 * Method used to generate the full path of a DICOM tag for sorting purposes
 	 * @param row the TagRow for which to generate the full path
-	 * @return the full path of the DICOM tag with the ancestors if any and the tag name, separated by " › "
+	 * @return the full path of the DICOM tag with the ancestors if any and the tag name,
+	 * separated by " › "
 	 */
 	private String generateFullPath(TagRow row) {
 		StringBuilder fullPath = new StringBuilder();

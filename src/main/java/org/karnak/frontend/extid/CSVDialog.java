@@ -238,7 +238,8 @@ public class CSVDialog extends Dialog {
 						: row[selectValuesPositionHashMap.get(PATIENT_FIRST_NAME)];
 				String lastName = selectValuesPositionHashMap.get(PATIENT_LAST_NAME).equals(-1) ? ""
 						: row[selectValuesPositionHashMap.get(PATIENT_LAST_NAME)];
-				final PatientModel newPatient = new PatientModel(row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
+				final PatientModel newPatient = new PatientModel(
+						row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
 						row[selectValuesPositionHashMap.get(PATIENT_ID)], firstName, lastName, issuerOfPatientID,
 						projectEntity.getId(), projectEntity.getUuid());
 				patientsList.add(newPatient);

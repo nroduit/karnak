@@ -247,4 +247,5 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 	public void initNewProjectProfileDropDown(NewProject newProject) {
 		addDropDownProfileList(newProject.getProfileDropDown());
 	}
+
 }

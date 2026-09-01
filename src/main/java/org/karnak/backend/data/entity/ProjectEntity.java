@@ -156,7 +156,8 @@ public class ProjectEntity implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, secretEntities, deidentificationDestinationEntities, tagMorphingDestinationEntities, profileEntity);
+		return Objects.hash(id, name, secretEntities, deidentificationDestinationEntities,
+				tagMorphingDestinationEntities, profileEntity);
 	}
 
 }

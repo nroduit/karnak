@@ -86,7 +86,8 @@ class ProjectServiceTest {
 		ForwardNodeEntity forwardNodeEntitySecond = new ForwardNodeEntity();
 		destinationEntityFirst.setForwardNodeEntity(forwardNodeEntityFirst);
 		destinationEntitySecond.setForwardNodeEntity(forwardNodeEntitySecond);
-		projectEntity.setDeidentificationDestinationEntities(Arrays.asList(destinationEntityFirst, destinationEntitySecond));
+		projectEntity
+			.setDeidentificationDestinationEntities(Arrays.asList(destinationEntityFirst, destinationEntitySecond));
 
 		// Call service
 		projectService.update(projectEntity);

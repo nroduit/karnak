@@ -59,7 +59,11 @@ public class DicomNodeUtil {
 	public List<DicomNodeList> getAllDicomNodeTypes() {
 		var nodeLists = getDynamicNodeGroups();
 		nodeLists.addAll(dicomNodeConfigService.getWorkStationNodeTypes(true));
-		nodeLists.addAll(dicomNodeConfigService.getWorkStationNodeTypes(false)); // Adds the generic category Workstations
+		nodeLists.addAll(dicomNodeConfigService.getWorkStationNodeTypes(false)); // Adds
+																					// the
+																					// generic
+																					// category
+																					// Workstations
 		return nodeLists;
 	}
 
@@ -125,11 +129,11 @@ public class DicomNodeUtil {
 
 	/**
 	 * Returns the dynamic source groups first (e.g. the Gateway destinations), followed
-	 * by every user-defined DICOM node group (independently of node type) and the
-	 * global "All Workstation nodes" and "All Worklist nodes" groups.
-	 * Connectivity tools (echo, monitor) check any DICOM node, worklist SCPs included:
-	 * C-ECHO and the capabilities probe are type-agnostic, so worklist nodes are offered
-	 * alongside every other node rather than being filtered out by their reserved type.
+	 * by every user-defined DICOM node group (independently of node type) and the global
+	 * "All Workstation nodes" and "All Worklist nodes" groups. Connectivity tools (echo,
+	 * monitor) check any DICOM node, worklist SCPs included: C-ECHO and the capabilities
+	 * probe are type-agnostic, so worklist nodes are offered alongside every other node
+	 * rather than being filtered out by their reserved type.
 	 */
 	public List<DicomNodeList> getAllNodeTypesIncludingWorklist() {
 		var nodeLists = getDynamicNodeGroups();

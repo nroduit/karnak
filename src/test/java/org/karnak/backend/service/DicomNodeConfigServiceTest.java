@@ -72,7 +72,6 @@ class DicomNodeConfigServiceTest {
 		assertEquals("SITE-MWL", result.get(0).getFirst().getAet());
 	}
 
-
 	@Test
 	void all_worklist_nodes_ignore_group() {
 		var ungrouped = node("Public", "ADVT", "dicomserver.co.uk", 104, "WORKLIST", null);

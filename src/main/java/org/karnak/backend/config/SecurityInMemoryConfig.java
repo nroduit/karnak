@@ -98,10 +98,10 @@ public class SecurityInMemoryConfig {
 		// fine-grained authorities required by the @PreAuthorize annotations
 		// of the REST API controllers.
 		List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(SecurityRole.ADMIN_ROLE.getRole(),
-				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(), SecurityRole.BACKEND_ROLE.getRole(),
-				SecurityRole.API_READ_ROLE.getRole(), SecurityRole.API_CREATE_ROLE.getRole(),
-				SecurityRole.API_UPDATE_ROLE.getRole(), SecurityRole.API_DELETE_ROLE.getRole(),
-				SecurityRole.API_SEARCH_ROLE.getRole());
+				SecurityRole.INVESTIGATOR_ROLE.getRole(), SecurityRole.USER_ROLE.getRole(),
+				SecurityRole.BACKEND_ROLE.getRole(), SecurityRole.API_READ_ROLE.getRole(),
+				SecurityRole.API_CREATE_ROLE.getRole(), SecurityRole.API_UPDATE_ROLE.getRole(),
+				SecurityRole.API_DELETE_ROLE.getRole(), SecurityRole.API_SEARCH_ROLE.getRole());
 
 		UserDetails userDetails = User.builder()
 			.username(AppConfig.getInstance().getKarnakAdmin())

@@ -30,10 +30,8 @@ public final class ProjectMapper {
 		model.setName(entity.getName());
 		model.setProfileUuid(entity.getProfileEntity() != null ? entity.getProfileEntity().getUuid() : null);
 		if (entity.getAllDestinations() != null) {
-			model.setDestinationUuids(entity.getAllDestinations()
-				.stream()
-				.map(DestinationEntity::getUuid)
-				.collect(Collectors.toSet()));
+			model.setDestinationUuids(
+					entity.getAllDestinations().stream().map(DestinationEntity::getUuid).collect(Collectors.toSet()));
 		}
 		return model;
 	}

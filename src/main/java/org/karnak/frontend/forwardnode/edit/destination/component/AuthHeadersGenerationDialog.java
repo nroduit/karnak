@@ -91,7 +91,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		authTypeSelect.setItems(authTypeSelectValues);
 		authTypeSelect.setLabel("Authorization Type");
 		authTypeSelect.setErrorMessage("This field is mandatory");
-		//authTypeSelect.setWidth(FIELD_WIDTH);
+		// authTypeSelect.setWidth(FIELD_WIDTH);
 		authTypeSelect.setEmptySelectionAllowed(false);
 		authTypeSelect.addValueChangeListener(value -> displayAuthTypeForm(value.getValue()));
 

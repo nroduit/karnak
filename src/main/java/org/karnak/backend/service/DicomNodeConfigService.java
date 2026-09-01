@@ -245,10 +245,10 @@ public class DicomNodeConfigService {
 	// ---------------------------------------------------------------------------------------
 
 	/**
-	 * @param byGroup when {@code true}, return one {@link DicomNodeList} per organizational
-	 * group (ungrouped nodes are discarded); when {@code false}, return a single
-	 * {@link DicomNodeList} labelled {@value #WORKSTATION_DISPLAY_NAME} containing every
-	 * workstation node regardless of its group
+	 * @param byGroup when {@code true}, return one {@link DicomNodeList} per
+	 * organizational group (ungrouped nodes are discarded); when {@code false}, return a
+	 * single {@link DicomNodeList} labelled {@value #WORKSTATION_DISPLAY_NAME} containing
+	 * every workstation node regardless of its group
 	 * @return the workstation nodes (i.e. nodes whose type is
 	 * {@value #NODE_TYPE_WORKSTATION}), either bucketed by group and ordered
 	 * alphabetically by group name, or flattened under a single list
@@ -257,7 +257,8 @@ public class DicomNodeConfigService {
 	public List<DicomNodeList> getWorkStationNodeTypes(boolean byGroup) {
 		if (byGroup) {
 			return groupByNodeGroup(dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKSTATION));
-		} else {
+		}
+		else {
 			DicomNodeList list = new DicomNodeList(WORKSTATION_DISPLAY_NAME);
 			dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKSTATION).forEach(e -> list.add(toConfigNode(e)));
 			return Collections.singletonList(list);
@@ -265,10 +266,10 @@ public class DicomNodeConfigService {
 	}
 
 	/**
-	 * @param byGroup when {@code true}, return one {@link DicomNodeList} per organizational
-	 * group (ungrouped worklist nodes are discarded); when {@code false}, return a single
-	 * {@link DicomNodeList} labelled {@value #WORKLIST_DISPLAY_NAME} containing every
-	 * worklist node regardless of its group
+	 * @param byGroup when {@code true}, return one {@link DicomNodeList} per
+	 * organizational group (ungrouped worklist nodes are discarded); when {@code false},
+	 * return a single {@link DicomNodeList} labelled {@value #WORKLIST_DISPLAY_NAME}
+	 * containing every worklist node regardless of its group
 	 * @return the worklist nodes (i.e. nodes whose type is {@value #NODE_TYPE_WORKLIST}),
 	 * either bucketed by group and ordered alphabetically by group name, or flattened
 	 * under a single list
@@ -277,7 +278,8 @@ public class DicomNodeConfigService {
 	public List<DicomNodeList> getWorkListNodeTypes(boolean byGroup) {
 		if (byGroup) {
 			return groupByNodeGroup(dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKLIST));
-		} else {
+		}
+		else {
 			DicomNodeList list = new DicomNodeList(WORKLIST_DISPLAY_NAME);
 			dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKLIST).forEach(e -> list.add(toConfigNode(e)));
 			return Collections.singletonList(list);
@@ -294,7 +296,8 @@ public class DicomNodeConfigService {
 	}
 
 	/**
-	 * Bucket nodes by their organizational group, ordered alphabetically by group name. Node without a group are discarded.
+	 * Bucket nodes by their organizational group, ordered alphabetically by group name.
+	 * Node without a group are discarded.
 	 * @param nodes the nodes to organize
 	 * @return one {@link DicomNodeList} per group
 	 */
