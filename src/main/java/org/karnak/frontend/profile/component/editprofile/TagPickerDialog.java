@@ -15,6 +15,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
+import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -80,7 +81,7 @@ public class TagPickerDialog extends Dialog {
 		this.allowPaths = allowPaths;
 
 		setHeaderTitle("Add DICOM tags");
-		setWidth("760px");
+		setWidth("1240px");
 		setHeight(allowPaths ? "700px" : "640px");
 
 		buildSearchControls();
@@ -176,22 +177,44 @@ public class TagPickerDialog extends Dialog {
 		if (!allowPaths) {
 			return;
 		}
+		var selectedValue = scopeGroup.getValue();
 		if (scopeGroup.getValue() == TagScopes.TagScope.IN_SEQUENCE && !isBrowsingModule()) {
-			scopeGroup.setValue(TagScopes.TagScope.ANY_LEVEL);
+			selectedValue = TagScopes.TagScope.ANY_LEVEL;
 		}
 		// Re-evaluates the enabled provider against the current mode
 		scopeGroup.getDataProvider().refreshAll();
+		// Call to refreshAll resets the selected value so we refresh and then set the correct value
+		scopeGroup.setValue(selectedValue);
 	}
 
 	private void buildGrid(boolean multiSelect) {
 		grid.setSelectionMode(multiSelect ? SelectionMode.MULTI : SelectionMode.SINGLE);
-		grid.addColumn(TagRow::tagValue).setHeader("Tag").setAutoWidth(true).setFlexGrow(0);
-		grid.addColumn(this::displayName).setHeader("Attribute").setAutoWidth(true);
-		grid.addColumn(TagRow::vr).setHeader("VR").setAutoWidth(true).setFlexGrow(0);
+		grid.addColumn(TagRow::tagValue).setHeader("Tag").setWidth("105px").setFlexGrow(0);
+		grid.addColumn(this::displayNameWithIndent).setTooltipGenerator(this::displayName).setHeader("Attribute").setAutoWidth(true).setFlexGrow(1);
+		grid.addColumn(TagRow::vr).setHeader("VR").setWidth("85px").setFlexGrow(0);
 		if (allowPaths) {
-			grid.addColumn(this::enclosingSequences).setHeader("In sequence").setAutoWidth(true);
+			grid.addColumn(this::enclosingSequences).setTooltipGenerator(this::enclosingSequences).setHeader("In sequence").setAutoWidth(true).setFlexGrow(2);
+			// Create a hidden column containing the full path (ancestors + tag name) for sorting purposes
+			Grid.Column<TagRow> fullPath = grid.addColumn(this::generateFullPath).setHeader("Full path");
+			fullPath.setVisible(false);
+			grid.sort(GridSortOrder.asc(fullPath).build());
 		}
 		grid.setSizeFull();
+	}
+
+	/**
+	 * Method used to generate the full path of a DICOM tag for sorting purposes
+	 * @param row the TagRow for which to generate the full path
+	 * @return the full path of the DICOM tag with the ancestors if any and the tag name, separated by " › "
+	 */
+	private String generateFullPath(TagRow row) {
+		StringBuilder fullPath = new StringBuilder();
+		fullPath.append(enclosingSequences(row));
+		if (!fullPath.isEmpty()) {
+			fullPath.append(" › ");
+		}
+		fullPath.append(displayName(row));
+		return fullPath.toString();
 	}
 
 	/**
@@ -214,9 +237,13 @@ public class TagPickerDialog extends Dialog {
 	}
 
 	/** Indents nested (sequence) attributes so the hierarchy is readable. */
-	private String displayName(TagRow row) {
+	private String displayNameWithIndent(TagRow row) {
 		String label = row.keyword() != null && !row.keyword().isBlank() ? row.keyword() : row.name();
 		return row.depth() > 0 ? " ".repeat(row.depth() * 3) + "└ " + label : label;
+	}
+
+	private String displayName(TagRow row) {
+		return row.keyword() != null && !row.keyword().isBlank() ? row.keyword() : row.name();
 	}
 
 	private void refreshFromSearch() {

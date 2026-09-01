@@ -93,7 +93,7 @@ public class ProfileElementEditor extends Dialog {
 		this.onSaved = onSaved;
 
 		setHeaderTitle(existing != null ? "Edit element" : "Add element");
-		setWidth("640px");
+		setWidth("1240px");
 
 		nameField.setWidthFull();
 		conditionField.setWidthFull();

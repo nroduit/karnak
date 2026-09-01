@@ -31,8 +31,8 @@ public class WarningRemoveProjectUsed extends Dialog {
 		divIntro.getStyle().set("padding-bottom", "10px");
 
 		divContent.add(divIntro);
-		if (projectEntity.getDestinationEntities() != null) {
-			for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+		if (projectEntity.getAllDestinations() != null) {
+			for (DestinationEntity destinationEntity : projectEntity.getAllDestinations()) {
 				Div divDestination = new Div();
 				divDestination.setText(String.format("Type: %s, Description: %s, ForwardNode: %s",
 						destinationEntity.getDestinationType(), destinationEntity.getDescription(),

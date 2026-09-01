@@ -9,15 +9,14 @@
  */
 package org.karnak.backend.data.entity;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.time.LocalDateTime;
-import java.util.List;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,7 @@ class ProjectEntityTest {
 		ProjectEntity entity = new ProjectEntity();
 
 		assertTrue(entity.getSecretEntities().isEmpty());
-		assertTrue(entity.getDestinationEntities().isEmpty());
+		assertTrue(entity.getAllDestinations().isEmpty());
 	}
 
 	@Test
@@ -41,7 +40,7 @@ class ProjectEntityTest {
 		entity.setName("Project");
 		entity.setProfileEntity(profile);
 		entity.setSecretEntities(List.of());
-		entity.setDestinationEntities(List.of());
+		entity.setDeidentificationDestinationEntities(List.of());
 
 		assertEquals(1L, entity.getId());
 		assertEquals("Project", entity.getName());

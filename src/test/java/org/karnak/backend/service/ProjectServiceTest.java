@@ -9,14 +9,13 @@
  */
 package org.karnak.backend.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -87,7 +86,7 @@ class ProjectServiceTest {
 		ForwardNodeEntity forwardNodeEntitySecond = new ForwardNodeEntity();
 		destinationEntityFirst.setForwardNodeEntity(forwardNodeEntityFirst);
 		destinationEntitySecond.setForwardNodeEntity(forwardNodeEntitySecond);
-		projectEntity.setDestinationEntities(Arrays.asList(destinationEntityFirst, destinationEntitySecond));
+		projectEntity.setDeidentificationDestinationEntities(Arrays.asList(destinationEntityFirst, destinationEntitySecond));
 
 		// Call service
 		projectService.update(projectEntity);
@@ -107,7 +106,7 @@ class ProjectServiceTest {
 
 		DestinationEntity deidentifyDestination = new DestinationEntity();
 		deidentifyDestination.setForwardNodeEntity(new ForwardNodeEntity());
-		projectEntity.setDestinationEntities(List.of(deidentifyDestination));
+		projectEntity.setDeidentificationDestinationEntities(List.of(deidentifyDestination));
 
 		DestinationEntity tagMorphingDestination = new DestinationEntity();
 		tagMorphingDestination.setForwardNodeEntity(new ForwardNodeEntity());

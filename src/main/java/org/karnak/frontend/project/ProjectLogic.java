@@ -182,8 +182,8 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 		editProject.getButtonUpdate().addClickListener(event -> {
 			if (editProject.getProjectEntity() != null
 					&& editProject.getBinder().writeBeanIfValid(editProject.getProjectEntity())) {
-				if (editProject.getProjectEntity().getDestinationEntities() != null
-						&& !editProject.getProjectEntity().getDestinationEntities().isEmpty()) {
+				List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getAllDestinations();
+				if (destinationEntities != null && !destinationEntities.isEmpty()) {
 					ConfirmDialog dialog = new ConfirmDialog(
 							String.format("The project %s is used, are you sure you want to updated ?",
 									editProject.getProjectEntity().getName()));
@@ -209,7 +209,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 	 */
 	public void addEditEventButtonRemove(EditProject editProject) {
 		editProject.getButtonRemove().addClickListener(e -> {
-			List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getDestinationEntities();
+			List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getAllDestinations();
 			if (destinationEntities != null && !destinationEntities.isEmpty()) {
 				editProject.getDialogWarning().setText(editProject.getProjectEntity());
 				editProject.getDialogWarning().open();
@@ -247,5 +247,4 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 	public void initNewProjectProfileDropDown(NewProject newProject) {
 		addDropDownProfileList(newProject.getProfileDropDown());
 	}
-
 }

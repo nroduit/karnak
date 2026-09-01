@@ -131,7 +131,7 @@ public class DicomNodeSelectionDialog extends Dialog {
 			Span spanDescription = new Span(item.getName());
 			spanDescription.getStyle().set("font-weight", "500");
 
-			HtmlComponent htmlLineBreak = new HtmlComponent("BR");
+			HtmlComponent htmlLineBreak = new HtmlComponent("br");
 
 			Span spanOtherAttributes = new Span(item.getAet() + " | " + item.getHostname() + " | " + item.getPort());
 			spanOtherAttributes.getStyle().set("font-size", "75%");

@@ -89,9 +89,6 @@ public class WebDestinationManagementGrid extends Grid<WebDestinationConfigEntit
 			HorizontalLayout actions = new HorizontalLayout();
 			actions.setPadding(false);
 			actions.setSpacing(true);
-			if (!editablePredicate.test(endpoint)) {
-				return actions;
-			}
 
 			Button editBtn = new Button(VaadinIcon.EDIT.create(), event -> editHandler.accept(endpoint));
 			editBtn.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
@@ -102,6 +99,11 @@ public class WebDestinationManagementGrid extends Grid<WebDestinationConfigEntit
 			deleteBtn.setAriaLabel("Delete");
 
 			actions.add(editBtn, deleteBtn);
+			if (!editablePredicate.test(endpoint)) {
+				// Keep the icons but hide them in order for the row height to remain consistent with editable rows.
+				editBtn.getStyle().set("visibility", "hidden");
+				deleteBtn.getStyle().set("visibility", "hidden");
+			}
 			return actions;
 		});
 	}

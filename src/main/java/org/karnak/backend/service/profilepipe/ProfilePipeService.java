@@ -450,8 +450,8 @@ public class ProfilePipeService {
 			return;
 		}
 		for (ProjectEntity projectEntity : profileEntity.getProjectEntities()) {
-			if (projectEntity.getDestinationEntities() != null) {
-				for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+			if (projectEntity.getAllDestinations() != null) {
+				for (DestinationEntity destinationEntity : projectEntity.getAllDestinations()) {
 					applicationEventPublisher.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
 				}
 			}

@@ -32,6 +32,7 @@ import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.AdvancedParams;
@@ -59,6 +60,12 @@ public class StoreScpForwardService {
 	private Map<ForwardDicomNode, List<ForwardDestination>> destinations;
 
 	private final CStoreSCPService cStoreSCPService;
+
+	// Maximum number of open incoming associations; 0 means auto: twice the
+	// transfer-permit ceiling, leaving room for associations idling between
+	// objects and for C-ECHO
+	@Value("${gateway.max-open-associations:0}")
+	private int maxOpenAssociations;
 
 	@Autowired
 	public StoreScpForwardService(final CStoreSCPService cStoreSCPService) {
@@ -100,8 +107,25 @@ public class StoreScpForwardService {
 		device.setDimseRQHandler(createServiceRegistry());
 		device.addConnection(conn);
 		device.addApplicationEntity(ae);
+		configureAssociationLimit();
 		ae.setAssociationAcceptor(true);
 		ae.addConnection(conn);
+	}
+
+	/**
+	 * Caps the open incoming associations on the device. Every accepted association holds
+	 * PDU buffers and a dedicated thread (a cheap virtual one by default, see
+	 * {@code GatewayDeviceListenerService}) even while it only waits for a transfer
+	 * permit, so without this cap the memory footprint grows with the number of clients
+	 * instead of the work admitted - the transfer permits bound processing, not
+	 * connections. Beyond the limit dcm4che rejects the association up front (transient
+	 * A-ASSOCIATE-RJ), the protocol-correct "busy, retry later" signal, before any thread
+	 * or buffer is committed.
+	 */
+	private void configureAssociationLimit() {
+		int limit = maxOpenAssociations > 0 ? maxOpenAssociations : 2 * cStoreSCPService.getMaxTransferPermits();
+		device.setLimitOpenAssociations(limit);
+		log.info("DICOM listener limited to {} open associations", limit);
 	}
 
 	public final void setPriority(int priority) {

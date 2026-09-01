@@ -200,6 +200,7 @@ public class ExternalIDView extends HorizontalLayout {
 			separatorCSVField.setMaxLength(1);
 			separatorCSVField.setValue(",");
 			Button openCSVButton = new Button("Open CSV");
+			openCSVButton.getStyle().set("margin-top", "10px");
 
 			openCSVButton.addClickListener(buttonClickEvent -> {
 				chooseSeparatorDialog.close();
@@ -228,7 +229,7 @@ public class ExternalIDView extends HorizontalLayout {
 
 	public void checkDuplicatePatient() {
 		if (!externalIDGrid.getDuplicatePatientsList().isEmpty()) {
-			DuplicateDialog duplicateDialog = new DuplicateDialog("WARNING Duplicate data",
+			DuplicateDialog duplicateDialog = new DuplicateDialog("WARNING: Duplicate data",
 					"You are trying to insert two equivalent patients. Here is the list of duplicate patients.",
 					externalIDGrid.getDuplicatePatientsList(), "Close");
 			duplicateDialog.setWidth("80%");

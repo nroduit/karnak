@@ -19,11 +19,11 @@ import org.dcm4che3.net.TransferCapability;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.AttributeEditor;
-import org.weasis.dicom.param.DeviceListenerService;
 import org.weasis.dicom.param.DicomNode;
 
 @Service
@@ -33,7 +33,13 @@ public class DicomGatewayService {
 
 	private final StoreScpForwardService storeScpForwardService;
 
-	private DeviceListenerService deviceService;
+	private GatewayDeviceListenerService deviceService;
+
+	// Serve each incoming association from a virtual thread instead of a cached
+	// platform-thread pool; associations parked on the transfer permits then cost
+	// kilobytes instead of a stack. Kill switch, see application.yml.
+	@Value("${gateway.virtual-association-threads:true}")
+	private boolean virtualAssociationThreads;
 
 	@Autowired
 	public DicomGatewayService(final StoreScpForwardService storeScpForwardService) {
@@ -64,12 +70,14 @@ public class DicomGatewayService {
 	public void init(AdvancedParams forwardParams, ForwardDicomNode fwdNode, DicomNode destinationNode,
 			List<AttributeEditor> editors) throws IOException {
 		storeScpForwardService.init(forwardParams, fwdNode, destinationNode, editors);
-		this.deviceService = new DeviceListenerService(storeScpForwardService.getDevice());
+		this.deviceService = new GatewayDeviceListenerService(storeScpForwardService.getDevice(),
+				virtualAssociationThreads);
 	}
 
 	public void init(Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
 		storeScpForwardService.init(destinations);
-		this.deviceService = new DeviceListenerService(storeScpForwardService.getDevice());
+		this.deviceService = new GatewayDeviceListenerService(storeScpForwardService.getDevice(),
+				virtualAssociationThreads);
 	}
 
 	public boolean isRunning() {

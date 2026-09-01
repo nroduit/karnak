@@ -9,19 +9,14 @@
  */
 package org.karnak.backend.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
@@ -29,8 +24,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.karnak.backend.data.entity.DicomNodeConfigEntity;
 import org.karnak.backend.data.repo.DicomNodeConfigRepo;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
@@ -49,44 +48,41 @@ class DicomNodeConfigServiceTest {
 	}
 
 	@Test
-	void groups_managed_nodes_by_node_group_ordered_with_ungrouped_under_workstation() {
-		var ungrouped = node("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION", null);
-		var pacs = node("Public", "DICOMSERVER", "dicomserver.co.uk", 11112, "WORKSTATION", "PACS_WEB");
-		when(dicomNodeConfigRepo.findByNodeTypeNot("WORKLIST")).thenReturn(List.of(ungrouped, pacs));
-
-		var result = dicomNodeConfigService.getAllDicomNodeTypes();
-
-		assertEquals(2, result.size());
-		assertEquals("PACS_WEB", result.get(0).getName());
-		assertEquals("WORKSTATION", result.get(1).getName());
-		assertEquals("KARNAK-GATEWAY", result.get(1).getFirst().getAet());
-	}
-
-	@Test
 	void exposes_id_and_node_type_on_loaded_nodes() {
 		var workstation = node("Karnak", "KARNAK-GATEWAY", "localhost", 11112, "WORKSTATION", null);
 		workstation.setId(42L);
-		when(dicomNodeConfigRepo.findByNodeTypeNot("WORKLIST")).thenReturn(List.of(workstation));
+		when(dicomNodeConfigRepo.findByNodeType("WORKSTATION")).thenReturn(List.of(workstation));
 
-		var configNode = dicomNodeConfigService.getAllDicomNodeTypes().get(0).getFirst();
+		var configNode = dicomNodeConfigService.getWorkStationNodeTypes(false).get(0).getFirst();
 
 		assertEquals(42L, configNode.getId());
 		assertEquals("WORKSTATION", configNode.getNodeType());
 	}
 
 	@Test
-	void groups_worklist_nodes_by_node_group_with_ungrouped_under_worklists() {
+	void groups_worklist_nodes_by_node_group_ignore_ungrouped() {
 		var ungrouped = node("Public", "ADVT", "dicomserver.co.uk", 104, "WORKLIST", null);
 		var grouped = node("Site", "SITE-MWL", "mwl.host", 105, "WORKLIST", "SiteA");
 		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of(ungrouped, grouped));
 
-		var result = dicomNodeConfigService.getWorkListNodeTypes();
+		var result = dicomNodeConfigService.getWorkListNodeTypes(true);
 
-		assertEquals(2, result.size());
+		assertEquals(1, result.size());
 		assertEquals("SiteA", result.get(0).getName());
 		assertEquals("SITE-MWL", result.get(0).getFirst().getAet());
-		assertEquals("Worklists", result.get(1).getName());
-		assertEquals("ADVT", result.get(1).getFirst().getAet());
+	}
+
+
+	@Test
+	void all_worklist_nodes_ignore_group() {
+		var ungrouped = node("Public", "ADVT", "dicomserver.co.uk", 104, "WORKLIST", null);
+		var grouped = node("Site", "SITE-MWL", "mwl.host", 105, "WORKLIST", "SiteA");
+		when(dicomNodeConfigRepo.findByNodeType("WORKLIST")).thenReturn(List.of(ungrouped, grouped));
+
+		var result = dicomNodeConfigService.getWorkListNodeTypes(false);
+
+		assertEquals(1, result.size());
+		assertEquals("All Worklist nodes", result.get(0).getName());
 	}
 
 	@Test

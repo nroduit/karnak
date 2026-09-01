@@ -11,6 +11,7 @@ package org.karnak.backend.service;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +54,10 @@ public class DicomNodeConfigService {
 	public static final String NODE_TYPE_WORKLIST = "WORKLIST";
 
 	/** Display name of the reserved worklist group. */
-	private static final String WORKLIST_DISPLAY_NAME = "Worklists";
+	private static final String WORKLIST_DISPLAY_NAME = "All Worklist nodes";
+
+	/** Display name of the reserved worklist group. */
+	private static final String WORKSTATION_DISPLAY_NAME = "All Workstation nodes";
 
 	private final DicomNodeConfigRepo dicomNodeConfigRepo;
 
@@ -241,39 +245,66 @@ public class DicomNodeConfigService {
 	// ---------------------------------------------------------------------------------------
 
 	/**
-	 * @return one list per organizational group of managed (non-worklist) nodes, ordered
-	 * by group name; the ungrouped nodes are returned under the
-	 * {@value #NODE_TYPE_WORKSTATION} label
+	 * @param byGroup when {@code true}, return one {@link DicomNodeList} per organizational
+	 * group (ungrouped nodes are discarded); when {@code false}, return a single
+	 * {@link DicomNodeList} labelled {@value #WORKSTATION_DISPLAY_NAME} containing every
+	 * workstation node regardless of its group
+	 * @return the workstation nodes (i.e. nodes whose type is
+	 * {@value #NODE_TYPE_WORKSTATION}), either bucketed by group and ordered
+	 * alphabetically by group name, or flattened under a single list
 	 */
 	@Transactional(readOnly = true)
-	public List<DicomNodeList> getAllDicomNodeTypes() {
-		return groupByNodeGroup(dicomNodeConfigRepo.findByNodeTypeNot(NODE_TYPE_WORKLIST), NODE_TYPE_WORKSTATION);
+	public List<DicomNodeList> getWorkStationNodeTypes(boolean byGroup) {
+		if (byGroup) {
+			return groupByNodeGroup(dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKSTATION));
+		} else {
+			DicomNodeList list = new DicomNodeList(WORKSTATION_DISPLAY_NAME);
+			dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKSTATION).forEach(e -> list.add(toConfigNode(e)));
+			return Collections.singletonList(list);
+		}
 	}
 
 	/**
-	 * @return one list per organizational group of worklist nodes, ordered by group name;
-	 * the ungrouped worklist nodes are returned under the {@value #WORKLIST_DISPLAY_NAME}
-	 * label. Worklist nodes are grouped exactly like every other node; the only
-	 * difference from {@link #getAllDicomNodeTypes()} is the {@value #NODE_TYPE_WORKLIST}
-	 * type filter.
+	 * @param byGroup when {@code true}, return one {@link DicomNodeList} per organizational
+	 * group (ungrouped worklist nodes are discarded); when {@code false}, return a single
+	 * {@link DicomNodeList} labelled {@value #WORKLIST_DISPLAY_NAME} containing every
+	 * worklist node regardless of its group
+	 * @return the worklist nodes (i.e. nodes whose type is {@value #NODE_TYPE_WORKLIST}),
+	 * either bucketed by group and ordered alphabetically by group name, or flattened
+	 * under a single list
 	 */
 	@Transactional(readOnly = true)
-	public List<DicomNodeList> getWorkListNodeTypes() {
-		return groupByNodeGroup(dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKLIST), WORKLIST_DISPLAY_NAME);
+	public List<DicomNodeList> getWorkListNodeTypes(boolean byGroup) {
+		if (byGroup) {
+			return groupByNodeGroup(dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKLIST));
+		} else {
+			DicomNodeList list = new DicomNodeList(WORKLIST_DISPLAY_NAME);
+			dicomNodeConfigRepo.findByNodeType(NODE_TYPE_WORKLIST).forEach(e -> list.add(toConfigNode(e)));
+			return Collections.singletonList(list);
+		}
 	}
 
 	/**
-	 * Bucket nodes by their organizational group, ordered alphabetically by group name.
+	 * @return every managed node (worklist nodes included), bucketed by organizational
+	 * group and ordered alphabetically by group name; ungrouped nodes are discarded
+	 */
+	@Transactional(readOnly = true)
+	public List<DicomNodeList> getAllNodes() {
+		return groupByNodeGroup(dicomNodeConfigRepo.findAll());
+	}
+
+	/**
+	 * Bucket nodes by their organizational group, ordered alphabetically by group name. Node without a group are discarded.
 	 * @param nodes the nodes to organize
-	 * @param ungroupedLabel the bucket name used for nodes that carry no group
 	 * @return one {@link DicomNodeList} per group
 	 */
-	private List<DicomNodeList> groupByNodeGroup(List<DicomNodeConfigEntity> nodes, String ungroupedLabel) {
+	private List<DicomNodeList> groupByNodeGroup(List<DicomNodeConfigEntity> nodes) {
 		var byGroup = new TreeMap<String, DicomNodeList>();
 		for (DicomNodeConfigEntity entity : nodes) {
 			String group = entity.getNodeGroup();
-			String label = (group == null || group.isBlank()) ? ungroupedLabel : group;
-			byGroup.computeIfAbsent(label, DicomNodeList::new).add(toConfigNode(entity));
+			if (group != null && !group.isBlank()) {
+				byGroup.computeIfAbsent(group, DicomNodeList::new).add(toConfigNode(entity));
+			}
 		}
 		return new ArrayList<>(byGroup.values());
 	}

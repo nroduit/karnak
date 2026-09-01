@@ -9,8 +9,18 @@
  */
 package org.karnak.backend.service;
 
+import com.sun.management.OperatingSystemMXBean;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
+import java.io.Serial;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -18,9 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -67,49 +77,122 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	@Getter
 	private volatile int status;
 
-	// Scheduled service for updating status transfer in progress
-	private ScheduledFuture<?> isDelayOver;
+	// Single-flight guard for the transfer-status window: the C-STORE that wins it
+	// schedules the DB writes, every other one skips straight to the transfer
+	private final AtomicBoolean transferStatusPending = new AtomicBoolean();
 
+	// Runs the transfer-status DB writes off the C-STORE threads
 	private final ScheduledExecutorService executorService;
 
 	// Maximum number of C-STORE transfers processed concurrently; 0 means auto:
 	// the limit scales with the resources actually available, between 2 x CPU
-	// cores (minimum 8) and 8 x CPU cores depending on the heap headroom
+	// cores (minimum 8) and 8 x CPU cores depending on the heap headroom. Any
+	// positive value fixes the limit and disables the adaptive controller
+	// entirely, which is also how it is taken out of the picture when measuring.
 	@Value("${gateway.max-concurrent-transfers:0}")
 	private int maxConcurrentTransfers;
 
 	// How long an incoming transfer waits for a permit before being refused with
-	// A700 (out of resources)
-	@Value("${gateway.transfer-permit-timeout-seconds:300}")
+	// A700 (out of resources). While it waits, the sender sees no PDV consumed,
+	// and most SCUs abort on their own timeout well before that - the waiter is
+	// then parked on a dead association until this expires (its reader thread is
+	// the one waiting, so the abort goes unread) - hence a value near the
+	// senders' timeouts.
+	@Value("${gateway.transfer-permit-timeout-seconds:120}")
 	private long transferPermitTimeoutSeconds;
 
+	// Seconds between two memory samples (heap and process RSS) of the adaptive
+	// controller. This is a memory-safety control, not a scheduler: it only has to
+	// react before memory fills, which takes seconds, not microseconds.
+	@Value("${gateway.transfer-permit-sample-seconds:5}")
+	private long transferPermitSampleSeconds;
+
+	// Fair semaphore: waiting associations get permits in arrival order instead of
+	// letting a busy sender starve the others. Fairness routes every acquisition
+	// through the AQS queue even when a permit is free, which is a global
+	// serialisation point at high object rates; set to false to measure its cost.
+	@Value("${gateway.transfer-permit-fair:true}")
+	private boolean transferPermitFair;
+
 	// Admission control: bounds how many C-STOREs are processed at the same time.
-	// The listener device serves every association with its own thread (cached
-	// thread pool), and a transfer that de-identifies or transcodes holds the whole
-	// pixel data of the object in heap, so without a bound the peak heap grows
-	// linearly with the number of concurrent clients. Blocking in store() applies
-	// backpressure through the DICOM protocol itself: the PDVs of the association
-	// are simply not consumed until a permit is available. The permit count is not
+	// The listener device serves every association with its own thread (virtual by
+	// default, see GatewayDeviceListenerService), and a transfer that de-identifies
+	// or transcodes holds the whole pixel data of the object in heap, so without a
+	// bound the peak heap grows linearly with the number of concurrent clients.
+	// Blocking in store() applies backpressure through the DICOM protocol itself:
+	// the PDVs of the association are simply not consumed until a permit is
+	// available. The permit count is not
 	// fixed: it is adjusted between minTransferPermits and maxTransferPermits
 	// according to the heap headroom, so the gateway scales up when memory is
 	// available and only throttles under actual memory pressure.
 	private AdjustableSemaphore transferPermits;
 
 	// Heap usage fractions steering the adaptive permit count: below the grow
-	// threshold the limit increases, above the shrink threshold it decreases
+	// threshold the limit increases, above the shrink threshold it decreases.
+	// They are compared against occupancy *after* collection, never against live
+	// occupancy - see sampleHeapAndAdjust.
 	private static final double GROW_HEAP_USAGE = 0.60;
 
 	private static final double SHRINK_HEAP_USAGE = 0.80;
 
-	private final Object permitLock = new Object();
+	// Post-collection heap occupancy past which the limit drops straight to the
+	// floor: by the time several ordinary shrink steps would have run, the
+	// heap is full.
+	private static final double EMERGENCY_HEAP_USAGE = 0.92;
 
-	private int permitLimit;
+	// Process-RSS fractions of the memory limit steering the native-memory
+	// signal. De-identification and transcoding allocate off-heap (OpenCV mats,
+	// direct buffers) and a container OOM-kill acts on RSS, none of which any
+	// heap reading can see.
+	private static final double SHRINK_RSS_USAGE = 0.90;
+
+	private static final double EMERGENCY_RSS_USAGE = 0.95;
+
+	// Consecutive samples on the same side of a threshold before the limit moves.
+	// Growing needs more agreement than shrinking: the controller must not be
+	// able to complete a grow/shrink cycle inside one GC cycle (that turns
+	// ordinary sawtooth into permit flapping, and a fair semaphore whose permit
+	// count keeps collapsing stalls every association at once), while a shrink is
+	// the memory-safety action - shedding permits reclaims nothing from admitted
+	// transfers, so it has to outrun the pressure it reacts to.
+	private static final int GROW_HYSTERESIS_SAMPLES = 3;
+
+	private static final int SHRINK_HYSTERESIS_SAMPLES = 2;
+
+	// Mutated only by the single-threaded sampler; volatile for readers.
+	private volatile int permitLimit;
 
 	private int minTransferPermits;
 
+	// Ceiling of the adaptive range (or the fixed limit); also the basis for the
+	// auto association cap in StoreScpForwardService
+	@Getter
 	private int maxTransferPermits;
 
 	private int permitStep;
+
+	// Sampler state, confined to the sampler thread
+	private int consecutiveGrowSamples;
+
+	private int consecutiveShrinkSamples;
+
+	private long lastCollectionCount = -1;
+
+	private boolean collectionUsageUnavailableLogged;
+
+	private boolean procRssUnavailable;
+
+	// Cgroup-aware memory limit provider for the RSS signal: getTotalMemorySize
+	// is the container limit when one is set, the physical RAM otherwise. Null on
+	// a JVM that does not expose the com.sun.management interface.
+	private final OperatingSystemMXBean osBean = platformOsBean();
+
+	private static final Path PROC_SELF_STATUS = Path.of("/proc/self/status");
+
+	// Dedicated one-shot scheduler for the heap sampler. Not the executorService
+	// above: that one runs the transfer-status writes, and a slow DB round trip
+	// there must not delay the memory-safety control.
+	private ScheduledExecutorService permitSampler;
 
 	@Autowired
 	public CStoreSCPService(DestinationRepo destinationRepo, ForwardService forwardService) {
@@ -118,7 +201,6 @@ public class CStoreSCPService extends BasicCStoreSCP {
 		this.forwardService = forwardService;
 		this.destinations = null;
 		this.executorService = Executors.newSingleThreadScheduledExecutor();
-		this.isDelayOver = null;
 		this.status = 0;
 		this.priority = 0;
 	}
@@ -141,19 +223,37 @@ public class CStoreSCPService extends BasicCStoreSCP {
 		}
 		this.permitStep = Math.max(1, cores / 2);
 		this.permitLimit = minTransferPermits;
-		// Fair, so waiting associations get permits in arrival order instead of
-		// letting a busy sender starve the others
-		this.transferPermits = new AdjustableSemaphore(permitLimit, true);
+		this.transferPermits = new AdjustableSemaphore(permitLimit, transferPermitFair);
+
+		if (minTransferPermits == maxTransferPermits) {
+			log.info("C-STORE transfer permits fixed at {} (fair={})", permitLimit, transferPermitFair);
+			return;
+		}
+		// The limit is adapted off the C-STORE path, on its own thread. Doing it per
+		// object meant a global lock plus two Runtime calls on the hottest path in
+		// the gateway, for a value that can only meaningfully change once per GC.
+		this.permitSampler = Executors.newSingleThreadScheduledExecutor(r -> {
+			Thread t = new Thread(r, "karnak-permit-sampler");
+			t.setDaemon(true);
+			return t;
+		});
+		long period = Math.max(1, transferPermitSampleSeconds);
+		this.permitSampler.scheduleWithFixedDelay(this::sampleHeapAndAdjust, period, period, TimeUnit.SECONDS);
+		log.info("C-STORE transfer permits adaptive between {} and {}, step {}, sampled every {}s (fair={})",
+				minTransferPermits, maxTransferPermits, permitStep, period, transferPermitFair);
+	}
+
+	@PreDestroy
+	void stopPermitSampler() {
+		if (permitSampler != null) {
+			permitSampler.shutdownNow();
+		}
 	}
 
 	@Override
 	protected void store(Association as, PresentationContext pc, Attributes rq, PDVInputStream data, Attributes rsp)
 			throws IOException {
-		ForwardDicomNode fwdNode = destinations.keySet()
-			.stream()
-			.filter(n -> n.getForwardAETitle().equals(as.getCalledAET()))
-			.findFirst()
-			.orElseThrow(() -> new IllegalStateException("Cannot find the forward AeTitle " + as.getCalledAET()));
+		ForwardDicomNode fwdNode = findForwardNode(as.getCalledAET());
 		List<ForwardDestination> destList = destinations.get(fwdNode);
 		if (destList == null || destList.isEmpty()) {
 			throw new IllegalStateException("No DICOM destinations for " + fwdNode);
@@ -195,12 +295,26 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	}
 
 	/**
+	 * Resolves the forward node addressed by the called AET of the association. Runs on
+	 * every C-STORE; a plain loop over the live key set, kept deliberately index-free
+	 * because the routing map is mutated in place by configuration reloads and an index
+	 * would have to chase it.
+	 */
+	private ForwardDicomNode findForwardNode(String calledAet) {
+		for (ForwardDicomNode node : destinations.keySet()) {
+			if (node.getForwardAETitle().equals(calledAet)) {
+				return node;
+			}
+		}
+		throw new IllegalStateException("Cannot find the forward AeTitle " + calledAet);
+	}
+
+	/**
 	 * Blocks until a transfer permit is available (backpressure on the sending
 	 * association) or the timeout elapses, in which case the C-STORE is refused with A700
 	 * (out of resources) so the sender can retry later.
 	 */
 	private void acquireTransferPermit(Attributes rq) throws DicomServiceException {
-		adjustTransferPermits();
 		try {
 			if (!transferPermits.tryAcquire(transferPermitTimeoutSeconds, TimeUnit.SECONDS)) {
 				log.error("Refused: too many concurrent transfers (A700). SopUID: {}",
@@ -216,50 +330,241 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	}
 
 	/**
-	 * Adapts the concurrent transfer limit to the current heap headroom. Called on every
-	 * incoming C-STORE, so the limit follows the load closely: while heap usage stays
-	 * below the grow threshold the limit rises by one step toward the CPU-based ceiling,
-	 * and once usage exceeds the shrink threshold it falls back toward the floor. A
-	 * shrink never interrupts admitted transfers; it only reduces the permits available
-	 * to new ones.
+	 * Adapts the concurrent transfer limit to the memory actually in use. Runs on the
+	 * sampler thread, never on a C-STORE. Two signals are watched:
+	 * <p>
+	 * <b>Process RSS</b> against the memory limit (cgroup-aware), checked first and not
+	 * gated on garbage collection: de-identification and transcoding allocate off-heap
+	 * (OpenCV mats, direct buffers), a container OOM-kill acts on RSS, and none of that
+	 * needs a GC to change. The signal is Linux-only; where it is unavailable the heap
+	 * signal alone drives the controller.
+	 * <p>
+	 * <b>Heap surviving collection</b>: {@link MemoryPoolMXBean#getCollectionUsage()}
+	 * summed over the heap pools. Live occupancy ({@code totalMemory - freeMemory}) is
+	 * the wrong signal here: it includes everything about to be collected, so under a
+	 * generational collector it sweeps through both thresholds on every GC cycle whatever
+	 * the real pressure. Reacting to that made the limit oscillate between floor and
+	 * ceiling at GC frequency, and because the semaphore can be fair, every shrink queues
+	 * the associations behind the permit deficit - all of them stalling together, several
+	 * times a second. A heap sample is taken only once the collectors have actually run
+	 * since the previous one, so the controller cannot complete a cycle inside one GC
+	 * cycle.
+	 * <p>
+	 * The response is asymmetric: growing needs {@value #GROW_HYSTERESIS_SAMPLES}
+	 * consecutive samples and moves one additive step, shrinking needs
+	 * {@value #SHRINK_HYSTERESIS_SAMPLES} and halves the distance to the floor, and past
+	 * the emergency thresholds the limit drops to the floor in one move. A shrink never
+	 * interrupts admitted transfers; it only reduces the permits available to new ones.
 	 */
-	private void adjustTransferPermits() {
-		if (minTransferPermits == maxTransferPermits) {
-			return;
+	private void sampleHeapAndAdjust() {
+		try {
+			double rssUsage = processRssFraction();
+			if (rssUsage > EMERGENCY_RSS_USAGE) {
+				dropPermitLimitToFloor("process RSS", rssUsage);
+				return;
+			}
+			if (rssUsage > SHRINK_RSS_USAGE) {
+				consecutiveGrowSamples = 0;
+				consecutiveShrinkSamples++;
+				shrinkPermitLimit("process RSS", rssUsage);
+				return;
+			}
+
+			long collections = totalCollectionCount();
+			if (collections == lastCollectionCount) {
+				// No GC since the last sample: getCollectionUsage would return the
+				// same reading, and three copies of one measurement are not
+				// three samples.
+				return;
+			}
+			lastCollectionCount = collections;
+
+			long liveHeap = liveHeapAfterCollection();
+			if (liveHeap < 0) {
+				if (!collectionUsageUnavailableLogged) {
+					log.warn("No heap pool reports collection usage; the transfer permit limit stays at {}",
+							permitLimit);
+					collectionUsageUnavailableLogged = true;
+				}
+				return;
+			}
+			double heapUsage = (double) liveHeap / Runtime.getRuntime().maxMemory();
+
+			if (heapUsage > EMERGENCY_HEAP_USAGE) {
+				dropPermitLimitToFloor("live heap", heapUsage);
+			}
+			else if (heapUsage < GROW_HEAP_USAGE) {
+				consecutiveShrinkSamples = 0;
+				consecutiveGrowSamples++;
+				growPermitLimit(heapUsage);
+			}
+			else if (heapUsage > SHRINK_HEAP_USAGE) {
+				consecutiveGrowSamples = 0;
+				consecutiveShrinkSamples++;
+				shrinkPermitLimit("live heap", heapUsage);
+			}
+			else {
+				// Between the thresholds: the current limit is the right one.
+				consecutiveGrowSamples = 0;
+				consecutiveShrinkSamples = 0;
+			}
 		}
-		Runtime runtime = Runtime.getRuntime();
-		long usedHeap = runtime.totalMemory() - runtime.freeMemory();
-		double heapUsage = (double) usedHeap / runtime.maxMemory();
-		synchronized (permitLock) {
-			if (heapUsage < GROW_HEAP_USAGE && permitLimit < maxTransferPermits) {
-				int step = Math.min(permitStep, maxTransferPermits - permitLimit);
-				permitLimit += step;
-				transferPermits.release(step);
-				log.debug("Transfer permit limit raised to {} (heap usage {}%)", permitLimit,
-						Math.round(heapUsage * 100));
-			}
-			else if (heapUsage > SHRINK_HEAP_USAGE && permitLimit > minTransferPermits) {
-				int step = Math.min(permitStep, permitLimit - minTransferPermits);
-				permitLimit -= step;
-				transferPermits.reduce(step);
-				log.debug("Transfer permit limit lowered to {} (heap usage {}%)", permitLimit,
-						Math.round(heapUsage * 100));
-			}
+		catch (RuntimeException e) {
+			// The sampler is scheduled with a fixed delay: letting an exception out
+			// would cancel it silently and freeze the limit for the process lifetime.
+			log.warn("Transfer permit sampling failed, limit left at {}", permitLimit, e);
+		}
+	}
+
+	private void growPermitLimit(double heapUsage) {
+		if (consecutiveGrowSamples >= GROW_HYSTERESIS_SAMPLES && permitLimit < maxTransferPermits) {
+			consecutiveGrowSamples = 0;
+			int step = Math.min(permitStep, maxTransferPermits - permitLimit);
+			permitLimit += step;
+			transferPermits.release(step);
+			log.debug("Transfer permit limit raised to {} (live heap {}%)", permitLimit, Math.round(heapUsage * 100));
 		}
 	}
 
 	/**
+	 * Multiplicative decrease: halves the distance to the floor (never less than one
+	 * additive step), so a shrink episode outruns the growth it reacts to.
+	 */
+	private void shrinkPermitLimit(String signal, double usage) {
+		if (consecutiveShrinkSamples >= SHRINK_HYSTERESIS_SAMPLES && permitLimit > minTransferPermits) {
+			consecutiveShrinkSamples = 0;
+			int headroom = permitLimit - minTransferPermits;
+			int step = Math.min(headroom, Math.max(permitStep, headroom / 2));
+			permitLimit -= step;
+			transferPermits.reduce(step);
+			log.debug("Transfer permit limit lowered to {} ({} {}%)", permitLimit, signal, Math.round(usage * 100));
+		}
+	}
+
+	/**
+	 * Emergency shed: back to the floor in one move, because by the time several ordinary
+	 * shrink steps would have run the memory is gone. Admitted transfers are never
+	 * interrupted; the gateway just stops admitting past the floor.
+	 */
+	private void dropPermitLimitToFloor(String signal, double usage) {
+		consecutiveGrowSamples = 0;
+		consecutiveShrinkSamples = 0;
+		int deficit = permitLimit - minTransferPermits;
+		if (deficit > 0) {
+			permitLimit = minTransferPermits;
+			transferPermits.reduce(deficit);
+			log.warn("Transfer permit limit dropped to floor {} ({} at {}%)", permitLimit, signal,
+					Math.round(usage * 100));
+		}
+	}
+
+	/**
+	 * Fraction of the memory limit (container limit when one is set, physical RAM
+	 * otherwise) currently resident for this process, or {@code -1} when the signal is
+	 * unavailable. RSS is used rather than the OS/cgroup used-memory counters because
+	 * those include the page cache, which Karnak's bulk-data spooling fills routinely -
+	 * reclaimable memory that would read as permanent pressure.
+	 */
+	private double processRssFraction() {
+		if (procRssUnavailable || osBean == null) {
+			return -1;
+		}
+		long limit = osBean.getTotalMemorySize();
+		long rss = readVmRssBytes();
+		if (limit <= 0 || rss < 0) {
+			return -1;
+		}
+		return (double) rss / limit;
+	}
+
+	/**
+	 * Resident set size of this process, from {@code /proc/self/status} (Linux only). The
+	 * first failure marks the signal unavailable for the process lifetime instead of
+	 * retrying - and logging - on every sample.
+	 */
+	private long readVmRssBytes() {
+		try {
+			for (String line : Files.readAllLines(PROC_SELF_STATUS)) {
+				if (line.startsWith("VmRSS:")) {
+					String[] fields = line.split("\\s+");
+					return Long.parseLong(fields[1]) * 1024L;
+				}
+			}
+		}
+		catch (IOException | RuntimeException e) {
+			// Fall through to the unavailable marking below
+		}
+		procRssUnavailable = true;
+		log.info("Process RSS is unavailable; the transfer permit controller uses heap occupancy only");
+		return -1;
+	}
+
+	private static OperatingSystemMXBean platformOsBean() {
+		try {
+			return ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+		}
+		catch (RuntimeException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Heap still live after the last collection, summed over the heap pools that report
+	 * it. Returns {@code -1} when no pool does, which is the signal to leave the limit
+	 * alone rather than fall back to a measurement known to be misleading.
+	 */
+	private static long liveHeapAfterCollection() {
+		long total = -1;
+		for (MemoryPoolMXBean pool : ManagementFactory.getMemoryPoolMXBeans()) {
+			if (pool.getType() != MemoryType.HEAP) {
+				continue;
+			}
+			MemoryUsage usage = pool.getCollectionUsage();
+			if (usage != null) {
+				total = (total < 0 ? 0 : total) + usage.getUsed();
+			}
+		}
+		return total;
+	}
+
+	private static long totalCollectionCount() {
+		long total = 0;
+		for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
+			long count = gc.getCollectionCount();
+			if (count > 0) {
+				total += count;
+			}
+		}
+		return total;
+	}
+
+	/**
 	 * Flags the destinations as transferring, then schedules clearing the flag after a
-	 * delay.
+	 * delay. Single-flight per window, and both DB round trips run on the status
+	 * executor: the calling C-STORE thread holds a transfer permit and must not spend it
+	 * on repository calls.
 	 */
 	private void updateTransferStatus(List<ForwardDestination> destinations) {
-		// if delay is over or first iteration
-		if (isDelayOver == null || isDelayOver.isDone()) {
-			// Set flag transfer in progress
-			destinations.forEach(d -> updateTransferStatus(d, true));
-			// In a certain delay set back transfer in progress to false
-			isDelayOver = executorService.schedule(() -> destinations.forEach(d -> updateTransferStatus(d, false)), 5,
-					TimeUnit.SECONDS);
+		if (transferStatusPending.compareAndSet(false, true)) {
+			// The executor is single-threaded, so the set always runs before the clear
+			executorService.execute(() -> setTransferStatus(destinations, true));
+			executorService.schedule(() -> {
+				setTransferStatus(destinations, false);
+				transferStatusPending.set(false);
+			}, 5, TimeUnit.SECONDS);
+		}
+	}
+
+	/**
+	 * Persists the flag for every destination. Never lets an exception out: the status is
+	 * telemetry, and the guard reset scheduled after it must always run.
+	 */
+	private void setTransferStatus(List<ForwardDestination> destinations, boolean status) {
+		try {
+			destinations.forEach(d -> updateTransferStatus(d, status));
+		}
+		catch (RuntimeException e) {
+			log.warn("Cannot persist the transfer-in-progress status", e);
 		}
 	}
 
@@ -280,6 +585,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	// shrink the limit without interrupting the transfers already admitted
 	private static final class AdjustableSemaphore extends Semaphore {
 
+		@Serial
 		private static final long serialVersionUID = 1L;
 
 		AdjustableSemaphore(int permits, boolean fair) {

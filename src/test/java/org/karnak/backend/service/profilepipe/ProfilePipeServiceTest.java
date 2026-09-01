@@ -9,12 +9,6 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -22,6 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -293,7 +292,7 @@ class ProfilePipeServiceTest {
 		// A project referencing the profile, but with no de-identification destinations:
 		// its destinations use the profile for tag morphing (separate FK).
 		ProjectEntity project = new ProjectEntity();
-		project.setDestinationEntities(new ArrayList<>());
+		project.setDeidentificationDestinationEntities(new ArrayList<>());
 		profile.setProjectEntities(List.of(project));
 		DestinationEntity tagMorphingDestination = new DestinationEntity();
 		tagMorphingDestination.setForwardNodeEntity(new ForwardNodeEntity("FWD_AET"));
@@ -326,7 +325,7 @@ class ProfilePipeServiceTest {
 			destination.setForwardNodeEntity(forwardNode);
 			destinations.add(destination);
 		}
-		project.setDestinationEntities(destinations);
+		project.setDeidentificationDestinationEntities(destinations);
 		profile.setProjectEntities(List.of(project));
 	}
 

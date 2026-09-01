@@ -129,10 +129,56 @@ gateway:
   # consuming their PDVs. 0 = auto: the limit adapts to the available resources,
   # scaling between 2 x CPU cores (minimum 8) and 8 x CPU cores according to the
   # heap headroom, so throttling only kicks in under actual memory pressure.
+  # Any positive value fixes the limit and switches the adaptive controller off.
+  # Note "CPU cores" is what the JVM sees: under a container CPU limit that is the
+  # quota, not the host's core count (check with -XshowSettings:system).
   max-concurrent-transfers: 0
+  # Maximum number of open incoming DICOM associations. Every accepted
+  # association holds a dedicated thread and PDU buffers even while it only
+  # waits for a transfer permit, so memory grows with the number of clients
+  # unless they are bounded here: beyond the limit new associations are rejected
+  # up front (transient A-ASSOCIATE-RJ) and the sender retries later. 0 = auto:
+  # twice the transfer-permit ceiling, leaving room for associations idling
+  # between objects and for C-ECHO. With virtual-association-threads enabled the
+  # per-association thread cost mostly disappears, so an explicit higher value
+  # is affordable when senders hold many mostly-idle associations open.
+  max-open-associations: 0
+  # Serve each incoming association from a virtual thread (Java 21+). An
+  # association waiting for a transfer permit - or for a slow sender - parks its
+  # thread, and a parked virtual thread costs kilobytes where a platform thread
+  # reserves a ~1 MB stack, so far more waiting senders fit in the same memory.
+  # Native transcoding work still pins an OS carrier thread while it runs, which
+  # is fine: it is CPU-bound and already bounded by the transfer permits. Set to
+  # false to fall back to the classic cached platform-thread pool.
+  virtual-association-threads: true
   # How long an incoming transfer waits for a permit before being refused with
-  # A700 (out of resources)
-  transfer-permit-timeout-seconds: 300
+  # A700 (out of resources). While it waits the sender sees no data consumed, so
+  # keep this below the senders' own response timeouts; a longer wait just parks
+  # threads on associations the sender may already have abandoned.
+  transfer-permit-timeout-seconds: 120
+  # Interval at which the adaptive controller samples memory. It watches the
+  # heap occupancy that survives collection and, on Linux, the process RSS
+  # against the container memory limit (transcoding allocates off-heap, which no
+  # heap reading sees), so it only has to react before memory fills - seconds,
+  # not per object. Ignored when the limit is fixed.
+  transfer-permit-sample-seconds: 5
+  # Hand out permits in arrival order. Fairness routes every acquisition through
+  # the queue even when a permit is free, which is a global serialisation point at
+  # high object rates; set to false to measure what it costs.
+  transfer-permit-fair: true
+
+# Outgoing associations to a destination.
+forward:
+  pool:
+    # DICOM associations kept open per destination. 1 is the historical behaviour
+    # and serialises concurrent transfers to that destination onto a single
+    # association; raise it when several sources feed the same destination. The
+    # destination PACS must accept that many associations from this calling AE.
+    max-per-destination: 1
+    # Async C-STORE window (maxOpsInvoked) on each of those associations: how many
+    # requests may be outstanding before waiting for responses. Balance against
+    # max-per-destination.
+    max-ops-invoked: 16
 
 async-events:
   # Bounded executor for the @Async event listeners (transfer monitoring,

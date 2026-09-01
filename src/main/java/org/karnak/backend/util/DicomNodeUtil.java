@@ -53,11 +53,13 @@ public class DicomNodeUtil {
 
 	/**
 	 * @return the dynamic source groups first (e.g. the Gateway destinations), followed
-	 * by every user-defined DICOM node group (the reserved worklist group is excluded)
+	 * by every user-defined DICOM node group and the global "All Workstation nodes" group
+	 * containing all the nodes having a type of workstation (dynamic nodes excluded).
 	 */
 	public List<DicomNodeList> getAllDicomNodeTypes() {
 		var nodeLists = getDynamicNodeGroups();
-		nodeLists.addAll(dicomNodeConfigService.getAllDicomNodeTypes());
+		nodeLists.addAll(dicomNodeConfigService.getWorkStationNodeTypes(true));
+		nodeLists.addAll(dicomNodeConfigService.getWorkStationNodeTypes(false)); // Adds the generic category Workstations
 		return nodeLists;
 	}
 
@@ -112,22 +114,28 @@ public class DicomNodeUtil {
 	}
 
 	/**
-	 * @return one list per organizational group of worklist nodes (the ungrouped worklist
-	 * nodes under the "Worklists" label), mirroring {@link #getAllDicomNodeTypes()}
+	 * @return one list per organizational group of worklist nodes and one additional
+	 * category containing all worklist nodes under the name "All Worklist nodes".
 	 */
 	public List<DicomNodeList> getWorkListNodeTypes() {
-		return dicomNodeConfigService.getWorkListNodeTypes();
+		var nodeLists = dicomNodeConfigService.getWorkListNodeTypes(true);
+		nodeLists.addAll(dicomNodeConfigService.getWorkListNodeTypes(false));
+		return nodeLists;
 	}
 
 	/**
-	 * @return {@link #getAllDicomNodeTypes()} followed by the worklist groups.
+	 * Returns the dynamic source groups first (e.g. the Gateway destinations), followed
+	 * by every user-defined DICOM node group (independently of node type) and the
+	 * global "All Workstation nodes" and "All Worklist nodes" groups.
 	 * Connectivity tools (echo, monitor) check any DICOM node, worklist SCPs included:
 	 * C-ECHO and the capabilities probe are type-agnostic, so worklist nodes are offered
 	 * alongside every other node rather than being filtered out by their reserved type.
 	 */
 	public List<DicomNodeList> getAllNodeTypesIncludingWorklist() {
-		var nodeLists = getAllDicomNodeTypes();
-		nodeLists.addAll(dicomNodeConfigService.getWorkListNodeTypes());
+		var nodeLists = getDynamicNodeGroups();
+		nodeLists.addAll(dicomNodeConfigService.getAllNodes());
+		nodeLists.addAll(dicomNodeConfigService.getWorkListNodeTypes(false));
+		nodeLists.addAll(dicomNodeConfigService.getWorkStationNodeTypes(false));
 		return nodeLists;
 	}
 

@@ -14,7 +14,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -104,7 +103,8 @@ public class TagPickerField extends VerticalLayout {
 		manualEntry
 			.setPlaceholder(allowsPaths() ? "(0010,0010), .(0010,0010) or (0040,0275).(0040,0009)" : "(0010,0010)");
 		manualEntry.setClearButtonVisible(true);
-		manualEntry.setWidth("340px");
+		manualEntry.setWidth("450px");
+		manualEntry.getStyle().set("flex-grow", "5");
 		if (allowsPaths()) {
 			manualEntry.setHelperText(pathMode == PathMode.LITERAL ? LITERAL_PATH_HELPER : PATH_HELPER);
 		}
@@ -116,6 +116,7 @@ public class TagPickerField extends VerticalLayout {
 		HorizontalLayout bar = new HorizontalLayout(manualEntry, addTyped, browse);
 		bar.setAlignItems(Alignment.BASELINE);
 		bar.setPadding(false);
+		bar.setWidth("100%");
 		return bar;
 	}
 

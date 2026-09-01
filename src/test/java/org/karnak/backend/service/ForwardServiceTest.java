@@ -233,14 +233,17 @@ class ForwardServiceTest {
 	// ------------------
 
 	@Test
-	void web_transfer_fast_path_uploads_stream_and_monitors_success() throws Exception {
+	void web_transfer_without_editors_parses_the_stream_and_uploads_the_dataset() throws Exception {
 		DicomStowRS stow = mock(DicomStowRS.class);
 		WebForwardDestination dest = webDestination(stow, List.of());
-		Params p = new Params(IUID, CUID, TS, 0, new ByteArrayInputStream(serialize(dataset())), null);
+		Params p = new Params(IUID, CUID, TS, 0, new ByteArrayInputStream(serializeRaw(dataset())), null);
 
 		forwardService.transfer(fwdNode, dest, null, p);
 
-		verify(stow).uploadDicom(any(InputStream.class), any(Attributes.class));
+		// No raw streaming upload here: the dataset is parsed (bulk data spooled)
+		// and uploaded from the attributes, so monitoring and the upload never
+		// compete for the same stream.
+		verify(stow).uploadDicom(any(Attributes.class), eq(TS));
 		assertTrue(captureSingleEvent().sent());
 	}
 
@@ -334,20 +337,7 @@ class ForwardServiceTest {
 		return a;
 	}
 
-	/**
-	 * Full stream (preamble + file meta information), consumed by the no-editor fast
-	 * path.
-	 */
-	private static byte[] serialize(Attributes data) throws IOException {
-		Attributes fmi = data.createFileMetaInformation(TS);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DicomOutputStream dos = new DicomOutputStream(baos, UID.ExplicitVRLittleEndian)) {
-			dos.writeDataset(fmi, data);
-		}
-		return baos.toByteArray();
-	}
-
-	/** Raw dataset (no preamble / file meta information), consumed by the editor path. */
+	/** Raw dataset (no preamble / file meta information), as read off an association. */
 	private static byte[] serializeRaw(Attributes data) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (DicomOutputStream dos = new DicomOutputStream(baos, TS)) {

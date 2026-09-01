@@ -12,6 +12,7 @@ package org.karnak.frontend.dicom;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -62,7 +63,7 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 			.setFlexGrow(3)
 			.setWidth("120px")
 			.setSortable(true);
-		addColumn(DicomNodeConfigEntity::getAeTitle).setHeader("AE Title")
+		Column<DicomNodeConfigEntity> aetitle = addColumn(DicomNodeConfigEntity::getAeTitle).setHeader("AE Title")
 			.setFlexGrow(2)
 			.setWidth("100px")
 			.setSortable(true);
@@ -80,6 +81,8 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 			.setWidth("80px")
 			.setSortable(true);
 		addColumn(createActionsRenderer()).setHeader("Actions").setFlexGrow(0).setWidth("100px");
+
+		this.sort(GridSortOrder.asc(aetitle).build());
 	}
 
 	private ComponentRenderer<HorizontalLayout, DicomNodeConfigEntity> createActionsRenderer() {
@@ -87,9 +90,6 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 			HorizontalLayout actions = new HorizontalLayout();
 			actions.setPadding(false);
 			actions.setSpacing(true);
-			if (!editablePredicate.test(node)) {
-				return actions;
-			}
 
 			Button editBtn = new Button(VaadinIcon.EDIT.create(), event -> editHandler.accept(node));
 			editBtn.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
@@ -100,6 +100,13 @@ public class DicomNodeManagementGrid extends Grid<DicomNodeConfigEntity> {
 			deleteBtn.setAriaLabel("Delete");
 
 			actions.add(editBtn, deleteBtn);
+
+			if (!editablePredicate.test(node)) {
+				// Keep the icons but hide them in order for the row height to remain consistent with editable rows.
+				editBtn.getStyle().set("visibility", "hidden");
+				deleteBtn.getStyle().set("visibility", "hidden");
+			}
+
 			return actions;
 		});
 	}

@@ -138,7 +138,7 @@ public class ProjectService {
 	 * their (tag-morphing) pipeline keeps running the previously loaded project/profile.
 	 */
 	private void updateDestinations(ProjectEntity projectEntity) {
-		projectEntity.getDestinationEntities()
+		projectEntity.getAllDestinations()
 			.forEach(destinationEntity -> applicationEventPublisher
 				.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE)));
 		for (DestinationEntity destinationEntity : destinationRepo.findByTagMorphingProjectEntity(projectEntity)) {

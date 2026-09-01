@@ -45,7 +45,7 @@ public class DuplicateDialog extends Dialog {
 
 		Button cancelButton = new Button(buttonText, event -> close());
 
-		cancelButton.getStyle().set("margin-left", "50%");
+		cancelButton.getStyle().set("margin-left", "50%").set("margin-top", "10px");
 		add(divTitle, divContent, grid, cancelButton);
 	}
 

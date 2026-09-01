@@ -9,14 +9,12 @@
  */
 package org.karnak.backend.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -29,6 +27,8 @@ import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.backend.model.dicom.WebDestinationNode;
 import org.karnak.backend.service.DicomNodeConfigService;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomNodeSource;
@@ -59,7 +59,7 @@ class DicomNodeUtilTest {
 		var pacsWeb = new DicomNodeList("PACS Public WEB");
 		when(gatewaySource.getGroupName()).thenReturn("Gateway destinations");
 		when(gatewaySource.getNodes()).thenReturn(List.of());
-		when(dicomNodeConfigService.getAllDicomNodeTypes()).thenReturn(List.of(workstations, pacsWeb));
+		when(dicomNodeConfigService.getWorkStationNodeTypes(true)).thenReturn(List.of(workstations, pacsWeb));
 
 		var result = dicomNodeUtil.getAllDicomNodeTypes();
 
@@ -119,32 +119,16 @@ class DicomNodeUtilTest {
 	}
 
 	@Test
-	void all_node_types_including_worklist_appends_worklist_groups_after_the_others() {
-		var workstations = new DicomNodeList("Workstations");
-		var worklists = new DicomNodeList("Worklists");
-		when(gatewaySource.getGroupName()).thenReturn("Gateway destinations");
-		when(gatewaySource.getNodes()).thenReturn(List.of());
-		when(dicomNodeConfigService.getAllDicomNodeTypes()).thenReturn(List.of(workstations));
-		when(dicomNodeConfigService.getWorkListNodeTypes()).thenReturn(List.of(worklists));
-
-		var result = dicomNodeUtil.getAllNodeTypesIncludingWorklist();
-
-		assertEquals(3, result.size());
-		assertEquals("Gateway destinations", result.get(0).getName());
-		assertEquals("Workstations", result.get(1).getName());
-		assertEquals("Worklists", result.get(2).getName());
-	}
-
-	@Test
 	void returns_worklist_node_types_from_service() {
-		var worklists = List.of(new DicomNodeList("Worklists"));
-		when(dicomNodeConfigService.getWorkListNodeTypes()).thenReturn(worklists);
+		var worklists = List.of(new DicomNodeList("All Worklist nodes"));
+		when(dicomNodeConfigService.getWorkListNodeTypes(false)).thenReturn(worklists);
+		when(dicomNodeConfigService.getWorkListNodeTypes(true)).thenReturn(new ArrayList<DicomNodeList>());
 
 		var result = dicomNodeUtil.getWorkListNodeTypes();
 
 		assertNotNull(result);
 		assertEquals(1, result.size());
-		assertEquals("Worklists", result.getFirst().getName());
+		assertEquals("All Worklist nodes", result.getFirst().getName());
 	}
 
 	@Test

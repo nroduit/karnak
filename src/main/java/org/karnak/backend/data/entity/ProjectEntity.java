@@ -65,7 +65,11 @@ public class ProjectEntity implements Serializable {
 
 	@OneToMany(mappedBy = "deIdentificationProjectEntity", fetch = FetchType.EAGER)
 	@JsonIgnore
-	private List<DestinationEntity> destinationEntities;
+	private List<DestinationEntity> deidentificationDestinationEntities;
+
+	@OneToMany(mappedBy = "tagMorphingProjectEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
+	private List<DestinationEntity> tagMorphingDestinationEntities;
 
 	@ManyToOne
 	@JoinColumn(name = "profile_pipe_id")
@@ -78,8 +82,24 @@ public class ProjectEntity implements Serializable {
 
 	public ProjectEntity() {
 		this.uuid = UUID.randomUUID();
-		this.destinationEntities = new ArrayList<>();
+		this.deidentificationDestinationEntities = new ArrayList<>();
+		this.tagMorphingDestinationEntities = new ArrayList<>();
 		this.secretEntities = new ArrayList<>();
+	}
+
+	/**
+	 * Retrieve all destinations of the project, both de-identification and tag morphing.
+	 * @return combined list of de-identification and tag morphing destinations
+	 */
+	public List<DestinationEntity> getAllDestinations() {
+		List<DestinationEntity> destinations = new ArrayList<>();
+		if (deidentificationDestinationEntities != null) {
+			destinations.addAll(deidentificationDestinationEntities);
+		}
+		if (tagMorphingDestinationEntities != null) {
+			destinations.addAll(tagMorphingDestinationEntities);
+		}
+		return destinations;
 	}
 
 	/**
@@ -129,13 +149,14 @@ public class ProjectEntity implements Serializable {
 		ProjectEntity that = (ProjectEntity) o;
 		return Objects.equals(id, that.id) && Objects.equals(name, that.name)
 				&& Objects.equals(secretEntities, that.secretEntities)
-				&& Objects.equals(destinationEntities, that.destinationEntities)
+				&& Objects.equals(deidentificationDestinationEntities, that.deidentificationDestinationEntities)
+				&& Objects.equals(tagMorphingDestinationEntities, that.tagMorphingDestinationEntities)
 				&& Objects.equals(profileEntity, that.profileEntity);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, secretEntities, destinationEntities, profileEntity);
+		return Objects.hash(id, name, secretEntities, deidentificationDestinationEntities, tagMorphingDestinationEntities, profileEntity);
 	}
 
 }

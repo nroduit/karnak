@@ -237,6 +237,7 @@ public class DicomEchoView extends AbstractView implements HasUrlParameter<Strin
 	private void buildFormLayoutTitle() {
 		formLayoutTitle = new H6("Dicom Echo");
 		formLayoutTitle.getStyle().set("margin-top", "0px");
+		formLayoutTitle.getStyle().set("margin-bottom", "10px");
 	}
 
 	private void buildFormLayout() {

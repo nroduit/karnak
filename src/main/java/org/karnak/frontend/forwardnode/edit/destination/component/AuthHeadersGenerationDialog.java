@@ -75,6 +75,8 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		HorizontalLayout horizontalLayout = new HorizontalLayout(cancelButton, generateButton);
 		horizontalLayout.setWidthFull();
 		horizontalLayout.getStyle().set("justify-content", "flex-end").set("margin-top", "20px");
+		divSelectBox.getStyle().set("margin-bottom", "10px");
+		divTitle.getStyle().set("margin-bottom", "10px");
 		add(divTitle, divSelectBox, divContent, horizontalLayout);
 	}
 
@@ -89,7 +91,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		authTypeSelect.setItems(authTypeSelectValues);
 		authTypeSelect.setLabel("Authorization Type");
 		authTypeSelect.setErrorMessage("This field is mandatory");
-		authTypeSelect.setWidth(FIELD_WIDTH);
+		//authTypeSelect.setWidth(FIELD_WIDTH);
 		authTypeSelect.setEmptySelectionAllowed(false);
 		authTypeSelect.addValueChangeListener(value -> displayAuthTypeForm(value.getValue()));
 

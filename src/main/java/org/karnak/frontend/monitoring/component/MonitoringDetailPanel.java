@@ -67,7 +67,7 @@ public class MonitoringDetailPanel extends VerticalLayout {
 
 		// The fields scroll while the Copy button stays visible at the bottom
 		VerticalLayout body = new VerticalLayout(placeholder, form);
-		body.setPadding(false);
+		body.getStyle().set("padding", "8px");
 		body.setSpacing(true);
 		body.setWidthFull();
 		Scroller scroller = new Scroller(body);

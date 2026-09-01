@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
@@ -80,6 +82,10 @@ public class GatewaySetUpService {
 
 	private final DestinationRepo destinationRepo;
 
+	// Live routing table, shared by reference with CStoreSCPService (via
+	// GatewayService.init) and iterated by C-STORE threads while the UI and the
+	// configuration refresh mutate it. Concurrent map plus copy-on-write value
+	// lists keep those readers safe; it is refreshed in place, never cleared.
 	private final Map<ForwardDicomNode, List<ForwardDestination>> destMap;
 
 	private final DeidentifyImageService deidentifyImageService;
@@ -125,7 +131,7 @@ public class GatewaySetUpService {
 		this.versionRepo = versionRepo;
 		this.destinationRepo = destinationRepo;
 		this.deidentifyImageService = deidentifyImageService;
-		this.destMap = new HashMap<>();
+		this.destMap = new ConcurrentHashMap<>();
 
 		listenerAET = SystemPropertyUtil.retrieveSystemProperty("DICOM_LISTENER_AET", "KARNAK-GATEWAY");
 		listenerPort = SystemPropertyUtil.retrieveIntegerSystemProperty("DICOM_LISTENER_PORT", 11119);
@@ -386,18 +392,27 @@ public class GatewaySetUpService {
 	}
 
 	public void reloadGatewayPersistence() {
-
+		// Build the whole new routing table aside first: constructing the
+		// destinations opens SCU devices and takes time, and C-STORE threads keep
+		// resolving their forward node against destMap meanwhile.
+		Map<ForwardDicomNode, List<ForwardDestination>> fresh = new HashMap<>();
 		List<ForwardNodeEntity> list = new ArrayList<>(forwardNodeRepo.findAll());
 		for (ForwardNodeEntity forwardNodeEntity : list) {
 			ForwardDicomNode fwdSrcNode = new ForwardDicomNode(forwardNodeEntity.getFwdAeTitle(), null,
 					forwardNodeEntity.getId());
 			addAcceptedSourceNodes(fwdSrcNode, forwardNodeEntity);
-			List<ForwardDestination> dstList = new ArrayList<>(forwardNodeEntity.getDestinationEntities().size());
-			for (DestinationEntity dstNode : forwardNodeEntity.getDestinationEntities()) {
-				addDestinationNode(dstList, fwdSrcNode, dstNode);
-			}
-			destMap.put(fwdSrcNode, dstList);
+			fresh.put(fwdSrcNode, addDestinationNodes(fwdSrcNode, forwardNodeEntity));
 		}
+		// Then swap entry by entry instead of clear-and-rebuild, so the table never
+		// goes empty under live traffic. The remove before each put matters:
+		// ForwardDicomNode equality is AET-based and the accepted source nodes live
+		// in the key object, so a plain put would keep the stale key - and its
+		// stale authorization list - when an equal one is already present.
+		destMap.keySet().retainAll(fresh.keySet());
+		fresh.forEach((node, dstList) -> {
+			destMap.remove(node);
+			destMap.put(node, dstList);
+		});
 	}
 
 	public void update(NodeEvent event) {
@@ -408,7 +423,7 @@ public class GatewaySetUpService {
 		ForwardDicomNode fwdNode = destMap.keySet().stream().filter(f -> id.equals(f.getId())).findFirst().orElse(null);
 		if (fwdNode == null) {
 			fwdNode = new ForwardDicomNode(aet, null, id);
-			destMap.put(fwdNode, new ArrayList<>(2));
+			destMap.put(fwdNode, new CopyOnWriteArrayList<>());
 		}
 		switch (src) {
 			case DicomSourceNodeEntity srcNode -> {
@@ -459,9 +474,13 @@ public class GatewaySetUpService {
 		}
 	}
 
+	/**
+	 * Destination list for a forward node. Copy-on-write because C-STORE threads iterate
+	 * it while UI events add and remove destinations in place.
+	 */
 	private List<ForwardDestination> addDestinationNodes(ForwardDicomNode fwdSrcNode,
 			ForwardNodeEntity forwardNodeEntity) {
-		List<ForwardDestination> dstList = new ArrayList<>(forwardNodeEntity.getDestinationEntities().size());
+		List<ForwardDestination> dstList = new CopyOnWriteArrayList<>();
 		for (DestinationEntity dstNode : forwardNodeEntity.getDestinationEntities()) {
 			addDestinationNode(dstList, fwdSrcNode, dstNode);
 		}
@@ -495,14 +514,14 @@ public class GatewaySetUpService {
 		// Retrieve the last gateway version
 		VersionEntity lastVersion = versionRepo.findTopByOrderByIdDesc();
 
-		// Check if refresh needed: the current version of the gateway setup for this
-		// instance
-		// is lower than the last version in DB
+		// Check if refresh needed: the current version of the gateway setup for
+		// this instance is lower than the last version in DB
 		if (lastVersion != null && gatewaySetUpVersion < lastVersion.getGatewaySetup()
 				&& destinationRepo.findAll().stream().noneMatch(DestinationEntity::isTransferInProgress)) {
 			// Check no transfer is in progress
-			// Rebuild the configuration
-			destMap.clear();
+			// Rebuild the configuration; the reload swaps the routing table in place
+			// (no clear), so a transfer racing the in-progress heuristic above still
+			// resolves its forward node.
 			reloadGatewayPersistence();
 
 			// Update the current instance version

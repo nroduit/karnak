@@ -11,7 +11,6 @@ package org.karnak.backend.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -42,7 +41,6 @@ import org.dcm4che3.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che3.net.Association;
 import org.dcm4che3.net.DataWriter;
 import org.dcm4che3.net.DataWriterAdapter;
-import org.dcm4che3.net.InputStreamDataWriter;
 import org.dcm4che3.net.PDVInputStream;
 import org.dcm4che3.net.Status;
 import org.jspecify.annotations.NullUnmarked;
@@ -102,8 +100,8 @@ public class ForwardService {
 	private int fanoutMaxThreads;
 
 	// Sequence depth the conformance snapshot is captured to when deep-sequence
-	// validation is enabled on the destination; must match the validator's recursion
-	// depth
+	// validation is enabled on the destination; must match the validator's
+	// recursion depth
 	@Value("${conformance-report.max-sequence-depth:8}")
 	private int conformanceMaxSequenceDepth;
 
@@ -132,10 +130,9 @@ public class ForwardService {
 				return t;
 			}
 		};
-		// Bounded queue + caller-runs: under overload the submitting thread runs the task
-		// itself, degrading gracefully to sequential delivery rather than growing
-		// threads/queue
-		// without bound.
+		// Bounded queue + caller-runs: under overload the submitting thread runs the
+		// task itself, degrading gracefully to sequential delivery rather than
+		// growing threads/queue without bound.
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(threads, threads, 60L, TimeUnit.SECONDS,
 				new LinkedBlockingQueue<>(threads * 4), threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 		executor.allowCoreThreadTimeOut(true);
@@ -174,12 +171,9 @@ public class ForwardService {
 		List<File> files = new ArrayList<>();
 		try {
 			int nbDestinations = destinations.size();
-			// The first destination consumes the incoming stream once: for a single
-			// destination it streams straight through; for several it also buffers the
-			// dataset (bulk
-			// data spooled to temporary files) into "attributes" so the remaining
-			// destinations can be
-			// served from it.
+			// The first destination consumes the incoming stream once, with bulk data
+			// spooled to temporary files; for several destinations the dataset is also
+			// buffered into "attributes" so the remaining ones can be served from it.
 			prepareAndTransfer(forwardNode, p, 0, destinations.get(0), attributes, nbDestinations, files);
 
 			if (nbDestinations > 1 && !attributes.isEmpty()) {
@@ -191,9 +185,8 @@ public class ForwardService {
 			throw e;
 		}
 		finally {
-			// Force to clean the temporary bulk files (only after every parallel sending
-			// has
-			// finished)
+			// Force to clean the temporary bulk files (only after every parallel
+			// sending has finished)
 			files.forEach(file -> FileUtil.delete(file.toPath()));
 		}
 	}
@@ -350,7 +343,6 @@ public class ForwardService {
 			if (!streamSCU.isReadyForDataTransfer()) {
 				throw new IllegalStateException("Association not ready for transfer.");
 			}
-			DataWriter dataWriter;
 			String cuid = p.cuid();
 			String iuid = p.iuid();
 			String tsuid = p.tsuid();
@@ -358,33 +350,31 @@ public class ForwardService {
 					streamSCU.selectTransferSyntax(cuid, destination.getOutputTransferSyntax(tsuid)));
 			List<AttributeEditor> editors = destination.getDicomEditors();
 			TransformedPlanarImage transformedPlanarImage = new TransformedPlanarImage();
-			if (copy == null && editors.isEmpty() && syntax.getRequested().equals(tsuid)) {
-				dataWriter = new InputStreamDataWriter(p.data());
-				attributesToSend = new DicomInputStream(p.data()).readDataset();
-				attributesOriginal.addAll(attributesToSend);
+			// Always parse with bulk data spooled to temporary files, even with no
+			// editors and no transcoding. A raw streaming fast path
+			// (InputStreamDataWriter over the PDV stream) cannot coexist with reading
+			// the dataset for monitoring: the read exhausts the stream before the
+			// C-STORE writes it, which sent empty objects on that path.
+			AttributeEditorContext context = new AttributeEditorContext(tsuid, sourceNode,
+					streamSCU.getRemoteDicomNode());
+			in = new DicomInputStream(p.data(), tsuid);
+			in.setIncludeBulkData(IncludeBulkData.URI);
+			Attributes attributes = in.readDataset();
+			attributesOriginal.addAll(attributes);
+			attributesToSend = attributes;
+			if (copy != null) {
+				copy.addAll(attributes);
 			}
-			else {
-				AttributeEditorContext context = new AttributeEditorContext(tsuid, sourceNode,
-						streamSCU.getRemoteDicomNode());
-				in = new DicomInputStream(p.data(), tsuid);
-				in.setIncludeBulkData(IncludeBulkData.URI);
-				Attributes attributes = in.readDataset();
-				attributesOriginal.addAll(attributes);
-				attributesToSend = attributes;
-				if (copy != null) {
-					copy.addAll(attributes);
-				}
 
-				if (!editors.isEmpty()) {
-					editors.forEach(e -> e.apply(attributes, context));
-					iuid = attributes.getString(Tag.SOPInstanceUID);
-					cuid = attributes.getString(Tag.SOPClassUID);
-				}
-
-				abortIfRequested(context, p, true, "DICOM association abort: ");
-				dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes, transformedPlanarImage,
-						destination.isImageIdentityCheck());
+			if (!editors.isEmpty()) {
+				editors.forEach(e -> e.apply(attributes, context));
+				iuid = attributes.getString(Tag.SOPInstanceUID);
+				cuid = attributes.getString(Tag.SOPClassUID);
 			}
+
+			abortIfRequested(context, p, true, "DICOM association abort: ");
+			DataWriter dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes,
+					transformedPlanarImage, destination.isImageIdentityCheck());
 
 			launchCStore(p, streamSCU, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
 
@@ -499,12 +489,11 @@ public class ForwardService {
 		if (defacing) {
 			image = Defacer.apply(attributes, image);
 		}
-		// Apply the primary mask (from static config or the first API mask). Each draw
-		// returns a new image, so the previous intermediate must be released or its
-		// native
-		// OpenCV Mat leaks (off-heap, invisible to the JVM). The source image (img) is
-		// owned
-		// by the ImageAdapter pipeline and must never be released here.
+		// Apply the primary mask (from static config or the first API mask). Each
+		// draw returns a new image, so the previous intermediate must be released or
+		// its native OpenCV Mat leaks (off-heap, invisible to the JVM). The source
+		// image (img) is owned by the ImageAdapter pipeline and must never be
+		// released here.
 		if (m != null) {
 			PlanarImage masked = MaskArea.drawShape(image.toMat(), m);
 			releaseIntermediate(image, img, masked);
@@ -667,38 +656,26 @@ public class ForwardService {
 			DicomStowRS stow = destination.getStowrsSingleFile();
 			var syntax = new AdaptTransferSyntax(p.tsuid(), destination.getOutputTransferSyntax(p.tsuid()));
 
-			if (syntax.getRequested().equals(p.tsuid()) && copy == null && editors.isEmpty()) {
-				Attributes fmi = Attributes.createFileMetaInformation(p.iuid(), p.cuid(), syntax.getRequested());
-				try (InputStream stream = p.data()) {
-					attributesToSend = new DicomInputStream(p.data()).readDataset();
-					attributesOriginal.addAll(attributesToSend);
-					stow.uploadDicom(stream, fmi);
-				}
-				catch (HttpException httpException) {
-					if (httpException.getStatusCode() != 409) {
-						throw new AbortException(Abort.FILE_EXCEPTION, httpException.getMessage());
-					}
-					else {
-						log.debug("File already present in destination");
-					}
-				}
+			// Always parse with bulk data spooled to temporary files, even with no
+			// editors and no transcoding: a raw streaming upload cannot coexist with
+			// reading the dataset for monitoring - the read exhausts the stream
+			// before the upload, which sent empty payloads on that path.
+			AttributeEditorContext context = new AttributeEditorContext(p.tsuid(), fwdNode, null);
+			in = new DicomInputStream(p.data(), p.tsuid());
+			in.setIncludeBulkData(IncludeBulkData.URI);
+			Attributes attributes = in.readDataset();
+			attributesToSend = attributes;
+			attributesOriginal.addAll(attributes);
+			if (copy != null) {
+				copy.addAll(attributes);
 			}
-			else {
-				AttributeEditorContext context = new AttributeEditorContext(p.tsuid(), fwdNode, null);
-				in = new DicomInputStream(p.data(), p.tsuid());
-				in.setIncludeBulkData(IncludeBulkData.URI);
-				Attributes attributes = in.readDataset();
-				attributesToSend = attributes;
-				attributesOriginal.addAll(attributes);
-				if (copy != null) {
-					copy.addAll(attributes);
-				}
-				if (!editors.isEmpty()) {
-					editors.forEach(e -> e.apply(attributes, context));
-				}
+			if (!editors.isEmpty()) {
+				editors.forEach(e -> e.apply(attributes, context));
+			}
 
-				abortIfRequested(context, p, true, "STOW-RS abort: ");
+			abortIfRequested(context, p, true, "STOW-RS abort: ");
 
+			try {
 				BytesWithImageDescriptor desc = ImageAdapter.imageTranscode(attributes, syntax, context);
 				if (desc == null) {
 					stow.uploadDicom(attributes, syntax.getOriginal());
@@ -706,6 +683,14 @@ public class ForwardService {
 				else {
 					uploadPayLoadFromTransformedImage(stow, syntax, context, attributes, desc, transformedPlanarImage,
 							destination.isImageIdentityCheck());
+				}
+			}
+			catch (HttpException httpException) {
+				if (httpException.getStatusCode() != 409) {
+					throw new AbortException(Abort.FILE_EXCEPTION, httpException.getMessage());
+				}
+				else {
+					log.debug("File already present in destination");
 				}
 			}
 			progressNotify(destination, p.iuid(), p.cuid(), false, 0);
@@ -1068,10 +1053,10 @@ public class ForwardService {
 			// would catch it and record a second, spurious error outcome for an instance
 			// already reported as sent.
 			try {
-				// The snapshot must be built synchronously: bulk data references become
-				// invalid once the temporary files are cleaned. When deep-sequence
-				// validation is on, capture as deep as the validator recurses; otherwise
-				// the default depth
+				// The snapshot must be built synchronously: bulk data references
+				// become invalid once the temporary files are cleaned. When
+				// deep-sequence validation is on, capture as deep as the validator
+				// recurses; otherwise the default depth is used.
 				boolean deep = destination.isDeepSequenceValidation();
 				int snapshotDepth = deep ? conformanceMaxSequenceDepth : MetadataSnapshot.DEFAULT_MAX_SEQUENCE_DEPTH;
 				MetadataSnapshot snapshot = MetadataSnapshot.of(attributesToSend, snapshotDepth);
@@ -1110,13 +1095,11 @@ public class ForwardService {
 		String tsuid;
 		boolean transformApplied = transformedPlanarImage != null && transformedPlanarImage.isTransformApplied();
 		if (transformApplied) {
-			// The image was masked/defaced: the check must run on the transformed output
-			// pixels the receiver gets. The sent dataset (attributesToSend) still holds
-			// the
-			// original, unmasked PixelData bulk reference (the mask is drawn lazily into
-			// the
-			// encoded stream, never written back).
-			// If the output pixels could not be captured, skip the check.
+			// The image was masked/defaced: the check must run on the transformed
+			// output pixels the receiver gets. The sent dataset (attributesToSend)
+			// still holds the original, unmasked PixelData bulk reference (the mask is
+			// drawn lazily into the encoded stream, never written back). If the output
+			// pixels could not be captured, skip the check.
 			byte[] outputPixels = transformedPlanarImage.getPixelDataBytes();
 			if (outputPixels == null || outputPixels.length == 0) {
 				return null;
@@ -1125,8 +1108,8 @@ public class ForwardService {
 			tsuid = UID.ExplicitVRLittleEndian;
 		}
 		else {
-			// No image transformation: the sent pixels equal the sent dataset's own
-			// pixels.
+			// No image transformation: the sent pixels equal the sent dataset's
+			// own pixels.
 			imageBytes = deidentifyImageService.extractPixelDataBytes(attributesToSend);
 			if (imageBytes.length == 0) {
 				return null;

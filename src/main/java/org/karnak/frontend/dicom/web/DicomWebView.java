@@ -98,6 +98,7 @@ public class DicomWebView extends AbstractView {
 
 		H6 title = new H6("DICOMweb");
 		title.getStyle().set("margin-top", "0px");
+		title.getStyle().set("margin-bottom", "10px");
 
 		urlFld = new TextField("DICOMweb base URL");
 		urlFld.setWidthFull();
@@ -110,6 +111,7 @@ public class DicomWebView extends AbstractView {
 		servicesFld.setHelperText("none selected means all services");
 		servicesFld.setValue(EnumSet.allOf(DicomWebServiceType.class));
 		servicesFld.addThemeVariants(CheckboxGroupVariant.AURA_HORIZONTAL);
+		servicesFld.getStyle().set("margin-top", "10px");
 
 		groupFilterFld = new ComboBox<>("Group");
 		groupFilterFld.setClearButtonVisible(true);
@@ -162,12 +164,6 @@ public class DicomWebView extends AbstractView {
 			.forEach(groups::add);
 
 		groupFilterFld.setItems(groups);
-		// Only show the Group filter when there is more than one group to choose from;
-		// otherwise an empty selection already checks everything.
-		groupFilterFld.setVisible(groups.size() > 1);
-		if (!groupFilterFld.isVisible()) {
-			groupFilterFld.clear();
-		}
 
 		applyGroupFilter(groupFilterFld.getValue());
 	}

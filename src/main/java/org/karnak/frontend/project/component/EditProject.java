@@ -88,7 +88,7 @@ public class EditProject extends VerticalLayout {
 		profileDropDown.setLabel("De-identification Profile");
 		profileDropDown.setWidthFull();
 		buttonUpdate = new Button("Update");
-		buttonRemove = new Button("Remove");
+		buttonRemove = new Button("Delete");
 		buttonRemove.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		horizontalLayoutButtons = new HorizontalLayout(buttonUpdate, buttonRemove);
 	}

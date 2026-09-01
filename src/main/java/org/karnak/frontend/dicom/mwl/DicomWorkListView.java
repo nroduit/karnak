@@ -228,6 +228,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	private void buildWlConfigurationTitle() {
 		wlConfigurationTitle = new H6("Worklist Node Configuration");
 		wlConfigurationTitle.getStyle().set("margin-top", "0px");
+		wlConfigurationTitle.getStyle().set("margin-bottom", "10px");
 	}
 
 	private void buildWlConfigurationForm() {
@@ -292,6 +293,8 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private void buildWlQueryTitle() {
 		wlQueryTitle = new H6("Worklist Query");
+		wlQueryTitle.getStyle().set("margin-bottom", "10px");
+		wlQueryTitle.getStyle().set("margin-top", "10px");
 	}
 
 	private void buildWlQueryForm() {

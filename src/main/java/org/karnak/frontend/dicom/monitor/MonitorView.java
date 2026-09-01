@@ -87,6 +87,8 @@ public class MonitorView extends AbstractView {
 	// DICOMweb Layout
 	private VerticalLayout webLayout;
 
+	private VerticalLayout webResultLayout;
+
 	private ComboBox<String> webGroupFld;
 
 	private Button webBtn;
@@ -121,6 +123,7 @@ public class MonitorView extends AbstractView {
 		webGrid.setItems(results);
 		webNote.setText(results.size() + " DICOMweb destination(s) checked - select a row to view the details");
 		webGrid.setVisible(true);
+		webResultLayout.setVisible(true);
 	}
 
 	private void createView() {
@@ -136,11 +139,12 @@ public class MonitorView extends AbstractView {
 		buildDicomLayout();
 		buildResultLayout();
 		buildWebLayout();
+		buildWebResultLayout();
 
 		// A second tab line switches between the two monitoring sections (DICOM nodes vs
 		// DICOMweb) instead of stacking them on the page.
 		VerticalLayout dicomSection = sectionWrapper(dicomLayout, resultLayout);
-		VerticalLayout webSection = sectionWrapper(webLayout);
+		VerticalLayout webSection = sectionWrapper(webLayout, webResultLayout);
 		webSection.setVisible(false);
 
 		Tab tabDicomNodes = new Tab("DICOM Nodes");
@@ -167,6 +171,7 @@ public class MonitorView extends AbstractView {
 	private void buildDicomEchoLayoutTitle() {
 		dicomEchoLayoutTitle = new H6("Dicom Echo");
 		dicomEchoLayoutTitle.getStyle().set("margin-top", "0px");
+		dicomEchoLayoutTitle.getStyle().set("margin-bottom", "10px");
 	}
 
 	private void buildDicomEchoLayout() {
@@ -296,6 +301,7 @@ public class MonitorView extends AbstractView {
 
 		H6 webTitle = new H6("DICOMweb destinations (STOW-RS)");
 		webTitle.getStyle().set("margin-top", "0px");
+		webTitle.getStyle().set("margin-bottom", "10px");
 
 		webGroupFld = new ComboBox<>("Group");
 		var webGroups = new ArrayList<String>();
@@ -305,9 +311,6 @@ public class MonitorView extends AbstractView {
 		webGroupFld.setPlaceholder("All groups");
 		webGroupFld.setClearButtonVisible(true);
 		webGroupFld.setHelperText("empty = all groups");
-		// Only show the Group filter when there is more than one group to choose from;
-		// with a single group an empty selection already checks everything.
-		webGroupFld.setVisible(webGroups.size() > 1);
 
 		webBtn = new Button("Check DICOMweb", (event) -> runWebCheck());
 		webBtn.addThemeVariants(ButtonVariant.PRIMARY);
@@ -318,6 +321,20 @@ public class MonitorView extends AbstractView {
 		webBar.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 		webBar.setSpacing(true);
 
+		webLayout.add(webTitle, webBar);
+	}
+
+	private void buildWebResultLayout() {
+		webResultLayout = new VerticalLayout();
+		webResultLayout.setWidthFull();
+		webResultLayout.setPadding(true);
+		webResultLayout.setSpacing(false);
+		webResultLayout.getStyle()
+				.set("box-shadow",
+						"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
+		webResultLayout.getStyle().set("border-radius", "4px");
+		webResultLayout.setVisible(false);
+
 		webNote = new Div();
 		webNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
 		webNote.getStyle().set("font-style", "italic");
@@ -327,7 +344,7 @@ public class MonitorView extends AbstractView {
 		webGrid.setAllRowsVisible(true);
 		webGrid.setVisible(false);
 
-		webLayout.add(webTitle, webBar, webNote, webGrid);
+		webResultLayout.add(webNote, webGrid);
 	}
 
 	private void runWebCheck() {
