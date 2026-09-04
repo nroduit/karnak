@@ -10,6 +10,7 @@
 package org.karnak.backend.model.forwardnode;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
@@ -33,12 +34,22 @@ public class ForwardNodeModel implements Serializable {
 	@Serial
 	private static final long serialVersionUID = -4939483865789354368L;
 
+	// The AETitle reaches the DICOM gateway (where it becomes a called AE title) and the
+	// gateway logs. DICOM PS3.5 already excludes control characters and the backslash
+	// from an AE title; enforcing it here also keeps a crafted payload from forging log
+	// records with an embedded CR/LF.
+	public static final String AE_TITLE = "[^\\p{Cntrl}\\\\]*";
+
+	public static final String NO_CONTROL_CHARACTERS = "[^\\p{Cntrl}]*";
+
 	private UUID uuid;
 
+	@Pattern(regexp = NO_CONTROL_CHARACTERS, message = "Forward description contains control characters")
 	private String fwdDescription;
 
 	@NotBlank(message = "Forward AETitle is mandatory")
 	@Size(max = 16, message = "Forward AETitle has more than 16 characters")
+	@Pattern(regexp = AE_TITLE, message = "Forward AETitle contains characters not allowed in an AETitle")
 	private String fwdAeTitle;
 
 	private Set<DicomSourceNodeModel> sourceNodes = new HashSet<>();

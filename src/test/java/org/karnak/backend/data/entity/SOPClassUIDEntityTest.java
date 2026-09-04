@@ -72,7 +72,10 @@ class SOPClassUIDEntityTest {
 		assertNotEquals(base, sop(1L, "c", "x", "n"));
 		assertNotEquals(base, sop(1L, "c", "u", "x"));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-a-sop");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-sop";
+		assertNotEquals(base, foreign);
 	}
 
 	private static SOPClassUIDEntity sop(Long id, String ciod, String uid, String name) {

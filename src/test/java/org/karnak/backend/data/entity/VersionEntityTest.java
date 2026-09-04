@@ -51,7 +51,10 @@ class VersionEntityTest {
 		assertNotEquals(base, version(2L, 42L));
 		assertNotEquals(base, version(1L, 99L));
 		assertNotEquals(base, null);
-		assertNotEquals(base, "not-a-version");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-version";
+		assertNotEquals(base, foreign);
 	}
 
 }

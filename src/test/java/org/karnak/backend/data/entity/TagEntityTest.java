@@ -66,7 +66,7 @@ class TagEntityTest {
 		assertNotEquals(base, included(1L, "(0008,0020)"));
 		assertFalse(base.equals(null));
 		// Different concrete subclass -> not equal (getClass() check).
-		ExcludedTagEntity excluded = new ExcludedTagEntity("(0010,0010)", null);
+		TagEntity excluded = new ExcludedTagEntity("(0010,0010)", null);
 		excluded.setId(1L);
 		assertNotEquals(base, excluded);
 	}

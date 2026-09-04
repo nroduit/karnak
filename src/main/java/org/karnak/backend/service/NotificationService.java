@@ -472,8 +472,18 @@ public class NotificationService {
 					.plusSeconds(Notification.EXTRA_TIMER_DELAY)
 					.isBefore(LocalDateTime.now(ZoneId.of("CET")))
 				&& (destinationEntity.getEmailLastCheck() == null || destinationEntity.getEmailLastCheck()
-					.plusSeconds(destinationEntity.getNotifyInterval().longValue())
+					.plusSeconds(notifyInterval(destinationEntity))
 					.isBefore(LocalDateTime.now(ZoneId.of("CET"))));
+	}
+
+	/**
+	 * Notify interval in seconds of the destination. The column is nullable and only the
+	 * destination editor fills a default, so rows created or migrated by another path can
+	 * hold a null: fall back to the default interval instead of failing the scheduled task.
+	 */
+	private static long notifyInterval(DestinationEntity destinationEntity) {
+		Integer interval = destinationEntity.getNotifyInterval();
+		return interval == null ? Notification.DEFAULT_INTERVAL_SECONDS : interval.longValue();
 	}
 
 	/** Renders the Thymeleaf template and sends the notification email. */

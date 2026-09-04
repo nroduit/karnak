@@ -279,7 +279,11 @@ public class DeidentifyImageService {
 		}).contentType(mapping.mediaType());
 
 		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
-		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
+		// dcmAttributes is never null here: callDeidentifyImageApi returns as soon as
+		// extractPixelDataBytes gives back the empty array it answers a null instance
+		// with, and its own caller has already read the sensitive tags off the
+		// instance.
+		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID)); // NOSONAR
 		addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
 
 		addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));

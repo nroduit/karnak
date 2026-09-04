@@ -109,7 +109,10 @@ class ProjectEntityTest {
 
 		assertNotEquals(base, named("Other"));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-a-project");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-project";
+		assertNotEquals(base, foreign);
 	}
 
 	private static ProjectEntity named(String name) {

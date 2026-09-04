@@ -9,6 +9,8 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.Collection;
+import java.util.List;
 import org.karnak.backend.data.entity.TransferSeriesInstanceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -22,5 +24,12 @@ public interface TransferSeriesInstanceRepo extends JpaRepository<TransferSeries
 	 * the same series are serialized.
 	 */
 	boolean existsBySeriesStatusIdAndSopInstanceUid(Long seriesStatusId, String sopInstanceUid);
+
+	/**
+	 * The instances of the series already recorded among the given UIDs, one round trip
+	 * for a whole batch of outcomes.
+	 */
+	List<TransferSeriesInstanceEntity> findBySeriesStatusIdAndSopInstanceUidIn(Long seriesStatusId,
+			Collection<String> sopInstanceUids);
 
 }

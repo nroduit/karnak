@@ -9,10 +9,19 @@
  */
 package org.karnak.backend.service;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +50,9 @@ import org.dcm4che3.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che3.net.Association;
 import org.dcm4che3.net.DataWriter;
 import org.dcm4che3.net.DataWriterAdapter;
+import org.dcm4che3.net.InputStreamDataWriter;
 import org.dcm4che3.net.PDVInputStream;
+import org.dcm4che3.net.PDVOutputStream;
 import org.dcm4che3.net.Status;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.Defacer;
@@ -88,6 +99,12 @@ import org.springframework.stereotype.Service;
 public class ForwardService {
 
 	private static final String ERROR_WHEN_FORWARDING = "Error when forwarding to the final destination";
+
+	// Owner-only creation mode for the spool files, so a dataset waiting in the shared
+	// temporary directory is not readable by the other users of the host. Empty on a
+	// file system without POSIX permissions (Windows), where the temporary directory is
+	// already per-user and createTempFile would reject the attribute.
+	private static final FileAttribute<?>[] SPOOL_FILE_ATTRIBUTES = spoolFileAttributes();
 
 	private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -376,7 +393,7 @@ public class ForwardService {
 			DataWriter dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes,
 					transformedPlanarImage, destination.isImageIdentityCheck());
 
-			launchCStore(p, streamSCU, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
+			launchCStore(p, lease, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
 
 			progressNotify(destination, p.iuid(), p.cuid(), false, streamSCU);
 			monitor(sourceNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
@@ -414,17 +431,129 @@ public class ForwardService {
 		return files;
 	}
 
-	private void launchCStore(Params p, StoreFromStreamSCU streamSCU, DataWriter dataWriter, String cuid, String iuid,
+	/**
+	 * Sends the object on the leased association. dcm4che serialises the DIMSE writes of
+	 * an association and realises the {@link DataWriter} inside that lock, i.e. the
+	 * transcoding, masking and the whole dataset write of one transfer run while every
+	 * other transfer sharing the association waits - each of them holding a transfer
+	 * permit and its decoded native image. With a shared lease (the destination's pool is
+	 * exhausted, see {@link DicomForwardDestination#acquire()}) the dataset is therefore
+	 * rendered to a spool file first, outside the lock and in parallel with the other
+	 * permits, the native image is released, and only a file-to-socket copy is done under
+	 * the lock. An exclusive lease has no one to contend with and writes straight to the
+	 * socket, so nothing is spooled when the pool is large enough for the load.
+	 */
+	private void launchCStore(Params p, ScuLease lease, DataWriter dataWriter, String cuid, String iuid,
 			AdaptTransferSyntax syntax, TransformedPlanarImage transformedPlanarImage)
 			throws IOException, InterruptedException {
+		Path spool = null;
 		try {
-			streamSCU.cstore(cuid, iuid, p.priority(), dataWriter, syntax.getSuitable());
+			DataWriter writer = dataWriter;
+			if (!lease.exclusive()) {
+				spool = spoolDataset(dataWriter, syntax.getSuitable());
+				releaseTransformedImage(transformedPlanarImage);
+				writer = new InputStreamDataWriter(new BufferedInputStream(Files.newInputStream(spool)));
+			}
+			lease.scu().cstore(cuid, iuid, p.priority(), writer, syntax.getSuitable());
 		}
 		finally {
-			if (transformedPlanarImage != null && transformedPlanarImage.getPlanarImage() != null) {
-				transformedPlanarImage.getPlanarImage().release();
+			releaseTransformedImage(transformedPlanarImage);
+			if (spool != null) {
+				FileUtil.delete(spool);
 			}
 		}
+	}
+
+	private static void releaseTransformedImage(TransformedPlanarImage transformedPlanarImage) {
+		if (transformedPlanarImage != null && transformedPlanarImage.getPlanarImage() != null
+				&& !transformedPlanarImage.getPlanarImage().isReleased()) {
+			transformedPlanarImage.getPlanarImage().release();
+		}
+	}
+
+	private static FileAttribute<?>[] spoolFileAttributes() {
+		if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+			return new FileAttribute<?>[] {
+					PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")) };
+		}
+		return new FileAttribute<?>[0];
+	}
+
+	/**
+	 * Realises a data writer into a temporary file holding the dataset exactly as it
+	 * would be written on the association in {@code tsuid}. The file lives next to the
+	 * bulk-data spool (the JVM temporary directory) and belongs to the caller.
+	 *
+	 * <p>
+	 * That directory is shared with every other user of the host, and the spool holds a
+	 * whole patient dataset, so the file is created owner-only rather than with the umask
+	 * of the process.
+	 */
+	private static Path spoolDataset(DataWriter dataWriter, String tsuid) throws IOException {
+		Path spool = Files.createTempFile("karnak-fwd-", ".dcm", SPOOL_FILE_ATTRIBUTES);
+		try (FilePDVOutputStream out = new FilePDVOutputStream(
+				new BufferedOutputStream(Files.newOutputStream(spool)))) {
+			dataWriter.writeTo(out, tsuid);
+		}
+		catch (IOException | RuntimeException e) {
+			FileUtil.delete(spool);
+			throw e;
+		}
+		return spool;
+	}
+
+	/**
+	 * {@link PDVOutputStream} backed by a plain stream, so a {@link DataWriter} can be
+	 * realised outside an association. The copy methods mirror what the association's own
+	 * PDV stream does with them.
+	 */
+	private static final class FilePDVOutputStream extends PDVOutputStream {
+
+		private final OutputStream out;
+
+		FilePDVOutputStream(OutputStream out) {
+			this.out = out;
+		}
+
+		@Override
+		public void write(int b) throws IOException {
+			out.write(b);
+		}
+
+		@Override
+		public void write(byte[] b, int off, int len) throws IOException {
+			out.write(b, off, len);
+		}
+
+		@Override
+		public void copyFrom(InputStream in, int length) throws IOException {
+			byte[] buffer = new byte[8192];
+			int remaining = length;
+			while (remaining > 0) {
+				int read = in.read(buffer, 0, Math.min(buffer.length, remaining));
+				if (read < 0) {
+					throw new IOException("Unexpected end of stream, " + remaining + " bytes missing");
+				}
+				out.write(buffer, 0, read);
+				remaining -= read;
+			}
+		}
+
+		@Override
+		public void copyFrom(InputStream in) throws IOException {
+			in.transferTo(out);
+		}
+
+		@Override
+		public void flush() throws IOException {
+			out.flush();
+		}
+
+		@Override
+		public void close() throws IOException {
+			out.close();
+		}
+
 	}
 
 	private DataWriter buildDataWriterFromTransformedImage(AdaptTransferSyntax syntax, AttributeEditorContext context,
@@ -608,7 +737,7 @@ public class ForwardService {
 						destination.isImageIdentityCheck());
 			}
 
-			launchCStore(p, streamSCU, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
+			launchCStore(p, lease, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
 
 			progressNotify(destination, p.iuid(), p.cuid(), false, streamSCU);
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, false, null,

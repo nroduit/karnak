@@ -121,6 +121,12 @@ info:
 monitoring:
   # Maximum number of days in the monitoring history
   max-history-days: 30
+  # Transfer outcomes are folded into the per-series aggregate in batches: the
+  # forwarding threads only queue them in memory, and every interval each series
+  # with pending outcomes is written in one transaction. One transaction per
+  # object made the database commit rate the ceiling of the whole ingest. The
+  # interval is the maximum delay before an outcome shows in the monitoring view.
+  flush-interval-ms: 1000
 
 gateway:
   # Maximum number of C-STORE transfers processed concurrently. Bounds the peak
@@ -163,17 +169,25 @@ gateway:
   # not per object. Ignored when the limit is fixed.
   transfer-permit-sample-seconds: 5
   # Hand out permits in arrival order. Fairness routes every acquisition through
-  # the queue even when a permit is free, which is a global serialisation point at
+  # the queue even when a permit is free, which is a global serialization point at
   # high object rates; set to false to measure what it costs.
   transfer-permit-fair: true
 
 # Outgoing associations to a destination.
 forward:
   pool:
-    # DICOM associations kept open per destination. 1 is the historical behaviour
-    # and serialises concurrent transfers to that destination onto a single
+    # DICOM associations kept open per destination. 1 is the historical behavior
+    # and serializes concurrent transfers to that destination onto a single
     # association; raise it when several sources feed the same destination. The
     # destination PACS must accept that many associations from this calling AE.
+    # This is only the fallback: every DICOM destination carries its own value
+    # ("Concurrent connections" in the destination form).
+    # Transfers that find the pool exhausted share an association. dcm4che
+    # serializes the writes of an association, so those transfers render their
+    # dataset (transcoding, masking) to a spool file first and only copy it to
+    # the socket under the association's lock: the CPU work stays parallel
+    # across the transfer permits whatever the pool size, at the cost of one
+    # extra temporary file per contended transfer.
     max-per-destination: 1
     # Async C-STORE window (maxOpsInvoked) on each of those associations: how many
     # requests may be outstanding before waiting for responses. Balance against
@@ -181,8 +195,8 @@ forward:
     max-ops-invoked: 16
 
 async-events:
-  # Bounded executor for the @Async event listeners (transfer monitoring,
-  # conformance collection). When the queue is full the publishing thread runs
+  # Bounded executor for the @Async event listeners (conformance collection;
+  # transfer monitoring is batched, see monitoring.flush-interval-ms). When the queue is full the publishing thread runs
   # the listener itself (caller-runs), throttling ingest instead of growing the
   # heap without limit. 0 = auto: core scales with the CPU cores (minimum 8)
   # and max with 2 x CPU cores (minimum 16).

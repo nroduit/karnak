@@ -109,7 +109,10 @@ class MaskEntityTest {
 		assertNotEquals(base, mask(2L, "S"));
 		assertNotEquals(base, mask(1L, "OTHER"));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-a-mask");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-mask";
+		assertNotEquals(base, foreign);
 	}
 
 	private static MaskEntity mask(Long id, String station) {

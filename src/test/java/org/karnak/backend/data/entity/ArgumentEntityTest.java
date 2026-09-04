@@ -71,7 +71,10 @@ class ArgumentEntityTest {
 		assertNotEquals(base, arg(1L, "other", "v"));
 		assertNotEquals(base, arg(1L, "k", "other"));
 		assertNotNull(base);
-		assertNotEquals("not-an-argument", base);
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-an-argument";
+		assertNotEquals(foreign, base);
 	}
 
 	private static ArgumentEntity arg(Long id, String key, String value) {

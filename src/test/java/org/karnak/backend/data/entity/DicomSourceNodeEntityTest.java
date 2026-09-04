@@ -91,7 +91,10 @@ class DicomSourceNodeEntityTest {
 		assertNotEquals(base, node(2L, "AET", "1.2.3.5"));
 		assertNotEquals(base, node(1L, "OTHER", "1.2.3.4"));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-a-node");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-node";
+		assertNotEquals(base, foreign);
 	}
 
 	private static DicomSourceNodeEntity node(Long id, String aeTitle, String hostName) {

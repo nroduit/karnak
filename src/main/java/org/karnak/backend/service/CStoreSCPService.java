@@ -348,7 +348,11 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	 * the associations behind the permit deficit - all of them stalling together, several
 	 * times a second. A heap sample is taken only once the collectors have actually run
 	 * since the previous one, so the controller cannot complete a cycle inside one GC
-	 * cycle.
+	 * cycle. The one exception is growth on a quiet heap: an interval without any
+	 * collection still counts as a grow sample when the live occupancy - an upper bound
+	 * of what a collection would leave - is below the grow threshold, otherwise a
+	 * throttled gateway that allocates too little to trigger collections could never earn
+	 * more permits.
 	 * <p>
 	 * The response is asymmetric: growing needs {@value #GROW_HYSTERESIS_SAMPLES}
 	 * consecutive samples and moves one additive step, shrinking needs
@@ -373,8 +377,16 @@ public class CStoreSCPService extends BasicCStoreSCP {
 			long collections = totalCollectionCount();
 			if (collections == lastCollectionCount) {
 				// No GC since the last sample: getCollectionUsage would return the
-				// same reading, and three copies of one measurement are not
-				// three samples.
+				// same reading, and three copies of one measurement are not three
+				// samples. It is not "no information" either: a heap that did not
+				// need collecting is a heap under no pressure. Growth must not wait
+				// for a GC, because a throttled gateway allocates little, collects
+				// rarely, and would otherwise never earn the permits that let it
+				// allocate more (the deadlock seen as a load test that never ramps
+				// past the floor). Live occupancy is an upper bound of what a
+				// collection would leave, so below the grow threshold it is safe to
+				// grow on; it is never used to shrink, the signal that flaps.
+				growOnQuietHeap();
 				return;
 			}
 			lastCollectionCount = collections;
@@ -416,11 +428,28 @@ public class CStoreSCPService extends BasicCStoreSCP {
 		}
 	}
 
+	/**
+	 * Grow decision for a sample interval without any collection. The live occupancy
+	 * ({@code totalMemory - freeMemory}) includes garbage not yet collected, so it can
+	 * only overstate the pressure: when even that is below the grow threshold, growing is
+	 * safe. Above it nothing is known - the garbage may or may not be live - so the
+	 * sample is skipped rather than counted either way.
+	 */
+	private void growOnQuietHeap() {
+		Runtime runtime = Runtime.getRuntime();
+		double liveUsage = (double) (runtime.totalMemory() - runtime.freeMemory()) / runtime.maxMemory();
+		if (liveUsage < GROW_HEAP_USAGE) {
+			consecutiveShrinkSamples = 0;
+			consecutiveGrowSamples++;
+			growPermitLimit(liveUsage);
+		}
+	}
+
 	private void growPermitLimit(double heapUsage) {
 		if (consecutiveGrowSamples >= GROW_HYSTERESIS_SAMPLES && permitLimit < maxTransferPermits) {
 			consecutiveGrowSamples = 0;
 			int step = Math.min(permitStep, maxTransferPermits - permitLimit);
-			permitLimit += step;
+			permitLimit += step; // NOSONAR single-writer sampler thread
 			transferPermits.release(step);
 			log.debug("Transfer permit limit raised to {} (live heap {}%)", permitLimit, Math.round(heapUsage * 100));
 		}
@@ -435,7 +464,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 			consecutiveShrinkSamples = 0;
 			int headroom = permitLimit - minTransferPermits;
 			int step = Math.min(headroom, Math.max(permitStep, headroom / 2));
-			permitLimit -= step;
+			permitLimit -= step; // NOSONAR single-writer sampler thread
 			transferPermits.reduce(step);
 			log.debug("Transfer permit limit lowered to {} ({} {}%)", permitLimit, signal, Math.round(usage * 100));
 		}

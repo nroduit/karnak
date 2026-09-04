@@ -97,7 +97,10 @@ class ProfileEntityTest {
 
 		assertNotEquals(base, profile(2L, "N"));
 		assertNotEquals(base, profile(1L, "Other"));
-		assertNotEquals("not-a-profile", base);
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-profile";
+		assertNotEquals(foreign, base);
 		assertFalse(base.equals(null));
 	}
 

@@ -159,7 +159,9 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	public DeleteProfileResult deleteProfile(ProfileEntity profileEntity) {
 		ProfilePipeService.DeleteProfileResult result = profilePipeService.deleteProfile(profileEntity);
 		if (result.success()) {
-			profileView.clearRightPanel();
+			if (profileView != null) {
+				profileView.clearRightPanel();
+			}
 			refreshAll();
 		}
 		return new DeleteProfileResult(result.success(), result.errorMessage());
@@ -168,7 +170,9 @@ public class ProfileLogic extends ListDataProvider<ProfileEntity> implements Gro
 	public ProfileEntity updateProfile(ProfileEntity profileEntity) {
 		final ProfileEntity profileUpdate = profilePipeService.updateProfile(profileEntity);
 		refreshAll();
-		profileView.getProfileGrid().selectRow(profileUpdate);
+		if (profileView != null) {
+			profileView.getProfileGrid().selectRow(profileUpdate);
+		}
 		return profileEntity;
 	}
 

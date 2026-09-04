@@ -71,7 +71,10 @@ class WebDestinationConfigEntityTest {
 
 		assertNotEquals(base, entity(2L));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-a-web-destination");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-web-destination";
+		assertNotEquals(base, foreign);
 	}
 
 	@Test

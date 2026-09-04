@@ -11,6 +11,7 @@ package org.karnak.backend.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -55,10 +56,18 @@ public class DestinationService {
 
 	/**
 	 * Store given Destination to the backing destinationEntity service.
+	 *
+	 * <p>
+	 * A destination is always owned by a forward node: without one
+	 * {@link ForwardNodeService#updateDestination} returns null and the destination
+	 * cannot be attached, so the missing owner is reported here rather than surfacing as
+	 * a null dereference further down.
 	 * @param forwardNodeEntity ForwardNode Entity
 	 * @param destinationEntity the updated or new destinationEntity
 	 */
 	public DestinationEntity save(ForwardNodeEntity forwardNodeEntity, DestinationEntity destinationEntity) {
+		Objects.requireNonNull(forwardNodeEntity, "Cannot save a destination without a forward node");
+		Objects.requireNonNull(destinationEntity, "Cannot save a null destination");
 		DestinationEntity dataUpdated = forwardNodeService.updateDestination(forwardNodeEntity, destinationEntity);
 
 		if (destinationEntity.getId() != null) {

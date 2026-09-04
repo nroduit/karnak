@@ -131,6 +131,16 @@ public class ForwardNodeController {
 	@PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_update')")
 	public ResponseEntity<ForwardNodeModel> updateForwardNode(@PathVariable("forwardNodeUuid") UUID forwardNodeUuid,
 			@RequestBody ForwardNodeModel forwardNodeModel) {
+		// This is a partial update, so the payload cannot be @Valid: one that only
+		// changes the description carries no AETitle, which @NotBlank would reject. The
+		// fields that are present are held to the constraints of the creation endpoint
+		// instead - in particular the AETitle, which ends up in the DICOM gateway and
+		// its logs. Checked before the lookup: a malformed payload is a bad request
+		// whether or not the node it names exists.
+		if (violatesConstraint(forwardNodeModel.getFwdAeTitle(), ForwardNodeModel.AE_TITLE)
+				|| violatesConstraint(forwardNodeModel.getFwdDescription(), ForwardNodeModel.NO_CONTROL_CHARACTERS)) {
+			return ResponseEntity.badRequest().build();
+		}
 		ForwardNodeEntity existing = forwardNodeAPIService.retrieveForwardNodeByUuid(forwardNodeUuid);
 		if (existing == null) {
 			return ResponseEntity.notFound().build();
@@ -309,6 +319,15 @@ public class ForwardNodeController {
 		}
 		destinationService.delete(existing);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * Whether a value carried by a partial update payload breaks the constraint the
+	 * creation endpoint declares for it. An absent value is not a violation: it simply
+	 * leaves the persisted one untouched.
+	 */
+	private static boolean violatesConstraint(String value, String pattern) {
+		return value != null && !value.matches(pattern);
 	}
 
 	/**

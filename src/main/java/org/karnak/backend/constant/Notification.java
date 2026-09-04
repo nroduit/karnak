@@ -23,7 +23,9 @@ public class Notification {
 
 	public static final String DEFAULT_SUBJECT_VALUES = "PatientID,StudyDescription";
 
-	public static final String DEFAULT_INTERVAL = "45";
+	public static final int DEFAULT_INTERVAL_SECONDS = 45;
+
+	public static final String DEFAULT_INTERVAL = String.valueOf(DEFAULT_INTERVAL_SECONDS);
 
 	// Thymeleaf
 	public static final String CONTEXT_THYMELEAF = "notif";

@@ -9,8 +9,14 @@
  */
 package org.karnak.backend.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.TransferSeriesInstanceEntity;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
@@ -70,41 +76,84 @@ public class MonitoringWriteService {
 	 */
 	@Transactional
 	public void upsert(MonitoringEntry entry) {
-		String serieKey = StringUtils.defaultString(entry.serieUidOriginal());
-		TransferSeriesStatusEntity series = seriesRepo
-			.findWithLockByForwardNodeIdAndDestinationIdAndSerieUidOriginal(entry.forwardNodeId(),
-					entry.destinationId(), serieKey)
-			.orElse(null);
-
-		if (series == null) {
-			// Persist the empty row first so the instance rows can reference its id; a
-			// concurrent creation of the same series fails the unique key here and the
-			// caller retries (the row then exists and is taken under the lock above).
-			series = seriesRepo.saveAndFlush(newSeries(entry, serieKey));
-		}
-
-		InstanceNovelty novelty = registerInstance(series.getId(), entry);
-		apply(series, entry, novelty);
-		seriesRepo.saveAndFlush(series);
-
-		// Record the reason for any non-delivered outcome: an error, or an
-		// editor-requested abort (counted as excluded). A sent object or a bare 409
-		// retry has no reason. The reason is booked in the same buckets as the series
-		// row:
-		// error vs excluded on the delivery axis, plus retry when it hit an already-seen
-		// instance (novelty axis), so the leaf breakdown mirrors the series counters.
-		boolean excluded = !entry.sent() && !entry.error() && !entry.duplicate();
-		if ((entry.error() || excluded) && StringUtils.isNotBlank(entry.reason())) {
-			incrementReason(series.getId(), truncate(entry.reason(), MAX_REASON_LENGTH), entry.error(),
-					novelty == InstanceNovelty.KNOWN);
-		}
+		upsertAll(List.of(entry));
 	}
 
 	/**
-	 * Classifies one outcome against the instances already recorded for the series and,
-	 * for a newly seen instance, persists its original SOP Instance UID. The membership
-	 * check + insert are safe without an upsert because the caller holds the pessimistic
-	 * series lock, so writes for the same series are serialized.
+	 * Folds a batch of outcomes of <em>one</em> series (same forward node, destination
+	 * and original series UID, in arrival order) into its aggregate row in a single
+	 * transaction: one row lock, one lookup of the instances already recorded, one insert
+	 * per new instance, one write per distinct reason and one update of the row. Per
+	 * object, monitoring used to cost a transaction of its own, and at high object rates
+	 * the commit rate of the database - not the gateway - became the throughput ceiling
+	 * of the whole ingest. May throw {@code DataIntegrityViolationException} when two
+	 * threads create the same series concurrently — the caller retries.
+	 */
+	@Transactional
+	public void upsertAll(List<MonitoringEntry> entries) {
+		if (entries == null || entries.isEmpty()) {
+			return;
+		}
+		MonitoringEntry first = entries.getFirst();
+		String serieKey = StringUtils.defaultString(first.serieUidOriginal());
+		TransferSeriesStatusEntity series = seriesRepo
+			.findWithLockByForwardNodeIdAndDestinationIdAndSerieUidOriginal(first.forwardNodeId(),
+					first.destinationId(), serieKey)
+			.orElse(null);
+
+		if (series == null) {
+			series = seriesRepo.saveAndFlush(newSeries(first, serieKey));
+		}
+
+		Set<String> known = knownInstances(series.getId(), entries);
+		List<TransferSeriesInstanceEntity> newInstances = new ArrayList<>();
+		// reason -> {errors, excluded, retries}, in first-seen order
+		Map<String, int[]> reasons = new LinkedHashMap<>();
+		for (MonitoringEntry entry : entries) {
+			InstanceNovelty novelty = classify(series.getId(), entry, known, newInstances);
+			apply(series, entry, novelty);
+
+			boolean excluded = !entry.sent() && !entry.error() && !entry.duplicate();
+			if ((entry.error() || excluded) && StringUtils.isNotBlank(entry.reason())) {
+				int[] counts = reasons.computeIfAbsent(truncate(entry.reason(), MAX_REASON_LENGTH), r -> new int[3]);
+				counts[entry.error() ? 0 : 1]++;
+				if (novelty == InstanceNovelty.KNOWN) {
+					counts[2]++;
+				}
+			}
+		}
+		if (!newInstances.isEmpty()) {
+			instanceRepo.saveAll(newInstances);
+		}
+		seriesRepo.saveAndFlush(series);
+		Long seriesId = series.getId();
+		reasons.forEach((reason, counts) -> incrementReason(seriesId, reason, counts[0], counts[1], counts[2]));
+	}
+
+	/**
+	 * The original SOP Instance UIDs of the batch that the series has already recorded,
+	 * fetched in one query. Safe without an upsert because the caller holds the
+	 * pessimistic series lock, so writes for the same series are serialized.
+	 */
+	private Set<String> knownInstances(Long seriesStatusId, List<MonitoringEntry> entries) {
+		Set<String> uids = new HashSet<>();
+		for (MonitoringEntry entry : entries) {
+			if (StringUtils.isNotBlank(entry.sopInstanceUidOriginal())) {
+				uids.add(entry.sopInstanceUidOriginal());
+			}
+		}
+		Set<String> known = new HashSet<>();
+		if (!uids.isEmpty()) {
+			instanceRepo.findBySeriesStatusIdAndSopInstanceUidIn(seriesStatusId, uids)
+				.forEach(instance -> known.add(instance.getSopInstanceUid()));
+		}
+		return known;
+	}
+
+	/**
+	 * Classifies one outcome against the instances already recorded for the series
+	 * (including the ones seen earlier in the same batch) and, for a newly seen instance,
+	 * queues its original SOP Instance UID for insertion.
 	 *
 	 * <p>
 	 * A blank UID cannot be de-duplicated: such an event is reported as
@@ -113,15 +162,16 @@ public class MonitoringWriteService {
 	 * let repeated identity-less failures — e.g. an error raised before the original
 	 * attributes are read — inflate the {@code instances} counter without bound.
 	 */
-	private InstanceNovelty registerInstance(Long seriesStatusId, MonitoringEntry entry) {
+	private static InstanceNovelty classify(Long seriesStatusId, MonitoringEntry entry, Set<String> known,
+			List<TransferSeriesInstanceEntity> newInstances) {
 		String uid = entry.sopInstanceUidOriginal();
 		if (StringUtils.isBlank(uid)) {
 			return InstanceNovelty.UNIDENTIFIED;
 		}
-		if (instanceRepo.existsBySeriesStatusIdAndSopInstanceUid(seriesStatusId, uid)) {
+		if (!known.add(uid)) {
 			return InstanceNovelty.KNOWN;
 		}
-		instanceRepo.saveAndFlush(new TransferSeriesInstanceEntity(seriesStatusId, uid));
+		newInstances.add(new TransferSeriesInstanceEntity(seriesStatusId, uid));
 		return InstanceNovelty.NEW;
 	}
 
@@ -181,24 +231,18 @@ public class MonitoringWriteService {
 	}
 
 	/**
-	 * Increment (or create) the per-reason counter in the matching delivery bucket (error
-	 * vs excluded) and, when the outcome hit an already-seen instance, also its retry
-	 * counter; serialized by the series lock.
+	 * Adds the batch's counts to the per-reason counter (created if missing) in the
+	 * matching delivery buckets (error vs excluded) and, for the outcomes that hit an
+	 * already-seen instance, to its retry counter; serialized by the series lock.
 	 */
-	private void incrementReason(Long seriesStatusId, String reason, boolean error, boolean retry) {
+	private void incrementReason(Long seriesStatusId, String reason, int errors, int excluded, int retries) {
 		reasonRepo.findBySeriesStatusIdAndReason(seriesStatusId, reason).ifPresentOrElse(existing -> {
-			if (error) {
-				existing.setErrorCount(existing.getErrorCount() + 1);
-			}
-			else {
-				existing.setExcludedCount(existing.getExcludedCount() + 1);
-			}
-			if (retry) {
-				existing.setRetryCount(existing.getRetryCount() + 1);
-			}
+			existing.setErrorCount(existing.getErrorCount() + errors);
+			existing.setExcludedCount(existing.getExcludedCount() + excluded);
+			existing.setRetryCount(existing.getRetryCount() + retries);
 			reasonRepo.saveAndFlush(existing);
-		}, () -> reasonRepo.saveAndFlush(
-				new TransferSeriesReasonEntity(seriesStatusId, reason, error ? 1 : 0, error ? 0 : 1, retry ? 1 : 0)));
+		}, () -> reasonRepo
+			.saveAndFlush(new TransferSeriesReasonEntity(seriesStatusId, reason, errors, excluded, retries)));
 	}
 
 	/** Distinct, comma-joined SOP class UIDs, bounded to the column length. */

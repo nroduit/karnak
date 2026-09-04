@@ -67,7 +67,10 @@ class AuthConfigEntityTest {
 		assertNotEquals(base, config(2L, "code"));
 		assertNotEquals(base, config(1L, "other"));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-a-config");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-a-config";
+		assertNotEquals(base, foreign);
 	}
 
 }

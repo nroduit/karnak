@@ -18,13 +18,13 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
- * Executor used by the {@code @Async} event listeners (transfer monitoring, conformance
- * collection). Spring Boot's default async executor has an unbounded queue: when the
- * listeners (DB upserts, validation) are slower than the DICOM ingest rate, the backlog
- * of pending events grows without limit and the heap with it, until the JVM crashes. This
- * executor bounds the queue and runs overflowing tasks on the publishing thread
- * (caller-runs), so a saturated event pipeline throttles the forwarding threads instead
- * of accumulating events in memory.
+ * Executor used by the {@code @Async} event listeners (conformance collection; transfer
+ * monitoring is batched per series instead, see {@code monitoring.flush-interval-ms}).
+ * Spring Boot's default async executor has an unbounded queue: when the listeners are
+ * slower than the DICOM ingest rate, the backlog of pending events grows without limit
+ * and the heap with it, until the JVM crashes. This executor bounds the queue and runs
+ * overflowing tasks on the publishing thread (caller-runs), so a saturated event pipeline
+ * throttles the forwarding threads instead of accumulating events in memory.
  */
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
+import org.karnak.backend.model.forwardnode.ForwardNodeModel;
 import org.karnak.backend.util.SystemPropertyUtil;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.springframework.core.env.Environment;
@@ -184,8 +185,14 @@ public class EditAETitleDescription extends VerticalLayout {
 		binder.forField(textFieldAETitle)
 			.withValidator(value -> !value.isEmpty(), "Forward AE Title is mandatory")
 			.withValidator(value -> value.length() <= 16, "Forward AETitle has more than 16 characters")
+			// Same constraint as the REST API: the AETitle reaches the DICOM gateway
+			// and its logs, where a pasted CR/LF would forge log records
+			.withValidator(value -> value.matches(ForwardNodeModel.AE_TITLE),
+					"Forward AETitle contains characters not allowed in an AETitle")
 			.bind(ForwardNodeEntity::getFwdAeTitle, ForwardNodeEntity::setFwdAeTitle);
 		binder.forField(textFieldDescription)
+			.withValidator(value -> value.matches(ForwardNodeModel.NO_CONTROL_CHARACTERS),
+					"Forward description contains control characters")
 			.bind(ForwardNodeEntity::getFwdDescription, ForwardNodeEntity::setFwdDescription);
 	}
 

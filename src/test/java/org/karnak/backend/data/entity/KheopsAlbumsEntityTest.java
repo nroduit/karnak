@@ -76,7 +76,10 @@ class KheopsAlbumsEntityTest {
 		assertNotEquals(base, new KheopsAlbumsEntity("u", "d", "x", "c"));
 		assertNotEquals(base, new KheopsAlbumsEntity("u", "d", "s", "x"));
 		assertFalse(base.equals(null));
-		assertNotEquals(base, "not-an-album");
+		// Declared as Object: equals(Object) must reject a foreign type at runtime,
+		// which is what this asserts.
+		Object foreign = "not-an-album";
+		assertNotEquals(base, foreign);
 	}
 
 }

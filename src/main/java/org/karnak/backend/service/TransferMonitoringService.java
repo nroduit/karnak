@@ -19,10 +19,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
 import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
@@ -44,7 +47,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,26 +87,73 @@ public class TransferMonitoringService {
 	}
 
 	/**
-	 * Listener on TransferMonitoringEvent: fold the outcome into the series aggregate,
-	 * retrying the first-insert race for a brand-new series.
+	 * Outcomes not yet written, per series, in arrival order. Filled by the forwarding
+	 * threads, drained by {@link #flushPendingEntries()}. Per-key {@code compute} on the
+	 * writers and {@code remove} on the drain are both atomic, so a batch is either still
+	 * here or exclusively held by the flush, never both.
 	 */
-	@Async
+	private final ConcurrentHashMap<SeriesKey, List<MonitoringEntry>> pending = new ConcurrentHashMap<>();
+
+	private record SeriesKey(Long forwardNodeId, Long destinationId, String serieUidOriginal) {
+	}
+
+	/**
+	 * Listener on TransferMonitoringEvent: queues the outcome for the next flush. Runs on
+	 * the forwarding thread and only touches memory: the database write is batched per
+	 * series by {@link #flushPendingEntries()}, because one transaction per object made
+	 * the database commit rate the ceiling of the whole ingest.
+	 */
 	@EventListener
 	public void onTransferMonitoringEvent(TransferMonitoringEvent transferMonitoringEvent) {
 		MonitoringEntry entry = transferMonitoringEvent.getEntry();
+		SeriesKey key = new SeriesKey(entry.forwardNodeId(), entry.destinationId(), entry.serieUidOriginal());
+		pending.compute(key, (k, batch) -> {
+			List<MonitoringEntry> list = batch != null ? batch : new ArrayList<>();
+			list.add(entry);
+			return list;
+		});
+	}
+
+	/**
+	 * Writes every pending batch, one transaction per series, retrying the first-insert
+	 * race for a brand-new series. A failing series is logged and skipped so the others
+	 * are still written and the schedule keeps running.
+	 */
+	@Scheduled(fixedDelayString = "${monitoring.flush-interval-ms:1000}")
+	public void flushPendingEntries() {
+		for (SeriesKey key : pending.keySet()) {
+			List<MonitoringEntry> batch = pending.remove(key);
+			if (batch != null && !batch.isEmpty()) {
+				writeBatch(batch);
+			}
+		}
+	}
+
+	private void writeBatch(List<MonitoringEntry> batch) {
+		String serieUid = batch.getFirst().serieUidOriginal();
 		for (int attempt = 1; attempt <= MAX_UPSERT_ATTEMPTS; attempt++) {
 			try {
-				monitoringWriteService.upsert(entry);
+				monitoringWriteService.upsertAll(batch);
 				return;
 			}
 			catch (DataIntegrityViolationException e) {
 				// Concurrent creation of the same series: retry, the row now exists
 				if (attempt == MAX_UPSERT_ATTEMPTS) {
-					log.warn("Could not record monitoring entry for series {} after {} attempts",
-							entry.serieUidOriginal(), MAX_UPSERT_ATTEMPTS, e);
+					log.warn("Could not record {} monitoring entries for series {} after {} attempts", batch.size(),
+							serieUid, MAX_UPSERT_ATTEMPTS, e);
 				}
 			}
+			catch (RuntimeException e) {
+				log.warn("Could not record {} monitoring entries for series {}", batch.size(), serieUid, e);
+				return;
+			}
 		}
+	}
+
+	/** Writes what is still pending before the context goes down. */
+	@PreDestroy
+	void flushOnShutdown() {
+		flushPendingEntries();
 	}
 
 	/**
@@ -118,6 +167,7 @@ public class TransferMonitoringService {
 
 	/** Delete all monitoring records. */
 	public void deleteAllTransferStatus() {
+		pending.clear();
 		reasonRepo.deleteAllInBatch();
 		instanceRepo.deleteAllInBatch();
 		seriesRepo.deleteAllInBatch();

@@ -13,11 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.karnak.backend.data.entity.TransferSeriesInstanceEntity;
 import org.karnak.backend.data.entity.TransferSeriesReasonEntity;
 import org.karnak.backend.data.entity.TransferSeriesStatusEntity;
 import org.karnak.backend.data.repo.TransferSeriesInstanceRepo;
@@ -113,7 +116,8 @@ class MonitoringWriteServiceTest {
 		when(seriesRepo.findWithLockByForwardNodeIdAndDestinationIdAndSerieUidOriginal(anyLong(), anyLong(),
 				anyString()))
 			.thenReturn(Optional.of(existing));
-		when(instanceRepo.existsBySeriesStatusIdAndSopInstanceUid(10L, "sop-1")).thenReturn(true);
+		when(instanceRepo.findBySeriesStatusIdAndSopInstanceUidIn(eq(10L), any()))
+			.thenReturn(List.of(new TransferSeriesInstanceEntity(10L, "sop-1")));
 
 		writeService.upsert(entry(true, false, false, null, "sop-1"));
 
@@ -132,7 +136,8 @@ class MonitoringWriteServiceTest {
 		when(seriesRepo.findWithLockByForwardNodeIdAndDestinationIdAndSerieUidOriginal(anyLong(), anyLong(),
 				anyString()))
 			.thenReturn(Optional.of(existing));
-		when(instanceRepo.existsBySeriesStatusIdAndSopInstanceUid(10L, "sop-1")).thenReturn(true);
+		when(instanceRepo.findBySeriesStatusIdAndSopInstanceUidIn(eq(10L), any()))
+			.thenReturn(List.of(new TransferSeriesInstanceEntity(10L, "sop-1")));
 
 		// HTTP 409 "already present": sent=false, error=false, duplicate=true
 		writeService.upsert(entry(false, false, true, null, "sop-1"));
@@ -202,7 +207,8 @@ class MonitoringWriteServiceTest {
 				anyString()))
 			.thenReturn(Optional.of(existing));
 		// Already-seen instance -> the excluded outcome is a retry on the novelty axis.
-		when(instanceRepo.existsBySeriesStatusIdAndSopInstanceUid(10L, "sop-1")).thenReturn(true);
+		when(instanceRepo.findBySeriesStatusIdAndSopInstanceUidIn(eq(10L), any()))
+			.thenReturn(List.of(new TransferSeriesInstanceEntity(10L, "sop-1")));
 		when(reasonRepo.findBySeriesStatusIdAndReason(10L, "SOP Class X is not in the SOPClassUID filter"))
 			.thenReturn(Optional.empty());
 
@@ -238,7 +244,7 @@ class MonitoringWriteServiceTest {
 		assertEquals(3, existing.getInstances());
 		assertEquals(0, existing.getRetries());
 		assertEquals(4, existing.getErrors());
-		verify(instanceRepo, never()).saveAndFlush(any());
+		verify(instanceRepo, never()).saveAll(any());
 	}
 
 	@Test

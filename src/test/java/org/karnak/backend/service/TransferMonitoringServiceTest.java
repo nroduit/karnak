@@ -11,6 +11,8 @@ package org.karnak.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -58,10 +60,16 @@ class TransferMonitoringServiceTest {
 	}
 
 	@Test
-	void should_upsert_the_series_aggregate_on_event() {
+	void should_queue_the_event_and_write_the_series_batch_on_flush() {
 		transferMonitoringService.onTransferMonitoringEvent(event());
+		transferMonitoringService.onTransferMonitoringEvent(event());
+		Mockito.verifyNoInteractions(monitoringWriteServiceMock);
 
-		Mockito.verify(monitoringWriteServiceMock, Mockito.times(1)).upsert(any(MonitoringEntry.class));
+		transferMonitoringService.flushPendingEntries();
+
+		Mockito.verify(monitoringWriteServiceMock, Mockito.times(1)).upsertAll(argThat(batch -> batch.size() == 2));
+		transferMonitoringService.flushPendingEntries();
+		Mockito.verifyNoMoreInteractions(monitoringWriteServiceMock);
 	}
 
 	@Test
@@ -69,11 +77,12 @@ class TransferMonitoringServiceTest {
 		Mockito.doThrow(new DataIntegrityViolationException("duplicate"))
 			.doNothing()
 			.when(monitoringWriteServiceMock)
-			.upsert(any(MonitoringEntry.class));
+			.upsertAll(anyList());
 
 		transferMonitoringService.onTransferMonitoringEvent(event());
+		transferMonitoringService.flushPendingEntries();
 
-		Mockito.verify(monitoringWriteServiceMock, Mockito.times(2)).upsert(any(MonitoringEntry.class));
+		Mockito.verify(monitoringWriteServiceMock, Mockito.times(2)).upsertAll(anyList());
 	}
 
 	@Test
