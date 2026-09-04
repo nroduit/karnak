@@ -479,7 +479,8 @@ public class NotificationService {
 	/**
 	 * Notify interval in seconds of the destination. The column is nullable and only the
 	 * destination editor fills a default, so rows created or migrated by another path can
-	 * hold a null: fall back to the default interval instead of failing the scheduled task.
+	 * hold a null: fall back to the default interval instead of failing the scheduled
+	 * task.
 	 */
 	private static long notifyInterval(DestinationEntity destinationEntity) {
 		Integer interval = destinationEntity.getNotifyInterval();
