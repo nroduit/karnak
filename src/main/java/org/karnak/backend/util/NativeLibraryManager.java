@@ -80,7 +80,8 @@ public class NativeLibraryManager {
 			if (!directoryExisted) {
 				// Only a directory this class created is ours to remove on shutdown, see
 				// GatewayService#destroy. In the portable package the libraries are
-				// installed inside the app image, where deleting them would break the code
+				// installed inside the app image, where deleting them would break the
+				// code
 				// signature and leave the next start without an OpenCV library.
 				System.setProperty(NATIVE_CODEC_PROPERTY, directory.toString());
 			}
