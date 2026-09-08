@@ -11,6 +11,7 @@ package org.karnak.backend.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -66,7 +67,7 @@ class NativeLibraryManagerTest {
 
 	@Test
 	void prepare_library_copies_the_library_from_the_classpath(@TempDir Path tempDir) throws IOException {
-		Path directory = Files.createDirectories(tempDir.resolve(NativeLibraryManager.OPENCV_FOLDER));
+		Path directory = tempDir.resolve(NativeLibraryManager.OPENCV_FOLDER);
 
 		Path libraryFile = NativeLibraryManager.prepareLibrary(SYSTEM_WITH_RESOURCE, directory.toString());
 
@@ -74,6 +75,33 @@ class NativeLibraryManagerTest {
 		assertTrue(Files.isReadable(libraryFile));
 		assertEquals("dummy-native-lib-content", Files.readString(libraryFile));
 		assertEquals(directory.toString(), System.getProperty("dicom.native.codec"));
+	}
+
+	@Test
+	void prepare_library_does_not_mark_a_preexisting_directory_for_deletion(@TempDir Path tempDir) throws IOException {
+		// The portable package installs the library inside the app image, which must
+		// survive
+		// the shutdown cleanup in GatewayService#destroy.
+		Path directory = Files.createDirectories(tempDir.resolve(NativeLibraryManager.OPENCV_FOLDER));
+
+		Path libraryFile = NativeLibraryManager.prepareLibrary(SYSTEM_WITH_RESOURCE, directory.toString());
+
+		assertTrue(Files.isReadable(libraryFile));
+		assertNull(System.getProperty("dicom.native.codec"));
+	}
+
+	@Test
+	void prepare_library_does_not_overwrite_an_installed_library(@TempDir Path tempDir) throws IOException {
+		// The portable package ships the library inside the signed app image, so it must
+		// not be
+		// rewritten from the classpath even when the jar still carries a copy.
+		Path directory = Files.createDirectories(tempDir.resolve(NativeLibraryManager.OPENCV_FOLDER));
+		Files.writeString(directory.resolve("libopencv_java.so"), "installed-by-the-packager");
+
+		Path libraryFile = NativeLibraryManager.prepareLibrary(SYSTEM_WITH_RESOURCE, directory.toString());
+
+		assertEquals("installed-by-the-packager", Files.readString(libraryFile));
+		assertNull(System.getProperty("dicom.native.codec"));
 	}
 
 	@Test
@@ -85,6 +113,7 @@ class NativeLibraryManagerTest {
 
 		assertEquals(existing, libraryFile);
 		assertEquals("already-here", Files.readString(libraryFile));
+		assertNull(System.getProperty("dicom.native.codec"));
 	}
 
 	@Test

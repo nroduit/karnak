@@ -91,6 +91,20 @@ class ActionTagsTest {
 			assertThrows(ProfileException.class, () -> new ActionTags(element("X")));
 		}
 
+		@Test
+		void rejects_an_unknown_action_symbol() {
+			// "DDum" was retired in favour of "D": an unknown symbol must fail at build
+			// time.
+			ProfileElementEntity element = element("DDum");
+			element.addIncludedTag(new IncludedTagEntity("(0010,0010)", element));
+
+			ProfileException e = assertThrows(ProfileException.class, () -> new ActionTags(element));
+			assertEquals(
+					"Cannot build the profile action.on.specific.tags: Unknown Action 'DDum', only K (keep), X (remove),"
+							+ " Z (replace with null), D (replace with a dummy value) and U (new UID) are allowed",
+					e.getMessage());
+		}
+
 	}
 
 	@Nested

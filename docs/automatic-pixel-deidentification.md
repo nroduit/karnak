@@ -73,9 +73,8 @@ profileElements:
   codename: "basic.dicom.profile"
 ```
 
-Reference profiles are provided under
-[`profils/`](../profils): `Automatic-Deidentification-Karnak-Profile.yml` and
-`Automatic-Deidentification-No-Mask-Karnak-Profile.yml`.
+A complete example is documented in the
+[Karnak documentation](https://weasis.org/karnak-documentation/en/profiles/masks/#automatic-pixel-data-de-identification).
 
 ---
 

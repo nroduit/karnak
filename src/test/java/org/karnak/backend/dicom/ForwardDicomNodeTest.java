@@ -10,6 +10,7 @@
 package org.karnak.backend.dicom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -92,6 +93,27 @@ class ForwardDicomNodeTest {
 			node.addAcceptedSourceNode(3L, "SRC-AET", "src-host");
 
 			assertEquals(1, node.getAcceptedSourceNodes().size());
+		}
+
+		@Test
+		void hostname_validation_follows_the_explicit_flag() {
+			ForwardDicomNode node = new ForwardDicomNode("FWD-AET");
+
+			node.addAcceptedSourceNode(3L, "SRC-AET", "src-host", false);
+			node.addAcceptedSourceNode(4L, "SRC-AET2", "src-host2", true);
+
+			DicomNode unchecked = node.getAcceptedSourceNodes()
+				.stream()
+				.filter(n -> "SRC-AET".equals(n.getAet()))
+				.findFirst()
+				.orElseThrow();
+			DicomNode checked = node.getAcceptedSourceNodes()
+				.stream()
+				.filter(n -> "SRC-AET2".equals(n.getAet()))
+				.findFirst()
+				.orElseThrow();
+			assertFalse(unchecked.isValidateHostname());
+			assertTrue(checked.isValidateHostname());
 		}
 
 	}

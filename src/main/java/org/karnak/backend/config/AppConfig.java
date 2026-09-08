@@ -51,10 +51,6 @@ public class AppConfig {
 
 	@Getter
 	@Setter
-	private String environment;
-
-	@Getter
-	@Setter
 	private String name;
 
 	@Setter

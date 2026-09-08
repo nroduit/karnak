@@ -22,6 +22,7 @@ import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.TagEntity;
 import org.karnak.backend.exception.ProfileException;
+import org.karnak.backend.model.action.AbstractAction;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.expression.ExpressionError;
@@ -98,6 +99,19 @@ public abstract class AbstractProfileItem implements ProfileItem {
 	public void profileValidation() throws ProfileException {
 		validateTagPaths();
 		validateCondition();
+	}
+
+	/**
+	 * Rejects an {@link #action} symbol that {@link AbstractAction#convertAction} does
+	 * not know, so that a misspelt or retired symbol fails at profile build time instead
+	 * of silently leaving the matched tags untouched.
+	 */
+	protected void validateAction() throws ProfileException {
+		if (action != null && AbstractAction.convertAction(action) == null) {
+			throw new ProfileException("Cannot build the profile " + codeName + ": Unknown Action '" + action
+					+ "', only K (keep), X (remove), Z (replace with null), D (replace with a dummy value)"
+					+ " and U (new UID) are allowed");
+		}
 	}
 
 	/**

@@ -17,6 +17,22 @@ die ( ) {
   exit 1
 }
 
+# jlink de-duplicates the runtime legal files into symlinks
+materialize_symlinks ( ) {
+  local root="$1"
+  local link target count=0
+
+  while IFS= read -r -d '' link; do
+    target=$(readlink -f "$link") && [ -e "$target" ] \
+      || die "Dangling symlink in the app image: $link"
+    rm -f "$link"
+    cp -pR "$target" "$link" || die "Cannot materialize the symlink $link"
+    count=$((count + 1))
+  done < <(find "$root" -type l -print0)
+
+  echo "Materialized $count symlink(s) in $root"
+}
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
@@ -108,17 +124,33 @@ done < <(find "$lib_dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
 if [ ${#_subdirs[@]} -eq 1 ]; then
   ARC_OS="${_subdirs[0]}"
 else
+  # The natives of every platform can be present, so pick the host one. Matching on the
+  # candidates instead would return whichever directory `find` happened to list first.
+  case "$(uname -s)" in
+    Darwin)                 host_os="macosx";;
+    Linux)                  host_os="linux";;
+    CYGWIN*|MINGW*|MSYS*)   host_os="windows";;
+    *)                      host_os="";;
+  esac
+  case "$(uname -m)" in
+    arm64|aarch64)          host_arc="aarch64";;
+    x86_64|amd64)           host_arc="x86-64";;
+    *)                      host_arc="";;
+  esac
+
   ARC_OS=""
-  for cand in "${_subdirs[@]}"; do
-    case "$cand" in
-      *windows*) ARC_OS="$cand"; break;;
-      *macosx*) ARC_OS="$cand"; break;;
-      *linux*) ARC_OS="$cand"; break;;
-    esac
+  # Exact os-arch first, then any build for the host os.
+  for want in "$host_os-$host_arc" "$host_os"; do
+    [ -n "$host_os" ] || break
+    for cand in "${_subdirs[@]}"; do
+      case "$cand" in
+        "$want"|"$want"-*) ARC_OS="$cand"; break 2;;
+      esac
+    done
   done
-  # fallback to first if nothing matched
-  if [ -z "$ARC_OS" ] && [ ${#_subdirs[@]} -gt 0 ]; then
-    ARC_OS="${_subdirs[0]}"
+
+  if [ -z "$ARC_OS" ] ; then
+    die "No natives for $host_os-$host_arc in $lib_dir (found: ${_subdirs[*]})."
   fi
 fi
 
@@ -243,7 +275,7 @@ else
 fi
 
 if [ ! -d "$JDK_PATH_UNIX/jmods" ]; then
-  die "The JDK at '$JDK_PATH_UNIX' has no 'jmods' directory (packaged modules) required by jpackage/jlink.\nUse a full JDK >= ${REQUIRED_TEXT_VERSION} that ships jmods."
+  die "The JDK at '$JDK_PATH_UNIX' has no 'jmods' directory (packaged modules) required by jpackage/jlink.\nUse a full JDK >= ${REQUIRED_TEXT_VERSION} that ships jmods. Temurin 24+ enables JEP 493 and\ndistributes the jmods separately: install the 'jdk+jmods' package, or download the jmods\narchive from the Adoptium API and extract it as '$JDK_PATH_UNIX/jmods'."
 fi
 
 $JPKGCMD --type app-image --input "$INPUT_DIR" --dest "$OUTPUT_PATH" --name "$NAME" \
@@ -256,6 +288,11 @@ $JPKGCMD --type app-image --input "$INPUT_DIR" --dest "$OUTPUT_PATH" --name "$NA
 # MacOS code signing
 if [ "$machine" = "macosx" ] ; then
     APP_BUNDLE="$OUTPUT_PATH/$NAME.app"
+
+    # Must run before any signing: it changes the files that the seal covers. jpackage already
+    # signed the image (ad hoc when no identity was given), so the bundle is re-signed below in
+    # both branches.
+    materialize_symlinks "$APP_BUNDLE"
 
     if [[ -n "$CERTIFICATE" ]] ; then
       SIGN_ID="$CERTIFICATE"
@@ -273,54 +310,75 @@ if [ "$machine" = "macosx" ] ; then
           --sign "$SIGN_ID" "$lib" 2>&1 || echo "Warning: Could not sign $lib"
       done
 
-      LAST_PWD=$(pwd)
-      echo "Last PWD: $LAST_PWD"
-
       # Process JAR files containing native libraries
       APP_DIR="$APP_BUNDLE/Contents/app"
       MAIN_JAR="$APP_DIR/karnak-${KARNAK_VERSION}.jar"
 
       if [ -f "$MAIN_JAR" ]; then
         echo "Processing Spring Boot JAR: $MAIN_JAR"
-        TEMP_JAR_DIR=$(mktemp -d)
-
-        # Extract JAR
         MAIN_JAR_ABS="$(cd "$(dirname "$MAIN_JAR")" && pwd)/$(basename "$MAIN_JAR")"
-        cd "$TEMP_JAR_DIR" && jar xf "$MAIN_JAR_ABS"
+        WORK_DIR=$(mktemp -d)
 
-        # Find and process nested JARs containing native libraries
-        find "$TEMP_JAR_DIR" -type f -name "*.jar" | grep -E '(.*-native-.*|jna-.*)' | while read -r nested_jar; do
-          echo "Processing nested JAR: $nested_jar"
+        # The jar is edited in place with zip rather than extracted and rebuilt. `jar cf`
+        # regenerates the manifest, which drops Main-Class, Start-Class and the Spring-Boot-*
+        # entries, and it deflates the nested jars that the Spring Boot loader requires to be
+        # stored. zip rewrites only the entries it is handed and copies the rest verbatim.
+        nested_jars=$(unzip -Z1 "$MAIN_JAR_ABS" 'BOOT-INF/lib/*.jar' 2>/dev/null \
+          | grep -E '(-native-|/jna-)' || true)
 
-          NESTED_TEMP=$(mktemp -d)
-          cd "$NESTED_TEMP" && jar xf "$nested_jar"
+        for entry in $nested_jars ; do
+          # Pull the nested jar out keeping its BOOT-INF/lib/... path, so it can be zipped back
+          # under the same name.
+          rm -rf "$WORK_DIR/outer" "$WORK_DIR/inner"
+          mkdir -p "$WORK_DIR/outer" "$WORK_DIR/inner"
+          unzip -q -o "$MAIN_JAR_ABS" "$entry" -d "$WORK_DIR/outer" \
+            || die "Cannot extract $entry from $MAIN_JAR_ABS"
 
-          # Sign native libraries in this nested JAR
-          find "$NESTED_TEMP" -type f \( -name "*.dylib" -o -name "*.jnilib" \) | while read -r lib; do
+          libs=$(unzip -Z1 "$WORK_DIR/outer/$entry" '*.dylib' '*.jnilib' 2>/dev/null || true)
+          [ -n "$libs" ] || continue
+          echo "Processing nested JAR: $entry"
+
+          # Only the Mach-O files are unpacked, signed and put back, so the nested jar keeps its
+          # own manifest and every other entry untouched.
+          ( cd "$WORK_DIR/inner" && unzip -q -o "$WORK_DIR/outer/$entry" '*.dylib' '*.jnilib' ) \
+            || die "Cannot extract the native libraries of $entry"
+
+          while IFS= read -r lib; do
             echo "Signing native library in nested JAR: $lib"
             codesign --force --options runtime --timestamp \
-              --sign "$SIGN_ID" "$lib" 2>&1
-          done
+              --sign "$SIGN_ID" "$WORK_DIR/inner/$lib" \
+              || die "Cannot sign $lib in $entry"
+          done <<< "$libs"
 
-          # Repackage the nested JAR
-          jar cf "$nested_jar" -C "$NESTED_TEMP" .
-          rm -rf "$NESTED_TEMP"
+          # shellcheck disable=SC2086
+          ( cd "$WORK_DIR/inner" && zip -q "$WORK_DIR/outer/$entry" $libs ) \
+            || die "Cannot update the native libraries of $entry"
+          # -0 keeps the nested jar stored, as the Spring Boot loader requires.
+          ( cd "$WORK_DIR/outer" && zip -q -X -0 "$MAIN_JAR_ABS" "$entry" ) \
+            || die "Cannot put $entry back into $MAIN_JAR_ABS"
 
-          echo "Repackaged nested JAR: $nested_jar"
+          echo "Repackaged nested JAR: $entry"
         done
 
-        # Clean up extracted native libraries from the main JAR
-        rm -rf "$TEMP_JAR_DIR/BOOT-INF/classes/lib"
-        rm -rf "$TEMP_JAR_DIR/BOOT-INF/lib/license-checker-"*".jar"
+        # Drop the natives (already installed next to the app image) and the license checker.
+        # zip exits 12 when a pattern matches nothing, which is not an error here.
+        for pattern in 'BOOT-INF/classes/lib/*' 'BOOT-INF/lib/license-checker-*.jar' ; do
+          zip -q -d "$MAIN_JAR_ABS" "$pattern" || [ $? -eq 12 ] \
+            || die "Cannot remove $pattern from $MAIN_JAR_ABS"
+        done
 
-        # Repackage JAR
-        jar cf "$MAIN_JAR_ABS" -C "$TEMP_JAR_DIR" .
-        rm -rf "$TEMP_JAR_DIR"
+        rm -rf "$WORK_DIR"
+
+        # The launcher only reports a broken jar at runtime, so fail the build here instead.
+        unzip -p "$MAIN_JAR_ABS" META-INF/MANIFEST.MF | grep -q '^Start-Class:' \
+          || die "The repackaged jar lost its Start-Class manifest entry."
+        if unzip -v "$MAIN_JAR_ABS" | awk '$NF ~ /^BOOT-INF\/lib\/.*\.jar$/ {print $2}' \
+             | grep -qv '^Stored$' ; then
+          die "The repackaged jar has deflated nested jars; the Spring Boot loader needs them stored."
+        fi
 
         echo "Repackaged and signed: $MAIN_JAR_ABS"
       fi
-
-      cd "$LAST_PWD" || die "Cannot change directory to $curPath"
 
 
       # Sign the entire app bundle
@@ -328,12 +386,20 @@ if [ "$machine" = "macosx" ] ; then
       codesign --deep --force --options runtime --timestamp \
         --entitlements "$RES/uri-launcher.entitlements" \
         --sign "$SIGN_ID" "$APP_BUNDLE"
-
-      # Verify
-      echo "Verifying signature..."
-      codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
-      spctl --assess --verbose=4 --type execute "$APP_BUNDLE"
+    else
+      # jpackage signs the app image ad hoc on Apple Silicon, so the seal has to be rebuilt
+      # after the symlinks were materialized, even without a Developer ID.
+      echo "No signing identity given, re-signing $APP_BUNDLE ad hoc"
+      codesign --deep --force --sign - "$APP_BUNDLE"
     fi
+
+    # Fatal: a broken seal makes Gatekeeper kill the app on first launch, and the failure only
+    # shows up on the machine that downloads it. Notarization runs later, so spctl (which also
+    # checks for a ticket) stays informational here.
+    echo "Verifying signature..."
+    codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE" \
+      || die "The app bundle seal is invalid. See the codesign output above."
+    spctl --assess --verbose=4 --type execute "$APP_BUNDLE" || true
 fi
 
 cp "$curPath/run.cfg" "$OUTPUT_PATH/"
@@ -342,4 +408,9 @@ if [ "$machine" = "windows" ] ; then
 else
   cp "$curPath/run.sh" "$OUTPUT_PATH/"
   chmod +x "$OUTPUT_PATH"/run.sh
+  if [ "$machine" = "macosx" ] ; then
+    # Double-clickable launcher for the Finder (a .command file opens in Terminal)
+    printf '#!/bin/bash\ncd "$(dirname "$0")" && exec ./run.sh "$@"\n' > "$OUTPUT_PATH/Karnak.command"
+    chmod +x "$OUTPUT_PATH/Karnak.command"
+  fi
 fi

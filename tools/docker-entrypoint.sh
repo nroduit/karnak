@@ -44,9 +44,14 @@ SYS_PROPS+=" -Djava.library.path='/tmp/dicom-opencv'"
 #  KARNAK ENVIRONMENT  #
 ########################
 file_env 'KARNAK_LOGIN_PASSWORD'
+: "${KARNAK_LOGIN_ADMIN:=admin}"
 : "${KARNAK_LOGIN_PASSWORD:=undefined}"
 SYS_PROPS+=" -Dkarnakadmin='$KARNAK_LOGIN_ADMIN'"
 SYS_PROPS+=" -Dkarnakpassword='$KARNAK_LOGIN_PASSWORD'"
+
+# Web portal port inside the container (8081 is the port of the portable package)
+: "${KARNAK_WEB_PORT:=8080}"
+SYS_PROPS+=" -Dserver.port=$KARNAK_WEB_PORT"
 
 file_env 'DB_ENCRYPTION_KEY'
 : "${DB_ENCRYPTION_KEY:=undefined}"

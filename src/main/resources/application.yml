@@ -5,7 +5,6 @@ application:
 #  Karnak Application Profiles
 #  --------------------------------------------------------
 name: KARNAK-Profile
-environment: LOCAL
 karnakadmin: ${KARNAK_ADMIN:admin}
 karnakpassword: ${KARNAK_PASSWORD:karnak}
 karnakpostgreskey: ${DB_ENCRYPTION_KEY}

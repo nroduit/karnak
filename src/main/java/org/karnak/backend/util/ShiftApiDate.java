@@ -168,10 +168,15 @@ public class ShiftApiDate {
 	}
 
 	private static String normalizeJsonPath(String path) {
-		if (path != null && !path.startsWith("/")) {
-			return "/" + path;
+		if (path == null) {
+			return null;
 		}
-		return path;
+		// An empty path is the JSON Pointer of the whole document (RFC 6901)
+		String trimmed = path.trim();
+		if (!trimmed.isEmpty() && !trimmed.startsWith("/")) {
+			return "/" + trimmed;
+		}
+		return trimmed;
 	}
 
 	private static String fetchResponse(String authConfig, String url, String method, String body) {

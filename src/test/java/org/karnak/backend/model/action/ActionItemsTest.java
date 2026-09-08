@@ -124,7 +124,7 @@ class ActionItemsTest {
 			Attributes dcm = new Attributes();
 			dcm.setString(Tag.PatientName, VR.PN, "Doe^John");
 
-			new DefaultDummy("DDum").execute(dcm, Tag.PatientName, HMAC_KEY);
+			new DefaultDummy("D").execute(dcm, Tag.PatientName, HMAC_KEY);
 
 			assertEquals("UNKNOWN", dcm.getString(Tag.PatientName));
 		}
@@ -135,7 +135,7 @@ class ActionItemsTest {
 			// Window Center has VR DS (decimal string).
 			dcm.setString(Tag.WindowCenter, VR.DS, "128.0");
 
-			new DefaultDummy("DDum").execute(dcm, Tag.WindowCenter, HMAC_KEY);
+			new DefaultDummy("D").execute(dcm, Tag.WindowCenter, HMAC_KEY);
 
 			assertEquals("0", dcm.getString(Tag.WindowCenter));
 		}
@@ -145,7 +145,7 @@ class ActionItemsTest {
 			Attributes dcm = new Attributes();
 			dcm.setString(Tag.StudyInstanceUID, VR.UI, "1.2.3.4.5");
 
-			new DefaultDummy("DDum").execute(dcm, Tag.StudyInstanceUID, HMAC_KEY);
+			new DefaultDummy("D").execute(dcm, Tag.StudyInstanceUID, HMAC_KEY);
 
 			assertEquals(HMAC_KEY.uidHash("1.2.3.4.5"), dcm.getString(Tag.StudyInstanceUID));
 		}
@@ -161,8 +161,7 @@ class ActionItemsTest {
 			assertInstanceOf(Remove.class, AbstractAction.convertAction("X"));
 			assertInstanceOf(Keep.class, AbstractAction.convertAction("K"));
 			assertInstanceOf(UID.class, AbstractAction.convertAction("U"));
-			assertInstanceOf(DefaultDummy.class, AbstractAction.convertAction("DDum"));
-			assertInstanceOf(Replace.class, AbstractAction.convertAction("D"));
+			assertInstanceOf(DefaultDummy.class, AbstractAction.convertAction("D"));
 		}
 
 		@Test

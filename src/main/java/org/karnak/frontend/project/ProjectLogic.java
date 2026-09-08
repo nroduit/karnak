@@ -185,7 +185,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> implements Gro
 				List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getAllDestinations();
 				if (destinationEntities != null && !destinationEntities.isEmpty()) {
 					ConfirmDialog dialog = new ConfirmDialog(
-							String.format("The project %s is used, are you sure you want to updated ?",
+							String.format("The project %s is used, are you sure you want to update it?",
 									editProject.getProjectEntity().getName()));
 					dialog.addConfirmationListener(componentEvent -> {
 						projectService.update(editProject.getProjectEntity());

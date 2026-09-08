@@ -42,6 +42,11 @@ class PrivateTagsTest {
 		assertThrows(ProfileException.class, () -> new PrivateTags(element(null)));
 	}
 
+	@Test
+	void rejects_an_unknown_action_symbol() {
+		assertThrows(ProfileException.class, () -> new PrivateTags(element("DDum")));
+	}
+
 	@Nested
 	class GetAction {
 

@@ -19,12 +19,10 @@ import org.weasis.core.util.annotations.Generated;
 @Generated()
 public class WarningDeleteProfileUsed extends Dialog {
 
-	private static final long serialVersionUID = 2906158929357513753L;
-
 	public void setText(ProfileEntity profileEntity) {
 		removeAll();
 		Div divTitle = new Div();
-		divTitle.setText(String.format("The profile %s can't be remove", profileEntity.getName()));
+		divTitle.setText(String.format("The profile %s can't be removed", profileEntity.getName()));
 		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
 
 		Div divContent = new Div();

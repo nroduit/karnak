@@ -426,7 +426,7 @@ else it occurs:
 profileElements:
   - name: "Replace study description"
     codename: "action.on.specific.tags"
-    action: "D"          # X remove, Z empty, K keep, U new UID, D dummy, DDum default dummy
+    action: "D"          # X remove, Z empty, K keep, U new UID, D dummy value
     tags:
       - "0008,1030"
 ```

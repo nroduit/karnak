@@ -97,7 +97,7 @@ public class SourceView extends VerticalLayout {
 	}
 
 	private void setButtonNewDestinationDICOM() {
-		newSourceNode.getElement().setAttribute("title", "New destination of type dicom");
+		newSourceNode.getElement().setAttribute("title", "New source of type dicom");
 		newSourceNode.addThemeVariants(ButtonVariant.PRIMARY);
 		newSourceNode.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}

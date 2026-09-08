@@ -30,6 +30,7 @@ import org.karnak.backend.model.profilepipe.TagPath;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.weasis.dicom.param.AttributeEditorContext;
 
 @Slf4j
@@ -126,8 +127,9 @@ public class ReplaceApi extends AbstractProfileItem {
 			switch (ae.getArgumentKey()) {
 				case "url" -> url = evaluateStringWithExpression(ae.getArgumentValue(), original);
 				case "responsePath" -> {
-					responsePath = ae.getArgumentValue();
-					if (!responsePath.startsWith("/")) {
+					// An empty path is the JSON Pointer of the whole document (RFC 6901)
+					responsePath = ae.getArgumentValue() == null ? "" : ae.getArgumentValue().trim();
+					if (!responsePath.isEmpty() && !responsePath.startsWith("/")) {
 						responsePath = "/" + responsePath;
 					}
 				}
@@ -170,6 +172,12 @@ public class ReplaceApi extends AbstractProfileItem {
 			if (args.defaultValue() == null) {
 				// Abort current transfer
 				throw new EndpointException("HTTP Client Error : " + e.getStatusText() + " - " + args.url());
+			}
+		}
+		catch (HttpServerErrorException e) {
+			if (args.defaultValue() == null) {
+				// Abort current transfer
+				throw new EndpointException("HTTP Server Error : " + e.getStatusText() + " - " + args.url());
 			}
 		}
 		return null;
