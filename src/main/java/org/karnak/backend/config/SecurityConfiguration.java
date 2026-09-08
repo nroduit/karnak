@@ -23,13 +23,15 @@ import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -37,7 +39,9 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.weasis.core.util.annotations.Generated;
 
@@ -55,15 +59,58 @@ public class SecurityConfiguration {
 
 	private final OidcRoleAuthoritiesMapper oidcRoleAuthoritiesMapper;
 
-	private final String jwkSetUri;
+	// Decodes the access tokens, both the ones obtained by the interactive login and the
+	// ones presented as Bearer tokens on the REST API. A single instance, because each
+	// one keeps its own cache of the JWK set fetched from the IDP.
+	private final JwtDecoder accessTokenDecoder;
 
 	public SecurityConfiguration(OidcRoleAuthoritiesMapper oidcRoleAuthoritiesMapper,
 			@Value("${spring.security.oauth2.client.provider.keycloak.jwk-set-uri}") String jwkSetUri) {
 		this.oidcRoleAuthoritiesMapper = oidcRoleAuthoritiesMapper;
-		this.jwkSetUri = jwkSetUri;
+		this.accessTokenDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+	}
+
+	/**
+	 * Filter chain of the REST API, matched before the Vaadin one below.
+	 *
+	 * <p>
+	 * The API is stateless: every request carries its own Bearer token and no session is
+	 * created or read, so a third-party page cannot have the browser replay an ambient
+	 * OIDC login. That is what makes running it without CSRF tokens safe - and it has to
+	 * run without them, since the API clients are scripts and other systems, which have
+	 * no way to obtain one.
+	 */
+	@Bean
+	@Order(1)
+	public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+		http.securityMatcher(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
+			.authorizeHttpRequests(authorize -> authorize
+				// Allow endpoints
+				.requestMatchers(HttpMethod.GET, EndPoint.ECHO_PATH + EndPoint.DESTINATIONS_PATH)
+				.permitAll()
+				.anyRequest()
+				.authenticated())
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(accessTokenDecoder)
+				.jwtAuthenticationConverter(accessTokenAuthenticationConverter())))
+			.csrf(AbstractHttpConfigurer::disable); // NOSONAR stateless chain
+
+		return http.build();
+	}
+
+	/**
+	 * Reads the Karnak roles of a Bearer token with the same mapper the interactive login
+	 * uses, so an API client and a logged-in user of the same IDP account carry identical
+	 * authorities.
+	 */
+	private JwtAuthenticationConverter accessTokenAuthenticationConverter() {
+		JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+		converter.setJwtGrantedAuthoritiesConverter(oidcRoleAuthoritiesMapper::mapAuthorities);
+		return converter;
 	}
 
 	@Bean
+	@Order(2)
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			// Turns on/off authorizations
@@ -81,19 +128,7 @@ public class SecurityConfiguration {
 				.requestMatchers("/actuator/**")
 				.permitAll()
 				.requestMatchers(EndpointRequest.to(HealthEndpoint.class, InfoEndpoint.class))
-				.permitAll()
-				// Allow endpoints
-				.requestMatchers(HttpMethod.GET, EndPoint.ECHO_PATH + EndPoint.DESTINATIONS_PATH)
-				.permitAll()
-				// Api endpoints
-				.requestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
-				.authenticated())
-			.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH))
-			// OAuth2 Resource Server: decode the Bearer JWT presented by API clients
-			// (Postman, scripts) so that the fine-grained @PreAuthorize checks of the
-			// controllers are evaluated. The roles are mapped from the Keycloak claims
-			.oauth2ResourceServer(oauth2 -> oauth2
-				.jwt(jwt -> jwt.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter())))
+				.permitAll())
 			// OpenId connect login: map the IDP realm/client roles to the Karnak roles
 			// so that @RolesAllowed annotations on the views work with OIDC users. The
 			// roles are read from the Bearer/access token (not the ID token) via a
@@ -140,34 +175,13 @@ public class SecurityConfiguration {
 	}
 
 	/**
-	 * JWT decoder used both to validate the Bearer tokens of API clients (resource
-	 * server) and to read the roles of the access token at login time.
-	 * @return the JWT decoder
-	 */
-	private NimbusJwtDecoder jwtDecoder() {
-		return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-	}
-
-	/**
-	 * Maps the roles of a validated Bearer token to the granted authorities required by
-	 * the
-	 * @PreAuthorize annotations of the controllers .
-	 * @return the JWT authentication converter
-	 */
-	private JwtAuthenticationConverter jwtAuthenticationConverter() {
-		final JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-		converter.setJwtGrantedAuthoritiesConverter(oidcRoleAuthoritiesMapper::mapAuthorities);
-		return converter;
-	}
-
-	/**
 	 * Decodes the raw Bearer/access token so its claims (in particular
 	 * "resource_access.karnak.roles") can be read.
 	 * @param accessToken the OAuth2 access token issued by the IDP
 	 * @return the decoded access token
 	 */
 	private Jwt decodeAccessToken(OAuth2AccessToken accessToken) {
-		return jwtDecoder().decode(accessToken.getTokenValue());
+		return accessTokenDecoder.decode(accessToken.getTokenValue());
 	}
 
 }

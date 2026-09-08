@@ -22,6 +22,7 @@ import org.springframework.boot.security.autoconfigure.actuate.web.servlet.Endpo
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,6 +30,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
@@ -47,7 +50,35 @@ public class SecurityInMemoryConfig {
 
 	private static final String LOGIN_URL = "/login";
 
+	/**
+	 * Filter chain of the REST API, matched before the Vaadin one below.
+	 *
+	 * <p>
+	 * The API is stateless: every request carries its own HTTP Basic credentials and no
+	 * session is created or read, so a third-party page cannot have the browser replay an
+	 * ambient login. That is what makes running it without CSRF tokens safe - and it has
+	 * to run without them, since the API clients are scripts and other systems, which
+	 * have no way to obtain one.
+	 */
 	@Bean
+	@Order(1)
+	public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+		http.securityMatcher(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
+			.authorizeHttpRequests(authorize -> authorize
+				// Allow endpoints
+				.requestMatchers(HttpMethod.GET, EndPoint.ECHO_PATH + EndPoint.DESTINATIONS_PATH)
+				.permitAll()
+				.anyRequest()
+				.authenticated())
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.httpBasic(Customizer.withDefaults())
+			.csrf(AbstractHttpConfigurer::disable); // NOSONAR stateless chain
+
+		return http.build();
+	}
+
+	@Bean
+	@Order(2)
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			// Turns on/off authorizations
@@ -65,15 +96,7 @@ public class SecurityInMemoryConfig {
 				.requestMatchers("/actuator/**")
 				.permitAll()
 				.requestMatchers(EndpointRequest.to(HealthEndpoint.class, InfoEndpoint.class))
-				.permitAll()
-				// Allow endpoints
-				.requestMatchers(HttpMethod.GET, "/api/echo/destinations")
-				.permitAll()
-				// Api endpoints
-				.requestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH)
-				.authenticated())
-			.csrf(csrf -> csrf.ignoringRequestMatchers(EndPoint.API_PATH + EndPoint.ALL_REMAINING_PATH))
-			.httpBasic(Customizer.withDefaults())
+				.permitAll())
 			// Vaadin/Spring Security integration: permits the framework internal
 			// requests and the @AnonymousAllowed views, scopes CSRF, configures the
 			// request cache, the form login on the login view and requires
