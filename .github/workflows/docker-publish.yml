@@ -26,7 +26,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up JDK for compilation
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -40,7 +40,7 @@ jobs:
         with:
           images: nroduit/karnak
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
       - name: Login to DockerHub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
         with:

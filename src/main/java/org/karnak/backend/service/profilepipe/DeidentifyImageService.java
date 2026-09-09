@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.dcm4che3.data.BulkData;
 import org.dcm4che3.data.Fragments;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import org.dcm4che3.util.TagUtils;
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
@@ -56,6 +58,18 @@ public class DeidentifyImageService {
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
 	private static final int[] EMPTY_INT_ARRAY = new int[0];
+
+	private static final String PALETTE_COLOR = "PALETTE COLOR";
+
+	private static final String MONOCHROME1 = "MONOCHROME1";
+
+	private static final String MONOCHROME2 = "MONOCHROME2";
+
+	/**
+	 * Number of entries of a Palette Color LUT whose descriptor declares {@code 0}, which
+	 * means 2^16 entries (see PS3.3 C.7.9.2).
+	 */
+	private static final int MAX_LUT_ENTRIES = 65536;
 
 	private static final TransferSyntaxMapping JPEG = new TransferSyntaxMapping("image.jpg", MediaType.IMAGE_JPEG);
 
@@ -271,7 +285,24 @@ public class DeidentifyImageService {
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
 		TransferSyntaxMapping mapping = resolveMapping(tsuid);
-		bodyBuilder.part("image", new ByteArrayResource(imageBytes) {
+		boolean rawPixelData = mapping.filename().endsWith(".raw");
+
+		// The Palette Color LUT is resolved first because the photometric interpretation
+		// and the samples per pixel sent to the API depend on whether a usable LUT could
+		// be built.
+		String paletteLutJson = rawPixelData ? buildPaletteColorLutJson(dcmAttributes) : null;
+		boolean paletteFallback = rawPixelData && isPaletteColor(dcmAttributes) && paletteLutJson == null;
+		int rows = dcmAttributes.getInt(Tag.Rows, 0);
+		int columns = dcmAttributes.getInt(Tag.Columns, 0);
+		int bitsAllocated = dcmAttributes.getInt(Tag.BitsAllocated, 0);
+		int samplesPerPixel = resolveSamplesPerPixel(dcmAttributes, paletteFallback);
+
+		byte[] payload = rawPixelData
+				? firstRawFrame(imageBytes, rows, columns, bitsAllocated, samplesPerPixel,
+						dcmAttributes.getString(Tag.SOPInstanceUID))
+				: imageBytes;
+
+		bodyBuilder.part("image", new ByteArrayResource(payload) {
 			@Override
 			public String getFilename() {
 				return mapping.filename();
@@ -286,26 +317,98 @@ public class DeidentifyImageService {
 		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID)); // NOSONAR
 		addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
 
-		addTextPart(bodyBuilder, "rows", dcmAttributes.getInt(Tag.Rows, 0));
-		addTextPart(bodyBuilder, "columns", dcmAttributes.getInt(Tag.Columns, 0));
-		addTextPart(bodyBuilder, "bits_allocated", dcmAttributes.getInt(Tag.BitsAllocated, 0));
-		addTextPart(bodyBuilder, "samples_per_pixel", dcmAttributes.getInt(Tag.SamplesPerPixel, 0));
-		addTextPart(bodyBuilder, "photometric_interpretation", dcmAttributes.getString(Tag.PhotometricInterpretation));
+		addTextPart(bodyBuilder, "rows", rows);
+		addTextPart(bodyBuilder, "columns", columns);
+		addTextPart(bodyBuilder, "bits_allocated", bitsAllocated);
+		addTextPart(bodyBuilder, "samples_per_pixel", samplesPerPixel);
+		String photometricInterpretation = resolvePhotometricInterpretation(dcmAttributes, paletteFallback);
+		addTextPart(bodyBuilder, "photometric_interpretation", photometricInterpretation);
 
-		if (mapping.filename().endsWith(".raw")) {
-			addRawPixelDataParts(bodyBuilder, dcmAttributes);
+		if (rawPixelData) {
+			addRawPixelDataParts(bodyBuilder, dcmAttributes, paletteLutJson, photometricInterpretation);
 		}
 
 		return bodyBuilder.build();
 	}
 
-	private void addRawPixelDataParts(MultipartBodyBuilder bodyBuilder, Attributes attrs) {
+	/**
+	 * Keeps only the first frame of an uncompressed pixel data buffer and checks it
+	 * against the declared geometry. Compressed streams are sent frame by frame already
+	 * (see {@code extractPixelDataBytesFromFragments}), while raw pixel data holds every
+	 * frame back to back: sending the whole buffer makes the API fail to decode the
+	 * image. A buffer smaller than a single frame is a genuine inconsistency: the request
+	 * is rejected here, with the sizes at hand, rather than as an opaque HTTP 400.
+	 * @throws DeidentifyImageException when the buffer is too small for the declared
+	 * geometry
+	 */
+	byte[] firstRawFrame(byte[] imageBytes, int rows, int columns, int bitsAllocated, int samplesPerPixel,
+			@Nullable String sopInstanceUid) {
+		int frameLength = rows * columns * samplesPerPixel * ((bitsAllocated + 7) / 8);
+		if (frameLength <= 0) {
+			log.warn("Incomplete image geometry for SOP Instance UID {} (rows={}, columns={}, bits allocated={}, "
+					+ "samples per pixel={}) - sending the pixel data as is", sopInstanceUid, rows, columns,
+					bitsAllocated, samplesPerPixel);
+			return imageBytes;
+		}
+		if (imageBytes.length < frameLength) {
+			throw new DeidentifyImageException(String.format(
+					"Pixel data of SOP Instance UID %s holds %d bytes but a single %dx%d frame of %d bit(s) and %d "
+							+ "sample(s) per pixel needs %d bytes",
+					sopInstanceUid, imageBytes.length, rows, columns, bitsAllocated, samplesPerPixel, frameLength));
+		}
+		if (imageBytes.length == frameLength) {
+			return imageBytes;
+		}
+		// Multi-frame instances (and buffers padded to an even length) are truncated to
+		// their first frame, which is the one the API is asked to inspect.
+		log.debug("Pixel data of SOP Instance UID {} holds {} bytes, keeping the first {} bytes frame",
+				sopInstanceUid, imageBytes.length, frameLength);
+		return Arrays.copyOf(imageBytes, frameLength);
+	}
+
+	/**
+	 * Returns the photometric interpretation to send to the API.
+	 *
+	 * <p>
+	 * A {@code PALETTE COLOR} image whose LUT is missing or unusable is declared as
+	 * {@code MONOCHROME2}: the stored pixel values are single channel indexes which remain
+	 * fully usable for burned-in text detection. Without this normalization the API would
+	 * receive a {@code PALETTE COLOR} image without its LUT and would reject the request
+	 * with an HTTP 400.
+	 */
+	private @Nullable String resolvePhotometricInterpretation(Attributes dcmAttributes, boolean paletteFallback) {
+		if (paletteFallback) {
+			log.warn("PALETTE COLOR without usable LUT for SOP Instance UID {} - falling back to {}",
+					dcmAttributes.getString(Tag.SOPInstanceUID), MONOCHROME2);
+			return MONOCHROME2;
+		}
+		return dcmAttributes.getString(Tag.PhotometricInterpretation);
+	}
+
+	/**
+	 * Returns the samples per pixel to send to the API, forcing {@code 1} when a
+	 * {@code PALETTE COLOR} image is downgraded to {@code MONOCHROME2}: an inconsistent
+	 * value would make the API compute an erroneous buffer size for the raw pixel data.
+	 */
+	private int resolveSamplesPerPixel(Attributes dcmAttributes, boolean paletteFallback) {
+		int samplesPerPixel = dcmAttributes.getInt(Tag.SamplesPerPixel, 0);
+		if (paletteFallback && samplesPerPixel != 1) {
+			log.warn("Inconsistent Samples per Pixel ({}) for a PALETTE COLOR image - forcing 1", samplesPerPixel);
+			return 1;
+		}
+		return samplesPerPixel;
+	}
+
+	private void addRawPixelDataParts(MultipartBodyBuilder bodyBuilder, Attributes attrs,
+			@Nullable String paletteLutJson, @Nullable String photometricInterpretation) {
+		// The API applies the photometric polarity of raw pixel data through this flag
+		// only: it never reads back the photometric interpretation on that path.
+		addTextPart(bodyBuilder, "is_monochrome1", MONOCHROME1.equals(photometricInterpretation));
 		addOptionalDoublePart(bodyBuilder, attrs, "rescale_slope", Tag.RescaleSlope, 1.0);
 		addOptionalDoublePart(bodyBuilder, attrs, "rescale_intercept", Tag.RescaleIntercept, 0.0);
 		addOptionalDoublePart(bodyBuilder, attrs, "window_center", Tag.WindowCenter, 0.0);
 		addOptionalDoublePart(bodyBuilder, attrs, "window_width", Tag.WindowWidth, 0.0);
 
-		String paletteLutJson = buildPaletteColorLutJson(attrs);
 		if (paletteLutJson != null) {
 			addTextPart(bodyBuilder, "palette_color_lut", paletteLutJson);
 		}
@@ -437,16 +540,15 @@ public class DeidentifyImageService {
 	 * data is found.
 	 */
 	@Nullable String buildPaletteColorLutJson(Attributes dcmAttributes) {
-		String photometric = dcmAttributes.getString(Tag.PhotometricInterpretation);
-		if (!"PALETTE COLOR".equals(photometric)) {
+		if (!isPaletteColor(dcmAttributes)) {
 			return null;
 		}
 
 		int[] redDesc = dcmAttributes.getInts(Tag.RedPaletteColorLookupTableDescriptor);
 		int[] greenDesc = dcmAttributes.getInts(Tag.GreenPaletteColorLookupTableDescriptor);
 		int[] blueDesc = dcmAttributes.getInts(Tag.BluePaletteColorLookupTableDescriptor);
-		if (redDesc == null || greenDesc == null || blueDesc == null) {
-			log.warn("PALETTE COLOR photometric but missing LUT descriptors");
+		if (isMalformedDescriptor(redDesc) || isMalformedDescriptor(greenDesc) || isMalformedDescriptor(blueDesc)) {
+			log.warn("PALETTE COLOR photometric but missing or malformed LUT descriptors");
 			return null;
 		}
 
@@ -454,7 +556,7 @@ public class DeidentifyImageService {
 		int[] greenLut = extractLutData(dcmAttributes, Tag.GreenPaletteColorLookupTableData, greenDesc);
 		int[] blueLut = extractLutData(dcmAttributes, Tag.BluePaletteColorLookupTableData, blueDesc);
 		if (redLut.length == 0 || greenLut.length == 0 || blueLut.length == 0) {
-			log.warn("PALETTE COLOR photometric but missing LUT data");
+			log.warn("PALETTE COLOR photometric but missing or unusable LUT data");
 			return null;
 		}
 
@@ -473,11 +575,33 @@ public class DeidentifyImageService {
 	}
 
 	/**
+	 * Returns {@code true} when the instance declares a {@code PALETTE COLOR} photometric
+	 * interpretation.
+	 */
+	private boolean isPaletteColor(Attributes dcmAttributes) {
+		return PALETTE_COLOR.equals(dcmAttributes.getString(Tag.PhotometricInterpretation));
+	}
+
+	/**
+	 * A Palette Color LUT descriptor must hold exactly 3 values: [numberOfEntries,
+	 * firstStoredPixelValue, bitsPerEntry].
+	 */
+	private boolean isMalformedDescriptor(int @Nullable [] descriptor) {
+		return descriptor == null || descriptor.length != 3;
+	}
+
+	/**
 	 * Extracts LUT data for a single color channel. The descriptor array has 3 values:
 	 * [numberOfEntries, firstStoredPixelValue, bitsPerEntry]. If bitsPerEntry is 8,
 	 * values are read as bytes; if 16, as unsigned shorts (ints).
+	 * @return the LUT entries, or an empty array when the data is absent or inconsistent
+	 * with its descriptor
 	 */
 	private int[] extractLutData(Attributes dcmAttributes, int lutDataTag, int[] descriptor) {
+		return normalizeLutData(readLutData(dcmAttributes, lutDataTag, descriptor), descriptor, lutDataTag);
+	}
+
+	private int[] readLutData(Attributes dcmAttributes, int lutDataTag, int[] descriptor) {
 		int bitsPerEntry = descriptor[2];
 		if (bitsPerEntry == 8) {
 			byte[] data = dcmAttributes.getSafeBytes(lutDataTag);
@@ -492,6 +616,32 @@ public class DeidentifyImageService {
 		}
 		int[] lutDatas = dcmAttributes.getInts(lutDataTag);
 		return lutDatas == null ? EMPTY_INT_ARRAY : lutDatas;
+	}
+
+	/**
+	 * Checks the LUT data against the number of entries declared by its descriptor.
+	 * Truncated data is rejected (an empty array is returned) so that the caller falls
+	 * back to a grayscale image instead of sending a palette the API cannot apply. Extra
+	 * entries are dropped: an 8-bit LUT segment is padded to an even length when it holds
+	 * an odd number of entries.
+	 */
+	private int[] normalizeLutData(int[] lutData, int[] descriptor, int lutDataTag) {
+		if (lutData.length == 0) {
+			return EMPTY_INT_ARRAY;
+		}
+
+		int expectedEntries = descriptor[0] == 0 ? MAX_LUT_ENTRIES : descriptor[0];
+		if (lutData.length < expectedEntries) {
+			log.warn("Palette Color LUT data {} is truncated: {} entries read but {} declared by its descriptor",
+					TagUtils.toString(lutDataTag), lutData.length, expectedEntries);
+			return EMPTY_INT_ARRAY;
+		}
+		if (lutData.length > expectedEntries) {
+			log.debug("Palette Color LUT data {} holds {} entries, truncating to the {} declared by its descriptor",
+					TagUtils.toString(lutDataTag), lutData.length, expectedEntries);
+			return Arrays.copyOf(lutData, expectedEntries);
+		}
+		return lutData;
 	}
 
 	private record TransferSyntaxMapping(String filename, MediaType mediaType) {

@@ -11,9 +11,14 @@ package org.karnak.backend.service.profilepipe;
 
 /**
  * Raised when the external de-identification image API call fails (unreachable, HTTP
- * error, malformed response).
+ * error, malformed response) or when the instance cannot produce a request the API could
+ * process (e.g. pixel data inconsistent with the declared geometry).
  */
 public class DeidentifyImageException extends RuntimeException {
+
+	public DeidentifyImageException(String message) {
+		super(message);
+	}
 
 	public DeidentifyImageException(String message, Throwable cause) {
 		super(message, cause);

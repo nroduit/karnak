@@ -10,6 +10,7 @@
 package org.karnak.backend.service.profilepipe;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -269,13 +270,75 @@ class DeidentifyImageServiceTest {
 	void buildPaletteColorLutJson_palette_without_lut_data_tags_should_return_null() {
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
-		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
-		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
-		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
 
 		String builtPalette = this.deidentifyImageService.buildPaletteColorLutJson(attributes);
 
 		assertThat(builtPalette).isNull();
+	}
+
+	@Test
+	void buildPaletteColorLutJson_palette_with_malformed_descriptor_should_return_null() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		// A descriptor must hold exactly 3 values
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 3, 2);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setBytes(Tag.RedPaletteColorLookupTableData, VR.OB, new byte[] { 10, 24, 50 });
+		attributes.setBytes(Tag.GreenPaletteColorLookupTableData, VR.OB, new byte[] { 20, 1, 0 });
+		attributes.setBytes(Tag.BluePaletteColorLookupTableData, VR.OB, new byte[] { 100, 50, 12 });
+
+		String builtPalette = this.deidentifyImageService.buildPaletteColorLutJson(attributes);
+
+		assertThat(builtPalette).isNull();
+	}
+
+	@Test
+	void buildPaletteColorLutJson_palette_with_truncated_lut_data_should_return_null() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		// Descriptors declare 4 entries but only 3 are stored
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 4, 2, 16);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 4, 2, 16);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 4, 2, 16);
+		attributes.setInt(Tag.RedPaletteColorLookupTableData, VR.US, 10, 24, 50);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableData, VR.US, 20, 1, 0);
+		attributes.setInt(Tag.BluePaletteColorLookupTableData, VR.US, 100, 50, 12);
+
+		String builtPalette = this.deidentifyImageService.buildPaletteColorLutJson(attributes);
+
+		assertThat(builtPalette).isNull();
+	}
+
+	@Test
+	void buildPaletteColorLutJson_palette_with_padded_8bit_lut_should_drop_padding() throws JsonProcessingException {
+		// An 8-bit LUT segment holding an odd number of entries is padded to an even
+		// length: the extra byte must be dropped, not rejected.
+		byte[] redBytes = new byte[] { 10, 24, (byte) 200, 0 };
+		byte[] greenBytes = new byte[] { 20, 1, 5, 0 };
+		byte[] blueBytes = new byte[] { 100, 50, 12, 0 };
+
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setBytes(Tag.RedPaletteColorLookupTableData, VR.OB, redBytes);
+		attributes.setBytes(Tag.GreenPaletteColorLookupTableData, VR.OB, greenBytes);
+		attributes.setBytes(Tag.BluePaletteColorLookupTableData, VR.OB, blueBytes);
+
+		String builtPalette = this.deidentifyImageService.buildPaletteColorLutJson(attributes);
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, int[]> parsedJson = objectMapper.readValue(builtPalette, new TypeReference<>() {
+		});
+
+		assertThat(parsedJson.get("red")).containsExactly(10, 24, 200);
+		assertThat(parsedJson.get("green")).containsExactly(20, 1, 5);
+		assertThat(parsedJson.get("blue")).containsExactly(100, 50, 12);
 	}
 
 	@Test
@@ -286,9 +349,9 @@ class DeidentifyImageServiceTest {
 
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
-		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
-		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
-		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 1, 2, 8);
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 3, 2, 8);
 		attributes.setBytes(Tag.RedPaletteColorLookupTableData, VR.OB, redBytes);
 		attributes.setBytes(Tag.GreenPaletteColorLookupTableData, VR.OB, greenBytes);
 		attributes.setBytes(Tag.BluePaletteColorLookupTableData, VR.OB, blueBytes);
@@ -312,9 +375,9 @@ class DeidentifyImageServiceTest {
 
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
-		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 1, 2, 16);
-		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 1, 2, 16);
-		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 1, 2, 16);
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 3, 2, 16);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 3, 2, 16);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 3, 2, 16);
 		attributes.setInt(Tag.RedPaletteColorLookupTableData, VR.US, redInts);
 		attributes.setInt(Tag.GreenPaletteColorLookupTableData, VR.US, greenInts);
 		attributes.setInt(Tag.BluePaletteColorLookupTableData, VR.US, blueInts);
@@ -433,9 +496,10 @@ class DeidentifyImageServiceTest {
 		int[] blueInts = new int[] { 100, 50, 12 };
 		Attributes attributes = new Attributes();
 		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
-		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 1, 2, 16);
-		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 1, 2, 16);
-		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 1, 2, 16);
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 3, 2, 16);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 3, 2, 16);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 3, 2, 16);
 		attributes.setInt(Tag.RedPaletteColorLookupTableData, VR.US, redInts);
 		attributes.setInt(Tag.GreenPaletteColorLookupTableData, VR.US, greenInts);
 		attributes.setInt(Tag.BluePaletteColorLookupTableData, VR.US, blueInts);
@@ -455,6 +519,229 @@ class DeidentifyImageServiceTest {
 		assertThat(parsedJson.get("red")).containsExactly(10, 24, 200);
 		assertThat(parsedJson.get("green")).containsExactly(20, 1, 0);
 		assertThat(parsedJson.get("blue")).containsExactly(100, 50, 12);
+
+		// The photometric interpretation is left untouched when the LUT is usable
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("PALETTE COLOR");
+		assertThat(partBody(generatedBody, "samples_per_pixel")).isEqualTo("1");
+	}
+
+	@Test
+	void generateMultipartBody_with_raw_palette_color_without_lut_should_fall_back_to_monochrome2() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("MONOCHROME2");
+		assertThat(partBody(generatedBody, "samples_per_pixel")).isEqualTo("1");
+		assertThat(generatedBody.getFirst("palette_color_lut")).isNull();
+	}
+
+	@Test
+	void generateMultipartBody_with_raw_palette_color_with_truncated_lut_should_fall_back_to_monochrome2() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		attributes.setInt(Tag.RedPaletteColorLookupTableDescriptor, VR.US, 4, 2, 16);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableDescriptor, VR.US, 4, 2, 16);
+		attributes.setInt(Tag.BluePaletteColorLookupTableDescriptor, VR.US, 4, 2, 16);
+		attributes.setInt(Tag.RedPaletteColorLookupTableData, VR.US, 10, 24, 200);
+		attributes.setInt(Tag.GreenPaletteColorLookupTableData, VR.US, 20, 1, 0);
+		attributes.setInt(Tag.BluePaletteColorLookupTableData, VR.US, 100, 50, 12);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("MONOCHROME2");
+		assertThat(generatedBody.getFirst("palette_color_lut")).isNull();
+	}
+
+	@Test
+	void generateMultipartBody_with_raw_palette_color_without_lut_should_force_samples_per_pixel_to_one() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		// Inconsistent value: a PALETTE COLOR image stores a single channel of indexes
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 3);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("MONOCHROME2");
+		assertThat(partBody(generatedBody, "samples_per_pixel")).isEqualTo("1");
+	}
+
+	@Test
+	void generateMultipartBody_with_compressed_palette_color_without_lut_should_keep_photometric() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.4.50");
+
+		// The codestream carries its own color information: no normalization needed
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("PALETTE COLOR");
+		assertThat(generatedBody.getFirst("palette_color_lut")).isNull();
+	}
+
+	@Test
+	void generateMultipartBody_with_raw_monochrome_should_keep_photometric() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "MONOCHROME1");
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("MONOCHROME1");
+		assertThat(partBody(generatedBody, "samples_per_pixel")).isEqualTo("1");
+		assertThat(partBody(generatedBody, "is_monochrome1")).isEqualTo("true");
+	}
+
+	@Test
+	void generateMultipartBody_with_raw_monochrome2_should_not_flag_monochrome1() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "MONOCHROME2");
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(partBody(generatedBody, "is_monochrome1")).isEqualTo("false");
+	}
+
+	@Test
+	void generateMultipartBody_with_compressed_monochrome1_should_not_add_the_flag() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "MONOCHROME1");
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		byte[] imageByte = new byte[] { 10, 20, 30 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.4.50");
+
+		// The flag only drives the raw decoding path of the API
+		assertThat(generatedBody.getFirst("is_monochrome1")).isNull();
+	}
+
+	private static String partBody(MultiValueMap<String, HttpEntity<?>> body, String partName) {
+		HttpEntity<?> part = body.getFirst(partName);
+		assertThat(part).isNotNull();
+		return (String) part.getBody();
+	}
+
+	private static byte[] imagePartBytes(MultiValueMap<String, HttpEntity<?>> body) {
+		HttpEntity<?> imagePart = body.getFirst("image");
+		assertThat(imagePart).isNotNull();
+		ByteArrayResource imageResource = (ByteArrayResource) imagePart.getBody();
+		assertThat(imageResource).isNotNull();
+		return imageResource.getByteArray();
+	}
+
+	// First raw frame
+	@Test
+	void firstRawFrame_matching_geometry_should_return_the_buffer() {
+		byte[] imageBytes = new byte[] { 1, 2, 3, 4 };
+
+		byte[] frame = this.deidentifyImageService.firstRawFrame(imageBytes, 2, 2, 8, 1, "1.2.3");
+
+		assertThat(frame).isSameAs(imageBytes);
+	}
+
+	@Test
+	void firstRawFrame_unknown_geometry_should_return_the_buffer() {
+		byte[] imageBytes = new byte[] { 1, 2, 3, 4 };
+
+		byte[] frame = this.deidentifyImageService.firstRawFrame(imageBytes, 0, 0, 0, 0, "1.2.3");
+
+		assertThat(frame).isSameAs(imageBytes);
+	}
+
+	@Test
+	void firstRawFrame_multi_frame_should_keep_the_first_frame() {
+		byte[] imageBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+		byte[] frame = this.deidentifyImageService.firstRawFrame(imageBytes, 2, 2, 8, 1, "1.2.3");
+
+		assertThat(frame).containsExactly(1, 2, 3, 4);
+	}
+
+	@Test
+	void firstRawFrame_16bit_should_use_two_bytes_per_sample() {
+		byte[] imageBytes = new byte[8];
+
+		byte[] frame = this.deidentifyImageService.firstRawFrame(imageBytes, 2, 2, 16, 1, "1.2.3");
+
+		assertThat(frame).hasSize(8);
+	}
+
+	@Test
+	void firstRawFrame_buffer_smaller_than_a_frame_should_throw() {
+		byte[] imageBytes = new byte[] { 1, 2, 3 };
+
+		assertThatThrownBy(() -> this.deidentifyImageService.firstRawFrame(imageBytes, 2, 2, 8, 1, "1.2.3"))
+			.isInstanceOf(DeidentifyImageException.class)
+			.hasMessageContaining("1.2.3")
+			.hasMessageContaining("4 bytes");
+	}
+
+	@Test
+	void generateMultipartBody_with_raw_multi_frame_should_send_the_first_frame_only() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "MONOCHROME2");
+		attributes.setInt(Tag.Rows, VR.US, 2);
+		attributes.setInt(Tag.Columns, VR.US, 2);
+		attributes.setInt(Tag.BitsAllocated, VR.US, 8);
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		attributes.setInt(Tag.NumberOfFrames, VR.IS, 2);
+		byte[] imageByte = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(imagePartBytes(generatedBody)).containsExactly(1, 2, 3, 4);
+	}
+
+	@Test
+	void generateMultipartBody_with_compressed_multi_frame_should_send_the_buffer_as_is() {
+		Attributes attributes = new Attributes();
+		attributes.setInt(Tag.Rows, VR.US, 2);
+		attributes.setInt(Tag.Columns, VR.US, 2);
+		attributes.setInt(Tag.BitsAllocated, VR.US, 8);
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+		byte[] imageByte = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.4.50");
+
+		assertThat(imagePartBytes(generatedBody)).containsExactly(1, 2, 3, 4, 5, 6, 7, 8);
+	}
+
+	@Test
+	void generateMultipartBody_with_palette_color_fallback_should_size_the_frame_on_one_sample() {
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+		attributes.setInt(Tag.Rows, VR.US, 2);
+		attributes.setInt(Tag.Columns, VR.US, 2);
+		attributes.setInt(Tag.BitsAllocated, VR.US, 8);
+		// Inconsistent value: the frame must be sized with the forced single sample
+		attributes.setInt(Tag.SamplesPerPixel, VR.US, 3);
+		byte[] imageByte = new byte[] { 1, 2, 3, 4 };
+
+		MultiValueMap<String, HttpEntity<?>> generatedBody = this.deidentifyImageService
+			.generateMultipartBody(attributes, imageByte, "", "1.2.840.10008.1.2.1");
+
+		assertThat(partBody(generatedBody, "photometric_interpretation")).isEqualTo("MONOCHROME2");
+		assertThat(partBody(generatedBody, "samples_per_pixel")).isEqualTo("1");
+		assertThat(imagePartBytes(generatedBody)).containsExactly(1, 2, 3, 4);
 	}
 
 	@Test

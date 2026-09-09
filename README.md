@@ -91,9 +91,9 @@ Note: on Windows the bash.exe must be specified: `mvn clean install -Pportable -
 To configure and run Karnak with docker compose (Karnak + Postgres + Redis), follow the [installation guide](https://weasis.org/karnak-documentation/en/installation/). This is the recommended setup for production.
 
 ## Run portable package
-After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch the executable `run.sh` (Linux or macOS) or `run.bat` (Windows).
+After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch `run.bat` (Windows) or `./run.sh` from a terminal (Linux or macOS). On macOS there is no double-clickable launcher: Gatekeeper refuses to open a script downloaded from the Internet, so open a Terminal in the folder and run `./run.sh`.
 
-Settings such as the web port and the DICOM listener can be adjusted in the `run.cfg` file located next to the executable. On the first launch the script proposes to download the optional OCR service used by the automatic pixel de-identification (release pinned by `OCR_VERSION` in `run.cfg`), then opens the web portal in the default browser.
+Settings such as the web port and the DICOM listener can be adjusted in the `run.cfg` file located next to the executable. On the first launch the script proposes to download the optional OCR service used by the automatic pixel de-identification (release pinned by `OCR_VERSION` in `run.cfg`), then opens the web portal in the default browser (`KARNAK_OPEN_BROWSER=false` disables this).
 
 Then open <http://localhost:8081> and log in (see [Accessing Karnak](#accessing-karnak)).
 
@@ -212,7 +212,7 @@ Go on the root folder and launch the following command:
 
 ## Run image from Docker Hub
 
-The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`). The container listens on port `8080` for the web portal and `11119` for the DICOM listener. See the [installation guide](https://weasis.org/karnak-documentation/en/installation/) for a complete docker compose setup.
+The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`). The container listens on port `8080` for the web portal (`KARNAK_WEB_PORT` changes it) and `11119` for the DICOM listener. See the [installation guide](https://weasis.org/karnak-documentation/en/installation/) for a complete docker compose setup.
 
 ## Docker environment variables
 

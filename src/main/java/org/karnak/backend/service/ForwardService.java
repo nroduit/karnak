@@ -9,6 +9,8 @@
  */
 package org.karnak.backend.service;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -33,9 +35,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
@@ -65,6 +64,7 @@ import org.karnak.backend.dicom.WebForwardDestination;
 import org.karnak.backend.exception.AbortException;
 import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
+import org.karnak.backend.model.image.PaletteColorConverter;
 import org.karnak.backend.model.image.TransformedPlanarImage;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.karnak.backend.model.profilepipe.SensitiveTagDefinition;
@@ -75,6 +75,10 @@ import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 import org.weasis.core.util.FileUtil;
 import org.weasis.core.util.LangUtil;
 import org.weasis.core.util.StreamUtil;
@@ -87,11 +91,6 @@ import org.weasis.dicom.util.StoreFromStreamSCU;
 import org.weasis.dicom.web.DicomStowRS;
 import org.weasis.dicom.web.HttpException;
 import org.weasis.opencv.data.PlanarImage;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -560,11 +559,47 @@ public class ForwardService {
 			Attributes attributes, TransformedPlanarImage transformedPlanarImage, boolean captureOutputImage)
 			throws IOException {
 		DataWriter dataWriter;
-		BytesWithImageDescriptor desc = ImageAdapter.imageTranscode(attributes, syntax, context);
+		BytesWithImageDescriptor desc = transcodeForTransformation(syntax, context, attributes);
 		boolean transformed = transformImage(attributes, context, transformedPlanarImage, captureOutputImage);
 		dataWriter = ImageAdapter.buildDataWriter(attributes, syntax,
 				transformed ? transformedPlanarImage.getEditablePlanarImage() : null, desc);
 		return dataWriter;
+	}
+
+	/**
+	 * Prepares the pixel data for the image pipeline.
+	 *
+	 * <p>
+	 * A {@code PALETTE COLOR} instance about to be masked or defaced is converted to RGB
+	 * first: the codec decodes the palette to 8-bit RGB but writes the sample depth of
+	 * the source dataset back, which would store 8-bit samples described as 16-bit ones.
+	 * The image descriptor must be built after the conversion so that it describes the
+	 * converted dataset.
+	 */
+	private static BytesWithImageDescriptor transcodeForTransformation(AdaptTransferSyntax syntax,
+			AttributeEditorContext context, Attributes attributes) throws IOException {
+		BytesWithImageDescriptor desc = ImageAdapter.imageTranscode(attributes, syntax, context);
+		if (desc == null || !hasImageTransformation(context)) {
+			// Nothing to decode, or nothing to transform: the instance is forwarded as
+			// it was received.
+			return desc;
+		}
+		// The descriptor built above describes the palette dataset; the converted one
+		// replaces it and describes the RGB pixels the codec will read.
+		BytesWithImageDescriptor converted = PaletteColorConverter.convertToRgb(attributes);
+		return converted != null ? converted : desc;
+	}
+
+	/**
+	 * Whether a mask or a defacing operation is configured for this instance, i.e.
+	 * whether its pixels are going to be decoded and re-encoded.
+	 */
+	private static boolean hasImageTransformation(AttributeEditorContext context) {
+		MaskArea m = context.getMaskArea();
+		boolean defacing = LangUtil.emptyToFalse(context.getProperties().getProperty(Defacer.APPLY_DEFACING));
+		List<MaskArea> additionalMasks = (List<MaskArea>) context.getProperties()
+			.get(Profile.ADDITIONAL_MASK_AREAS_KEY);
+		return m != null || defacing || (additionalMasks != null && !additionalMasks.isEmpty());
 	}
 
 	/**
@@ -588,7 +623,7 @@ public class ForwardService {
 		List<MaskArea> additionalMasks = (List<MaskArea>) context.getProperties()
 			.get(Profile.ADDITIONAL_MASK_AREAS_KEY);
 
-		if (m != null || defacing || (additionalMasks != null && !additionalMasks.isEmpty())) {
+		if (hasImageTransformation(context)) {
 			Editable<PlanarImage> editablePlanarImage = buildEditablePlanarImage(attributes, m, additionalMasks,
 					defacing, transformedPlanarImage, captureOutputImage);
 			transformedPlanarImage.setEditablePlanarImage(editablePlanarImage);
@@ -805,7 +840,7 @@ public class ForwardService {
 			abortIfRequested(context, p, true, "STOW-RS abort: ");
 
 			try {
-				BytesWithImageDescriptor desc = ImageAdapter.imageTranscode(attributes, syntax, context);
+				BytesWithImageDescriptor desc = transcodeForTransformation(syntax, context, attributes);
 				if (desc == null) {
 					stow.uploadDicom(attributes, syntax.getOriginal());
 				}
@@ -894,7 +929,7 @@ public class ForwardService {
 
 				abortIfRequested(context, p, false, "DICOM association abort. ");
 
-				BytesWithImageDescriptor desc = ImageAdapter.imageTranscode(attributes, syntax, context);
+				BytesWithImageDescriptor desc = transcodeForTransformation(syntax, context, attributes);
 				if (desc == null) {
 					stow.uploadDicom(attributes, syntax.getOriginal());
 				}

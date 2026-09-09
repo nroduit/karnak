@@ -92,10 +92,10 @@ default @Nullable ActionItem getAction(Attributes dcm, Attributes original, int 
 ```
 
 The pipeline calls the five-argument form. **Only the items whose tags the user configures
-override it** — `ActionTags`, `ActionDates`, `Expression`, `ReplaceApi`, `PrivateTags`, and
-`BasicProfile`, which forwards the path to the confidentiality-profile items it delegates
-to. Items selecting a fixed set of standard tags (`UpdateUIDsProfile`, `CleanPixelData`,
-`Defacing`) are location-independent and keep the four-argument form.
+override it** — `ActionTags`, `ActionDates`, `Expression`, `ReplaceApi`, `PrivateTags`,
+`UpdateUIDsProfile`, and `BasicProfile`, which forwards the path to the
+confidentiality-profile items it delegates to. Items selecting a fixed set of standard tags
+(`CleanPixelData`, `Defacing`) are location-independent and keep the four-argument form.
 
 ## Resolution order in `TagActionMap`
 
@@ -259,8 +259,5 @@ A path stored this way is displayed correctly by the editor even on an element w
 - **`AddPrivateTag` still rejects paths** (`rejectTagPaths()`). It shares the latch
   structure but not the problem: private attributes inside sequence items bring
   private-creator reservation per item, which is separate work.
-- **`UpdateUIDsProfile` ignores its configured tags entirely** — its `tagMap` has no caller
-  in main code, so `getAction` always returns `null`. Pre-existing and unrelated, but it
-  means the tag list on the "Replace UIDs" element has no effect, scoped or not.
 - **A path is never inferred.** An existing profile using a bare tag keeps matching at every
   depth; nothing rewrites stored values.

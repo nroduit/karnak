@@ -408,9 +408,4 @@ if [ "$machine" = "windows" ] ; then
 else
   cp "$curPath/run.sh" "$OUTPUT_PATH/"
   chmod +x "$OUTPUT_PATH"/run.sh
-  if [ "$machine" = "macosx" ] ; then
-    # Double-clickable launcher for the Finder (a .command file opens in Terminal)
-    printf '#!/bin/bash\ncd "$(dirname "$0")" && exec ./run.sh "$@"\n' > "$OUTPUT_PATH/Karnak.command"
-    chmod +x "$OUTPUT_PATH/Karnak.command"
-  fi
 fi
