@@ -297,10 +297,8 @@ public class DeidentifyImageService {
 		int bitsAllocated = dcmAttributes.getInt(Tag.BitsAllocated, 0);
 		int samplesPerPixel = resolveSamplesPerPixel(dcmAttributes, paletteFallback);
 
-		byte[] payload = rawPixelData
-				? firstRawFrame(imageBytes, rows, columns, bitsAllocated, samplesPerPixel,
-						dcmAttributes.getString(Tag.SOPInstanceUID))
-				: imageBytes;
+		byte[] payload = rawPixelData ? firstRawFrame(imageBytes, rows, columns, bitsAllocated, samplesPerPixel,
+				dcmAttributes.getString(Tag.SOPInstanceUID)) : imageBytes;
 
 		bodyBuilder.part("image", new ByteArrayResource(payload) {
 			@Override
@@ -345,9 +343,10 @@ public class DeidentifyImageService {
 			@Nullable String sopInstanceUid) {
 		int frameLength = rows * columns * samplesPerPixel * ((bitsAllocated + 7) / 8);
 		if (frameLength <= 0) {
-			log.warn("Incomplete image geometry for SOP Instance UID {} (rows={}, columns={}, bits allocated={}, "
-					+ "samples per pixel={}) - sending the pixel data as is", sopInstanceUid, rows, columns,
-					bitsAllocated, samplesPerPixel);
+			log.warn(
+					"Incomplete image geometry for SOP Instance UID {} (rows={}, columns={}, bits allocated={}, "
+							+ "samples per pixel={}) - sending the pixel data as is",
+					sopInstanceUid, rows, columns, bitsAllocated, samplesPerPixel);
 			return imageBytes;
 		}
 		if (imageBytes.length < frameLength) {
@@ -361,8 +360,8 @@ public class DeidentifyImageService {
 		}
 		// Multi-frame instances (and buffers padded to an even length) are truncated to
 		// their first frame, which is the one the API is asked to inspect.
-		log.debug("Pixel data of SOP Instance UID {} holds {} bytes, keeping the first {} bytes frame",
-				sopInstanceUid, imageBytes.length, frameLength);
+		log.debug("Pixel data of SOP Instance UID {} holds {} bytes, keeping the first {} bytes frame", sopInstanceUid,
+				imageBytes.length, frameLength);
 		return Arrays.copyOf(imageBytes, frameLength);
 	}
 
@@ -371,10 +370,10 @@ public class DeidentifyImageService {
 	 *
 	 * <p>
 	 * A {@code PALETTE COLOR} image whose LUT is missing or unusable is declared as
-	 * {@code MONOCHROME2}: the stored pixel values are single channel indexes which remain
-	 * fully usable for burned-in text detection. Without this normalization the API would
-	 * receive a {@code PALETTE COLOR} image without its LUT and would reject the request
-	 * with an HTTP 400.
+	 * {@code MONOCHROME2}: the stored pixel values are single channel indexes which
+	 * remain fully usable for burned-in text detection. Without this normalization the
+	 * API would receive a {@code PALETTE COLOR} image without its LUT and would reject
+	 * the request with an HTTP 400.
 	 */
 	private @Nullable String resolvePhotometricInterpretation(Attributes dcmAttributes, boolean paletteFallback) {
 		if (paletteFallback) {
