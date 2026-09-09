@@ -89,58 +89,62 @@ class PaletteColorConverterTest {
 		assertThat(PaletteColorConverter.convertToRgb(attributes)).isNull();
 		assertThat(attributes.getString(Tag.PhotometricInterpretation)).isEqualTo("PALETTE COLOR");
 	}
-// TODO for HUG deactivated: check why failing in jenkins
-//	@Test
-//	void an_8bit_palette_instance_is_converted_to_rgb() throws IOException {
-//		Attributes attributes = baseImage(1, 2, 8);
-//		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
-//		addRampPalette(attributes);
-//		attributes.setBytes(Tag.PixelData, VR.OB, new byte[] { 0, 10 });
-//
-//		BytesWithImageDescriptor descriptor = PaletteColorConverter.convertToRgb(attributes);
-//
-//		assertThat(descriptor).isNotNull();
-//		assertThat(attributes.getString(Tag.PhotometricInterpretation)).isEqualTo("RGB");
-//		assertThat(attributes.getInt(Tag.SamplesPerPixel, 0)).isEqualTo(3);
-//		assertThat(attributes.getInt(Tag.BitsAllocated, 0)).isEqualTo(8);
-//		assertThat(attributes.getInt(Tag.BitsStored, 0)).isEqualTo(8);
-//		assertThat(attributes.getInt(Tag.HighBit, 0)).isEqualTo(7);
-//		assertThat(attributes.getInt(Tag.PlanarConfiguration, -1)).isZero();
-//		assertThat(attributes.contains(Tag.RedPaletteColorLookupTableData)).isFalse();
-//		assertThat(attributes.contains(Tag.RedPaletteColorLookupTableDescriptor)).isFalse();
-//
-//		// The ramp palette maps the index i to (i, 0, 255 - i), in RGB order
-//		assertThat(attributes.getBytes(Tag.PixelData)).containsExactly(0, 0, 255, 10, 0, 245);
-//		assertThat(descriptor.getTransferSyntax()).isEqualTo(UID.ExplicitVRLittleEndian);
-//		assertThat(descriptor.getPixelDataVR()).isEqualTo(VR.OB);
-//		assertThat(descriptor.getImageDescriptor().getSamples()).isEqualTo(3);
-//		assertThat(descriptor.getImageDescriptor().getBitsAllocated()).isEqualTo(8);
-//	}
-// TODO for HUG deactivated: check why failing in jenkins
-//	@Test
-//	void a_16bit_multiframe_palette_instance_is_converted_frame_by_frame() throws IOException {
-//		int rows = 1;
-//		int columns = 2;
-//		int frames = 2;
-//		Attributes attributes = baseImage(rows, columns, 16);
-//		attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
-//		attributes.setInt(Tag.NumberOfFrames, VR.IS, frames);
-//		addRampPalette(attributes);
-//		// 16-bit little-endian indexes: frame 0 = [1, 2], frame 1 = [3, 4]
-//		attributes.setBytes(Tag.PixelData, VR.OW, new byte[] { 1, 0, 2, 0, 3, 0, 4, 0 });
-//
-//		BytesWithImageDescriptor descriptor = PaletteColorConverter.convertToRgb(attributes);
-//
-//		assertThat(descriptor).isNotNull();
-//		assertThat(attributes.getInt(Tag.BitsAllocated, 0)).isEqualTo(8);
-//		assertThat(attributes.getBytes(Tag.PixelData)).hasSize(rows * columns * 3 * frames)
-//			.containsExactly(1, 0, 254, 2, 0, 253, 3, 0, 252, 4, 0, 251);
-//
-//		// Each frame is exposed separately to the codec. The reader takes the whole
-//		// backing array of the buffer, so it must hold that frame and nothing else.
-//		assertThat(descriptor.getBytes(0).array()).containsExactly(1, 0, 254, 2, 0, 253);
-//		assertThat(descriptor.getBytes(1).array()).containsExactly(3, 0, 252, 4, 0, 251);
-//	}
+	// TODO for HUG deactivated: check why failing in jenkins
+	// @Test
+	// void an_8bit_palette_instance_is_converted_to_rgb() throws IOException {
+	// Attributes attributes = baseImage(1, 2, 8);
+	// attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+	// addRampPalette(attributes);
+	// attributes.setBytes(Tag.PixelData, VR.OB, new byte[] { 0, 10 });
+	//
+	// BytesWithImageDescriptor descriptor =
+	// PaletteColorConverter.convertToRgb(attributes);
+	//
+	// assertThat(descriptor).isNotNull();
+	// assertThat(attributes.getString(Tag.PhotometricInterpretation)).isEqualTo("RGB");
+	// assertThat(attributes.getInt(Tag.SamplesPerPixel, 0)).isEqualTo(3);
+	// assertThat(attributes.getInt(Tag.BitsAllocated, 0)).isEqualTo(8);
+	// assertThat(attributes.getInt(Tag.BitsStored, 0)).isEqualTo(8);
+	// assertThat(attributes.getInt(Tag.HighBit, 0)).isEqualTo(7);
+	// assertThat(attributes.getInt(Tag.PlanarConfiguration, -1)).isZero();
+	// assertThat(attributes.contains(Tag.RedPaletteColorLookupTableData)).isFalse();
+	// assertThat(attributes.contains(Tag.RedPaletteColorLookupTableDescriptor)).isFalse();
+	//
+	// // The ramp palette maps the index i to (i, 0, 255 - i), in RGB order
+	// assertThat(attributes.getBytes(Tag.PixelData)).containsExactly(0, 0, 255, 10, 0,
+	// 245);
+	// assertThat(descriptor.getTransferSyntax()).isEqualTo(UID.ExplicitVRLittleEndian);
+	// assertThat(descriptor.getPixelDataVR()).isEqualTo(VR.OB);
+	// assertThat(descriptor.getImageDescriptor().getSamples()).isEqualTo(3);
+	// assertThat(descriptor.getImageDescriptor().getBitsAllocated()).isEqualTo(8);
+	// }
+	// TODO for HUG deactivated: check why failing in jenkins
+	// @Test
+	// void a_16bit_multiframe_palette_instance_is_converted_frame_by_frame() throws
+	// IOException {
+	// int rows = 1;
+	// int columns = 2;
+	// int frames = 2;
+	// Attributes attributes = baseImage(rows, columns, 16);
+	// attributes.setString(Tag.PhotometricInterpretation, VR.CS, "PALETTE COLOR");
+	// attributes.setInt(Tag.NumberOfFrames, VR.IS, frames);
+	// addRampPalette(attributes);
+	// // 16-bit little-endian indexes: frame 0 = [1, 2], frame 1 = [3, 4]
+	// attributes.setBytes(Tag.PixelData, VR.OW, new byte[] { 1, 0, 2, 0, 3, 0, 4, 0 });
+	//
+	// BytesWithImageDescriptor descriptor =
+	// PaletteColorConverter.convertToRgb(attributes);
+	//
+	// assertThat(descriptor).isNotNull();
+	// assertThat(attributes.getInt(Tag.BitsAllocated, 0)).isEqualTo(8);
+	// assertThat(attributes.getBytes(Tag.PixelData)).hasSize(rows * columns * 3 * frames)
+	// .containsExactly(1, 0, 254, 2, 0, 253, 3, 0, 252, 4, 0, 251);
+	//
+	// // Each frame is exposed separately to the codec. The reader takes the whole
+	// // backing array of the buffer, so it must hold that frame and nothing else.
+	// assertThat(descriptor.getBytes(0).array()).containsExactly(1, 0, 254, 2, 0, 253);
+	// assertThat(descriptor.getBytes(1).array()).containsExactly(3, 0, 252, 4, 0, 251);
+	// }
 
 	private static Attributes baseImage(int rows, int columns, int bitsAllocated) {
 		Attributes attributes = new Attributes();
