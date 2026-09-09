@@ -148,6 +148,33 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.weasis.thirdparty.org.opencv</groupId>
+                  <artifactId>${lib-file-name}</artifactId>
+                  <version>${weasis.opencv.native.version}</version>
+                  <type>${lib-file-ext}</type>
+                  <classifier>${os-name}-${cpu-name}</classifier>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</outputDirectory>
+                  <destFileName>${lib-file-name}.${lib-file-ext}</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
@@ -686,8 +713,125 @@
               </excludes>
             </configuration>
           </plugin>
+          <!-- The deployment jar is built once (on whatever host CI runs) but the resulting
+               Docker image is multi-arch. Bundle both Linux native OpenCV libs so the single
+               jar resolves /lib/<running-arch>/libopencv_java.so on amd64 and arm64 alike,
+               regardless of the build host's architecture. -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-linux-native-libs</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.weasis.thirdparty.org.opencv</groupId>
+                      <artifactId>libopencv_java</artifactId>
+                      <version>${weasis.opencv.native.version}</version>
+                      <type>so</type>
+                      <classifier>linux-x86-64</classifier>
+                      <overWrite>false</overWrite>
+                      <outputDirectory>${project.build.outputDirectory}/lib/linux-x86-64</outputDirectory>
+                      <destFileName>libopencv_java.so</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.weasis.thirdparty.org.opencv</groupId>
+                      <artifactId>libopencv_java</artifactId>
+                      <version>${weasis.opencv.native.version}</version>
+                      <type>so</type>
+                      <classifier>linux-aarch64</classifier>
+                      <overWrite>false</overWrite>
+                      <outputDirectory>${project.build.outputDirectory}/lib/linux-aarch64</outputDirectory>
+                      <destFileName>libopencv_java.so</destFileName>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
       </build>
+    </profile>
+
+    <profile>
+      <id>linux-x86_64</id>
+      <activation>
+        <os>
+          <name>linux</name>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <os-name>linux</os-name>
+        <cpu-name>x86-64</cpu-name>
+        <lib-file-name>libopencv_java</lib-file-name>
+        <lib-file-ext>so</lib-file-ext>
+      </properties>
+    </profile>
+    <profile>
+      <id>linux-aarch64</id>
+      <activation>
+        <os>
+          <name>linux</name>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <properties>
+        <os-name>linux</os-name>
+        <cpu-name>aarch64</cpu-name>
+        <lib-file-name>libopencv_java</lib-file-name>
+        <lib-file-ext>so</lib-file-ext>
+      </properties>
+    </profile>
+    <profile>
+      <id>macosx-x86_64</id>
+      <activation>
+        <os>
+          <name>mac os x</name>
+          <arch>x86_64</arch>
+        </os>
+      </activation>
+      <properties>
+        <os-name>macosx</os-name>
+        <cpu-name>x86-64</cpu-name>
+        <lib-file-name>libopencv_java</lib-file-name>
+        <lib-file-ext>dylib</lib-file-ext>
+      </properties>
+    </profile>
+    <profile>
+      <id>macosx-aarch64</id>
+      <activation>
+        <os>
+          <name>mac os x</name>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <properties>
+        <os-name>macosx</os-name>
+        <cpu-name>aarch64</cpu-name>
+        <lib-file-name>libopencv_java</lib-file-name>
+        <lib-file-ext>dylib</lib-file-ext>
+      </properties>
+    </profile>
+    <profile>
+      <id>windows-x86_64</id>
+      <activation>
+        <os>
+          <family>windows</family>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <os-name>windows</os-name>
+        <cpu-name>x86-64</cpu-name>
+        <lib-file-name>opencv_java</lib-file-name>
+        <lib-file-ext>dll</lib-file-ext>
+      </properties>
     </profile>
 
     <profile>
