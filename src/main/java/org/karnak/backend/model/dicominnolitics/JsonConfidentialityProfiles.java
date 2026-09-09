@@ -52,7 +52,7 @@ public class JsonConfidentialityProfiles {
 
 	private static ActionItem convertAction(String strAction) {
 		return switch (strAction) {
-			case "D" -> new DefaultDummy("DDum");
+			case "D" -> new DefaultDummy("D");
 			case "Z" -> new ReplaceNull("Z");
 			case "X" -> new Remove("X");
 			case "K" -> new Keep("K");

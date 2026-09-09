@@ -132,10 +132,10 @@ class ActionTraceLoggingTest {
 		dcm.setString(Tag.StudyInstanceUID, VR.UI, "1.2.3");
 		dcm.setString(Tag.StudyDate, VR.DA, "20200101");
 
-		new DefaultDummy("DDum").execute(dcm, Tag.PatientName, HMAC_KEY);
-		new DefaultDummy("DDum").execute(dcm, Tag.WindowCenter, HMAC_KEY);
-		new DefaultDummy("DDum").execute(dcm, Tag.StudyInstanceUID, HMAC_KEY);
-		new DefaultDummy("DDum").execute(dcm, Tag.StudyDate, HMAC_KEY);
+		new DefaultDummy("D").execute(dcm, Tag.PatientName, HMAC_KEY);
+		new DefaultDummy("D").execute(dcm, Tag.WindowCenter, HMAC_KEY);
+		new DefaultDummy("D").execute(dcm, Tag.StudyInstanceUID, HMAC_KEY);
+		new DefaultDummy("D").execute(dcm, Tag.StudyDate, HMAC_KEY);
 
 		assertEquals("UNKNOWN", dcm.getString(Tag.PatientName));
 		assertEquals("0", dcm.getString(Tag.WindowCenter));

@@ -73,6 +73,7 @@ public class PrivateTags extends AbstractProfileItem {
 			throw new ProfileException("Cannot build the profile " + codeName + ": Unknown Action");
 		}
 
+		validateAction();
 		validateTagPaths();
 		validateCondition();
 	}

@@ -104,8 +104,8 @@ inspector. This makes adding a new element type a data change, not a UI rewrite.
 Per-type inspector contents:
 
 - **Action on tags / Action on private tags** — Action selector
-  (Keep `K` · Remove `X` · Replace null `Z` · Replace dummy `D` · Default dummy
-  `DDum`), included tags, excluded tags, optional condition.
+  (Keep `K` · Remove `X` · Replace null `Z` · Replace dummy `D`), included tags,
+  excluded tags, optional condition.
 - **Replace UIDs** — Action selector (New UID `U` · Remove `X` · Replace null `Z`),
   tags.
 - **Action on dates** — Date strategy (shift · shift range · shift by tag ·

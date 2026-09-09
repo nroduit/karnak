@@ -78,8 +78,8 @@ public abstract class AbstractAction implements ActionItem {
 			case "X" -> new Remove("X");
 			case "K" -> new Keep("K");
 			case "U" -> new UID("U");
-			case "DDum" -> new DefaultDummy("DDum");
-			case "D" -> new Replace("D");
+			// "D" is the DICOM "replace with a dummy value" action (PS3.15 E.1.1)
+			case "D" -> new DefaultDummy("D");
 			default -> null;
 		};
 	}

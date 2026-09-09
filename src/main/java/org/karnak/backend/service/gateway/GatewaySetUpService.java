@@ -26,7 +26,9 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.UID;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -139,8 +141,8 @@ public class GatewaySetUpService {
 
 		clientKey = SystemPropertyUtil.retrieveSystemProperty("TLS_KEYSTORE_PATH", null);
 		clientKeyPwd = SystemPropertyUtil.retrieveSystemProperty("TLS_KEYSTORE_SECRET", null);
-		truststorePwd = SystemPropertyUtil.retrieveSystemProperty("TLS_TRUSTSTORE_PATH", null);
-		truststore = SystemPropertyUtil.retrieveSystemProperty("TLS_TRUSTSTORE_SECRET", null);
+		truststore = SystemPropertyUtil.retrieveSystemProperty("TLS_TRUSTSTORE_PATH", null);
+		truststorePwd = SystemPropertyUtil.retrieveSystemProperty("TLS_TRUSTSTORE_SECRET", null);
 
 		String localAET = SystemPropertyUtil.retrieveSystemProperty("LOCAL_NODE_AE_TITLE", "KARNAK-LOCAL");
 		Integer localPort = SystemPropertyUtil.retrieveIntegerSystemProperty("LOCAL_NODE_PORT", null);
@@ -320,12 +322,20 @@ public class GatewaySetUpService {
 	/**
 	 * Parses the destination headers ({@code <key>/<value>} XML) into a single-entry map.
 	 */
-	private static Map<String, String> parseHeaders(String headers) {
+	static Map<String, String> parseHeaders(@Nullable String headers) {
 		Map<String, String> map = new HashMap<>();
+		if (!StringUtil.hasText(headers)) {
+			return map;
+		}
 		Document doc = Jsoup.parse(headers);
-		String key = doc.getElementsByTag("key").text();
-		if (StringUtil.hasText(key)) {
-			map.put(key, doc.getElementsByTag("value").text());
+		Elements keys = doc.getElementsByTag("key");
+		Elements values = doc.getElementsByTag("value");
+		// one <key>/<value> pair per header
+		for (int i = 0; i < keys.size(); i++) {
+			String key = keys.get(i).text().trim();
+			if (StringUtil.hasText(key)) {
+				map.put(key, i < values.size() ? values.get(i).text().trim() : "");
+			}
 		}
 		return map;
 	}
@@ -428,14 +438,14 @@ public class GatewaySetUpService {
 		switch (src) {
 			case DicomSourceNodeEntity srcNode -> {
 				if (type == NodeEventType.ADD) {
-					fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
+					addAcceptedSourceNode(fwdNode, srcNode);
 				}
 				else if (type == NodeEventType.REMOVE) {
 					fwdNode.getAcceptedSourceNodes().removeIf(s -> srcNode.getId().equals(s.getId()));
 				}
 				else if (type == NodeEventType.UPDATE) {
 					fwdNode.getAcceptedSourceNodes().removeIf(s -> srcNode.getId().equals(s.getId()));
-					fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
+					addAcceptedSourceNode(fwdNode, srcNode);
 				}
 			}
 			case DestinationEntity dstNode -> {
@@ -470,8 +480,15 @@ public class GatewaySetUpService {
 
 	private void addAcceptedSourceNodes(ForwardDicomNode fwdSrcNode, ForwardNodeEntity forwardNodeEntity) {
 		for (DicomSourceNodeEntity srcNode : forwardNodeEntity.getSourceNodes()) {
-			fwdSrcNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname());
+			addAcceptedSourceNode(fwdSrcNode, srcNode);
 		}
+	}
+
+	/** Registers a source node, honoring its "Check the hostname" setting. */
+	private static void addAcceptedSourceNode(ForwardDicomNode fwdNode, DicomSourceNodeEntity srcNode) {
+		boolean checkHostname = Boolean.TRUE.equals(srcNode.getCheckHostname())
+				&& StringUtil.hasText(srcNode.getHostname());
+		fwdNode.addAcceptedSourceNode(srcNode.getId(), srcNode.getAeTitle(), srcNode.getHostname(), checkHostname);
 	}
 
 	/**

@@ -1,0 +1,16 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- profile_element: the Karnak-specific "DDum" action symbol is retired in favour of the
+       DICOM PS3.15 "D" (replace with a dummy value) symbol, which now performs the same
+       VR-aware replacement. -->
+  <changeSet author="karnak" id="3.0-1">
+    <update tableName="profile_element">
+      <column name="action" value="D"/>
+      <where>action = 'DDum'</where>
+    </update>
+  </changeSet>
+
+</databaseChangeLog>

@@ -79,7 +79,6 @@ public class KarnakApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) {
 		log.info("Karnak application started successfully");
-		log.info("Environment: {}", myConfig != null ? myConfig.getEnvironment() : "not configured");
 		log.info("Profile name: {}", myConfig != null ? myConfig.getName() : "default");
 		try {
 			String hostname;

@@ -293,7 +293,9 @@ public class ForwardNodeController {
 			return ResponseEntity.notFound().build();
 		}
 		DestinationEntity destinationEntity = DestinationMapper.toEntity(destinationModel);
-		destinationEntity.setId(existing.getId());
+		// toEntity only returns null for a null model; the body is required, so Spring
+		// answers a 400 before this handler runs.
+		destinationEntity.setId(existing.getId()); // NOSONAR
 		destinationEntity.setUuid(existing.getUuid());
 		resolveProjects(destinationModel, destinationEntity);
 		DestinationEntity saved = destinationService.save(node, destinationEntity);
@@ -339,7 +341,9 @@ public class ForwardNodeController {
 	 * @throws ResponseStatusException a 400 when a referenced project does not exist.
 	 */
 	private void resolveProjects(DestinationModel model, DestinationEntity entity) {
-		if (model.getDeIdentificationProjectUuid() != null) {
+		// Both callers pass their required @Valid @RequestBody, so the model is never
+		// null.
+		if (model.getDeIdentificationProjectUuid() != null) { // NOSONAR
 			ProjectEntity project = projectService.retrieveProjectByUuid(model.getDeIdentificationProjectUuid());
 			if (project == null) {
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

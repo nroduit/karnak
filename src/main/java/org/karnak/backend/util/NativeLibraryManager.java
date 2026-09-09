@@ -50,6 +50,10 @@ public class NativeLibraryManager {
 	 * {@code java.library.path}. In the portable package it has already been extracted
 	 * into the {@code dicom-opencv} folder (and may have been stripped from the jar), so
 	 * whatever is there is used as-is.
+	 *
+	 * <p>
+	 * {@code dicom.native.codec} is set only when this method creates the directory,
+	 * since it marks the directory for deletion on shutdown.
 	 * @param system the native library specification (e.g. {@code linux-x86-64})
 	 * @param libraryPath the {@code java.library.path} value to search
 	 * @return the absolute path of the library to load
@@ -57,17 +61,29 @@ public class NativeLibraryManager {
 	static Path prepareLibrary(String system, String libraryPath) {
 		Path directory = resolveLibraryDirectory(libraryPath);
 		Path outputFile = directory.resolve(libraryFileName(system));
-		System.setProperty(NATIVE_CODEC_PROPERTY, directory.toString());
 
+		// An already installed library is used as-is: in the portable package it lives
+		// inside the signed app image, and rewriting it would break the code signature.
+		if (Files.isReadable(outputFile)) {
+			return outputFile;
+		}
+
+		boolean directoryExisted = Files.isDirectory(directory);
 		String resourcePath = "/lib/" + system + "/" + outputFile.getFileName();
 		try (InputStream in = NativeLibraryManager.class.getResourceAsStream(resourcePath)) {
-			if (in != null) {
-				Files.createDirectories(directory);
-				FileUtil.writeStream(in, outputFile, true);
-			}
-			else if (!Files.isReadable(outputFile)) {
+			if (in == null) {
 				throw new IllegalStateException("Native OpenCV library is neither on the classpath (" + resourcePath
 						+ ") nor already present at " + outputFile);
+			}
+			Files.createDirectories(directory);
+			FileUtil.writeStream(in, outputFile, true);
+			if (!directoryExisted) {
+				// Only a directory this class created is ours to remove on shutdown, see
+				// GatewayService#destroy. In the portable package the libraries are
+				// installed inside the app image, where deleting them would break the
+				// code
+				// signature and leave the next start without an OpenCV library.
+				System.setProperty(NATIVE_CODEC_PROPERTY, directory.toString());
 			}
 		}
 		catch (IOException e) {

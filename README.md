@@ -55,7 +55,7 @@ You don't need to build Karnak from source to use it. Pick the option that fits 
 
 | I want to… | Use | Details |
 |------------|-----|---------|
-| Run Karnak in production | **Docker** | [karnak-docker](https://github.com/nroduit/karnak-docker) — Postgres + Redis, the recommended setup |
+| Run Karnak in production | **Docker** | [Installation guide](https://weasis.org/karnak-documentation/en/installation/) — Docker Compose with Postgres + Redis, the recommended setup |
 | Try Karnak quickly on a single machine | **Portable package** | Self-contained, embedded database, no external services — see [Run portable package](#run-portable-package) |
 | Contribute to / develop Karnak | **Build from source** | See [Build Karnak](#build-karnak) and [Debug Karnak](#debug-karnak) |
 
@@ -63,8 +63,8 @@ You don't need to build Karnak from source to use it. Pick the option that fits 
 
 Once Karnak is running, with the default configuration:
 
-- **Web interface**: <http://localhost:8081>
-- **Default credentials**: user `admin`, password `karnak` (change these in production via `KARNAK_ADMIN` / `KARNAK_PASSWORD`)
+- **Web interface**: <http://localhost:8080> with the docker image, <http://localhost:8081> with the portable package or when running from the IDE
+- **Default credentials**: user `admin`, password `karnak` (change these in production: `KARNAK_LOGIN_ADMIN` / `KARNAK_LOGIN_PASSWORD_FILE` with docker, `KARNAK_ADMIN` / `KARNAK_PASSWORD` otherwise)
 - **DICOM listener**: AE Title `KARNAK-GATEWAY`, port `11119` (the portable package uses `11112`) — point your modality or PACS here to send studies to Karnak
 
 The web port (`KARNAK_WEB_PORT`), the listener AE Title (`DICOM_LISTENER_AET`) and port (`DICOM_LISTENER_PORT`), as well as the sources and destinations, are all configurable; see the [Karnak User Guide](https://weasis.org/karnak-documentation/).
@@ -88,12 +88,12 @@ Note: on Windows the bash.exe must be specified: `mvn clean install -Pportable -
 # Run Karnak
 
 ## Run with docker
-To configure and run Karnak with docker, see [karnak-docker](https://github.com/nroduit/karnak-docker). This is the recommended setup for production.
+To configure and run Karnak with docker compose (Karnak + Postgres + Redis), follow the [installation guide](https://weasis.org/karnak-documentation/en/installation/). This is the recommended setup for production.
 
 ## Run portable package
 After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch the executable `run.sh` (Linux or macOS) or `run.bat` (Windows).
 
-Settings such as the web port and the DICOM listener can be adjusted in the `run.cfg` file located next to the executable.
+Settings such as the web port and the DICOM listener can be adjusted in the `run.cfg` file located next to the executable. On the first launch the script proposes to download the optional OCR service used by the automatic pixel de-identification (release pinned by `OCR_VERSION` in `run.cfg`), then opens the web portal in the default browser.
 
 Then open <http://localhost:8081> and log in (see [Accessing Karnak](#accessing-karnak)).
 
@@ -116,7 +116,6 @@ Note: this portable package runs an embedded database (H2) in file mode, and the
     - In Environment variables, add the following values. The following values work with our default
       configuration defined with docker used for the development (see: "Run locally the database and the cache with docker") :
         - Mandatory:
-            - `ENVIRONMENT=DEV`
             - `DB_ENCRYPTION_KEY=fsGuSZRIEr$HwlTDPglZg*Vl7WtJCZz6RLvqoMKWSA!`
         - Optional:
             - `DB_PASSWORD=karnak`
@@ -144,8 +143,6 @@ Reuse the Spring Boot launcher from [Debug in IntelliJ](#debug-in-intellij) with
 - Activate the portable profile (it swaps in `application-portable.yml`). Either set it in the
   launcher's **Active profiles** field (`portable`), or add the environment variable:
     - `SPRING_PROFILES_ACTIVE=portable`
-- Mandatory (same as above):
-    - `ENVIRONMENT=DEV`
 - Optional — persist incoming studies to a local folder. When `LOCAL_NODE_PORT` and
   `LOCAL_NODE_STORAGE_PATH` are both set, Karnak starts an additional DICOM listener that stores
   received objects on disk:
@@ -215,11 +212,11 @@ Go on the root folder and launch the following command:
 
 ## Run image from Docker Hub
 
-See [karnak-docker](https://github.com/OsiriX-Foundation/karnak-docker)
+The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`). The container listens on port `8080` for the web portal and `11119` for the DICOM listener. See the [installation guide](https://weasis.org/karnak-documentation/en/installation/) for a complete docker compose setup.
 
 ## Docker environment variables
 
-See [all the environment variables](https://github.com/OsiriX-Foundation/karnak-docker#environment-variables)
+See the [environment variables](https://weasis.org/karnak-documentation/en/installation/#environment-variables) section of the installation guide.
 
 # Architecture
 

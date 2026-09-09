@@ -54,7 +54,15 @@ public class ForwardDicomNode extends DicomNode {
 	}
 
 	public void addAcceptedSourceNode(Long id, String srcAeTitle, String srcHostname) {
-		acceptedSourceNodes.add(new DicomNode(id, srcAeTitle, srcHostname, null, srcHostname != null));
+		addAcceptedSourceNode(id, srcAeTitle, srcHostname, srcHostname != null);
+	}
+
+	/**
+	 * @param validateHostname whether the hostname of the calling node must match
+	 * {@code srcHostname} for the association to be accepted
+	 */
+	public void addAcceptedSourceNode(Long id, String srcAeTitle, String srcHostname, boolean validateHostname) {
+		acceptedSourceNodes.add(new DicomNode(id, srcAeTitle, srcHostname, null, validateHostname));
 	}
 
 	@Override

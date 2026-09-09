@@ -30,10 +30,13 @@ jobs:
           persist-credentials: false
 
       - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: 'temurin'
           java-version: '25'
+          # Temurin 24+ enables JEP 493 and ships no 'jmods' directory; jpackage/jlink
+          # still needs it here, so pull the separate JMOD archive into the JDK.
+          java-package: 'jdk+jmods'
           cache: 'maven'
 
       - name: Import Developer Certificate
@@ -100,6 +103,10 @@ jobs:
         with:
           name: ${{ env.APP_PACKAGE_FOLDER }}
           path: target/${{ env.APP_PACKAGE_FOLDER }}
+          # The macOS app image seals Contents/app/.jpackage.xml, which is dropped by the
+          # default hidden-file exclusion. Gatekeeper then reports the sealed resource as
+          # missing and kills the app on first launch.
+          include-hidden-files: true
           compression-level: '9'
           if-no-files-found: error
           retention-days: 30

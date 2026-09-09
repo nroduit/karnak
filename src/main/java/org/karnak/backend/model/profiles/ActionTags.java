@@ -87,6 +87,7 @@ public class ActionTags extends AbstractProfileItem {
 			throw new ProfileException(errorMessage + codeName + ": No tags defined");
 		}
 
+		validateAction();
 		validateTagPaths();
 		validateCondition();
 	}

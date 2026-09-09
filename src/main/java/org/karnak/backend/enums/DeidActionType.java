@@ -22,8 +22,7 @@ import org.jspecify.annotations.Nullable;
 public enum DeidActionType {
 
 	KEEP("K", "Keep"), REMOVE("X", "Remove"), REPLACE_NULL("Z", "Replace with null"),
-	REPLACE_DUMMY("D", "Replace with a dummy value"), DEFAULT_DUMMY("DDum", "Replace with the default dummy value"),
-	NEW_UID("U", "Generate a new UID");
+	REPLACE_DUMMY("D", "Replace with a dummy value"), NEW_UID("U", "Generate a new UID");
 
 	private final String symbol;
 
