@@ -4,7 +4,6 @@ import ch.hcuge.dsi.jenkins.BuildImage;
 pipelineSpringBootMaven(
     buildImage: BuildImage.MVN_39_JDK25,
     deployableType: "DOCKER",
-    versionStrategy: "MANUAL",
     maven: [
         'checkstyleFailOnError': false,
         'archunitFailOnError': false,
