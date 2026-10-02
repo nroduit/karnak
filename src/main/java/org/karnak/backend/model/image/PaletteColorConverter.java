@@ -169,6 +169,7 @@ public final class PaletteColorConverter {
 		public VR getPixelDataVR() {
 			return VR.OB;
 		}
+
 	}
 
 	/**
