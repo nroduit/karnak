@@ -1,11 +1,98 @@
 # Changelog
 
-## [v1.1.0](https://github.com/nroduit/karnak/tree/v1.1.0) (2025-03-21)
+## [Unreleased](https://github.com/nroduit/karnak/tree/HEAD)
+
+[Full Changelog](https://github.com/nroduit/karnak/compare/v2.0.0...HEAD)
+
+**Fixed bugs:**
+
+- fix: security configuration [\#311](https://github.com/nroduit/karnak/issues/311)
+
+## [v2.0.0](https://github.com/nroduit/karnak/tree/v2.0.0) (2026-09-09)
+
+[Full Changelog](https://github.com/nroduit/karnak/compare/v1.1.1-beta...v2.0.0)
+
+**Implemented enhancements:**
+
+- Api endpoints implementation [\#306](https://github.com/nroduit/karnak/issues/306)
+- Modify roles retrieval [\#289](https://github.com/nroduit/karnak/issues/289)
+- Redesign the Profile Builder UI [\#279](https://github.com/nroduit/karnak/issues/279)
+- Improve the monitoring view [\#278](https://github.com/nroduit/karnak/issues/278)
+- Add optional one-level grouping to Profile, Project and Forward Node lists [\#274](https://github.com/nroduit/karnak/issues/274)
+- Add integration, performance, and image-processing tests for ForwardService and Gateway [\#272](https://github.com/nroduit/karnak/issues/272)
+- Improve DICOM/STOW-RS forwarding throughput: parallel fan-out, per-destination connection pool, SOP-class pre-negotiation, configurable HTTP version [\#271](https://github.com/nroduit/karnak/issues/271)
+- Improve login, authorization and role handling defects [\#270](https://github.com/nroduit/karnak/issues/270)
+- Improve role-based view security and stateful logic & inconsistent Spring scopes [\#269](https://github.com/nroduit/karnak/issues/269)
+- Conformance Report feature [\#266](https://github.com/nroduit/karnak/issues/266)
+- Pseudonym: skip issuer of patient id [\#265](https://github.com/nroduit/karnak/issues/265)
+- Improve transfers logs [\#264](https://github.com/nroduit/karnak/issues/264)
+- Monitoring: automatic deletion after a certain number of days [\#263](https://github.com/nroduit/karnak/issues/263)
+- Monitoring: add button delete all [\#262](https://github.com/nroduit/karnak/issues/262)
+- Update to Springboot 4, Vaadin 25 and Java 25 [\#260](https://github.com/nroduit/karnak/issues/260)
+- External pseudonyms: only Patient ID and External Pseudonym are mandatory [\#255](https://github.com/nroduit/karnak/issues/255)
+- Portable distribution for personnal use [\#253](https://github.com/nroduit/karnak/issues/253)
+- Api [\#305](https://github.com/nroduit/karnak/pull/305) ([jdcshug](https://github.com/jdcshug))
+- feat: missing jspecify-nullaway checks [\#293](https://github.com/nroduit/karnak/pull/293) ([jdcshug](https://github.com/jdcshug))
+- feat: Get roles from access token instead of id token [\#288](https://github.com/nroduit/karnak/pull/288) ([jdcshug](https://github.com/jdcshug))
+- feat: jspecify [\#280](https://github.com/nroduit/karnak/pull/280) ([jdcshug](https://github.com/jdcshug))
+
+**Fixed bugs:**
+
+- Destination not visible in UI [\#268](https://github.com/nroduit/karnak/issues/268)
+- Issue when saving a Destination [\#267](https://github.com/nroduit/karnak/issues/267)
+- Bug: expression.on.tags: expr argument silently fails to save when longer than 255 characters [\#258](https://github.com/nroduit/karnak/issues/258)
+- Bug: transfer\_status.reason column truncates long exception messages \(varchar 255\) [\#257](https://github.com/nroduit/karnak/issues/257)
+- fix: security [\#310](https://github.com/nroduit/karnak/pull/310) ([jdcshug](https://github.com/jdcshug))
+
+**Closed issues:**
+
+- Proposal: Management REST API for programmatic gateway configuration \(fork implementation ready\) [\#298](https://github.com/nroduit/karnak/issues/298)
+- Proposal: shift\_from\_api: per-patient date shift fetched from an external API [\#295](https://github.com/nroduit/karnak/issues/295)
+- jspecify / NullAway [\#281](https://github.com/nroduit/karnak/issues/281)
+- \[Clean Pixel\] Centralize the list of masks [\#38](https://github.com/nroduit/karnak/issues/38)
+
+**Merged pull requests:**
+
+- fix: correct pixel de-identification of PALETTE COLOR and multiframe raw images [\#309](https://github.com/nroduit/karnak/pull/309) ([nkalten](https://github.com/nkalten))
+- ci: bump the actions group across 1 directory with 2 updates [\#308](https://github.com/nroduit/karnak/pull/308) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: bump the maven group with 14 updates [\#307](https://github.com/nroduit/karnak/pull/307) ([dependabot[bot]](https://github.com/apps/dependabot))
+- feat: Implement OCR API call to add in the conformance report the detection of burnt sensitive data in the image [\#304](https://github.com/nroduit/karnak/pull/304) ([nkalten](https://github.com/nkalten))
+- fix: shift date in sequence [\#303](https://github.com/nroduit/karnak/pull/303) ([nkalten](https://github.com/nkalten))
+- ci: bump the actions group with 3 updates [\#302](https://github.com/nroduit/karnak/pull/302) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: bump the maven group with 7 updates [\#301](https://github.com/nroduit/karnak/pull/301) ([dependabot[bot]](https://github.com/apps/dependabot))
+- fix: mask error appears only with manual mask generation [\#300](https://github.com/nroduit/karnak/pull/300) ([nkalten](https://github.com/nkalten))
+- fix: spaces in tags parsing [\#299](https://github.com/nroduit/karnak/pull/299) ([nkalten](https://github.com/nkalten))
+- test: fix stale sent\(\) assertion for a 409-duplicate STOW-RS outcome [\#296](https://github.com/nroduit/karnak/pull/296) ([jbardet](https://github.com/jbardet))
+- feat: add shift\_from\_api option for per-patient date shifting [\#294](https://github.com/nroduit/karnak/pull/294) ([jbardet](https://github.com/jbardet))
+- ci: bump actions/setup-node from 6.4.0 to 7.0.0 in the actions group [\#292](https://github.com/nroduit/karnak/pull/292) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: bump the maven group with 2 updates [\#291](https://github.com/nroduit/karnak/pull/291) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci: bump the actions group across 1 directory with 5 updates [\#290](https://github.com/nroduit/karnak/pull/290) ([dependabot[bot]](https://github.com/apps/dependabot))
+- feat: explicit null check [\#287](https://github.com/nroduit/karnak/pull/287) ([jdcshug](https://github.com/jdcshug))
+- Feat: Add automatic de-identification [\#285](https://github.com/nroduit/karnak/pull/285) ([nkalten](https://github.com/nkalten))
+- ci: bump the actions group with 3 updates [\#283](https://github.com/nroduit/karnak/pull/283) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: bump the maven group with 3 updates [\#282](https://github.com/nroduit/karnak/pull/282) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: bump the maven group with 15 updates [\#277](https://github.com/nroduit/karnak/pull/277) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci: bump the actions group with 11 updates [\#276](https://github.com/nroduit/karnak/pull/276) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: bump maven from 3.9-eclipse-temurin-25-noble to 3-eclipse-temurin-26-noble in /src/main/docker in the docker group [\#275](https://github.com/nroduit/karnak/pull/275) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Various updates [\#261](https://github.com/nroduit/karnak/pull/261) ([jdcshug](https://github.com/jdcshug))
+- Springboot 4, Vaadin 25 and Java 25. [\#259](https://github.com/nroduit/karnak/pull/259) ([nroduit](https://github.com/nroduit))
+- Apply the theme custom-theme and migrate the custom-theme for vaadin 24 [\#256](https://github.com/nroduit/karnak/pull/256) ([mhenx](https://github.com/mhenx))
+
+## [v1.1.1-beta](https://github.com/nroduit/karnak/tree/v1.1.1-beta) (2025-11-27)
+
+[Full Changelog](https://github.com/nroduit/karnak/compare/v1.1.0...v1.1.1-beta)
+
+**Fixed bugs:**
+
+- Improve refreshing loading icon status [\#254](https://github.com/nroduit/karnak/issues/254)
+
+## [v1.1.0](https://github.com/nroduit/karnak/tree/v1.1.0) (2025-11-24)
 
 [Full Changelog](https://github.com/nroduit/karnak/compare/v1.0.3...v1.1.0)
 
 **Implemented enhancements:**
 
+- New Replace Action with secured call from REST API [\#246](https://github.com/nroduit/karnak/issues/246)
 - Email notifications fix: do not display rejected instances as errors [\#240](https://github.com/nroduit/karnak/issues/240)
 - Improvements of profile element Add Action [\#237](https://github.com/nroduit/karnak/issues/237)
 - New profile action : add tag [\#228](https://github.com/nroduit/karnak/issues/228)
@@ -19,40 +106,27 @@
 - Springboot 3 migration [\#206](https://github.com/nroduit/karnak/issues/206)
 - Clean pixel data profile: mask position issue when the same equipement produces different images sizes [\#179](https://github.com/nroduit/karnak/issues/179)
 - Clean pixel data limitation [\#175](https://github.com/nroduit/karnak/issues/175)
+- Add description to the switching different KHEOPS album [\#147](https://github.com/nroduit/karnak/issues/147)
+- Profile min SOP [\#96](https://github.com/nroduit/karnak/issues/96)
 - \[Clean Pixel\] Define exclusion rules in the UI [\#37](https://github.com/nroduit/karnak/issues/37)
-- Feat/expression excludeinstance [\#236](https://github.com/nroduit/karnak/pull/236) ([mhenx](https://github.com/mhenx))
+- Temporary destination in case of error [\#15](https://github.com/nroduit/karnak/issues/15)
 - Upgrade dependencies \(SpringBoot 3, Vaadin 24, ...\)+ new expression to call an API endpoint [\#210](https://github.com/nroduit/karnak/pull/210) ([jdcshug](https://github.com/jdcshug))
 
 **Fixed bugs:**
 
+- Sort the profile list [\#252](https://github.com/nroduit/karnak/issues/252)
+- When deleting a destination or forward node the monitoring throws an Entity Not Found Exception [\#248](https://github.com/nroduit/karnak/issues/248)
 - HTTP 405 error when accessing to the static images \(logo and spinner gif\) [\#243](https://github.com/nroduit/karnak/issues/243)
 - Fix NPE loading spinner [\#224](https://github.com/nroduit/karnak/issues/224)
-- Fix NPE loading spinner [\#223](https://github.com/nroduit/karnak/pull/223) ([jdcshug](https://github.com/jdcshug))
 
 **Closed issues:**
 
 - New Profile Expression Action : ExcludeInstance\(\) [\#235](https://github.com/nroduit/karnak/issues/235)
 - Expression do not handle multiple string values of a DICOM tag [\#211](https://github.com/nroduit/karnak/issues/211)
+- Add documentation on how expressions work [\#75](https://github.com/nroduit/karnak/issues/75)
 
 **Merged pull requests:**
 
-- Remove unecessary MVC configuration to fix static images serving [\#244](https://github.com/nroduit/karnak/pull/244) ([mhenx](https://github.com/mhenx))
-- Unit tests for JSON standard files [\#242](https://github.com/nroduit/karnak/pull/242) ([mhenx](https://github.com/mhenx))
-- Adds a differentiation between error and excluded instances in monitoring and email notifications [\#241](https://github.com/nroduit/karnak/pull/241) ([mhenx](https://github.com/mhenx))
-- Feat/code cleaning [\#239](https://github.com/nroduit/karnak/pull/239) ([mhenx](https://github.com/mhenx))
-- new profile element add private tag and validation improvements on add action [\#238](https://github.com/nroduit/karnak/pull/238) ([mhenx](https://github.com/mhenx))
-- UI fixes: pseudonym mapping flex display and icons for DICOM tools [\#234](https://github.com/nroduit/karnak/pull/234) ([mhenx](https://github.com/mhenx))
-- fix merge error ProfileTest [\#233](https://github.com/nroduit/karnak/pull/233) ([mhenx](https://github.com/mhenx))
-- Clean Pixel Data: add conditions on the image size to masks definition and application [\#232](https://github.com/nroduit/karnak/pull/232) ([mhenx](https://github.com/mhenx))
-- Apply masks & clean pixel to any type of non compliant image [\#231](https://github.com/nroduit/karnak/pull/231) ([mhenx](https://github.com/mhenx))
-- New profile action : add tag [\#230](https://github.com/nroduit/karnak/pull/230) ([mhenx](https://github.com/mhenx))
-- Remove unused import and braces [\#229](https://github.com/nroduit/karnak/pull/229) ([mhenx](https://github.com/mhenx))
-- Dialog to help generate Authorization Headers in the Destination STOW Form [\#226](https://github.com/nroduit/karnak/pull/226) ([mhenx](https://github.com/mhenx))
-- ExternalID : Delete selected and delete all buttons - bug fix [\#225](https://github.com/nroduit/karnak/pull/225) ([mhenx](https://github.com/mhenx))
-- Update DICOM's JSON reference files from Innolitics [\#222](https://github.com/nroduit/karnak/pull/222) ([mhenx](https://github.com/mhenx))
-- New profile expression : computePatientAge [\#219](https://github.com/nroduit/karnak/pull/219) ([mhenx](https://github.com/mhenx))
-- Minor UI fixes [\#218](https://github.com/nroduit/karnak/pull/218) ([mhenx](https://github.com/mhenx))
-- ExternalID : Delete selected and delete all buttons [\#217](https://github.com/nroduit/karnak/pull/217) ([mhenx](https://github.com/mhenx))
 - build\(deps\): bump org.json:json from 20230227 to 20231013 [\#212](https://github.com/nroduit/karnak/pull/212) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Feat/shift by date [\#204](https://github.com/nroduit/karnak/pull/204) ([redwork321](https://github.com/redwork321))
 

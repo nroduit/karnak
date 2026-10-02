@@ -139,6 +139,11 @@ public class DeidentifyImageService {
 	 */
 	public List<MaskBody> callDeidentifyImageApi(Attributes dcmAttributes, Map<String, String> sensitiveData,
 			String tsuid) {
+		if (dcmAttributes == null) {
+			log.warn("No DICOM instance to inspect - skipping API call");
+			return Collections.emptyList();
+		}
+
 		// Extract pixel data bytes from the DICOM instance
 		byte[] imageBytes = extractPixelDataBytes(dcmAttributes);
 		if (imageBytes.length == 0) {
@@ -308,11 +313,7 @@ public class DeidentifyImageService {
 		}).contentType(mapping.mediaType());
 
 		addTextPart(bodyBuilder, "sensitive_data_list", sensitiveDataJson);
-		// dcmAttributes is never null here: callDeidentifyImageApi returns as soon as
-		// extractPixelDataBytes gives back the empty array it answers a null instance
-		// with, and its own caller has already read the sensitive tags off the
-		// instance.
-		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID)); // NOSONAR
+		addTextPart(bodyBuilder, "sop_instance_uid", dcmAttributes.getString(Tag.SOPInstanceUID));
 		addTextPart(bodyBuilder, "transfer_syntax_uid", tsuid);
 
 		addTextPart(bodyBuilder, "rows", rows);

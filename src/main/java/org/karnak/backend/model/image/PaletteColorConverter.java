@@ -125,10 +125,22 @@ public final class PaletteColorConverter {
 
 	/**
 	 * In-memory view of the converted pixel data, as expected by
-	 * {@link org.dcm4che3.img.stream.ImageAdapter#buildDataWriter}.
+	 * {@link org.dcm4che3.img.stream.ImageAdapter#buildDataWriter}. A class rather than a
+	 * record: the pixel data array would give it a misleading, identity-based equality.
 	 */
-	private record RgbBytesDescriptor(ImageDescriptor imageDescriptor, byte[] pixelData,
-			int frameLength) implements BytesWithImageDescriptor {
+	private static final class RgbBytesDescriptor implements BytesWithImageDescriptor {
+
+		private final ImageDescriptor imageDescriptor;
+
+		private final byte[] pixelData;
+
+		private final int frameLength;
+
+		private RgbBytesDescriptor(ImageDescriptor imageDescriptor, byte[] pixelData, int frameLength) {
+			this.imageDescriptor = imageDescriptor;
+			this.pixelData = pixelData;
+			this.frameLength = frameLength;
+		}
 
 		@Override
 		public ImageDescriptor getImageDescriptor() {
