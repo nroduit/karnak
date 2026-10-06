@@ -88,14 +88,15 @@ public final class ConditionEvaluator {
 			boolean present = attrs.containsValue(tag);
 			return condition.getPresent() == present ? Ternary.TRUE : Ternary.FALSE;
 		}
+		Integer valueIndex = condition.getValueIndex();
 		if (condition.getEquals() != null) {
-			return matchesAny(attrs, tag, List.of(condition.getEquals()));
+			return matchesAny(attrs, tag, valueIndex, List.of(condition.getEquals()));
 		}
 		if (condition.getIn() != null) {
-			return matchesAny(attrs, tag, condition.getIn());
+			return matchesAny(attrs, tag, valueIndex, condition.getIn());
 		}
 		if (condition.getNotIn() != null) {
-			Ternary inSet = matchesAny(attrs, tag, condition.getNotIn());
+			Ternary inSet = matchesAny(attrs, tag, valueIndex, condition.getNotIn());
 			return switch (inSet) {
 				case TRUE -> Ternary.FALSE;
 				case FALSE -> Ternary.TRUE;
@@ -106,17 +107,26 @@ public final class ConditionEvaluator {
 	}
 
 	/**
-	 * @return TRUE if any (trimmed) value of {@code tag} equals one of
-	 * {@code candidates}, FALSE if the tag has a value but none match, UNKNOWN if the tag
-	 * is absent/empty.
+	 * @return TRUE if any (trimmed) value of {@code tag} (only the 1-based
+	 * {@code valueIndex} value when not null) equals one of {@code candidates}, FALSE if
+	 * the tag has a value but none match, UNKNOWN if the tag (or the indexed value) is
+	 * absent/empty.
 	 */
-	private static Ternary matchesAny(Attributes attrs, int tag, List<String> candidates) {
+	private static Ternary matchesAny(Attributes attrs, int tag, @Nullable Integer valueIndex,
+			List<String> candidates) {
 		if (!attrs.containsValue(tag)) {
 			return Ternary.UNKNOWN;
 		}
 		String[] values = attrs.getStrings(tag);
 		if (values == null || values.length == 0) {
 			return Ternary.UNKNOWN;
+		}
+		if (valueIndex != null) {
+			if (valueIndex < 1 || valueIndex > values.length || values[valueIndex - 1] == null
+					|| values[valueIndex - 1].isBlank()) {
+				return Ternary.UNKNOWN;
+			}
+			values = new String[] { values[valueIndex - 1] };
 		}
 		for (String value : values) {
 			String trimmed = value == null ? "" : value.trim();

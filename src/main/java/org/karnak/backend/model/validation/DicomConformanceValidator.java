@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.ElementDictionary;
@@ -28,6 +29,7 @@ import org.dcm4che3.util.TagUtils;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.exception.SOPNotFoundException;
 import org.karnak.backend.model.standard.AttributeDetail;
+import org.karnak.backend.model.standard.FunctionalGroupMacro;
 import org.karnak.backend.model.standard.Module;
 import org.karnak.backend.model.standard.ModuleAttribute;
 import org.karnak.backend.model.standard.StandardDICOM;
@@ -92,6 +94,16 @@ public class DicomConformanceValidator {
 	 * Standard attributes permitted in any dataset regardless of the SOP Class IOD, so
 	 * the non-standard-attribute check does not flag them as Standard Extended usage.
 	 */
+	/**
+	 * Conditional statement of a Functional Group Macro that forbids it in the Shared
+	 * Functional Groups Sequence.
+	 */
+	private static final Pattern NOT_SHARED_STATEMENT = Pattern
+		.compile("(?i)(shall|may) not be used as a Shared Functional Group");
+
+	private static final String FUNCTIONAL_GROUPS_DISPLAY = TagUtils.toString(Tag.SharedFunctionalGroupsSequence)
+			+ " / " + TagUtils.toString(Tag.PerFrameFunctionalGroupsSequence);
+
 	private static final Set<Integer> ALWAYS_ALLOWED_TAGS = Set.of(Tag.SpecificCharacterSet, Tag.TimezoneOffsetFromUTC);
 
 	/**
@@ -161,6 +173,8 @@ public class DicomConformanceValidator {
 		try {
 			modules = standard.getModulesBySOP(sopClassUid);
 			checkModuleRequirements(attrs, bulkPresentTags, modules, findings);
+			checkFunctionalGroupMacros(attrs, standard.getIdCIOD(sopClassUid),
+					standard.getFunctionalGroupMacrosBySOP(sopClassUid), findings);
 		}
 		catch (SOPNotFoundException e) {
 			// The bundled standard has no IOD for this SOP Class. The dcm4che registry
@@ -297,6 +311,11 @@ public class DicomConformanceValidator {
 			// Repeating-group placeholder paths like 60xx3000 are skipped
 			return;
 		}
+		if (segments.length == 2 && isFunctionalGroupsSequence(tag)) {
+			// The standard JSON flattens every Functional Group Macro under both the
+			// Shared and the Per-frame sequences: checked by checkFunctionalGroupMacros
+			return;
+		}
 		if (segments.length == 1) {
 			checkType(attrs, bulkPresentTags, tag, null, type, moduleId, findings);
 			return;
@@ -312,6 +331,121 @@ public class DicomConformanceValidator {
 				// One finding per instance is enough, whatever the number of items
 				break;
 			}
+		}
+	}
+
+	/**
+	 * Whether the Shared or the first Per-frame Functional Groups item contains a tag.
+	 */
+	private static boolean containsInFunctionalGroups(Attributes attrs, int tag) {
+		Attributes shared = attrs.getNestedDataset(Tag.SharedFunctionalGroupsSequence);
+		Attributes firstFrame = attrs.getNestedDataset(Tag.PerFrameFunctionalGroupsSequence);
+		return (shared != null && shared.contains(tag)) || (firstFrame != null && firstFrame.contains(tag));
+	}
+
+	private static boolean isFunctionalGroupsSequence(int tag) {
+		return tag == Tag.SharedFunctionalGroupsSequence || tag == Tag.PerFrameFunctionalGroupsSequence;
+	}
+
+	/**
+	 * Enhanced multi-frame: checks the Functional Group Macros of the IOD (e.g. PS3.3
+	 * Table A.55-2) against the Shared (5200,9229) and Per-frame (5200,9230) Functional
+	 * Groups Sequences. A macro is carried either in the single Shared item or in every
+	 * Per-frame item (PS3.3 C.7.6.16). It is mandatory for usage M and for usage C when
+	 * its curated condition holds; otherwise (U, or C with an unknown condition) it is
+	 * only validated when present. Per-frame-only macros (e.g. Frame Content) must not be
+	 * shared.
+	 */
+	private void checkFunctionalGroupMacros(Attributes attrs, String ciodId, List<FunctionalGroupMacro> macros,
+			List<ConformanceFinding> findings) {
+		Sequence sharedSequence = attrs.getSequence(Tag.SharedFunctionalGroupsSequence);
+		Attributes shared = sharedSequence == null || sharedSequence.isEmpty() ? null : sharedSequence.get(0);
+		Sequence perFrameSequence = attrs.getSequence(Tag.PerFrameFunctionalGroupsSequence);
+		List<Attributes> perFrame = perFrameSequence == null ? List.of() : perFrameSequence;
+		if (macros.isEmpty() || (shared == null && perFrame.isEmpty())) {
+			// Missing functional groups sequences are reported by the module check
+			return;
+		}
+		Set<String> perFrameOnlyMacros = rules.getPerFrameOnlyFunctionalGroupMacros();
+		for (FunctionalGroupMacro macro : macros) {
+			Map<String, String> sequences = rules.getFunctionalGroupMacros().get(macro.id());
+			if (sequences == null) {
+				continue;
+			}
+			boolean perFrameOnly = perFrameOnlyMacros.contains(macro.id()) || (macro.conditionalStatement() != null
+					&& NOT_SHARED_STATEMENT.matcher(macro.conditionalStatement()).find());
+			boolean required = isFunctionalGroupMacroRequired(attrs, ciodId, macro);
+			sequences.forEach((hexTag, type) -> {
+				Integer tag = parseTag(hexTag);
+				if (tag != null) {
+					checkFunctionalGroupSequence(shared, perFrame, tag, type, macro, required, perFrameOnly, findings);
+				}
+			});
+		}
+	}
+
+	private boolean isFunctionalGroupMacroRequired(Attributes attrs, String ciodId, FunctionalGroupMacro macro) {
+		if (Module.MANDATORY.equals(macro.usage())) {
+			return true;
+		}
+		if (!FunctionalGroupMacro.CONDITIONAL.equals(macro.usage())) {
+			return false;
+		}
+		ConditionalRequirement requirement = rules.getFunctionalGroupConditions().get(ciodId + "/" + macro.id());
+		return requirement != null && ConditionEvaluator.evaluate(attrs, requirement.getRequiredWhen()) == Ternary.TRUE;
+	}
+
+	private void checkFunctionalGroupSequence(Attributes shared, List<Attributes> perFrame, int tag, String type,
+			FunctionalGroupMacro macro, boolean required, boolean perFrameOnly, List<ConformanceFinding> findings) {
+		String name = attributeName(tag);
+		boolean inShared = shared != null && shared.contains(tag);
+		long inFrames = perFrame.stream().filter(frame -> frame.contains(tag)).count();
+		if (inShared && perFrameOnly) {
+			findings.add(new ConformanceFinding(displayPath(Tag.SharedFunctionalGroupsSequence, tag), name, macro.id(),
+					Severity.ERROR, CheckKind.MULTIFRAME, "only in the Per-frame Functional Groups",
+					"present in the Shared Functional Groups"));
+		}
+		if (!inShared && inFrames == 0) {
+			if (required) {
+				addMissingFunctionalGroup(tag, type, macro, perFrameOnly, findings);
+			}
+			return;
+		}
+		if (!inShared && inFrames < perFrame.size()) {
+			findings.add(new ConformanceFinding(displayPath(Tag.PerFrameFunctionalGroupsSequence, tag), name,
+					macro.id(), Severity.ERROR, CheckKind.MULTIFRAME,
+					"in the Shared Functional Groups or in every Per-frame Functional Groups item",
+					"missing in %d of %d frames".formatted(perFrame.size() - inFrames, perFrame.size())));
+		}
+		if (TYPE_1.equals(type)) {
+			// A functional group sequence present with no item is empty
+			if (inShared && !shared.containsValue(tag)) {
+				findings.add(new ConformanceFinding(displayPath(Tag.SharedFunctionalGroupsSequence, tag), name,
+						macro.id(), Severity.ERROR, CheckKind.TYPE1_EMPTY, "Type 1: present with a value",
+						"Attribute is present but empty"));
+			}
+			else if (perFrame.stream().anyMatch(frame -> frame.contains(tag) && !frame.containsValue(tag))) {
+				findings.add(new ConformanceFinding(displayPath(Tag.PerFrameFunctionalGroupsSequence, tag), name,
+						macro.id(), Severity.ERROR, CheckKind.TYPE1_EMPTY, "Type 1: present with a value",
+						"Attribute is present but empty"));
+			}
+		}
+	}
+
+	private void addMissingFunctionalGroup(int tag, String type, FunctionalGroupMacro macro, boolean perFrameOnly,
+			List<ConformanceFinding> findings) {
+		String display = perFrameOnly ? displayPath(Tag.PerFrameFunctionalGroupsSequence, tag)
+				: FUNCTIONAL_GROUPS_DISPLAY + " > " + TagUtils.toString(tag);
+		String location = perFrameOnly ? "in every Per-frame Functional Groups item"
+				: "in the Shared or in every Per-frame Functional Groups item";
+		String usage = "macro usage " + macro.usage();
+		if (TYPE_1.equals(type)) {
+			findings.add(new ConformanceFinding(display, attributeName(tag), macro.id(), Severity.ERROR,
+					CheckKind.TYPE1_MISSING, "Type 1 %s (%s)".formatted(location, usage), "Attribute is missing"));
+		}
+		else if (TYPE_2.equals(type)) {
+			findings.add(new ConformanceFinding(display, attributeName(tag), macro.id(), Severity.WARNING,
+					CheckKind.TYPE2_MISSING, "Type 2 %s (%s)".formatted(location, usage), "Attribute is missing"));
 		}
 	}
 
@@ -575,11 +709,14 @@ public class DicomConformanceValidator {
 
 	/**
 	 * dciodvfy {@code LateralityRequired} exclusions: another laterality is already
-	 * given, or laterality does not apply to this kind of object.
+	 * given, or laterality does not apply to this kind of object. In enhanced multi-frame
+	 * objects the Frame Anatomy Sequence (Frame Laterality) is carried by the Shared or
+	 * Per-frame Functional Groups.
 	 */
 	private static boolean lateralityConveyedOrNotApplicable(Attributes attrs) {
 		if (attrs.containsValue(Tag.ImageLaterality) || attrs.contains(Tag.MeasurementLaterality)
-				|| attrs.contains(Tag.FrameAnatomySequence) || attrs.contains(Tag.SegmentSequence)
+				|| attrs.contains(Tag.FrameAnatomySequence)
+				|| containsInFunctionalGroups(attrs, Tag.FrameAnatomySequence) || attrs.contains(Tag.SegmentSequence)
 				|| attrs.contains(Tag.SpecimenDescriptionSequence)) {
 			return true;
 		}
