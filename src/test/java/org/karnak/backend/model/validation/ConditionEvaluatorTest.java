@@ -116,4 +116,24 @@ class ConditionEvaluatorTest {
 		assertEquals(Ternary.UNKNOWN, ConditionEvaluator.evaluate(new Attributes(), null));
 	}
 
+	@Test
+	void value_index_restricts_the_comparison_to_one_value() {
+		var dcm = new Attributes();
+		dcm.setString(Tag.ImageType, VR.CS, "DERIVED", "PRIMARY", "ORIGINAL");
+
+		assertEquals(Ternary.TRUE, ConditionEvaluator.evaluate(dcm,
+				condition("{\"tag\":\"00080008\",\"valueIndex\":1,\"equals\":\"DERIVED\"}")));
+		assertEquals(Ternary.FALSE, ConditionEvaluator.evaluate(dcm,
+				condition("{\"tag\":\"00080008\",\"valueIndex\":1,\"in\":[\"ORIGINAL\",\"MIXED\"]}")));
+	}
+
+	@Test
+	void value_index_beyond_the_values_is_unknown() {
+		var dcm = new Attributes();
+		dcm.setString(Tag.ImageType, VR.CS, "ORIGINAL", "PRIMARY");
+
+		assertEquals(Ternary.UNKNOWN, ConditionEvaluator.evaluate(dcm,
+				condition("{\"tag\":\"00080008\",\"valueIndex\":3,\"equals\":\"ASL\"}")));
+	}
+
 }

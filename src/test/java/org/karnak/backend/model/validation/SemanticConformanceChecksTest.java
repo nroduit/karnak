@@ -162,6 +162,19 @@ class SemanticConformanceChecksTest {
 	}
 
 	@Test
+	void paired_body_part_with_frame_laterality_in_shared_functional_groups_is_clean() {
+		var dcm = minimalCt();
+		dcm.setString(Tag.BodyPartExamined, VR.CS, "BREAST");
+		var frameAnatomy = new Attributes();
+		frameAnatomy.setString(Tag.FrameLaterality, VR.CS, "R");
+		var shared = new Attributes();
+		shared.newSequence(Tag.FrameAnatomySequence, 1).add(frameAnatomy);
+		dcm.newSequence(Tag.SharedFunctionalGroupsSequence, 1).add(shared);
+
+		assertFalse(hasKind(validate(dcm), CheckKind.LATERALITY));
+	}
+
+	@Test
 	void unpaired_body_part_without_laterality_is_not_flagged() {
 		var dcm = minimalCt();
 		dcm.setString(Tag.BodyPartExamined, VR.CS, "CHEST");

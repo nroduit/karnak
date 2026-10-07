@@ -64,6 +64,12 @@ public class CuratedValidationRules {
 
 	private List<String> zeroIsWarning;
 
+	private Map<String, Map<String, String>> functionalGroupMacros;
+
+	private List<String> perFrameOnlyFunctionalGroupMacros;
+
+	private Map<String, ConditionalRequirement> functionalGroupConditions;
+
 	public static CuratedValidationRules load() {
 		try (InputStream in = CuratedValidationRules.class.getResourceAsStream(RESOURCE);
 				Reader reader = new InputStreamReader(Objects.requireNonNull(in, RESOURCE), StandardCharsets.UTF_8)) {
@@ -141,6 +147,31 @@ public class CuratedValidationRules {
 	 */
 	public Set<Integer> getZeroIsWarningAttributes() {
 		return parseTags(zeroIsWarning);
+	}
+
+	/**
+	 * Top-level sequence(s) of each Functional Group Macro with their Type inside the
+	 * macro, keyed by macroId then lowercase 8-digit hex tag.
+	 */
+	public Map<String, Map<String, String>> getFunctionalGroupMacros() {
+		return functionalGroupMacros == null ? Map.of() : functionalGroupMacros;
+	}
+
+	/**
+	 * Functional Group Macros that may only be part of the Per-frame Functional Groups
+	 * Sequence (e.g. Frame Content).
+	 */
+	public Set<String> getPerFrameOnlyFunctionalGroupMacros() {
+		return perFrameOnlyFunctionalGroupMacros == null ? Set.of()
+				: new LinkedHashSet<>(perFrameOnlyFunctionalGroupMacros);
+	}
+
+	/**
+	 * Machine-evaluable usage conditions of the C Functional Group Macros, keyed by
+	 * {@code ciodId/macroId} and evaluated on the top-level dataset.
+	 */
+	public Map<String, ConditionalRequirement> getFunctionalGroupConditions() {
+		return functionalGroupConditions == null ? Map.of() : functionalGroupConditions;
 	}
 
 	private static Set<Integer> parseTags(List<String> hexTags) {

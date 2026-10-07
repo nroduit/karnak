@@ -29,10 +29,13 @@ public class StandardDICOM {
 
 	private final AttributeDetails attributeDetails;
 
+	private final CIODToFunctionalGroupMacros ciodToFunctionalGroupMacros;
+
 	public StandardDICOM() {
 		sops = new SOPS();
 		moduleToAttributes = new ModuleToAttributes();
 		attributeDetails = new AttributeDetails();
+		ciodToFunctionalGroupMacros = new CIODToFunctionalGroupMacros();
 	}
 
 	public static String cleanTagPath(String tagPath) {
@@ -61,6 +64,14 @@ public class StandardDICOM {
 
 	public Map<Module, Map<String, ModuleAttribute>> getModulesBySOP(String sopUID) throws SOPNotFoundException {
 		return sops.getModuleToAttribute(sopUID, moduleToAttributes);
+	}
+
+	/**
+	 * The Functional Group Macros of the IOD of a SOP Class with their usage, empty for
+	 * an IOD without functional groups.
+	 */
+	public List<FunctionalGroupMacro> getFunctionalGroupMacrosBySOP(String sopUID) throws SOPNotFoundException {
+		return ciodToFunctionalGroupMacros.getMacros(getIdCIOD(sopUID));
 	}
 
 	public List<String> getModulesNameBySOP(String sopUID) throws SOPNotFoundException {

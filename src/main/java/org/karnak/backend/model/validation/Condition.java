@@ -26,6 +26,8 @@ import org.jspecify.annotations.NullUnmarked;
  * <li>{@code in} — the tag holds one of these values.</li>
  * <li>{@code notIn} — the tag holds none of these values.</li>
  * </ul>
+ * An optional {@code valueIndex} (1-based) restricts {@code equals}/{@code in}/
+ * {@code notIn} to that value of a multi-valued attribute (e.g. Image Type Value 1).
  */
 @NullUnmarked
 public class Condition {
@@ -39,6 +41,8 @@ public class Condition {
 	private List<String> in;
 
 	private List<String> notIn;
+
+	private Integer valueIndex;
 
 	private List<Condition> allOf;
 
@@ -62,6 +66,10 @@ public class Condition {
 
 	public List<String> getNotIn() {
 		return notIn;
+	}
+
+	public Integer getValueIndex() {
+		return valueIndex;
 	}
 
 	public List<Condition> getAllOf() {

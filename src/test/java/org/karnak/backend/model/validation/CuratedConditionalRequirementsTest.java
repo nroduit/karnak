@@ -13,12 +13,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
+import org.karnak.backend.model.dicominnolitics.JsonCIODtoFuncGroupMacro;
+import org.karnak.backend.model.dicominnolitics.StandardCIODtoFuncGroupMacros;
 
 /**
  * Guards the shipped {@code curated-validation-rules.json}: every conditional-requirement
@@ -55,6 +60,34 @@ class CuratedConditionalRequirementsTest {
 	@Test
 	void every_predicate_is_well_formed() {
 		conditions.forEach((key, requirement) -> assertWellFormed(key, requirement.getRequiredWhen()));
+	}
+
+	@Test
+	void every_functional_group_macro_of_the_standard_has_its_sequence() {
+		Map<String, Map<String, String>> macros = CuratedValidationRules.load().getFunctionalGroupMacros();
+		Arrays.stream(StandardCIODtoFuncGroupMacros.readJsonCIODToFuncGroupMacros())
+			.map(JsonCIODtoFuncGroupMacro::getMacroId)
+			.distinct()
+			.forEach(macroId -> {
+				Map<String, String> sequences = macros.get(macroId);
+				assertTrue(sequences != null && !sequences.isEmpty(), "no curated sequence for macro " + macroId);
+				sequences.keySet()
+					.forEach(tag -> assertTrue(tag.matches("[0-9a-f]{8}"), "bad tag " + tag + " in " + macroId));
+			});
+	}
+
+	@Test
+	void every_functional_group_condition_targets_a_conditional_macro() {
+		Set<String> conditionalMacros = Arrays.stream(StandardCIODtoFuncGroupMacros.readJsonCIODToFuncGroupMacros())
+			.filter(macro -> "C".equals(macro.getUsage()))
+			.map(macro -> macro.getCiodId() + "/" + macro.getMacroId())
+			.collect(Collectors.toSet());
+		Map<String, ConditionalRequirement> fgConditions = CuratedValidationRules.load().getFunctionalGroupConditions();
+		assertFalse(fgConditions.isEmpty());
+		fgConditions.forEach((key, requirement) -> {
+			assertTrue(conditionalMacros.contains(key), "not a C macro of the standard: " + key);
+			assertWellFormed(key, requirement.getRequiredWhen());
+		});
 	}
 
 	private static void assertWellFormed(String key, Condition condition) {

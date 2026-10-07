@@ -2085,5 +2085,1441 @@
     "00181170",
     "00101030",
     "00101020"
-  ]
+  ],
+  "_functionalGroupMacrosComment": "Top-level sequence (and its Type within the macro) carried by each Functional Group Macro, keyed by the macroId of ciod_to_func_group_macros.json. Derived from innolitics macro_to_attributes.json (top-level SQ attributes). The vendored module_to_attributes.json flattens each macro under both the Shared (5200,9229) and the Per-frame (5200,9230) Functional Groups Sequences; the validator uses this map with the macro usage instead.",
+  "functionalGroupMacros": {
+    "breast-biopsy-target": {
+      "00182041": "1C"
+    },
+    "breast-x-ray-acquisition-dose": {
+      "00189542": "1"
+    },
+    "breast-x-ray-detector": {
+      "00189541": "1"
+    },
+    "breast-x-ray-geometry": {
+      "00189476": "1"
+    },
+    "breast-x-ray-isocenter-reference-system": {
+      "00189462": "1"
+    },
+    "breast-x-ray-positioner": {
+      "00189405": "1"
+    },
+    "camera-position": {
+      "0034000b": "1"
+    },
+    "cardiac-synchronization": {
+      "00189118": "1"
+    },
+    "confocal-microscopy-image-frame-type": {
+      "00480116": "1"
+    },
+    "contrast-bolus-usage": {
+      "00189341": "1"
+    },
+    "ct-acquisition-details": {
+      "00189304": "1"
+    },
+    "ct-acquisition-type": {
+      "00189301": "1"
+    },
+    "ct-additional-x-ray-source": {
+      "00189360": "1"
+    },
+    "ct-exposure": {
+      "00189321": "1"
+    },
+    "ct-geometry": {
+      "00189312": "1"
+    },
+    "ct-image-frame-type": {
+      "00189329": "1"
+    },
+    "ct-pixel-value-transformation": {
+      "00289145": "1"
+    },
+    "ct-position": {
+      "00189326": "1"
+    },
+    "ct-reconstruction": {
+      "00189314": "1"
+    },
+    "ct-table-dynamics": {
+      "00189308": "1"
+    },
+    "ct-x-ray-details": {
+      "00189325": "1"
+    },
+    "derivation-image": {
+      "00089124": "2"
+    },
+    "frame-anatomy": {
+      "00209071": "1"
+    },
+    "frame-content": {
+      "00209111": "1"
+    },
+    "frame-display-shutter": {
+      "00189472": "1"
+    },
+    "frame-pixel-shift": {
+      "00289415": "1"
+    },
+    "frame-usefulness": {
+      "00340009": "1"
+    },
+    "frame-voi-lut": {
+      "00289132": "1"
+    },
+    "frame-voi-lut-with-lut": {
+      "00289132": "1"
+    },
+    "functional-mr": {
+      "00189621": "1"
+    },
+    "identity-pixel-value-transformation": {
+      "00289145": "1"
+    },
+    "image-data-type": {
+      "00189807": "1"
+    },
+    "image-frame-conversion-source": {
+      "00209172": "1"
+    },
+    "intravascular-frame-content": {
+      "00520027": "1"
+    },
+    "intravascular-oct-frame-content": {
+      "00520029": "1"
+    },
+    "intravascular-oct-frame-type": {
+      "00520025": "1"
+    },
+    "irradiation-event-identification": {
+      "00189477": "1"
+    },
+    "mr-arterial-spin-labeling": {
+      "00189251": "1"
+    },
+    "mr-averages": {
+      "00189119": "1"
+    },
+    "mr-diffusion": {
+      "00189117": "1"
+    },
+    "mr-echo": {
+      "00189114": "1"
+    },
+    "mr-fov-geometry": {
+      "00189125": "1"
+    },
+    "mr-image-frame-type": {
+      "00189226": "1"
+    },
+    "mr-imaging-modifier": {
+      "00189006": "1"
+    },
+    "mr-metabolite-map": {
+      "00189152": "1"
+    },
+    "mr-modifier": {
+      "00189115": "1"
+    },
+    "mr-receive-coil": {
+      "00189042": "1"
+    },
+    "mr-spatial-saturation": {
+      "00189107": "2"
+    },
+    "mr-spectroscopy-fov-geometry": {
+      "00189103": "1"
+    },
+    "mr-spectroscopy-frame-type": {
+      "00189227": "1"
+    },
+    "mr-timing-and-related-parameters": {
+      "00189112": "1"
+    },
+    "mr-transmit-coil": {
+      "00189049": "1"
+    },
+    "mr-velocity-encoding": {
+      "00189197": "1"
+    },
+    "multi-energy-ct-characteristics": {
+      "00189364": "1C"
+    },
+    "multi-energy-ct-processing": {
+      "00189363": "3"
+    },
+    "ophthalmic-frame-location": {
+      "00220031": "1"
+    },
+    "optical-path-identification": {
+      "00480207": "1"
+    },
+    "parametric-map-frame-type": {
+      "00409092": "1"
+    },
+    "patient-orientation-in-frame": {
+      "00209450": "1"
+    },
+    "patient-physiological-state": {
+      "00189771": "1"
+    },
+    "pet-detector-motion-details": {
+      "00189733": "1"
+    },
+    "pet-frame-acquisition": {
+      "00189732": "1"
+    },
+    "pet-frame-correction-factors": {
+      "00189736": "1"
+    },
+    "pet-frame-type": {
+      "00189751": "1"
+    },
+    "pet-position": {
+      "00189735": "1"
+    },
+    "pet-reconstruction": {
+      "00189749": "1"
+    },
+    "pet-table-dynamics": {
+      "00189734": "1"
+    },
+    "photoacoustic-excitation-characteristics": {
+      "00189821": "1"
+    },
+    "photoacoustic-image-data-type": {
+      "00189807": "1"
+    },
+    "photoacoustic-image-frame-type": {
+      "00189835": "1"
+    },
+    "photoacoustic-reconstruction-algorithm": {
+      "0018993d": "3"
+    },
+    "pixel-intensity-relationship-lut": {
+      "00289422": "1"
+    },
+    "pixel-measures": {
+      "00289110": "1"
+    },
+    "pixel-value-transformation": {
+      "00289145": "1"
+    },
+    "plane-orientation-patient": {
+      "00209116": "1"
+    },
+    "plane-orientation-volume": {
+      "0020930f": "1"
+    },
+    "plane-position-patient": {
+      "00209113": "1"
+    },
+    "plane-position-slide": {
+      "0048021a": "1"
+    },
+    "plane-position-volume": {
+      "0020930e": "1"
+    },
+    "radiopharmaceutical-usage": {
+      "00189737": "1"
+    },
+    "real-world-value-mapping": {
+      "00409096": "1"
+    },
+    "referenced-image": {
+      "00081140": "2"
+    },
+    "respiratory-synchronization": {
+      "00209253": "1"
+    },
+    "rt-beam-limiting-device-opening-sequence": {
+      "300a0656": "1C"
+    },
+    "rt-image-frame-context": {
+      "30020103": "1"
+    },
+    "rt-image-frame-general-content": {
+      "30020102": "1"
+    },
+    "rt-image-frame-imaging-device-position": {
+      "30020109": "1"
+    },
+    "rt-image-frame-radiation-acquisition-parameters": {
+      "3002010c": "1"
+    },
+    "segmentation": {
+      "0062000a": "1"
+    },
+    "specimen-reference": {
+      "00480110": "2"
+    },
+    "stored-value-color-range": {
+      "00281230": "1"
+    },
+    "temporal-position": {
+      "00209310": "1"
+    },
+    "time-of-frame": {
+      "0034000d": "1"
+    },
+    "unassigned-per-frame-converted-attributes": {
+      "00209171": "1C"
+    },
+    "unassigned-shared-converted-attributes": {
+      "00209170": "1C"
+    },
+    "us-image-description": {
+      "00189806": "1"
+    },
+    "whole-slide-microscopy-image-frame-type": {
+      "00400710": "1"
+    },
+    "x-ray-3d-frame-type": {
+      "00189504": "1"
+    },
+    "x-ray-calibration-device-usage": {
+      "00189455": "1"
+    },
+    "x-ray-collimator": {
+      "00189407": "1"
+    },
+    "x-ray-exposure-control-sensing-regions": {
+      "00189434": "1"
+    },
+    "x-ray-field-of-view": {
+      "00189432": "1"
+    },
+    "x-ray-filter": {
+      "00189556": "1"
+    },
+    "x-ray-frame-acquisition": {
+      "00189417": "1"
+    },
+    "x-ray-frame-characteristics": {
+      "00189412": "1"
+    },
+    "x-ray-frame-detector-parameters": {
+      "00189451": "1"
+    },
+    "x-ray-frame-pixel-data-properties": {
+      "00289443": "1"
+    },
+    "x-ray-geometry": {
+      "00189476": "1"
+    },
+    "x-ray-grid": {
+      "00189555": "1"
+    },
+    "x-ray-isocenter-reference-system": {
+      "00189462": "1"
+    },
+    "x-ray-object-thickness": {
+      "00189456": "1"
+    },
+    "x-ray-positioner": {
+      "00189405": "1"
+    },
+    "x-ray-projection-pixel-calibration": {
+      "00189401": "1"
+    },
+    "x-ray-table-position": {
+      "00189406": "1"
+    }
+  },
+  "_perFrameOnlyFunctionalGroupMacrosComment": "Functional Group Macros that may only be part of the Per-frame Functional Groups Sequence (PS3.3 C.7.6.16.2.2 Frame Content), whatever their conditional statement says. Macros whose conditional statement says they shall/may not be used as a Shared Functional Group are detected automatically.",
+  "perFrameOnlyFunctionalGroupMacros": [
+    "frame-content"
+  ],
+  "_functionalGroupConditionsComment": "Machine-evaluable usage conditions of Functional Group Macros with usage C, keyed by ciodId/macroId and evaluated on the top-level dataset. A C macro without an entry (condition on frame content, other macros or free text) is only validated when present. valueIndex (1-based) restricts the comparison to one value of a multi-valued attribute.",
+  "functionalGroupConditions": {
+    "breast-projection-x-ray-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "breast-projection-x-ray-image/derivation-image": {
+      "requiredWhen": {
+        "anyOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "DERIVED"
+          },
+          {
+            "allOf": [
+              {
+                "tag": "00080008",
+                "valueIndex": 1,
+                "equals": "ORIGINAL"
+              },
+              {
+                "tag": "00080068",
+                "equals": "FOR PRESENTATION"
+              }
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if the Image Type (0008,0008) Value 1 equals DERIVED or Value 1 is ORIGINAL and Presentation Intent Type equals FOR PRESENTATION. May be present otherwise."
+    },
+    "breast-tomosynthesis-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "breast-tomosynthesis-image/derivation-image": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals DERIVED."
+    },
+    "confocal-microscopy-image/optical-path-identification": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "confocal-microscopy-tiled-pyramidal-image/optical-path-identification": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "enhanced-continuous-rt-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise"
+    },
+    "enhanced-continuous-rt-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-continuous-rt-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-continuous-rt-image/rt-image-frame-radiation-acquisition-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL. May be present otherwise."
+    },
+    "enhanced-ct-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-ct-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-ct-image/ct-acquisition-details": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-acquisition-type": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-exposure": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-geometry": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-position": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise"
+    },
+    "enhanced-ct-image/ct-table-dynamics": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-x-ray-details": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/real-world-value-mapping": {
+      "requiredWhen": {
+        "tag": "00189361",
+        "equals": "YES"
+      },
+      "_condition": "Required if Multi-energy CT Acquisition (0018,9361) is YES. May be present otherwise."
+    },
+    "enhanced-ct-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-mr-color-image/mr-arterial-spin-labeling": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "ASL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 is ASL. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-averages": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-echo": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-imaging-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-metabolite-map": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "METABOLITE_MAP"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 equals METABOLITE_MAP. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-receive-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-timing-and-related-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-transmit-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/pixel-value-transformation": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "enhanced-mr-color-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-mr-image/mr-arterial-spin-labeling": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "ASL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 is ASL. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-averages": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-echo": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-imaging-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-metabolite-map": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "METABOLITE_MAP"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 equals METABOLITE_MAP. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-receive-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-timing-and-related-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-transmit-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/pixel-value-transformation": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "enhanced-mr-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-pet-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "tag": "00189037",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-detector-motion-details": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00540202",
+            "notIn": [
+              "STATIONARY"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and Type of Detector Motion (0054,0202) is not equal to STATIONARY."
+    },
+    "enhanced-pet-image/pet-frame-acquisition": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-frame-correction-factors": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-position": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-reconstruction": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-table-dynamics": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00181134",
+            "equals": "DYNAMIC"
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and Table Motion (0018,1134) is equal to DYNAMIC."
+    },
+    "enhanced-pet-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "tag": "00189170",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE. May be present otherwise."
+    },
+    "enhanced-rt-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-rt-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-rt-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-rt-image/rt-image-frame-radiation-acquisition-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL. May be present otherwise."
+    },
+    "enhanced-us-volume/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "enhanced-us-volume/plane-orientation-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "enhanced-us-volume/plane-position-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "enhanced-xa-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "enhanced-xa-image/patient-orientation-in-frame": {
+      "requiredWhen": {
+        "tag": "00189474",
+        "equals": "YES"
+      },
+      "_condition": "Required if C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES. May be present otherwise."
+    },
+    "enhanced-xa-image/pixel-intensity-relationship-lut": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "equals": "LOG"
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) equals LOG. May be present otherwise."
+    },
+    "enhanced-xa-image/x-ray-collimator": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-xa-image/x-ray-frame-detector-parameters": {
+      "requiredWhen": {
+        "tag": "00189420",
+        "equals": "DIGITAL_DETECTOR"
+      },
+      "_condition": "Required if X-Ray Receptor Type (0018,9420) is present and equals DIGITAL_DETECTOR."
+    },
+    "enhanced-xa-image/x-ray-positioner": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00189474",
+            "equals": "YES"
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES. May be present otherwise."
+    },
+    "enhanced-xa-image/x-ray-projection-pixel-calibration": {
+      "requiredWhen": {
+        "tag": "00189474",
+        "equals": "YES"
+      },
+      "_condition": "Required if C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES."
+    },
+    "enhanced-xa-image/x-ray-table-position": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00189474",
+            "equals": "YES"
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES. May be present otherwise."
+    },
+    "enhanced-xrf-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "enhanced-xrf-image/pixel-intensity-relationship-lut": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "equals": "LOG"
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) equals LOG. May be present otherwise."
+    },
+    "enhanced-xrf-image/x-ray-frame-detector-parameters": {
+      "requiredWhen": {
+        "tag": "00189420",
+        "equals": "DIGITAL_DETECTOR"
+      },
+      "_condition": "Required if X-Ray Receptor Type (0018,9420) is present and equals DIGITAL_DETECTOR."
+    },
+    "intravascular-optical-coherence-tomography-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "tag": "00189037",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE. May be present otherwise."
+    },
+    "intravascular-optical-coherence-tomography-image/intravascular-frame-content": {
+      "requiredWhen": {
+        "anyOf": [
+          {
+            "tag": "00183100",
+            "equals": "MEASURED"
+          },
+          {
+            "tag": "00080068",
+            "equals": "FOR PRESENTATION"
+          }
+        ]
+      },
+      "_condition": "Required if Intravascular Acquisition (0018,3100) equals MEASURED or Presentation Intent Type (0008,0068) equals FOR PRESENTATION."
+    },
+    "intravascular-optical-coherence-tomography-image/intravascular-oct-frame-content": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PROCESSING"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) equals FOR PROCESSING."
+    },
+    "intravascular-optical-coherence-tomography-image/pixel-intensity-relationship-lut": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "equals": "LOG"
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) equals LOG. May be present otherwise."
+    },
+    "intravascular-optical-coherence-tomography-image/pixel-measures": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PRESENTATION"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) is FOR PRESENTATION."
+    },
+    "mr-spectroscopy/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "mr-spectroscopy/mr-averages": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-echo": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-receive-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-timing-and-related-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-transmit-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "ophthalmic-tomography-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "tag": "00189037",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE. May be present otherwise."
+    },
+    "ophthalmic-tomography-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used. May not be used as a Shared Functional Group"
+    },
+    "parametric-map/stored-value-color-range": {
+      "requiredWhen": {
+        "tag": "00089205",
+        "equals": "COLOR_RANGE"
+      },
+      "_condition": "Required if Pixel Presentation (0008,9205) in the Parametric Map Image Module equals COLOR_RANGE."
+    },
+    "photoacoustic-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "photoacoustic-image/plane-orientation-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "photoacoustic-image/plane-position-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "segmentation/segmentation": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL"
+    },
+    "vl-whole-slide-microscopy-image/optical-path-identification": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "vl-whole-slide-microscopy-image/plane-position-slide": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "x-ray-3d-angiographic-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "x-ray-3d-angiographic-image/derivation-image": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals DERIVED."
+    },
+    "x-ray-3d-craniofacial-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "x-ray-3d-craniofacial-image/derivation-image": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals DERIVED."
+    }
+  }
 }
