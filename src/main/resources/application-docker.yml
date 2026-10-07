@@ -1,0 +1,6 @@
+#  --------------------------------------------------------
+#  Karnak Docker Application properties
+#  --------------------------------------------------------
+#Logstash
+logstash:
+  servers: logstash:9689

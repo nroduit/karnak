@@ -1,0 +1,11 @@
+#  --------------------------------------------------------
+#  Karnak Kheops Application properties
+#  --------------------------------------------------------
+#Keycloak Kheops
+keycloak:
+  realm: Karnak
+  auth-server-url: https://keycloak.kheops.online/auth/
+  ssl-required: external
+  resource: karnak
+  credentials.secret: cf259b46-a9e3-4ac9-a4df-08d73fb68b3c
+  confidential-port: 0
