@@ -11,7 +11,7 @@ info:
 name: test-YAML
 environment: LOCAL
 karnakadmin: admin
-karnakpassword: admin
+karnakpassword: karnak
 
 logging:
   level:
@@ -26,6 +26,8 @@ logging:
       springframework.core.io.support: INFO
       weasis: DEBUG
       karnak: DEBUG
+      apache:
+        kafka: ERROR
     root: INFO
 server:
   port: 8081

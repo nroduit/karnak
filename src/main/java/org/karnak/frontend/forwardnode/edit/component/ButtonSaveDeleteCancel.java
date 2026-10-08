@@ -13,8 +13,10 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import lombok.Getter;
+import org.weasis.core.util.annotations.Generated;
 
 @Getter
+@Generated()
 public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private final Button save;
@@ -42,7 +44,7 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private void setButtonSave() {
 		save.getStyle().setFlexGrow("1");
-		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		save.addThemeVariants(ButtonVariant.PRIMARY);
 	}
 
 	private void setButtonCancel() {
@@ -51,7 +53,7 @@ public class ButtonSaveDeleteCancel extends HorizontalLayout {
 
 	private void setButtonDelete() {
 		delete.getStyle().setFlexGrow("1");
-		delete.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		delete.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 	}
 
 	@Override

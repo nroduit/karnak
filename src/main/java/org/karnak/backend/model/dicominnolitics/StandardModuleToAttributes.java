@@ -9,42 +9,21 @@
  */
 package org.karnak.backend.model.dicominnolitics;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.stream.JsonReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-
 public class StandardModuleToAttributes {
 
-	private static final String moduleToAttributesFileName = "module_to_attributes.json";
+	private static final String MODULE_TO_ATTRIBUTES_FILENAME = "module_to_attributes.json";
 
-	private static jsonModuleToAttribute[] moduleToAttributes;
+	private final JsonModuleToAttribute[] moduleToAttributes;
 
 	public StandardModuleToAttributes() {
-		URL url = this.getClass().getResource(moduleToAttributesFileName);
-		moduleToAttributes = read(url);
+		this.moduleToAttributes = readJsonModuleToAttributes();
 	}
 
-	public static jsonModuleToAttribute[] readJsonModuleToAttributes() {
-		URL url = StandardModuleToAttributes.class.getResource(moduleToAttributesFileName);
-		return read(url);
+	public static JsonModuleToAttribute[] readJsonModuleToAttributes() {
+		return JsonStandardReader.read(MODULE_TO_ATTRIBUTES_FILENAME, JsonModuleToAttribute[].class);
 	}
 
-	private static jsonModuleToAttribute[] read(URL url) {
-		Gson gson = new Gson();
-		try {
-			JsonReader reader = new JsonReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8));
-			return gson.fromJson(reader, jsonModuleToAttribute[].class);
-		}
-		catch (Exception e) {
-			throw new JsonParseException(String.format("Cannot parse json %s correctly", moduleToAttributesFileName),
-					e);
-		}
-	}
-
-	public jsonModuleToAttribute[] getModuleToAttributes() {
+	public JsonModuleToAttribute[] getModuleToAttributes() {
 		return moduleToAttributes;
 	}
 

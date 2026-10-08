@@ -37,40 +37,15 @@ public class ShiftRangeDate {
 
 	public static String shift(Attributes dcm, int tag, List<ArgumentEntity> argumentEntities, HMAC hmac)
 			throws DateTimeException {
-		try {
-			verifyShiftArguments(argumentEntities);
-		}
-		catch (IllegalArgumentException e) {
-			throw e;
-		}
-		int shiftMaxDays = -1;
-		int shiftMaxSeconds = -1;
-		int shiftMinDays = 0;
-		int shiftMinSeconds = 0;
-		for (ArgumentEntity argumentEntity : argumentEntities) {
-			final String key = argumentEntity.getArgumentKey();
-			final String value = argumentEntity.getArgumentValue();
+		verifyShiftArguments(argumentEntities);
 
-			try {
-				if (key.equals("max_seconds")) {
-					shiftMaxSeconds = Integer.parseInt(value);
-				}
-				if (key.equals("max_days")) {
-					shiftMaxDays = Integer.parseInt(value);
-				}
-				if (key.equals("min_seconds")) {
-					shiftMinSeconds = Integer.parseInt(value);
-				}
-				if (key.equals("min_days")) {
-					shiftMinDays = Integer.parseInt(value);
-				}
-			}
-			catch (Exception e) {
-				log.error("args {} is not correct", value, e);
-			}
-		}
+		int shiftMaxSeconds = ArgumentUtil.intValue(argumentEntities, "max_seconds", -1);
+		int shiftMaxDays = ArgumentUtil.intValue(argumentEntities, "max_days", -1);
+		int shiftMinSeconds = ArgumentUtil.intValue(argumentEntities, "min_seconds", 0);
+		int shiftMinDays = ArgumentUtil.intValue(argumentEntities, "min_days", 0);
+
 		String dcmElValue = dcm.getString(tag);
-		String patientID = hmac.getHashContext().getPatientID();
+		String patientID = hmac.getHashContext().patientID();
 		int shiftDays = (int) hmac.scaleHash(patientID, shiftMinDays, shiftMaxDays);
 		int shiftSeconds = (int) hmac.scaleHash(patientID, shiftMinSeconds, shiftMaxSeconds);
 

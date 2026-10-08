@@ -1,0 +1,67 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Persisted history of DICOM Echo checks (DICOM Echo view), pruned to a bounded size -->
+  <changeSet author="karnak" id="2.1-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="dicom_node_check_history"/>
+      </not>
+    </preConditions>
+    <createTable tableName="dicom_node_check_history">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="dicom_node_check_history_pkey"/>
+      </column>
+      <column name="checked_at" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="calling_ae_title" type="VARCHAR(16)"/>
+      <column name="called_description" type="VARCHAR(255)"/>
+      <column name="called_ae_title" type="VARCHAR(16)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="called_hostname" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="called_port" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="echo_successful" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="echo_status_hex" type="VARCHAR(8)"/>
+      <column name="echo_status_message" type="VARCHAR(1024)"/>
+      <column name="echo_error_message" type="VARCHAR(1024)"/>
+      <column name="echo_rejection_reason" type="VARCHAR(1024)"/>
+      <column name="echo_verification_unsupported_message" type="VARCHAR(1024)"/>
+      <column name="remote_impl_version_name" type="VARCHAR(64)"/>
+      <column name="remote_impl_class_uid" type="VARCHAR(64)"/>
+      <column name="connection_ms" type="BIGINT"/>
+      <column name="execution_ms" type="BIGINT"/>
+      <column name="network_reachable" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="port_open" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="network_hostname_message" type="VARCHAR(1024)"/>
+      <column name="network_port_message" type="VARCHAR(1024)"/>
+      <column name="network_quality_message" type="VARCHAR(1024)"/>
+    </createTable>
+  </changeSet>
+
+  <!-- History is queried and pruned by recency -->
+  <changeSet author="karnak" id="2.1-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="dicom_node_check_history" indexName="idx_dicom_node_check_history_checked_at"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_dicom_node_check_history_checked_at" tableName="dicom_node_check_history">
+      <column name="checked_at"/>
+    </createIndex>
+  </changeSet>
+
+</databaseChangeLog>

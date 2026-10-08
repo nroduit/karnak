@@ -12,6 +12,9 @@ package org.karnak.frontend.forwardnode.edit.destination;
 import com.vaadin.flow.component.UIDetachedException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
+import jakarta.annotation.PreDestroy;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -19,19 +22,22 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.model.event.NodeEvent;
 import org.karnak.backend.service.DestinationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Logic service use to make calls to backend and implement logic linked to the view
  */
-@Service
+@SpringComponent
+@UIScope
 @Slf4j
+@Generated()
+@NullUnmarked
 public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 
 	public static final String TRANSFER_IN_PROGRESS = "Transfer in progress";
@@ -46,6 +52,8 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 	// Services
 	private final transient DestinationService destinationService;
 
+	private final transient DestinationStatusScheduler destinationStatusScheduler;
+
 	/**
 	 * Text filter that can be changed separately.
 	 */
@@ -59,17 +67,30 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 	 * @param destinationService Destination Service
 	 */
 	@Autowired
-	public DestinationLogic(final DestinationService destinationService) {
+	public DestinationLogic(final DestinationService destinationService,
+			final DestinationStatusScheduler destinationStatusScheduler) {
 		super(new HashSet<>());
 		this.destinationService = destinationService;
+		this.destinationStatusScheduler = destinationStatusScheduler;
 		this.forwardNodeEntity = null;
 		this.filterText = "";
+		// Register with the singleton scheduler so the transfer-status polling runs for
+		// this UI-scoped logic; unregistered on UI detach (see onDestroy).
+		destinationStatusScheduler.register(this);
+	}
+
+	@PreDestroy
+	public void onDestroy() {
+		destinationStatusScheduler.unregister(this);
 	}
 
 	@Override
 	public Object getId(DestinationEntity data) {
 		Objects.requireNonNull(data, "Cannot provide an id for a null item.");
-		return data.hashCode();
+		// Identify rows by the stable database id. DestinationEntity.hashCode() is also
+		// id-based, but using getId() directly keeps the grid's and data provider's item
+		// identity consistent (the grid uses this provider's getId by default).
+		return data.getId();
 	}
 
 	@Override
@@ -82,9 +103,9 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 	}
 
 	/**
-	 * Check activity on the forward node
+	 * Check activity on the forward node. Invoked periodically by
+	 * {@link DestinationStatusScheduler}.
 	 */
-	@Scheduled(fixedRate = 1000)
 	public void checkStatusTransfers() {
 		if (forwardNodeEntity != null && destinationViewRef.get() != null) {
 			// Refreshed destinations from DB
@@ -228,7 +249,7 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 	 * @param filterTextInput the text to filter by, never null.
 	 */
 	public void setFilter(String filterTextInput) {
-		Objects.requireNonNull(filterText, "Filter text cannot be null.");
+		Objects.requireNonNull(filterTextInput, "Filter text cannot be null.");
 
 		final String filterTextInputTrim = filterTextInput.trim();
 
@@ -256,6 +277,12 @@ public class DestinationLogic extends ListDataProvider<DestinationEntity> {
 		this.forwardNodeEntity = forwardNodeEntity;
 		getItems().clear();
 		getItems().addAll(destinationService.retrieveDestinations(this.forwardNodeEntity));
+		// Notify the bound grid that the backing data changed. Re-calling
+		// Grid.setItems with the same DataProvider instance no longer forces a re-read,
+		// so the change must be signalled explicitly (otherwise a newly added/removed
+		// destination would not appear). super.refreshAll() only fires the change event;
+		// the overridden refreshAll() would reload from the (possibly stale) entity.
+		super.refreshAll();
 	}
 
 	/**

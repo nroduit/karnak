@@ -9,22 +9,25 @@
  */
 package org.karnak.frontend.forwardnode;
 
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import jakarta.annotation.security.RolesAllowed;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.ConfirmDialog;
+import org.karnak.frontend.forwardnode.component.GridForwardNode;
 import org.karnak.frontend.forwardnode.component.LayoutNewGridForwardNode;
 import org.karnak.frontend.forwardnode.edit.LayoutEditForwardNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.security.access.annotation.Secured;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Forward Node View
@@ -32,8 +35,9 @@ import org.springframework.security.access.annotation.Secured;
 @Route(value = ForwardNodeView.ROUTE, layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
 @PageTitle("Karnak - Forward node")
-@Secured({ "ROLE_admin" })
-
+@RolesAllowed("admin")
+@Generated()
+@NullUnmarked
 public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Gateway";
@@ -79,7 +83,6 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 		// Events
 		// LayoutNewGridForwardNode
 		addEventNewForwardNodeLayoutNewGrid();
-		addEventGridSelectionLayoutNewGrid();
 		// LayoutEditForwardNode
 		addEventCancelButtonLayoutEdit();
 		addEventDeleteButtonLayoutEdit();
@@ -104,7 +107,27 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 	 * Init components
 	 */
 	private void initComponents() {
-		layoutNewGridForwardNode.getGridForwardNode().setItems(forwardNodeLogic);
+		GridForwardNode grid = layoutNewGridForwardNode.getGridForwardNode();
+		grid.init(forwardNodeLogic, this::onForwardNodeSelected);
+		// Insert the "Add group" button between the new-node form and the grid
+		layoutNewGridForwardNode.addComponentAtIndex(1, grid.createAddGroupButton());
+	}
+
+	public GridForwardNode getGridForwardNode() {
+		return layoutNewGridForwardNode.getGridForwardNode();
+	}
+
+	/**
+	 * Selection navigation for the forward node tree. Replicates the previous grid
+	 * selection listener: clearing the selection resets the Save/Delete button labels.
+	 * @param value the selected forward node, or {@code null} when cleared
+	 */
+	private void onForwardNodeSelected(ForwardNodeEntity value) {
+		if (value == null) {
+			layoutEditForwardNode.getButtonForwardNodeSaveDeleteCancel().getSave().setText(SAVE);
+			layoutEditForwardNode.getButtonForwardNodeSaveDeleteCancel().getDelete().setText(DELETE);
+		}
+		forwardNodeLogic.editForwardNode(value);
 	}
 
 	/**
@@ -112,21 +135,24 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 	 */
 	public void buildLayout() {
 		setSizeFull();
-		layoutNewGridForwardNode.setWidth("30%");
-		layoutEditForwardNode.setWidth("70%");
-		add(layoutNewGridForwardNode, layoutEditForwardNode);
+		layoutNewGridForwardNode.setWidth("100%");
+		layoutEditForwardNode.setWidth("100%");
+		SplitLayout splitLayout = new SplitLayout(layoutNewGridForwardNode, layoutEditForwardNode);
+		splitLayout.setSizeFull();
+		// Draggable splitter between the node list (left) and the edit panel (right).
+		splitLayout.setSplitterPosition(30);
+		add(splitLayout);
 	}
 
 	/**
-	 * Event when adding a forward node in the LayoutNewGridForwardNode
+	 * Event when adding a forward node from the new-forward-node popup
 	 */
 	private void addEventNewForwardNodeLayoutNewGrid() {
-		layoutNewGridForwardNode.getButtonAddNewForwardNode()
-			.addClickListener(click -> eventAddForwardNodeLayoutNewGrid(
-					new ForwardNodeEntity(layoutNewGridForwardNode.getTextFieldNewAETitleForwardNode().getValue())));
-		layoutNewGridForwardNode.getTextFieldNewAETitleForwardNode()
-			.addKeyDownListener(Key.ENTER, keyDownEvent -> eventAddForwardNodeLayoutNewGrid(
-					new ForwardNodeEntity(layoutNewGridForwardNode.getTextFieldNewAETitleForwardNode().getValue())));
+		layoutNewGridForwardNode.getNewForwardNodeDialog().setOnConfirm(() -> {
+			eventAddForwardNodeLayoutNewGrid(
+					new ForwardNodeEntity(layoutNewGridForwardNode.getTextFieldNewAETitleForwardNode().getValue()));
+			return true;
+		});
 	}
 
 	/**
@@ -135,21 +161,8 @@ public class ForwardNodeView extends HorizontalLayout implements HasUrlParameter
 	 */
 	private void eventAddForwardNodeLayoutNewGrid(ForwardNodeEntity forwardNodeEntity) {
 		forwardNodeLogic.addForwardNode(forwardNodeEntity);
-		layoutNewGridForwardNode.getGridForwardNode().getSelectionModel().select(forwardNodeEntity);
+		layoutNewGridForwardNode.getGridForwardNode().selectItem(forwardNodeEntity);
 		forwardNodeLogic.editForwardNode(forwardNodeEntity);
-	}
-
-	/**
-	 * Add event when selecting a forward node in the grid LayoutNewGridForwardNode
-	 */
-	private void addEventGridSelectionLayoutNewGrid() {
-		layoutNewGridForwardNode.getGridForwardNode().asSingleSelect().addValueChangeListener(event -> {
-			if (event.getValue() == null) {
-				layoutEditForwardNode.getButtonForwardNodeSaveDeleteCancel().getSave().setText(SAVE);
-				layoutEditForwardNode.getButtonForwardNodeSaveDeleteCancel().getDelete().setText(DELETE);
-			}
-			forwardNodeLogic.editForwardNode(event.getValue());
-		});
 	}
 
 	/**

@@ -18,7 +18,9 @@ import java.util.List;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.frontend.profile.component.editprofile.ProfileElementView;
 import org.karnak.frontend.profile.component.editprofile.ProfileShowHide;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class ProfileErrorView extends VerticalLayout {
 
 	public ProfileErrorView() {
@@ -83,7 +85,12 @@ public class ProfileErrorView extends VerticalLayout {
 	private Div setProfileError(String error) {
 		Div profileErrorDiv = new Div();
 		profileErrorDiv.add(new Text(error));
-		profileErrorDiv.getStyle().set("color", "red").set("margin-top", "5px");
+		profileErrorDiv.getStyle()
+			.set("color", "var(--aura-red-text)")
+			.set("margin-top", "5px")
+			// pre-wrap so multi-line YAML parse errors (line/column + caret snippet)
+			// keep their formatting instead of collapsing to a single line.
+			.set("white-space", "pre-wrap");
 		return profileErrorDiv;
 	}
 

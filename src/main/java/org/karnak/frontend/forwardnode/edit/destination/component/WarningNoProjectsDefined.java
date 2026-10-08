@@ -13,7 +13,9 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class WarningNoProjectsDefined extends Dialog {
 
 	private final Button btnValidate;
@@ -39,11 +41,7 @@ public class WarningNoProjectsDefined extends Dialog {
 		removeAll();
 		Div divTitle = new Div();
 		divTitle.setText("No projects created");
-		divTitle.getStyle()
-			.set("font-size", "large")
-			.set("font-weight", "bolder")
-			.set("padding-bottom", "10px")
-			.set("color", "red");
+		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
 
 		Div divContent = new Div();
 		Div divIntro = new Div();

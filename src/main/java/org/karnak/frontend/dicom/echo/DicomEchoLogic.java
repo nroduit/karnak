@@ -9,39 +9,44 @@
  */
 package org.karnak.frontend.dicom.echo;
 
+import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomEchoQueryData;
-import org.karnak.frontend.dicom.Util;
+import org.karnak.backend.model.dicom.result.DicomCapabilitiesResult;
+import org.karnak.backend.model.dicom.result.DicomNodeCheckResult;
+import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckService;
+import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.DicomNode;
 
+@Generated()
 public class DicomEchoLogic {
 
 	// PAGE
 	private final DicomEchoView view;
 
-	public DicomEchoLogic(DicomEchoView view) {
+	// SERVICES
+	private final DicomNodeCheckService dicomNodeCheckService;
+
+	private final DicomCapabilitiesCheckService dicomCapabilitiesCheckService;
+
+	public DicomEchoLogic(DicomEchoView view, DicomNodeCheckService dicomNodeCheckService,
+			DicomCapabilitiesCheckService dicomCapabilitiesCheckService) {
 		this.view = view;
+		this.dicomNodeCheckService = dicomNodeCheckService;
+		this.dicomCapabilitiesCheckService = dicomCapabilitiesCheckService;
 	}
 
 	public void dicomEcho(DicomEchoQueryData data) {
-		String aet = data.getCalledAet();
-		String hostname = data.getCalledHostname();
-		int port = data.getCalledPort();
+		DicomNode dcmNode = new DicomNode(data.getCalledAet(), data.getCalledHostname(), data.getCalledPort());
+		ConfigNode calledNode = new ConfigNode(data.getCalledAet(), dcmNode);
 
-		StringBuilder result = new StringBuilder();
-		result.append("<P><h6>Network status</h6>");
-		boolean reachable = Util.getNetworkResponse(result, aet, hostname, port, true);
-		result.append("</P>");
-		if (reachable) {
-			result.append("<br><P>");
-			DicomNode dcmNode = new DicomNode(data.getCalledAet(), data.getCalledHostname(), data.getCalledPort());
-			result.append("<h6>DICOM Echo: ");
-			result.append(dcmNode.getAet());
-			result.append("</h6>");
-			Util.getEchoResponse(result, data.getCallingAet(), dcmNode, true, "HTML");
-			result.append("</P>");
-		}
+		DicomNodeCheckResult result = dicomNodeCheckService.check(data.getCallingAet(), calledNode);
+		view.displayResult(result);
+	}
 
-		view.displayStatus(result.toString());
+	// On-demand capabilities probe, triggered by the current-result row button.
+	public DicomCapabilitiesResult probeCapabilities(String callingAet, ConfigNode node) {
+		return dicomCapabilitiesCheckService.probe(callingAet, node);
 	}
 
 }

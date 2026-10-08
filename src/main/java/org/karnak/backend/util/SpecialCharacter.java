@@ -13,13 +13,13 @@ import java.util.regex.Pattern;
 
 public class SpecialCharacter {
 
+	// https://stackoverflow.com/questions/10664434/escaping-special-characters-in-java-regular-expressions
+	private static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+
 	private SpecialCharacter() {
 	}
 
-	// Response Ferran Maylinch
-	// https://stackoverflow.com/questions/10664434/escaping-special-characters-in-java-regular-expressions
 	public static String escapeSpecialRegexChars(String str) {
-		Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
 		return SPECIAL_REGEX_CHARS.matcher(str).replaceAll("\\\\$0");
 	}
 

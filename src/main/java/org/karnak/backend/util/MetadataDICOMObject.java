@@ -18,26 +18,22 @@ public class MetadataDICOMObject {
 	private MetadataDICOMObject() {
 	}
 
-	/*
-	 * Search a tagValue in the current DicomObject and his parent Will loop in the parent
-	 * of the DicomObject until the last parent or the tagValue
+	/**
+	 * Returns the tag value, walking up the parent objects until it is found or the root
+	 * is reached.
 	 */
 	public static String getValue(Attributes dcm, int tag) {
-		return getValueRec(dcm, tag);
-	}
-
-	private static String getValueRec(Attributes dcm, int tag) {
 		String tagValue = DicomUtils.getStringFromDicomElement(dcm, tag);
 		Attributes dcmParent = dcm.getParent();
-		if (dcmParent != null && tagValue == null) {
-			return getValueRec(dcmParent, tag);
+		if (tagValue == null && dcmParent != null) {
+			return getValue(dcmParent, tag);
 		}
 		return tagValue;
 	}
 
-	/*
-	 * Generate the tag Path as needed in the class StandardDICOM Will loop in the parent
-	 * of the DicomObject until the last parent
+	/**
+	 * Builds the tag path (as expected by StandardDICOM) by walking up to the root
+	 * object.
 	 */
 	public static String getTagPath(Attributes dcm, int currentTag) {
 		return getTagPathRec(dcm, TagUtils.toString(currentTag));

@@ -19,10 +19,10 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import org.dcm4che3.img.util.DateTimeUtils;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
-import org.karnak.backend.dicom.DateTimeUtils;
 import org.karnak.backend.enums.ProfileItemType;
 
 public class AttributesByDefault {
@@ -44,7 +44,7 @@ public class AttributesByDefault {
 		profileElementEntities.forEach(profileElementEntity -> {
 			String codeValue = ProfileItemType.getCodeValue(profileElementEntity.getCodename());
 			String codeMeaning = ProfileItemType.getCodeMeaning(profileElementEntity.getCodename());
-			if (codeValue != null && listCodeValue.stream().noneMatch(s -> s.equals(codeValue))) {
+			if (codeValue != null && !listCodeValue.contains(codeValue)) {
 				Attributes attributes = new Attributes(dcm.bigEndian());
 				attributes.setString(Tag.CodeValue, VR.SH, codeValue);
 				attributes.setString(Tag.CodingSchemeDesignator, VR.SH, "DCM");

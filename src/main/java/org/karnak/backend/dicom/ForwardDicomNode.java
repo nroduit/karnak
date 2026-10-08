@@ -11,12 +11,17 @@ package org.karnak.backend.dicom;
 
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.dicom.param.DicomNode;
 
+@NullUnmarked
 public class ForwardDicomNode extends DicomNode {
 
+	@Getter
 	private final String forwardAETitle;
 
+	@Getter
 	private final Set<DicomNode> acceptedSourceNodes;
 
 	private final Long id;
@@ -49,15 +54,15 @@ public class ForwardDicomNode extends DicomNode {
 	}
 
 	public void addAcceptedSourceNode(Long id, String srcAeTitle, String srcHostname) {
-		acceptedSourceNodes.add(new DicomNode(id, srcAeTitle, srcHostname, null, srcHostname != null));
+		addAcceptedSourceNode(id, srcAeTitle, srcHostname, srcHostname != null);
 	}
 
-	public Set<DicomNode> getAcceptedSourceNodes() {
-		return acceptedSourceNodes;
-	}
-
-	public String getForwardAETitle() {
-		return forwardAETitle;
+	/**
+	 * @param validateHostname whether the hostname of the calling node must match
+	 * {@code srcHostname} for the association to be accepted
+	 */
+	public void addAcceptedSourceNode(Long id, String srcAeTitle, String srcHostname, boolean validateHostname) {
+		acceptedSourceNodes.add(new DicomNode(id, srcAeTitle, srcHostname, null, validateHostname));
 	}
 
 	@Override

@@ -38,17 +38,15 @@ public class KheopsAlbumsService {
 
 	public void updateSwitchingAlbumsFromDestination(DestinationEntity destinationEntity) {
 		if (destinationEntity.getKheopsAlbumEntities() != null) {
-			for (KheopsAlbumsEntity kheopsAlbum : destinationEntity.getKheopsAlbumEntities()) {
-				setDestination(destinationEntity, kheopsAlbum);
-			}
+			destinationEntity.getKheopsAlbumEntities()
+				.forEach(kheopsAlbum -> setDestination(destinationEntity, kheopsAlbum));
 		}
 		removeKheopsAlbums(destinationEntity);
 	}
 
 	private void removeKheopsAlbums(DestinationEntity destinationEntity) {
-		List<KheopsAlbumsEntity> kheopsAlbumsEntityListDatabase = new ArrayList<>();
-		kheopsAlbumsRepo.findAllByDestinationEntity(destinationEntity) //
-			.forEach(kheopsAlbumsEntityListDatabase::add);
+		List<KheopsAlbumsEntity> kheopsAlbumsEntityListDatabase = new ArrayList<>(
+				kheopsAlbumsRepo.findAllByDestinationEntity(destinationEntity));
 		deleteDiffCurrentAndDatabase(destinationEntity, kheopsAlbumsEntityListDatabase);
 		deleteAll(destinationEntity, kheopsAlbumsEntityListDatabase);
 	}
@@ -60,7 +58,7 @@ public class KheopsAlbumsService {
 			for (KheopsAlbumsEntity kheopsAlbumDatabase : kheopsAlbumsEntityListDatabase) {
 				Predicate<KheopsAlbumsEntity> idIsAlwaysPresent = kheopsAlbum -> kheopsAlbum.getId()
 					.equals(kheopsAlbumDatabase.getId());
-				if (!destinationEntity.getKheopsAlbumEntities().stream().anyMatch(idIsAlwaysPresent)) {
+				if (destinationEntity.getKheopsAlbumEntities().stream().noneMatch(idIsAlwaysPresent)) {
 					deleteSwitchingAlbums(kheopsAlbumDatabase);
 				}
 			}

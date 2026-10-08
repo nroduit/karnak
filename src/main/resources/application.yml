@@ -1,4 +1,3 @@
-# - Info
 application:
   team: imagerie
 
@@ -6,7 +5,6 @@ application:
 #  Karnak Application Profiles
 #  --------------------------------------------------------
 name: KARNAK-Profile
-#environment: LOCAL
 karnakadmin: ${KARNAK_ADMIN:admin}
 karnakpassword: ${KARNAK_PASSWORD:karnak}
 karnakpostgreskey: ${DB_ENCRYPTION_KEY}
@@ -17,8 +15,23 @@ logging:
     org:
       springframework: INFO
       karnak: INFO
+      hibernate:
+        orm:
+          # Suppress WARN of HHH90006001 in Hibernate 6
+          incubating: ERROR
+      atmosphere:
+         cpr:
+           # Suppress WARN  a.c.c.AtmosphereFramework - No BroadcasterCache configured
+           AtmosphereFramework: ERROR
+      apache:
+        kafka: ERROR
     com:
       vaadin:
+        copilot:
+          # Copilot's release-note fetch fails behind TLS-inspecting proxies (PKIX
+          # path building failed). The call is cosmetic, so silence its logger to
+          # drop the noisy stack trace.
+          VersionReleaseNoteHandler: "OFF"
         flow:
           server:
             communication:
@@ -26,6 +39,16 @@ logging:
               rpc:
                 MapSyncRpcHandler: ERROR
               ReturnChannelHandler: ERROR
+# Dev-mode Copilot (Vaadin dev tools). Disabled: a browser tab still holding a
+# Copilot connection after a server restart sends a copilot-* push message for
+# which the server has no CopilotSession, so Copilot.handleMessage throws
+# CopilotException ("No CopilotSession found for the current VaadinSession"),
+# surfaced as a WARN by Atmosphere's DefaultWebSocketProcessor. Turning Copilot
+# off makes handleConnect/handleMessage return early so the message is never
+# handled. Copilot is a dev-only tool and unused here.
+vaadin:
+  copilot:
+    enable: false
 server:
   port: 8081
   servlet:
@@ -38,18 +61,18 @@ spring:
     version: '@project.version@'
   cloud:
     config:
-#    Currently no cs configured in docker deploy/ vault
+      #    Currently no cs configured in docker deploy/ vault
+      uri: ${CONFIGSERVER_URI}
       fail-fast: true
       name: ${spring.application.name}
       label: ${ENVIRONMENT}
-#      uri: ${CONFIGSERVER_URI}
-#  config:
-#    import: 'configserver:'
+  config:
+    import: 'optional:configserver:'
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
   profiles:
-    active: docker,redis,eureka
+    active: docker,redis
   datasource:
     url: 'jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:karnak}'
     driver-class-name: org.postgresql.Driver
@@ -93,59 +116,122 @@ info:
     name: Karnak
     description: Karnak
   environment: ${ENVIRONMENT}
-  tags:
-    eureka.datacenter: ${eureka.datacenter}
-    eureka.instance-id: ${eureka.instance.instance-id}
-management:
-  endpoint:
-    health:
-      show-details: always
-    # https://github.com/spring-projects/spring-boot/issues/20509
-    env:
-      post.enabled: true
-    #issue with spring cloud Hoxton.SR10 and sup
-    restart:
-      enabled: false
-    pause:
-      enabled: false
-    shutdown:
-      enabled: false
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-    enabled-by-default: true
-  health:
-    config:
-      enabled: false
-  server:
-    port: ${SERVER_MANAGEMENT_PORT:18089}
-  info:
-    env:
-      enabled: true #disabled by default in springboot 2.6
-  metrics:
-    distribution:
-      percentiles-histogram:
-        '[http.server.requests]': true
-      percentiles:
-        '[http.server.requests]': 0.5, 0.9, 0.95, 0.99, 0.999
-      slo:
-        '[http.server.requests]': 50ms, 150ms, 250ms, 400ms
-    tags:
-      application: ${spring.application.name}
-      instance: ${eureka.instance.instance-id}
-      team: ${application.team}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
 
 monitoring:
   # Maximum number of days in the monitoring history
-  max-history-days: 3
+  max-history-days: 30
+  # Transfer outcomes are folded into the per-series aggregate in batches: the
+  # forwarding threads only queue them in memory, and every interval each series
+  # with pending outcomes is written in one transaction. One transaction per
+  # object made the database commit rate the ceiling of the whole ingest. The
+  # interval is the maximum delay before an outcome shows in the monitoring view.
+  flush-interval-ms: 1000
+
+gateway:
+  # Maximum number of C-STORE transfers processed concurrently. Bounds the peak
+  # heap used by de-identification/transcoding (each transfer can hold the whole
+  # pixel data of an object in memory); waiting associations are throttled by not
+  # consuming their PDVs. 0 = auto: the limit adapts to the available resources,
+  # scaling between 2 x CPU cores (minimum 8) and 8 x CPU cores according to the
+  # heap headroom, so throttling only kicks in under actual memory pressure.
+  # Any positive value fixes the limit and switches the adaptive controller off.
+  # Note "CPU cores" is what the JVM sees: under a container CPU limit that is the
+  # quota, not the host's core count (check with -XshowSettings:system).
+  max-concurrent-transfers: 0
+  # Maximum number of open incoming DICOM associations. Every accepted
+  # association holds a dedicated thread and PDU buffers even while it only
+  # waits for a transfer permit, so memory grows with the number of clients
+  # unless they are bounded here: beyond the limit new associations are rejected
+  # up front (transient A-ASSOCIATE-RJ) and the sender retries later. 0 = auto:
+  # twice the transfer-permit ceiling, leaving room for associations idling
+  # between objects and for C-ECHO. With virtual-association-threads enabled the
+  # per-association thread cost mostly disappears, so an explicit higher value
+  # is affordable when senders hold many mostly-idle associations open.
+  max-open-associations: 0
+  # Serve each incoming association from a virtual thread (Java 21+). An
+  # association waiting for a transfer permit - or for a slow sender - parks its
+  # thread, and a parked virtual thread costs kilobytes where a platform thread
+  # reserves a ~1 MB stack, so far more waiting senders fit in the same memory.
+  # Native transcoding work still pins an OS carrier thread while it runs, which
+  # is fine: it is CPU-bound and already bounded by the transfer permits. Set to
+  # false to fall back to the classic cached platform-thread pool.
+  virtual-association-threads: true
+  # How long an incoming transfer waits for a permit before being refused with
+  # A700 (out of resources). While it waits the sender sees no data consumed, so
+  # keep this below the senders' own response timeouts; a longer wait just parks
+  # threads on associations the sender may already have abandoned.
+  transfer-permit-timeout-seconds: 120
+  # Interval at which the adaptive controller samples memory. It watches the
+  # heap occupancy that survives collection and, on Linux, the process RSS
+  # against the container memory limit (transcoding allocates off-heap, which no
+  # heap reading sees), so it only has to react before memory fills - seconds,
+  # not per object. Ignored when the limit is fixed.
+  transfer-permit-sample-seconds: 5
+  # Hand out permits in arrival order. Fairness routes every acquisition through
+  # the queue even when a permit is free, which is a global serialization point at
+  # high object rates; set to false to measure what it costs.
+  transfer-permit-fair: true
+
+# Outgoing associations to a destination.
+forward:
+  pool:
+    # DICOM associations kept open per destination. 1 is the historical behavior
+    # and serializes concurrent transfers to that destination onto a single
+    # association; raise it when several sources feed the same destination. The
+    # destination PACS must accept that many associations from this calling AE.
+    # This is only the fallback: every DICOM destination carries its own value
+    # ("Concurrent connections" in the destination form).
+    # Transfers that find the pool exhausted share an association. dcm4che
+    # serializes the writes of an association, so those transfers render their
+    # dataset (transcoding, masking) to a spool file first and only copy it to
+    # the socket under the association's lock: the CPU work stays parallel
+    # across the transfer permits whatever the pool size, at the cost of one
+    # extra temporary file per contended transfer.
+    max-per-destination: 1
+    # Async C-STORE window (maxOpsInvoked) on each of those associations: how many
+    # requests may be outstanding before waiting for responses. Balance against
+    # max-per-destination.
+    max-ops-invoked: 16
+
+async-events:
+  # Bounded executor for the @Async event listeners (conformance collection;
+  # transfer monitoring is batched, see monitoring.flush-interval-ms). When the queue is full the publishing thread runs
+  # the listener itself (caller-runs), throttling ingest instead of growing the
+  # heap without limit. 0 = auto: core scales with the CPU cores (minimum 8)
+  # and max with 2 x CPU cores (minimum 16).
+  core-pool-size: 0
+  max-pool-size: 0
+  queue-capacity: 10000
 cache-api:
   # Cache Time to leave in minutes for API calls
   ttl: 15
 
 mail:
   sender: no-reply@hug.ch
+
+conformance-report:
+  # A study report is flushed and emailed when no new instance arrived for this period
+  idle-timeout-seconds: 300
+  # Safety cap: a study trickling in for longer than this is flushed anyway
+  max-study-lifetime-seconds: 14400
+
+dicom-tools:
+  # Timeouts used by the DICOM Tools Echo and Monitor views (milliseconds)
+  echo:
+    # C-ECHO TCP connection timeout
+    connect-timeout-ms: 3000
+    # C-ECHO association acceptance timeout
+    accept-timeout-ms: 5000
+  network:
+    # Per-reply timeout passed to the ping command
+    ping-timeout-ms: 3000
+    # TCP timeout for the DICOM port reachability probe
+    port-timeout-ms: 3000
+  web:
+    # Connect / TLS / HTTP timeout for the DICOMweb (STOW-RS) reachability probe
+    timeout-ms: 5000
+
+# External de-identification image API
+# This API checks if sensitive patient data is burned into DICOM pixel data.
+ocr:
+  url: ${OCR_URL:http://localhost:8000}

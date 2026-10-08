@@ -38,13 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Echo", description = "API Endpoints for Echo")
 public class EchoController {
 
-	// Services
 	private final EchoService echoService;
 
-	/**
-	 * Autowired constructor
-	 * @param echoService Service managing echo
-	 */
 	@Autowired
 	public EchoController(final EchoService echoService) {
 		this.echoService = echoService;
@@ -58,21 +53,11 @@ public class EchoController {
 							examples = @ExampleObject(name = "Example values status destinations",
 									value = SpringDocUtil.EXAMPLE_VALUES_STATUS_DESTINATIONS_ECHO))),
 			@ApiResponse(responseCode = "204", description = "No Content", content = @Content) })
-	/**
-	 * Retrieve the status of the configured destinations from the source AeTitle in
-	 * parameter
-	 * @param srcAet Source AeTitle to get the destination from
-	 * @return Configured destinations with theirs status
-	 */
 	@GetMapping(value = { EndPoint.DESTINATIONS_PATH },
 			produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<DestinationEchos> retrieveStatusConfiguredDestinations(
 			@RequestParam(value = EndPoint.SRC_AET_PARAM) String srcAet) {
-
-		// Call service to retrieve the status of the configured destinations
 		List<DestinationEcho> destinationEchos = echoService.retrieveStatusConfiguredDestinations(srcAet);
-
-		// If empty no content else list of destinations with status
 		return destinationEchos.isEmpty() ? ResponseEntity.noContent().build()
 				: ResponseEntity.ok(new DestinationEchos(destinationEchos));
 	}

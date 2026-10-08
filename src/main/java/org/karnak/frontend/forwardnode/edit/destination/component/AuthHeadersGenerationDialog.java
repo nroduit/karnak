@@ -18,7 +18,11 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import java.util.Base64;
+import org.jspecify.annotations.NullUnmarked;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class AuthHeadersGenerationDialog extends Dialog {
 
 	public static final String AUTHORIZATION_TAG = "<key>Authorization</key>";
@@ -71,13 +75,15 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		HorizontalLayout horizontalLayout = new HorizontalLayout(cancelButton, generateButton);
 		horizontalLayout.setWidthFull();
 		horizontalLayout.getStyle().set("justify-content", "flex-end").set("margin-top", "20px");
+		divSelectBox.getStyle().set("margin-bottom", "10px");
+		divTitle.getStyle().set("margin-bottom", "10px");
 		add(divTitle, divSelectBox, divContent, horizontalLayout);
 	}
 
 	private void setElement() {
 		divTitle = new Div();
 		divTitle.setText(TITLE);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		divContent = new Div();
 		divSelectBox = new Div();
@@ -85,7 +91,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 		authTypeSelect.setItems(authTypeSelectValues);
 		authTypeSelect.setLabel("Authorization Type");
 		authTypeSelect.setErrorMessage("This field is mandatory");
-		authTypeSelect.setWidth(FIELD_WIDTH);
+		// authTypeSelect.setWidth(FIELD_WIDTH);
 		authTypeSelect.setEmptySelectionAllowed(false);
 		authTypeSelect.addValueChangeListener(value -> displayAuthTypeForm(value.getValue()));
 
@@ -96,7 +102,7 @@ public class AuthHeadersGenerationDialog extends Dialog {
 				generateAuthHeaders(authTypeSelect.getValue());
 			}
 		});
-		generateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		generateButton.addThemeVariants(ButtonVariant.PRIMARY);
 		generateButton.setWidth(BUTTON_WIDTH);
 		cancelButton = new Button("Cancel", event -> close());
 		cancelButton.setWidth(BUTTON_WIDTH);

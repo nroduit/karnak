@@ -11,34 +11,46 @@ package org.karnak.frontend.forwardnode;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
+import org.karnak.backend.data.entity.ForwardNodeGroupEntity;
+import org.karnak.backend.data.entity.NamedGroupEntity;
+import org.karnak.backend.service.AuthConfigService;
 import org.karnak.backend.service.ForwardNodeAPIService;
 import org.karnak.backend.service.ForwardNodeService;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
 import org.karnak.frontend.forwardnode.edit.destination.DestinationLogic;
 import org.karnak.frontend.forwardnode.edit.source.SourceLogic;
+import org.karnak.frontend.util.GroupTreeController;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Logic service use to make calls to backend and implement logic linked to the view
  */
-@Service
+@SpringComponent
+@UIScope
 @Slf4j
-public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
+@Generated()
+@NullUnmarked
+public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity>
+		implements GroupTreeController<ForwardNodeEntity> {
 
 	@Setter
 	@Getter
 	private ForwardNodeView forwardNodeView;
 
 	// Services
-	private final ForwardNodeAPIService forwardNodeAPIService;
+	private final transient ForwardNodeAPIService forwardNodeAPIService;
 
 	private final transient ForwardNodeService forwardNodeService;
 
@@ -46,13 +58,16 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	private final transient ProjectService projectService;
 
 	@Getter
-	private final SOPClassUIDService sopClassUIDService;
+	private final transient AuthConfigService authConfigService;
 
 	@Getter
-	private final SourceLogic sourceLogic;
+	private final transient SOPClassUIDService sopClassUIDService;
 
 	@Getter
-	private final DestinationLogic destinationLogic;
+	private final transient SourceLogic sourceLogic;
+
+	@Getter
+	private final transient DestinationLogic destinationLogic;
 
 	/**
 	 * Text filter that can be changed separately.
@@ -62,12 +77,13 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	@Autowired
 	public ForwardNodeLogic(final ForwardNodeAPIService forwardNodeAPIService,
 			final ForwardNodeService forwardNodeService, final ProjectService projectService,
-			final SOPClassUIDService sopClassUIDService, final SourceLogic sourceLogic,
-			final DestinationLogic destinationLogic) {
+			final AuthConfigService authConfigService, final SOPClassUIDService sopClassUIDService,
+			final SourceLogic sourceLogic, final DestinationLogic destinationLogic) {
 		super(new ArrayList<>());
 		this.forwardNodeAPIService = forwardNodeAPIService;
 		this.forwardNodeService = forwardNodeService;
 		this.projectService = projectService;
+		this.authConfigService = authConfigService;
 		this.sopClassUIDService = sopClassUIDService;
 		this.sourceLogic = sourceLogic;
 		this.destinationLogic = destinationLogic;
@@ -80,8 +96,53 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	@Override
 	public void refreshAll() {
 		getItems().clear();
-		getItems().addAll(forwardNodeService.getAllForwardNodes());
+		getItems().addAll(forwardNodeService.retrieveAllForwardNodes());
 		super.refreshAll();
+		if (forwardNodeView != null) {
+			forwardNodeView.getGridForwardNode().reload();
+		}
+	}
+
+	// --- GroupTreeController ---------------------------------------------------------
+
+	@Override
+	public List<ForwardNodeEntity> listItems() {
+		return forwardNodeService.retrieveAllForwardNodes();
+	}
+
+	@Override
+	public List<? extends NamedGroupEntity> listGroups() {
+		return forwardNodeService.getAllGroups();
+	}
+
+	@Override
+	public NamedGroupEntity groupOf(ForwardNodeEntity item) {
+		return item.getGroup();
+	}
+
+	@Override
+	public Long itemId(ForwardNodeEntity item) {
+		return item.getId();
+	}
+
+	@Override
+	public NamedGroupEntity createGroup(String name) {
+		return forwardNodeService.saveGroup(name);
+	}
+
+	@Override
+	public void renameGroup(NamedGroupEntity group, String name) {
+		forwardNodeService.renameGroup((ForwardNodeGroupEntity) group, name);
+	}
+
+	@Override
+	public void deleteGroup(NamedGroupEntity group) {
+		forwardNodeService.deleteGroup((ForwardNodeGroupEntity) group);
+	}
+
+	@Override
+	public void assign(ForwardNodeEntity item, NamedGroupEntity group) {
+		forwardNodeService.assignToGroup(item, (ForwardNodeGroupEntity) group);
 	}
 
 	@Override
@@ -94,7 +155,7 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	 * Initialize the data provider
 	 */
 	private void initDataProvider() {
-		getItems().addAll(forwardNodeService.getAllForwardNodes());
+		getItems().addAll(forwardNodeService.retrieveAllForwardNodes());
 	}
 
 	/**
@@ -112,7 +173,6 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	}
 
 	public Long enter(String dataIdStr) {
-		// TODO: On enter, go to dataIdStr
 		try {
 			return Long.valueOf(dataIdStr);
 		}
@@ -120,13 +180,6 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 			log.error("Cannot get valueOf {}", dataIdStr, e);
 		}
 		return null;
-		/*
-		 * if (dataIdStr != null && !dataIdStr.isEmpty()) { // Ensure this is selected
-		 * even if coming directly here from login try { Long dataId =
-		 * Long.valueOf(dataIdStr); ForwardNodeEntity data = findForwardNode(dataId);
-		 * gatewayView.selectRow(data); } catch (NumberFormatException e) { } } else {
-		 * gatewayView.showForm(false); }
-		 */
 	}
 
 	public void editForwardNode(ForwardNodeEntity data) {
@@ -141,26 +194,6 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	public void cancelForwardNode() {
 		setFragmentParameter("");
 	}
-
-	public void saveForwardNode(ForwardNodeEntity data) {
-		/*
-		 * boolean newData = data.isNewData(); gatewayView.clearSelection();
-		 * gatewayView.updateForwardNode(data); setFragmentParameter("");
-		 * gatewayView.showSaveNotification(data.getFwdAeTitle() + (newData ? " created" :
-		 * " updated")); //editForwardNode(data); //if you dont't want to exit the
-		 * selection after saving a forward node. editForwardNode(null); //if you want to
-		 * exit the selection after saving a forward node.
-		 */
-	}
-
-	// public void deleteForwardNode(ForwardNodeEntity data) {
-	/*
-	 * gatewayView.clearSelection(); gatewayView.removeForwardNode(data);
-	 * setFragmentParameter(""); gatewayView.showSaveNotification(data.getFwdAeTitle() +
-	 * " removed");
-	 */
-	// setFragmentParameter("");
-	// }
 
 	/**
 	 * Retrieve forward node depending on its id
@@ -189,7 +222,7 @@ public class ForwardNodeLogic extends ListDataProvider<ForwardNodeEntity> {
 	 * @param filterTextInput the text to filter by, never null.
 	 */
 	public void setFilter(String filterTextInput) {
-		Objects.requireNonNull(filterText, "Filter text cannot be null.");
+		Objects.requireNonNull(filterTextInput, "Filter text cannot be null.");
 
 		final String filterTextTrim = filterTextInput.trim();
 

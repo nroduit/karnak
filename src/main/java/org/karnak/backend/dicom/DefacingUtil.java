@@ -13,18 +13,26 @@ import java.security.SecureRandom;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.opencv.core.Core.MinMaxLocResult;
+import org.weasis.dicom.geom.ImageOrientation;
+import org.weasis.dicom.geom.ImageOrientation.Plan;
+import org.weasis.dicom.geom.Vector3;
 import org.weasis.opencv.data.ImageCV;
 import org.weasis.opencv.data.PlanarImage;
-import org.weasis.opencv.op.ImageProcessor;
+import org.weasis.opencv.op.ImageAnalyzer;
+import org.weasis.opencv.op.ImageTransformer;
 
 public class DefacingUtil {
+
+	// CT Image Storage and its derived SOP Classes (Enhanced CT, ...)
+	private static final String CT_SOP_CLASS_UID_PREFIX = "1.2.840.10008.5.1.4.1.1.2.";
+
+	private static final SecureRandom RANDOM = new SecureRandom();
 
 	private DefacingUtil() {
 	}
 
 	public static int randomY(int minY, int maxY, int bound) {
-		SecureRandom random = new SecureRandom();
-		return (int) Math.floor(random.nextDouble() * (maxY - minY + bound) + minY);
+		return (int) Math.floor(RANDOM.nextDouble() * (maxY - minY + bound) + minY);
 	}
 
 	public static double pickRndYPxlColor(int xInit, int minY, int maxY, PlanarImage imgToPick) {
@@ -32,61 +40,16 @@ public class DefacingUtil {
 		return imgToPick.toMat().get(yRand, xInit)[0];
 	}
 
-	public static double pickRndYPxlColorConvolution(int xInit, int minY, int maxY, PlanarImage imgToPick) {
-		int yRand = DefacingUtil.randomY(minY, maxY, 1);
-		int size = 5;
-		double mean = 0;
-		int sum = 0;
-		int imgWidth = imgToPick.width();
-		int imgHeight = imgToPick.height();
-
-		// convolution
-		for (int x = xInit - (size / 2); x < xInit + (size / 2) + 1; x++) {
-			for (int y = yRand; y < yRand + size + 1; y++) {
-				int xPickColor = checkBoundsOfImageX(x, imgWidth);
-				int yPickColor = checkBoundsOfImageY(y, imgHeight);
-				double color = imgToPick.toMat().get(yPickColor, xPickColor)[0];
-
-				mean = mean + color;
-				sum++;
-			}
-		}
-		if (sum != 0) {
-			return mean / sum;
-		}
-		return mean;
-	}
-
-	public static int checkBoundsOfImageX(int x, int imgWidth) {
-		if (x < 0) {
-			return 0;
-		}
-		if (x >= imgWidth) {
-			return imgWidth - 1;
-		}
-		return x;
-	}
-
-	public static int checkBoundsOfImageY(int y, int imgHeight) {
-		if (y < 0) {
-			return 0;
-		}
-		if (y >= imgHeight) {
-			return imgHeight - 1;
-		}
-		return y;
-	}
-
 	public static PlanarImage transformToByte(PlanarImage srcImg) {
 		ImageCV imgTransform = new ImageCV();
 		srcImg.toMat().copyTo(imgTransform);
 
-		MinMaxLocResult minMaxLocResult = ImageProcessor.findMinMaxValues(imgTransform.toMat());
+		MinMaxLocResult minMaxLocResult = ImageAnalyzer.findMinMaxValues(imgTransform.toMat());
 		double min = minMaxLocResult.minVal;
 		double max = minMaxLocResult.maxVal;
 		double slope = 255.0 / (max - min);
 		double yint = 255.0 - slope * max;
-		imgTransform = ImageProcessor.rescaleToByte(imgTransform.toImageCV(), slope, yint);
+		imgTransform = ImageTransformer.rescaleToByte(imgTransform.toImageCV(), slope, yint);
 		return imgTransform;
 	}
 
@@ -96,23 +59,17 @@ public class DefacingUtil {
 		return (hounsfield - intercept) / slope;
 	}
 
-	public static PlanarImage rescaleForVisualizing(PlanarImage srcImg, Double contrast, Double brigtness) {
-		ImageCV imageForVisualizing = new ImageCV();
-		srcImg.toMat().copyTo(imageForVisualizing);
-		PlanarImage transformImg = transformToByte(imageForVisualizing);
-		transformImg = ImageProcessor.rescaleToByte(transformImg.toImageCV(), contrast / 100.0, brigtness);
-		return transformImg;
-	}
-
 	public static boolean isCT(Attributes attributes) {
 		String sopClassUID = attributes.getString(Tag.SOPClassUID);
-		return (sopClassUID + ".").startsWith("1.2.840.10008.5.1.4.1.1.2.");
+		return sopClassUID != null && (sopClassUID + ".").startsWith(CT_SOP_CLASS_UID_PREFIX);
 	}
 
 	public static boolean isAxial(Attributes attributes) {
-		double[] vector = attributes.getDoubles(Tag.ImageOrientationPatient);
-		ImageOrientation.Label label = ImageOrientation.makeImageOrientationLabelFromImageOrientationPatient(vector);
-		return label.equals(ImageOrientation.Label.AXIAL);
+		double[] iop = attributes.getDoubles(Tag.ImageOrientationPatient);
+		if (iop == null || iop.length < 6) {
+			return false;
+		}
+		return ImageOrientation.getPlan(Vector3.of(iop, 0), Vector3.of(iop, 3)) == Plan.TRANSVERSE;
 	}
 
 }

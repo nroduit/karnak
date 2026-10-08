@@ -18,7 +18,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import lombok.Getter;
 import org.karnak.backend.data.entity.KheopsAlbumsEntity;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class NewSwitchingAlbum extends Div {
 
 	@Getter
@@ -61,10 +63,10 @@ public class NewSwitchingAlbum extends Div {
 
 	private void setElements() {
 		textErrorConditionMsg.getStyle()
-			.set("margin-left", "calc(var(--lumo-border-radius-m) / 4")
-			.set("font-size", "var(--lumo-font-size-xs)")
-			.set("line-height", "var(--lumo-line-height-xs)")
-			.set("color", "var(--lumo-error-text-color)")
+			.set("margin-left", "calc(var(--vaadin-radius-m) / 4")
+			.set("font-size", "var(--aura-font-size-xs)")
+			.set("line-height", "var(--aura-line-height-xs)")
+			.set("color", "var(--aura-red-text)")
 			.set("will-change", "max-height")
 			.set("transition", "0.4s max-height")
 			.set("max-height", "5em");

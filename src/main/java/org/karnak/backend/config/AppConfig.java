@@ -12,10 +12,13 @@ package org.karnak.backend.config;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
 import java.net.URL;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.karnak.backend.cache.PatientClient;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.data.repo.ProfileRepo;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.backend.model.standard.ConfidentialityProfiles;
@@ -40,14 +43,11 @@ import org.yaml.snakeyaml.constructor.Constructor;
 @ConfigurationProperties
 @EnableCaching
 @Slf4j
+@NullUnmarked
 public class AppConfig {
 
 	@Getter
-	private static AppConfig instance;
-
-	@Getter
-	@Setter
-	private String environment;
+	@NonNull private static AppConfig instance;
 
 	@Getter
 	@Setter
@@ -64,11 +64,11 @@ public class AppConfig {
 	private final ProfilePipeService profilePipeService;
 
 	@Getter
-	private final PatientClient externalIDCache;
+	private final PseudonymCache externalIDCache;
 
 	@Autowired
 	public AppConfig(ProfileRepo profileRepo, ProfilePipeService profilePipeService,
-			@Qualifier("patientClient") PatientClient externalIDCache) {
+			@Qualifier("patientClient") PseudonymCache externalIDCache) {
 		this.profileRepo = profileRepo;
 		this.profilePipeService = profilePipeService;
 		this.externalIDCache = externalIDCache;

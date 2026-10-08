@@ -9,11 +9,28 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DestinationRepo extends JpaRepository<DestinationEntity, Long> {
+
+	/**
+	 * Destinations that reference the given project as their <b>tag-morphing</b> project.
+	 * {@code ProjectEntity} only maps the inverse side of the de-identification
+	 * association ({@code getDestinationEntities()}), so tag-morphing destinations must
+	 * be looked up explicitly.
+	 * @param tagMorphingProjectEntity the tag-morphing project
+	 * @return the destinations using it for tag morphing
+	 */
+	List<DestinationEntity> findByTagMorphingProjectEntity(ProjectEntity tagMorphingProjectEntity);
+
+	/** Destinations matching any of the given stable UUIDs (monitoring lookups). */
+	List<DestinationEntity> findByUuidIn(Collection<UUID> uuids);
 
 }

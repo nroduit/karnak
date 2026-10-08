@@ -11,9 +11,11 @@ package org.karnak.backend.service.gateway;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.dicom.GatewayParams;
@@ -26,9 +28,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.weasis.core.util.FileUtil;
 import org.weasis.core.util.StringUtil;
+import org.weasis.core.util.annotations.Generated;
 
 @Service
 @Slf4j
+@Generated()
+@NullUnmarked
 public class GatewayService implements ApplicationListener<ContextRefreshedEvent> {
 
 	private final GatewaySetUpService gatewaySetUpService;
@@ -62,7 +67,7 @@ public class GatewayService implements ApplicationListener<ContextRefreshedEvent
 	}
 
 	@Override
-	public void onApplicationEvent(ContextRefreshedEvent event) {
+	public void onApplicationEvent(@NonNull ContextRefreshedEvent event) {
 		log.info("Application Event: {}", event);
 	}
 
@@ -85,22 +90,22 @@ public class GatewayService implements ApplicationListener<ContextRefreshedEvent
 		destinationEntities.forEach(d -> d.setTransferInProgress(false));
 		destinationRepo.saveAll(destinationEntities);
 
-		log.info("{}", "Gateway has been stopped");
+		log.info("Gateway has been stopped");
 		String dir = System.getProperty("dicom.native.codec");
 		if (StringUtil.hasText(dir)) {
-			FileUtil.delete(new File(dir));
+			FileUtil.delete(Path.of(dir));
 		}
 	}
 
 	@PostConstruct
 	public void init() {
-		log.info("{}", "Start the gateway manager running as a background process");
+		log.info("Start the gateway manager running as a background process");
+		// DEACTIVATED for HUG
 		// try {
-		// URL resource = this.getClass().getResource("/lib");
-		// NativeLibraryManager.initNativeLibs(resource);
+		// NativeLibraryManager.initNativeLibs();
 		// }
-		// catch (Exception e1) {
-		// throw new IllegalStateException("Cannot register DICOM native librairies", e1);
+		// catch (Exception e) {
+		// throw new IllegalStateException("Cannot register DICOM native libraries", e);
 		// }
 		initGateway();
 	}

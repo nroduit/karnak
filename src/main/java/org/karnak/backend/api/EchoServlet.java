@@ -25,8 +25,8 @@ import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
 import org.karnak.backend.dicom.WebForwardDestination;
 import org.karnak.backend.service.gateway.GatewaySetUpService;
-import org.karnak.backend.util.ServletUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.op.Echo;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.ConnectOptions;
@@ -35,6 +35,7 @@ import org.weasis.dicom.param.DicomState;
 
 @WebServlet(urlPatterns = "/echo")
 @Slf4j
+@Generated()
 public class EchoServlet extends HttpServlet {
 
 	@Serial
@@ -58,21 +59,17 @@ public class EchoServlet extends HttpServlet {
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse res) {
 		res.setContentType("text/xml");
-		PrintWriter out = null;
+		PrintWriter out;
 		try {
 			out = res.getWriter();
 		}
 		catch (IOException e) {
-			String errorMsg = "Cannot write response";
-			log.error(errorMsg);
-			ServletUtil.sendResponseError(res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMsg);
+			sendInternalError(res, "Cannot write response");
 			return;
 		}
 		String aet = req.getParameter("srcAET");
 		if (globalConfig == null) {
-			String errorMsg = "Missing 'GlobalConfig' from current ServletContext";
-			log.error(errorMsg);
-			ServletUtil.sendResponseError(res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMsg);
+			sendInternalError(res, "Missing 'GlobalConfig' from current ServletContext");
 			return;
 		}
 		// Echo service, only work for the out stream configuration
@@ -112,6 +109,16 @@ public class EchoServlet extends HttpServlet {
 		}
 		sb.append("</destinations>\n");
 		out.println(sb);
+	}
+
+	private void sendInternalError(HttpServletResponse res, String errorMsg) {
+		log.error(errorMsg);
+		try {
+			res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMsg);
+		}
+		catch (IOException e) {
+			log.error("Cannot send http response message!", e);
+		}
 	}
 
 }

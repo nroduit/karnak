@@ -11,17 +11,14 @@ package org.karnak.backend.model.profiles;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.util.TagUtils;
-import org.karnak.backend.data.entity.ExcludedTagEntity;
-import org.karnak.backend.data.entity.IncludedTagEntity;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.AbstractAction;
 import org.karnak.backend.model.action.ActionItem;
-import org.karnak.backend.model.expression.ExprCondition;
-import org.karnak.backend.model.expression.ExpressionError;
-import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
+import org.karnak.backend.model.profilepipe.TagPath;
 
 public class PrivateTags extends AbstractProfileItem {
 
@@ -37,40 +34,31 @@ public class PrivateTags extends AbstractProfileItem {
 		exceptedTagsAction = new TagActionMap();
 		actionByDefault = AbstractAction.convertAction(this.action);
 		profileValidation();
-		setActionHashMap();
-	}
-
-	private void setActionHashMap() {
-
-		if (tagEntities != null && !tagEntities.isEmpty()) {
-			for (IncludedTagEntity tag : tagEntities) {
-				tagsAction.put(tag.getTagValue(), actionByDefault);
-			}
-		}
-		if (excludedTagEntities != null && !excludedTagEntities.isEmpty()) {
-			for (ExcludedTagEntity tag : excludedTagEntities) {
-				exceptedTagsAction.put(tag.getTagValue(), actionByDefault);
-			}
-		}
+		mapTagsToAction(tagsAction, exceptedTagsAction, actionByDefault);
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac) {
+		return getAction(dcm, original, tag, hmac, TagPath.ROOT);
+	}
+
+	@Override
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac, TagPath path) {
 		if (TagUtils.isPrivateGroup(tag)) {
 			if (!tagsAction.isEmpty() && exceptedTagsAction.isEmpty()) {
-				return tagsAction.get(tag);
+				return tagsAction.get(tag, path);
 			}
 
 			if (tagsAction.isEmpty() && !exceptedTagsAction.isEmpty()) {
-				if (exceptedTagsAction.get(tag) != null) {
+				if (exceptedTagsAction.get(tag, path) != null) {
 					return null;
 				}
 			}
 
 			if (!tagsAction.isEmpty() && !exceptedTagsAction.isEmpty()) {
 				// TODO check tag value?
-				if (exceptedTagsAction.get(tag) == null) {
-					return tagsAction.get(tag);
+				if (exceptedTagsAction.get(tag, path) == null) {
+					return tagsAction.get(tag, path);
 				}
 				return null;
 			}
@@ -85,11 +73,9 @@ public class PrivateTags extends AbstractProfileItem {
 			throw new ProfileException("Cannot build the profile " + codeName + ": Unknown Action");
 		}
 
-		final ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(new Attributes()),
-				Boolean.class);
-		if (condition != null && !expressionError.isValid()) {
-			throw new ProfileException(expressionError.getMsg());
-		}
+		validateAction();
+		validateTagPaths();
+		validateCondition();
 	}
 
 }

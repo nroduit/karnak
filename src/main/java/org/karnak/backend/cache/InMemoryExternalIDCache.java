@@ -13,11 +13,13 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.weasis.core.util.annotations.Generated;
 
 @Component("patientClient")
 @Profile("portable")
 @Primary
-public class InMemoryExternalIDCache extends PatientClient {
+@Generated()
+public class InMemoryExternalIDCache extends PseudonymCache {
 
 	private static final String NAME = "externalId.cache";
 

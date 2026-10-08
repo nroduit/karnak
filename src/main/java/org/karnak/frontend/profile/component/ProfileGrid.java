@@ -9,40 +9,32 @@
  */
 package org.karnak.frontend.profile.component;
 
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.provider.SortDirection;
-import java.util.Arrays;
+import java.util.List;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.frontend.util.CollatorUtils;
+import org.karnak.frontend.util.GroupTreeGrid;
+import org.weasis.core.util.annotations.Generated;
 
-public class ProfileGrid extends Grid<ProfileEntity> {
+@Generated()
+public class ProfileGrid extends GroupTreeGrid<ProfileEntity> {
 
 	public ProfileGrid() {
-		setSelectionMode(SelectionMode.SINGLE);
+		var nameColumn = addPrimaryColumn("Name", profile -> new Span(profile.getName()),
+				CollatorUtils.comparing(ProfileEntity::getName));
+		nameColumn.setFlexGrow(1);
+		// Keep the version column narrow so the name column gets most of the space.
+		addItemTextColumn("Version", ProfileEntity::getVersion, CollatorUtils.comparing(ProfileEntity::getVersion))
+			.setFlexGrow(0)
+			.setWidth("5em");
 
-		Column<ProfileEntity> nameColumn = addColumn(ProfileEntity::getName).setHeader("Name")
-			.setSortable(true)
-			.setKey("name")
-			.setComparator(CollatorUtils.comparing(ProfileEntity::getName));
-
-		Column<ProfileEntity> versionColumn = addColumn(ProfileEntity::getVersion).setHeader("Version")
-			.setSortable(true)
-			.setKey("version")
-			.setComparator(CollatorUtils.comparing(ProfileEntity::getVersion));
-
-		setMultiSort(true);
-		sort(Arrays.asList(new GridSortOrder<>(nameColumn, SortDirection.ASCENDING),
-				new GridSortOrder<>(versionColumn, SortDirection.ASCENDING)));
+		sort(List.of(new GridSortOrder<>(nameColumn, SortDirection.ASCENDING)));
 	}
 
 	public void selectRow(ProfileEntity row) {
-		if (row != null) {
-			getSelectionModel().select(row);
-		}
-		else {
-			getSelectionModel().deselectAll();
-		}
+		selectItem(row);
 	}
 
 }

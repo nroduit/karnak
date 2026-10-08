@@ -12,12 +12,15 @@ package org.karnak.frontend.project;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
@@ -26,14 +29,16 @@ import org.karnak.frontend.project.component.EditProject;
 import org.karnak.frontend.project.component.GridProject;
 import org.karnak.frontend.project.component.NewProject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Project View
  */
 @Route(value = ProjectView.ROUTE, layout = MainLayout.class)
 @PageTitle("Karnak - Projects")
-@Secured({ "ROLE_admin" })
+@RolesAllowed("admin")
+@Generated()
+@NullUnmarked
 public class ProjectView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Projects";
@@ -78,7 +83,10 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 
 		// Events
 		addEventButtonNewProject();
-		addEventGridSelection();
+	}
+
+	public GridProject getGridProject() {
+		return gridProject;
 	}
 
 	@Override
@@ -99,11 +107,16 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 	 * Create and add the layout of the view
 	 */
 	private void buildLayout() {
-		VerticalLayout layoutNewProject = new VerticalLayout(this.newProject, this.gridProject);
-		setWidthFull();
-		layoutNewProject.setWidth("40%");
-		this.editProject.setWidth("60%");
-		add(layoutNewProject, this.editProject);
+		VerticalLayout layoutNewProject = new VerticalLayout(this.newProject, this.gridProject.createAddGroupButton(),
+				this.gridProject);
+		setSizeFull();
+		layoutNewProject.setWidth("100%");
+		this.editProject.setWidth("100%");
+		SplitLayout splitLayout = new SplitLayout(layoutNewProject, this.editProject);
+		splitLayout.setSizeFull();
+		// Draggable splitter between the project list (left) and the edit panel (right).
+		splitLayout.setSplitterPosition(40);
+		add(splitLayout);
 	}
 
 	/**
@@ -112,7 +125,7 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 	private void initComponents() {
 		initEditProject(editProject, gridProject);
 		initNewProjectForm(newProject);
-		gridProject.setItems(projectLogic);
+		gridProject.init(projectLogic, this::navigateProject);
 		newResearchBinder = newProject.getBinder();
 	}
 
@@ -136,25 +149,21 @@ public class ProjectView extends HorizontalLayout implements HasUrlParameter<Str
 	}
 
 	/**
-	 * Add event on button New Project
+	 * Add event on the new-project popup confirm
 	 */
 	private void addEventButtonNewProject() {
-		newProject.getButtonAdd().addClickListener(event -> {
+		newProject.getDialog().setOnConfirm(() -> {
 			ProjectEntity newProjectEntity = new ProjectEntity();
 			if (newResearchBinder.writeBeanIfValid(newProjectEntity)) {
 				projectLogic.createProject(newProjectEntity, new SecretEntity(HMAC.generateRandomKey()));
 				newProject.clear();
-				gridProject.select(newProjectEntity);
+				gridProject.selectItem(newProjectEntity);
 				navigateProject(newProjectEntity);
+				return true;
 			}
+			// Keep the popup open so the validation errors stay visible.
+			return false;
 		});
-	}
-
-	/**
-	 * Add event when selecting a project in the grid
-	 */
-	private void addEventGridSelection() {
-		gridProject.asSingleSelect().addValueChangeListener(event -> navigateProject(event.getValue()));
 	}
 
 	/**

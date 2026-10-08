@@ -1,0 +1,22 @@
+/*
+ * Aura fix for the vcf-date-range-picker calendar toggle placement.
+ *
+ * The add-on positions its toggle button with `position: absolute; right: 6px`
+ * inside the end field, relying on Lumo's <vaadin-input-container> being
+ * `position: relative` to act as the toggle's containing block. Aura's input
+ * container is not positioned, so the toggle has no anchor: it escapes its field
+ * and lands at the far right of the monitoring filter row.
+ *
+ * Restore Lumo's geometry by making the end field's input container positioned
+ * again. The toggle then overlays at `right: 6px` inside the field (as designed)
+ * without taking layout space, so the start and end fields keep the same height.
+ *
+ * This must be injected into the picker's shadow DOM, so it is imported with
+ * @CssImport(themeFor = "vcf-date-range-picker"): the app dropped @Theme (which
+ * used to auto-apply themes/.../components/*.css), and a plain @CssImport only
+ * reaches shadow parts through inherited custom properties, not selectors.
+ */
+:host [part='end-text-field']::part(input-field) {
+  position: relative;
+  padding-left: 5px;
+}

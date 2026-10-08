@@ -10,9 +10,18 @@
 package org.karnak.backend.model.expression;
 
 import org.dcm4che3.data.Attributes;
-import org.dcm4che3.img.util.DicomUtils;
 import org.dcm4che3.util.TagUtils;
+import org.karnak.backend.util.DicomObjectTools;
 
+/**
+ * Exposes the attributes of the object being de-identified to the condition of a profile
+ * item.
+ *
+ * <p>
+ * Tags are resolved from the current dataset outwards, so a condition evaluated for an
+ * attribute nested in a sequence sees both the attributes of its item and those of the
+ * enclosing study — see {@link DicomObjectTools#getStringInScope}.
+ */
 public class ExprCondition implements ExpressionItem {
 
 	private final Attributes dcm;
@@ -41,7 +50,7 @@ public class ExprCondition implements ExpressionItem {
 	}
 
 	public boolean tagValueIsPresent(int tag, String value) {
-		String dcmValue = DicomUtils.getStringFromDicomElement(dcm, tag);
+		String dcmValue = DicomObjectTools.getStringInScope(dcm, tag);
 		return dcmValue != null && dcmValue.equals(value);
 	}
 
@@ -51,7 +60,7 @@ public class ExprCondition implements ExpressionItem {
 	}
 
 	public boolean tagValueContains(int tag, String value) {
-		String dcmValue = DicomUtils.getStringFromDicomElement(dcm, tag);
+		String dcmValue = DicomObjectTools.getStringInScope(dcm, tag);
 		return dcmValue != null && dcmValue.contains(value);
 	}
 
@@ -61,7 +70,7 @@ public class ExprCondition implements ExpressionItem {
 	}
 
 	public boolean tagValueBeginsWith(int tag, String value) {
-		String dcmValue = DicomUtils.getStringFromDicomElement(dcm, tag);
+		String dcmValue = DicomObjectTools.getStringInScope(dcm, tag);
 		return dcmValue != null && dcmValue.startsWith(value);
 	}
 
@@ -71,17 +80,17 @@ public class ExprCondition implements ExpressionItem {
 	}
 
 	public boolean tagValueEndsWith(int tag, String value) {
-		String dcmValue = DicomUtils.getStringFromDicomElement(dcm, tag);
+		String dcmValue = DicomObjectTools.getStringInScope(dcm, tag);
 		return dcmValue != null && dcmValue.endsWith(value);
 	}
 
 	public boolean tagIsPresent(String tag) {
 		int cleanTag = intFromHexString(tag);
-		return dcm.getString(cleanTag) != null;
+		return tagIsPresent(cleanTag);
 	}
 
 	public boolean tagIsPresent(int tag) {
-		return dcm.getString(tag) != null;
+		return DicomObjectTools.getStringInScope(dcm, tag) != null;
 	}
 
 }

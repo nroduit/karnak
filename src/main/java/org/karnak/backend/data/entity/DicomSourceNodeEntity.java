@@ -9,29 +9,53 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "DicomSourceNode")
 @Table(name = "dicom_source_node")
+@NullUnmarked
+@Getter
+@Setter
 public class DicomSourceNodeEntity implements Serializable {
 
-	private static final long serialVersionUID = -4917273057619947934L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id. Stored as a native UUID column (Postgres "uuid" / H2
+	// "UUID"), not a VARCHAR, for compactness and index performance.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
 
 	private String description;
 
 	// AETitle of the source node.
+	@NotBlank(message = "AETitle is mandatory")
+	@Size(max = 16, message = "AETitle has more than 16 characters")
 	private String aeTitle;
 
 	// the host or IP of the source node. If the hostname exists then it is checked
@@ -42,9 +66,13 @@ public class DicomSourceNodeEntity implements Serializable {
 	// the connection is abort
 	private Boolean checkHostname;
 
+	@ManyToOne
+	@JoinColumn(name = "forward_node_id")
+	@JsonIgnore
 	private ForwardNodeEntity forwardNodeEntity;
 
 	public DicomSourceNodeEntity() {
+		this.uuid = UUID.randomUUID();
 		this.description = "";
 		this.aeTitle = "";
 		this.hostname = "";
@@ -53,60 +81,6 @@ public class DicomSourceNodeEntity implements Serializable {
 
 	public static DicomSourceNodeEntity ofEmpty() {
 		return new DicomSourceNodeEntity();
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	@NotBlank(message = "AETitle is mandatory")
-	@Size(max = 16, message = "AETitle has more than 16 characters")
-	public String getAeTitle() {
-		return aeTitle;
-	}
-
-	public void setAeTitle(String aeTitle) {
-		this.aeTitle = aeTitle;
-	}
-
-	public String getHostname() {
-		return hostname;
-	}
-
-	public void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "forward_node_id")
-	public ForwardNodeEntity getForwardNodeEntity() {
-		return forwardNodeEntity;
-	}
-
-	public void setForwardNodeEntity(ForwardNodeEntity forwardNodeEntity) {
-		this.forwardNodeEntity = forwardNodeEntity;
-	}
-
-	public Boolean getCheckHostname() {
-		return checkHostname;
-	}
-
-	public void setCheckHostname(Boolean checkHostname) {
-		this.checkHostname = checkHostname;
 	}
 
 	/**
@@ -139,14 +113,12 @@ public class DicomSourceNodeEntity implements Serializable {
 			return false;
 		}
 		DicomSourceNodeEntity that = (DicomSourceNodeEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(description, that.description)
-				&& Objects.equals(aeTitle, that.aeTitle) && Objects.equals(hostname, that.hostname)
-				&& Objects.equals(checkHostname, that.checkHostname);
+		return Objects.equals(aeTitle, that.aeTitle) && Objects.equals(hostname, that.hostname);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, description, aeTitle, hostname, checkHostname);
+		return Objects.hash(aeTitle, hostname);
 	}
 
 }

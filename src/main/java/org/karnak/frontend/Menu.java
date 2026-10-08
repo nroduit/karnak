@@ -26,9 +26,13 @@ import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
 import java.util.HashMap;
 import java.util.Map;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.util.SecurityUtil;
 import org.karnak.frontend.util.ToggleButtonTheme;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class Menu extends FlexLayout {
 
 	private static final String SHOW_TABS = "show-tabs";
@@ -50,7 +54,7 @@ public class Menu extends FlexLayout {
 			}
 		});
 		showMenu.setClassName("menu-button");
-		showMenu.addThemeVariants(ButtonVariant.LUMO_SMALL);
+		showMenu.addThemeVariants(ButtonVariant.SMALL);
 		showMenu.setIcon(new Icon(VaadinIcon.MENU));
 		add(showMenu);
 
@@ -70,7 +74,7 @@ public class Menu extends FlexLayout {
 		Button logoutButton = new Button("Logout", VaadinIcon.SIGN_OUT.create());
 		logoutButton.addClickListener(event -> SecurityUtil.signOut());
 
-		logoutButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		logoutButton.addThemeVariants(ButtonVariant.ERROR);
 		add(logoutButton);
 	}
 

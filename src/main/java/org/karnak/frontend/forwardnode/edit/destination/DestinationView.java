@@ -16,9 +16,11 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
@@ -28,12 +30,15 @@ import org.karnak.frontend.util.UIS;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Destination View
  */
 @UIScope
 @Component
+@Generated()
+@NullUnmarked
 public class DestinationView extends VerticalLayout {
 
 	@Getter
@@ -128,6 +133,10 @@ public class DestinationView extends VerticalLayout {
 
 	private void setTextFieldFilter() {
 		filter.setPlaceholder(PLACEHOLDER_FILTER);
+		// Built-in clear button inside the field, like the monitoring UID filters
+		filter.setClearButtonVisible(true);
+		// Filter as the user types (no need to press Enter), like the monitoring filters
+		filter.setValueChangeMode(ValueChangeMode.LAZY);
 		// Apply the filter to grid's data provider. TextField value is never null
 		filter.addValueChangeListener(event -> destinationLogic.setFilter(event.getValue()));
 	}
@@ -135,19 +144,19 @@ public class DestinationView extends VerticalLayout {
 	private void setButtonNewLocalDICOM() {
 		newLocalDICOM = new Button(LABEL_NEW_LOCAL_DICOM);
 		newLocalDICOM.getElement().setAttribute("title", "New local folder destination");
-		newLocalDICOM.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newLocalDICOM.addThemeVariants(ButtonVariant.PRIMARY);
 		newLocalDICOM.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 
 	private void setButtonNewDestinationDICOM() {
 		newDestinationDICOM.getElement().setAttribute("title", "New destination of type dicom");
-		newDestinationDICOM.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newDestinationDICOM.addThemeVariants(ButtonVariant.PRIMARY);
 		newDestinationDICOM.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 
 	private void setButtonNewDestinationSTOW() {
 		newDestinationSTOW.getElement().setAttribute("title", "New destination of type stow");
-		newDestinationSTOW.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newDestinationSTOW.addThemeVariants(ButtonVariant.PRIMARY);
 		newDestinationSTOW.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 

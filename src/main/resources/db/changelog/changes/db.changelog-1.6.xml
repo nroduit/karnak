@@ -1,0 +1,69 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <changeSet author="karnak" id="1.6-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="build_conformance_report"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="build_conformance_report" type="BOOLEAN" defaultValue='false'>
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.6-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="conformance_report_notify"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="conformance_report_notify" type="VARCHAR(255)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.6-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="check_value_conformity"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="check_value_conformity" type="BOOLEAN" defaultValue='false'>
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.6-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="deep_sequence_validation"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="deep_sequence_validation" type="BOOLEAN" defaultValue='false'>
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.6-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="image_identity_check"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="image_identity_check" type="BOOLEAN" defaultValue='false'>
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

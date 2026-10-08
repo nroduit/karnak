@@ -11,7 +11,9 @@ package org.karnak.frontend.util;
 
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class NotificationUtil {
 
 	private NotificationUtil() {
@@ -23,7 +25,7 @@ public class NotificationUtil {
 	 */
 	public static void displayErrorMessage(String message, Notification.Position position) {
 		Span content = new Span(message);
-		content.getStyle().set("color", "var(--lumo-error-text-color)");
+		content.addClassName("karnak-error-text");
 		Notification notification = new Notification(content);
 		notification.setDuration(3000);
 		notification.setPosition(position);

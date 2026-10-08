@@ -9,13 +9,9 @@
  */
 package org.karnak.backend.model.action;
 
-import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
-import org.dcm4che3.util.TagUtils;
 import org.karnak.backend.model.profilepipe.HMAC;
-import org.slf4j.MDC;
 
-@Slf4j
 public class Keep extends AbstractAction {
 
 	public Keep(String symbol) {
@@ -24,11 +20,7 @@ public class Keep extends AbstractAction {
 
 	@Override
 	public void execute(Attributes dcm, int tag, HMAC hmac) {
-		if (log.isTraceEnabled()) {
-			String tagValueIn = AbstractAction.getStringValue(dcm, tag);
-			log.trace(CLINICAL_MARKER, PATTERN_WITH_IN, MDC.get("SOPInstanceUID"), TagUtils.toString(tag), symbol,
-					tagValueIn);
-		}
+		traceIn(dcm, tag);
 	}
 
 }

@@ -9,11 +9,10 @@
  */
 package org.karnak.frontend.dicom.mwl;
 
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.ItemClickEvent;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -32,18 +31,26 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.enums.Modality;
 import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.WorkListQueryData;
+import org.karnak.backend.util.DicomNodeUtil;
+import org.karnak.frontend.dicom.AETField;
 import org.karnak.frontend.dicom.AbstractView;
+import org.karnak.frontend.dicom.DicomNodeSelectionDialog;
+import org.karnak.frontend.dicom.DicomNodeSelectionDialog.SelectDicomNodeEvent;
 import org.karnak.frontend.dicom.PortField;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Calling Order 1) constructor 2) setParameter 3) beforeEnter
  */
+@Generated()
+@NullUnmarked
 public class DicomWorkListView extends AbstractView implements HasUrlParameter<String> {
 
 	private static final String PARAMETER_CALLING_AET = "callingAET";
@@ -133,7 +140,10 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private String actionParam;
 
-	public DicomWorkListView() {
+	private final DicomNodeUtil dicomNodeUtil;
+
+	public DicomWorkListView(DicomNodeUtil dicomNodeUtil) {
+		this.dicomNodeUtil = dicomNodeUtil;
 		init();
 		createView();
 		createMainLayout();
@@ -176,18 +186,23 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 
 	private void createView() {
 		setSizeFull();
+		getStyle().set("min-height", "0");
 	}
 
 	private void createMainLayout() {
 		mainLayout = new VerticalLayout();
 		mainLayout.setPadding(true);
 		mainLayout.setSpacing(true);
-		mainLayout.setWidthFull();
+		mainLayout.setSizeFull();
+		mainLayout.getStyle().set("min-height", "0");
 
 		buildWlConfigurationLayout();
 		buildQueryResultLayout();
 
 		mainLayout.add(wlConfigurationAndQueryLayout, queryResultLayout);
+		// Let the result section take the remaining height so its grid can scroll
+		// internally.
+		mainLayout.setFlexGrow(1, queryResultLayout);
 	}
 
 	private void buildWlConfigurationLayout() {
@@ -211,8 +226,9 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildWlConfigurationTitle() {
-		wlConfigurationTitle = new H6("Worklist Configuration");
+		wlConfigurationTitle = new H6("Worklist Node Configuration");
 		wlConfigurationTitle.getStyle().set("margin-top", "0px");
+		wlConfigurationTitle.getStyle().set("margin-bottom", "10px");
 	}
 
 	private void buildWlConfigurationForm() {
@@ -230,15 +246,15 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildCallingAETitleFld() {
-		callingAetFld = new TextField();
-		callingAetFld.setLabel("Calling AETitle");
+		callingAetFld = new AETField();
+		callingAetFld.setLabel("Calling AE Title");
 		callingAetFld.setRequired(true);
 		callingAetFld.setRequiredIndicatorVisible(true);
 		callingAetFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
 	private void buildWlAetFld() {
-		workListAetFld = new TextField("Worklist AET");
+		workListAetFld = new AETField("Worklist AE Title");
 		workListAetFld.setValueChangeMode(ValueChangeMode.EAGER);
 	}
 
@@ -254,29 +270,31 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildSelectWorkListBtn() {
-		selectWorkListBtn = new Button("Select Worklist");
+		selectWorkListBtn = new Button("Select Worklist Node");
 		selectWorkListBtn.getStyle().set("cursor", "pointer");
 
 		selectWorkListBtn.addClickListener(e -> openDicomWorklistSelectionDialog());
 	}
 
 	private void openDicomWorklistSelectionDialog() {
-		// DIALOGS
-		DicomWorkListSelectionDialog dicomWorklistSelectionDialog = new DicomWorkListSelectionDialog();
+		DicomNodeSelectionDialog dialog = new DicomNodeSelectionDialog(dicomNodeUtil.getWorkListNodeTypes(),
+				"Select Worklist Node", "Worklist node");
 
-		dicomWorklistSelectionDialog.addWorkListSelectionListener(e -> {
-			ConfigNode selectedWorkList = e.getSelectedWorkList();
+		dialog.addSelectDicomNodeListener((SelectDicomNodeEvent event) -> {
+			ConfigNode selectedWorkList = event.getSelectedDicomNode();
 
 			workListAetFld.setValue(selectedWorkList.getAet());
 			workListHostnameFld.setValue(selectedWorkList.getHostname());
 			workListPortFld.setValue(selectedWorkList.getPort());
 		});
 
-		dicomWorklistSelectionDialog.open();
+		dialog.open();
 	}
 
 	private void buildWlQueryTitle() {
 		wlQueryTitle = new H6("Worklist Query");
+		wlQueryTitle.getStyle().set("margin-bottom", "10px");
+		wlQueryTitle.getStyle().set("margin-top", "10px");
 	}
 
 	private void buildWlQueryForm() {
@@ -298,7 +316,7 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildScheduledStationAetFld() {
-		scheduledStationAetFld = new TextField("Scheduled Station AET");
+		scheduledStationAetFld = new AETField("Scheduled Station AE Title");
 	}
 
 	private void buildScheduledModalitySelector() {
@@ -317,11 +335,11 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildScheduledFromFld() {
-		scheduledFromFld = new DatePicker("Scheduled from");
+		scheduledFromFld = new DatePicker("Scheduled From");
 	}
 
 	private void buildScheduledToFld() {
-		scheduledToFld = new DatePicker("Scheduled to");
+		scheduledToFld = new DatePicker("Scheduled To");
 	}
 
 	private void buildPatientNameFld() {
@@ -345,17 +363,17 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 	}
 
 	private void buildClearBtn() {
-		clearBtn = new Button("Clear");
+		clearBtn = new Button("Reset Form");
 		clearBtn.getStyle().set("cursor", "pointer");
 
 		clearBtn.addClickListener(e -> binderForWorkListQuery.readBean(workListQueryData));
 	}
 
 	private void buildQueryBtn() {
-		queryBtn = new Button("Query");
+		queryBtn = new Button("Run Query");
 		queryBtn.getStyle().set("cursor", "pointer");
 		queryBtn.setEnabled(false);
-		queryBtn.addClassName("stroked-button");
+		queryBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		queryBtn.addClickListener(e -> executeQuery());
 	}
@@ -369,28 +387,27 @@ public class DicomWorkListView extends AbstractView implements HasUrlParameter<S
 			.set("box-shadow",
 					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
 		queryResultLayout.getStyle().set("border-radius", "4px");
+		queryResultLayout.getStyle().set("min-height", "0");
 		queryResultLayout.setVisible(false);
 
 		buildQueryResultTitleBar();
 		buildGrid();
 
 		queryResultLayout.add(queryResultTitle, queryResultGrid);
+		queryResultLayout.setFlexGrow(1, queryResultGrid);
 	}
 
 	private void buildQueryResultTitleBar() {
 		queryResultTitle = new H6("Query Result");
 		queryResultTitle.getStyle().set("margin-top", "0px");
-		queryResultTitle.getStyle().set("padding-bottom", "var(--lumo-space-m)");
+		queryResultTitle.getStyle().set("padding-bottom", "var(--vaadin-gap-m)");
 	}
 
 	private void buildGrid() {
 		queryResultGrid = new DicomWorkListGrid();
-		queryResultGrid.setWidthFull();
-
+		queryResultGrid.setSizeFull();
+		queryResultGrid.setMinHeight("200px");
 		queryResultGrid.setDataProvider(dataProviderForAttributes);
-
-		queryResultGrid.addItemClickListener(
-				(ComponentEventListener<ItemClickEvent<Attributes>>) event -> logic.itemSelected(event.getItem()));
 	}
 
 	private void bindFields() {

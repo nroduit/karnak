@@ -1,7 +1,19 @@
-**/.gitignore
 **/.git
-**/Dockerfile
+**/.gitignore
 **/.dockerignore
+**/Dockerfile
 **/README.md
+**/.DS_Store
 **/docker
-**/doc
+**/docs
+node_modules/
+.idea/
+.claude/
+logs/
+data/
+dicom/
+img/
+build-portable/
+# keep target out of context except the prebuilt jar used by src/main/docker/Dockerfile
+target/*
+!target/karnak-*.jar

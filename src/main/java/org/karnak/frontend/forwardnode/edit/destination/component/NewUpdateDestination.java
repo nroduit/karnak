@@ -16,12 +16,16 @@ import com.vaadin.flow.data.binder.Binder;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.UIDType;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
+import org.weasis.core.util.annotations.Generated;
 
 @Getter
+@Generated()
+@NullUnmarked
 public class NewUpdateDestination extends VerticalLayout {
 
 	private final FormDICOM formDICOM;
@@ -79,6 +83,9 @@ public class NewUpdateDestination extends VerticalLayout {
 			binderFormSTOW.readBean(currentDestinationEntity);
 			handleEventTranscodeOnlyUncompressedWhenSomeTransferSyntax(formSTOW.getTranscodeOnlyUncompressedComponent(),
 					currentDestinationEntity.getTransferSyntax(), false);
+			// Re-apply last so the virtual (report-only) state wins over the transcode
+			// enabling driven by the transfer syntax above.
+			formSTOW.updateVirtualState();
 		}
 		else if (type == DestinationType.dicom) {
 			add(formDICOM);
@@ -86,6 +93,9 @@ public class NewUpdateDestination extends VerticalLayout {
 			handleEventTranscodeOnlyUncompressedWhenSomeTransferSyntax(
 					formDICOM.getTranscodeOnlyUncompressedComponent(), currentDestinationEntity.getTransferSyntax(),
 					false);
+			// Re-apply last so the virtual (report-only) state wins over the transcode
+			// enabling driven by the transfer syntax above.
+			formDICOM.updateVirtualState();
 		}
 	}
 

@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,17 +17,41 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity
 @Table(name = "secret")
+@NullUnmarked
+@Getter
+@Setter
 public class SecretEntity implements Serializable {
 
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
+
+	@ManyToOne
+	@JoinColumn(name = "project_id")
 	private ProjectEntity projectEntity;
 
 	private byte[] secretKey;
@@ -36,61 +61,20 @@ public class SecretEntity implements Serializable {
 	private boolean active;
 
 	public SecretEntity() {
+		this.uuid = UUID.randomUUID();
 	}
 
 	public SecretEntity(byte[] secretKey) {
+		this.uuid = UUID.randomUUID();
 		this.secretKey = secretKey;
-		this.creationDate = LocalDateTime.now();
+		this.creationDate = LocalDateTime.now(ZoneId.of("CET"));
 	}
 
 	public SecretEntity(ProjectEntity projectEntity, byte[] secretKey) {
+		this.uuid = UUID.randomUUID();
 		this.projectEntity = projectEntity;
 		this.secretKey = secretKey;
-		this.creationDate = LocalDateTime.now();
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "project_id")
-	public ProjectEntity getProjectEntity() {
-		return projectEntity;
-	}
-
-	public void setProjectEntity(ProjectEntity projectEntity) {
-		this.projectEntity = projectEntity;
-	}
-
-	public byte[] getSecretKey() {
-		return secretKey;
-	}
-
-	public void setSecretKey(byte[] key) {
-		this.secretKey = key;
-	}
-
-	public LocalDateTime getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(LocalDateTime creationDate) {
-		this.creationDate = creationDate;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
+		this.creationDate = LocalDateTime.now(ZoneId.of("CET"));
 	}
 
 	@Override
@@ -102,13 +86,14 @@ public class SecretEntity implements Serializable {
 			return false;
 		}
 		SecretEntity that = (SecretEntity) o;
-		return active == that.active && Objects.equals(id, that.id) && Objects.equals(projectEntity, that.projectEntity)
-				&& Arrays.equals(secretKey, that.secretKey) && Objects.equals(creationDate, that.creationDate);
+		return active == that.active && Objects.equals(id, that.id) && Objects.equals(uuid, that.uuid)
+				&& Objects.equals(projectEntity, that.projectEntity) && Arrays.equals(secretKey, that.secretKey)
+				&& Objects.equals(creationDate, that.creationDate);
 	}
 
 	@Override
 	public int hashCode() {
-		int result = Objects.hash(id, projectEntity, creationDate, active);
+		int result = Objects.hash(id, uuid, projectEntity, creationDate, active);
 		result = 31 * result + Arrays.hashCode(secretKey);
 		return result;
 	}

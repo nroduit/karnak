@@ -17,12 +17,13 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.dcm4che3.data.Attributes;
+import org.dcm4che3.img.util.DateTimeUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ArgumentEntity;
-import org.karnak.backend.dicom.DateTimeUtils;
 
 @Slf4j
+@NullUnmarked
 public class ShiftDate {
 
 	private ShiftDate() {
@@ -47,17 +48,13 @@ public class ShiftDate {
 		return DateTimeUtils.formatDT(dummyLocalDateTime);
 	}
 
-	private static String addMissingZero(String age, int nMissingValue) {
-		int n = nMissingValue - age.length();
-		return StringUtils.repeat('0', n) + age;
+	private static String addMissingZero(String age, int targetLength) {
+		return "0".repeat(Math.max(0, targetLength - age.length())) + age;
 	}
 
 	public static String ageByDays(String age, int shiftDays) {
-		String valueAge = age.substring(0, 3);
-		int intAge = Integer.parseInt(valueAge);
-
-		int maxSubstring = age.length();
-		String formatAge = age.substring(3, maxSubstring);
+		int intAge = Integer.parseInt(age.substring(0, 3));
+		String formatAge = age.substring(3);
 
 		int intDummyAge = switch (formatAge) {
 			case "Y" -> intAge + shiftDays / 365;
@@ -74,25 +71,8 @@ public class ShiftDate {
 		verifyShiftArguments(argumentEntities);
 
 		String dcmElValue = dcm.getString(tag);
-		int shiftDays = -1;
-		int shiftSeconds = -1;
-
-		for (ArgumentEntity argumentEntity : argumentEntities) {
-			final String key = argumentEntity.getArgumentKey();
-			final String value = argumentEntity.getArgumentValue();
-
-			try {
-				if (key.equals("seconds")) {
-					shiftSeconds = Integer.parseInt(value);
-				}
-				if (key.equals("days")) {
-					shiftDays = Integer.parseInt(value);
-				}
-			}
-			catch (Exception e) {
-				log.error("args {} is not correct", value, e);
-			}
-		}
+		int shiftDays = ArgumentUtil.intValue(argumentEntities, "days", -1);
+		int shiftSeconds = ArgumentUtil.intValue(argumentEntities, "seconds", -1);
 		return shiftValue(dcm, tag, dcmElValue, shiftDays, shiftSeconds);
 	}
 

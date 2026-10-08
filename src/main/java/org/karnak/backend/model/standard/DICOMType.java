@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.exception.StandardDICOMException;
 import org.karnak.backend.util.MetadataDICOMObject;
@@ -23,7 +24,7 @@ public class DICOMType {
 	private DICOMType() {
 	}
 
-	public static String getBySOP(Attributes dcm, int tag) {
+	public static @Nullable String getBySOP(Attributes dcm, int tag) {
 		final StandardDICOM standardDICOM = AppConfig.getInstance().getStandardDICOM();
 		final String sopUID = MetadataDICOMObject.getValue(dcm, Tag.SOPClassUID);
 		final String tagPath = MetadataDICOMObject.getTagPath(dcm, tag);
@@ -32,19 +33,17 @@ public class DICOMType {
 		try {
 			List<ModuleAttribute> moduleAttribute = standardDICOM.getAttributesBySOP(sopUID, tagPath);
 			if (moduleAttribute.size() == 1) {
-				currentType = moduleAttribute.get(0).getType();
+				currentType = moduleAttribute.getFirst().getType();
 			}
 			else if (moduleAttribute.size() > 1) {
-				currentType = ModuleAttribute.getStrictedType(moduleAttribute);
+				currentType = ModuleAttribute.getStricterType(moduleAttribute);
 			}
 			else {
-				log.warn(String.format("Could not found the attribute %s in the SOP %s.", tagPath, sopUID));
+				log.warn("Could not find the attribute {} in the SOP {}.", tagPath, sopUID);
 			}
 		}
-		catch (StandardDICOMException standardDICOMException) {
-			log.error(
-					String.format("Could not find a DICOM type with the SOP %s and the attribute %s", sopUID, tagPath),
-					standardDICOMException);
+		catch (StandardDICOMException e) {
+			log.error("Could not find a DICOM type with the SOP {} and the attribute {}", sopUID, tagPath, e);
 		}
 		return currentType;
 	}

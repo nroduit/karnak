@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,15 +17,26 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
+
 @Entity(name = "KheopsAlbums")
 @Table(name = "kheops_albums")
+@NullUnmarked
+@Getter
+@Setter
 public class KheopsAlbumsEntity implements Serializable {
 
-	private static final long serialVersionUID = -3315720301354286325L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private String urlAPI;
@@ -35,6 +47,9 @@ public class KheopsAlbumsEntity implements Serializable {
 
 	private String condition;
 
+	@ManyToOne
+	@JoinColumn(name = "destination_id")
+	@JsonIgnore
 	private DestinationEntity destinationEntity = new DestinationEntity();
 
 	public KheopsAlbumsEntity() {
@@ -46,58 +61,6 @@ public class KheopsAlbumsEntity implements Serializable {
 		this.authorizationDestination = authorizationDestination;
 		this.authorizationSource = authorizationSource;
 		this.condition = condition;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getUrlAPI() {
-		return urlAPI;
-	}
-
-	public void setUrlAPI(String urlAPI) {
-		this.urlAPI = urlAPI;
-	}
-
-	public String getAuthorizationDestination() {
-		return authorizationDestination;
-	}
-
-	public void setAuthorizationDestination(String authorizationDestination) {
-		this.authorizationDestination = authorizationDestination;
-	}
-
-	public String getAuthorizationSource() {
-		return authorizationSource;
-	}
-
-	public void setAuthorizationSource(String authorizationSource) {
-		this.authorizationSource = authorizationSource;
-	}
-
-	public String getCondition() {
-		return condition;
-	}
-
-	public void setCondition(String condition) {
-		this.condition = condition;
-	}
-
-	@ManyToOne
-	@JoinColumn(name = "destination_id")
-	public DestinationEntity getDestinationEntity() {
-		return destinationEntity;
-	}
-
-	public void setDestinationEntity(DestinationEntity destinationEntity) {
-		this.destinationEntity = destinationEntity;
 	}
 
 	@Override

@@ -23,6 +23,7 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
@@ -30,6 +31,7 @@ import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
+import org.karnak.backend.service.AuthConfigService;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SOPClassUIDService;
 import org.karnak.backend.util.DoubleToIntegerConverter;
@@ -52,15 +54,19 @@ import org.karnak.frontend.util.UIS;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.weasis.core.util.StringUtil;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Layout of the edit forward node
  */
-
+@Generated()
+@NullUnmarked
 public class LayoutEditForwardNode extends VerticalLayout {
 
 	// Services
 	private final transient ProjectService projectService;
+
+	private final transient AuthConfigService authConfigService;
 
 	private final SOPClassUIDService sopClassUIDService;
 
@@ -91,6 +97,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 	public LayoutEditForwardNode(ForwardNodeLogic forwardNodeLogic, Environment environment) {
 		this.projectService = forwardNodeLogic.getProjectService();
+		this.authConfigService = forwardNodeLogic.getAuthConfigService();
 		this.sopClassUIDService = forwardNodeLogic.getSopClassUIDService();
 		this.currentForwardNodeEntity = null;
 		this.binderForwardNode = new BeanValidationBinder<>(ForwardNodeEntity.class);
@@ -121,6 +128,10 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	 */
 	private void buildLayout() {
 		layoutDestinationsSources.setSizeFull();
+		// More breathing room above the tabs, and tighten the gap below them so the
+		// sources/destinations content sits closer to the tab bar.
+		tabSourcesDestination.getStyle().set("margin-top", "1rem").set("margin-bottom", "0");
+		layoutDestinationsSources.getStyle().set("padding-top", "0");
 		getStyle().set("overflow-y", "auto");
 		setSizeFull();
 		setEditView();
@@ -180,42 +191,60 @@ public class LayoutEditForwardNode extends VerticalLayout {
 		newUpdateDestination.getFormDICOM()
 			.getDeIdentificationComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormDICOM()
 			.getTagMorphingComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormDICOM()
 			.getFilterBySOPClassesForm()
 			.getSopFilter()
 			.setItems(sopClassUIDService.getAllSOPClassUIDsName());
+		newUpdateDestination.getFormDICOM()
+			.getDeIdentificationComponent()
+			.getPseudonymFromApiComponent()
+			.getAuthConfig()
+			.setItems(authConfigService.getAllAuthConfigCodes());
 
 		// FormStow
 		newUpdateDestination.getFormSTOW()
 			.getDeIdentificationComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormSTOW()
 			.getTagMorphingComponent()
 			.getProjectDropDown()
-			.setItems(projectService.getAllProjects());
+			.setItems(projectService.retrieveAllProjects());
 		newUpdateDestination.getFormSTOW()
 			.getFilterBySOPClassesForm()
 			.getSopFilter()
 			.setItems(sopClassUIDService.getAllSOPClassUIDsName());
+		newUpdateDestination.getFormSTOW()
+			.getDeIdentificationComponent()
+			.getPseudonymFromApiComponent()
+			.getAuthConfig()
+			.setItems(authConfigService.getAllAuthConfigCodes());
 
 		// Set button in view in order to be able to enable/disable it
 		destinationView.setButtonForwardNodeSaveDeleteCancel(buttonForwardNodeSaveDeleteCancel);
 
 		// Set editable form in order to retrieve save button to enable/disable it
 		destinationView.setNewUpdateDestination(newUpdateDestination);
+
+		// Place the Save/Delete/Cancel buttons on the AE title / description row so they
+		// align with the two text fields.
+		editAETitleDescription.setActionButtons(buttonForwardNodeSaveDeleteCancel);
 	}
 
 	public void setEditView() {
 		removeAll();
+		// Save/Delete/Cancel act on the forward node (AE title / description) and sit on
+		// the
+		// same row as those fields (see initComponents). Sources and destinations have
+		// their
+		// own save/delete in their forms below.
 		add(UIS.setWidthFull(this.editAETitleDescription), UIS.setWidthFull(this.tabSourcesDestination),
-				UIS.setWidthFull(this.layoutDestinationsSources),
-				UIS.setWidthFull(this.buttonForwardNodeSaveDeleteCancel));
+				UIS.setWidthFull(this.layoutDestinationsSources));
 	}
 
 	public void load(ForwardNodeEntity forwardNodeEntity) {
@@ -305,8 +334,14 @@ public class LayoutEditForwardNode extends VerticalLayout {
 	private void setEventBinderForwardNode() {
 		this.binderForwardNode.addStatusChangeListener(event -> {
 			boolean isValid = !event.hasValidationErrors();
-			boolean hasChanges = this.binderForwardNode.hasChanges();
-			this.buttonForwardNodeSaveDeleteCancel.getSave().setEnabled(hasChanges && isValid);
+			// The forward-node binder uses setBean (write-through): a valid edit is
+			// written
+			// to the bean immediately, so hasChanges() turns false and would wrongly
+			// disable
+			// Save right after typing. Keep Save enabled whenever a node is loaded and
+			// valid.
+			boolean nodeLoaded = this.currentForwardNodeEntity != null;
+			this.buttonForwardNodeSaveDeleteCancel.getSave().setEnabled(nodeLoaded && isValid);
 		});
 	}
 
@@ -473,7 +508,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 				if (event.getValue()) {
 					// Deactivate tag morphing
 					tagMorphingComponent.getTagMorphingCheckbox().setValue(false);
-					if (!projectService.getAllProjects().isEmpty()) {
+					if (!projectService.retrieveAllProjects().isEmpty()) {
 						deIdentificationComponent.getDeIdentificationDiv().setVisible(true);
 						deIdentificationComponent.getDestinationComponentUtil()
 							.setTextOnSelectionProject(deIdentificationComponent.getProjectDropDown().getValue(),
@@ -503,7 +538,7 @@ public class LayoutEditForwardNode extends VerticalLayout {
 					// Deactivate deidentification
 					deIdentificationComponent.getDeIdentificationCheckbox().setValue(false);
 
-					if (!projectService.getAllProjects().isEmpty()) {
+					if (!projectService.retrieveAllProjects().isEmpty()) {
 						tagMorphingComponent.getTagMorphingDiv().setVisible(true);
 						tagMorphingComponent.getDestinationComponentUtil()
 							.setTextOnSelectionProject(tagMorphingComponent.getProjectDropDown().getValue(),
@@ -651,7 +686,10 @@ public class LayoutEditForwardNode extends VerticalLayout {
 
 		deIdentificationComponent.getDestinationBinder()
 			.forField(deIdentificationComponent.getPseudonymFromApiComponent().getAuthConfig())
-			.withConverter(String::valueOf, value -> (value == null) ? "" : value)
+			// The combo yields null when no identifier is selected; store it as an empty
+			// string rather than the literal "null".
+			.withConverter(value -> (value == null) ? "" : value,
+					value -> (value == null || value.isEmpty()) ? null : value)
 			.bind(DestinationEntity::getAuthConfig, DestinationEntity::setAuthConfig);
 
 		deIdentificationComponent.getDestinationBinder()

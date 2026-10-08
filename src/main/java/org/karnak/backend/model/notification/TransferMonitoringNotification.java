@@ -9,12 +9,12 @@
  */
 package org.karnak.backend.model.notification;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Model used to build transfer monitoring notification
@@ -22,6 +22,7 @@ import java.util.List;
 @Setter
 @Getter
 @EqualsAndHashCode
+@NullUnmarked
 public class TransferMonitoringNotification {
 
 	private String subject;

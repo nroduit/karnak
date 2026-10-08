@@ -15,17 +15,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
+import org.dcm4che3.img.util.DateTimeUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ArgumentEntity;
-import org.karnak.backend.dicom.DateTimeUtils;
 
 @Slf4j
+@NullUnmarked
 public class DateFormat {
 
 	// Date formats
@@ -54,7 +54,7 @@ public class DateFormat {
 	}
 
 	/**
-	 * Format a LocalDate to a specifig
+	 * Format a LocalDate to a specific format
 	 * @param date Date to format
 	 * @param format Format to apply
 	 * @return Formatted date String
@@ -75,82 +75,45 @@ public class DateFormat {
 
 	public static String formatDA(String date, String option) {
 		LocalDate localDate = DateTimeUtils.parseDA(date);
-		switch (option) {
-			case DAY:
-				localDate = localDate.minusDays(localDate.getDayOfMonth() - 1L);
-				break;
-			case MONTH_DAY:
-				localDate = localDate.minusDays(localDate.getDayOfMonth() - 1L);
-				localDate = localDate.minusMonths(localDate.getMonthValue() - 1L);
-				break;
-		}
-
+		localDate = switch (option) {
+			case DAY -> localDate.withDayOfMonth(1);
+			case MONTH_DAY -> localDate.withDayOfMonth(1).withMonth(1);
+			default -> localDate;
+		};
 		return localDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 	}
 
 	public static String formatDT(String dateTime, String option) {
-
 		Temporal localDateTime = DateTimeUtils.parseDT(dateTime);
-
-		switch (option) {
-			case DAY:
-				localDateTime = localDateTime.minus(localDateTime.get(ChronoField.DAY_OF_MONTH) - 1L, ChronoUnit.DAYS);
-				break;
-			case MONTH_DAY:
-				localDateTime = localDateTime.minus(localDateTime.get(ChronoField.DAY_OF_MONTH) - 1L, ChronoUnit.DAYS);
-				localDateTime = localDateTime.minus(localDateTime.get(ChronoField.MONTH_OF_YEAR) - 1L,
-						ChronoUnit.MONTHS);
-				break;
-		}
-
+		localDateTime = switch (option) {
+			case DAY -> localDateTime.with(ChronoField.DAY_OF_MONTH, 1);
+			case MONTH_DAY -> localDateTime.with(ChronoField.DAY_OF_MONTH, 1).with(ChronoField.MONTH_OF_YEAR, 1);
+			default -> localDateTime;
+		};
 		return DateTimeUtils.formatDT(localDateTime);
 	}
 
 	public static String format(Attributes dcm, int tag, List<ArgumentEntity> argumentEntities)
 			throws DateTimeException {
-		try {
-			verifyPatternArguments(argumentEntities);
-		}
-		catch (IllegalArgumentException e) {
-			throw e;
-		}
+		verifyPatternArguments(argumentEntities);
 
 		String dcmElValue = dcm.getString(tag);
-		String format = "";
-
-		for (ArgumentEntity argumentEntity : argumentEntities) {
-			final String key = argumentEntity.getArgumentKey();
-			final String value = argumentEntity.getArgumentValue();
-
-			try {
-				if (key.equals("remove")) {
-					format = value;
-				}
-			}
-			catch (Exception e) {
-				log.error("args {} is not correct", value, e);
-			}
-		}
-		if (dcmElValue != null) {
-			return switch (dcm.getVR(tag)) {
-				case DA -> formatDA(dcmElValue, format);
-				case DT -> formatDT(dcmElValue, format);
-				default -> null;
-			};
-		}
-		else {
+		if (dcmElValue == null) {
 			return null;
 		}
+		String format = ArgumentUtil.stringValue(argumentEntities, "remove", "");
+		return switch (dcm.getVR(tag)) {
+			case DA -> formatDA(dcmElValue, format);
+			case DT -> formatDT(dcmElValue, format);
+			default -> null;
+		};
 	}
 
-	public static void verifyPatternArguments(List<ArgumentEntity> argumentEntities) throws IllegalArgumentException {
-		List<String> listValue = new ArrayList<>();
-		listValue.add(DAY);
-		listValue.add(MONTH_DAY);
-
+	public static void verifyPatternArguments(List<ArgumentEntity> argumentEntities) {
+		List<String> allowedValues = List.of(DAY, MONTH_DAY);
 		if (argumentEntities.stream()
 			.noneMatch(argument -> argument.getArgumentKey().equals("remove")
-					&& listValue.contains(argument.getArgumentValue()))) {
+					&& allowedValues.contains(argument.getArgumentValue()))) {
 			IllegalArgumentException missingParameters = new IllegalArgumentException(
 					"Cannot build the option date_format, arguments are not correct");
 			log.error("Missing argument, the class need pattern as parameters", missingParameters);

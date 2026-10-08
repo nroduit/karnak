@@ -11,11 +11,11 @@ package org.karnak.backend.model.notification;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.constant.Notification;
 
 /**
@@ -25,6 +25,7 @@ import org.karnak.backend.constant.Notification;
 @Getter
 @EqualsAndHashCode
 @ToString
+@NullUnmarked
 public class SerieSummaryNotification {
 
 	private String serieUid;

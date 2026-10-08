@@ -36,8 +36,8 @@ public class StandardDicomTest {
 	@Test
 	public void getAttributeDetailTest() {
 		AttributeDetail patient = dicom.getAttributeDetail("00100010");
-		assertEquals("Patient's Name", patient.getName());
-		assertEquals("PN", patient.getValueRepresentation());
+		assertEquals("Patient's Name", patient.name());
+		assertEquals("PN", patient.valueRepresentation());
 	}
 
 	@Test

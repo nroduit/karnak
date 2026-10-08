@@ -33,11 +33,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.karnak.backend.cache.Patient;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.model.patient.PatientModel;
 import org.weasis.core.util.StringUtil;
+import org.weasis.core.util.annotations.Generated;
 
 @Slf4j
+@Generated()
+@NullUnmarked
 public class CSVDialog extends Dialog {
 
 	private static final String EXTERNAL_PSEUDONYM = "External Pseudonym";
@@ -56,7 +60,7 @@ public class CSVDialog extends Dialog {
 			ISSUER_OF_PATIENT_ID };
 
 	@Getter
-	private final List<Patient> patientsList;
+	private final List<PatientModel> patientsList;
 
 	private NumberField fromLineField;
 
@@ -111,17 +115,21 @@ public class CSVDialog extends Dialog {
 	private void setElement() {
 		divTitle = new Div();
 		divTitle.setText(TITLE);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		divGridContent = new Div();
 		errorMsg = new Div();
-		errorMsg.getStyle().set("font-weight", "bolder").set("padding-bottom", "10px").set("color", "red");
+		errorMsg.getStyle()
+			.set("font-weight", "var(--aura-font-weight-semibold)")
+			.set("padding-bottom", "10px")
+			.set("color", "var(--aura-red-text)");
 
 		fromLineField = new NumberField("From line ");
 		fromLineField.setValue(1d);
 		fromLineField.setStepButtonsVisible(true);
 		fromLineField.setMin(1);
 		fromLineField.setMax((double) allRows.size() + 1);
+		fromLineField.getStyle().set("margin-bottom", "10px");
 
 		readCSVButton = new Button("Upload CSV", event -> {
 			if (selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM).equals(-1)
@@ -133,7 +141,7 @@ public class CSVDialog extends Dialog {
 				close();
 			}
 		});
-		readCSVButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		readCSVButton.addThemeVariants(ButtonVariant.PRIMARY);
 		readCSVButton.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 
 		cancelButton = new Button("Cancel", event -> close());
@@ -226,9 +234,14 @@ public class CSVDialog extends Dialog {
 			for (String[] row : allRows.subList(fromLineField.getValue().intValue() - 1, allRows.size())) {
 				String issuerOfPatientID = selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID).equals(-1) ? ""
 						: row[selectValuesPositionHashMap.get(ISSUER_OF_PATIENT_ID)];
-				final Patient newPatient = new Patient(row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
-						row[selectValuesPositionHashMap.get(PATIENT_ID)], "", "", issuerOfPatientID,
-						projectEntity.getId());
+				String firstName = selectValuesPositionHashMap.get(PATIENT_FIRST_NAME).equals(-1) ? ""
+						: row[selectValuesPositionHashMap.get(PATIENT_FIRST_NAME)];
+				String lastName = selectValuesPositionHashMap.get(PATIENT_LAST_NAME).equals(-1) ? ""
+						: row[selectValuesPositionHashMap.get(PATIENT_LAST_NAME)];
+				final PatientModel newPatient = new PatientModel(
+						row[selectValuesPositionHashMap.get(EXTERNAL_PSEUDONYM)],
+						row[selectValuesPositionHashMap.get(PATIENT_ID)], firstName, lastName, issuerOfPatientID,
+						projectEntity.getId(), projectEntity.getUuid());
 				patientsList.add(newPatient);
 			}
 		}

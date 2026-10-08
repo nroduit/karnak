@@ -11,10 +11,14 @@ package org.karnak.frontend.extid;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
+import org.weasis.core.util.annotations.Generated;
 
-// TODO: currently not used but should be used to replace filters in ExternalIDGrid
+// Holds the live filter terms applied to the ExternalIDGrid data view
 @Setter
 @Getter
+@Generated()
+@NullUnmarked
 public class PatientFilter {
 
 	private String extidFilter;

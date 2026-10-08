@@ -13,19 +13,17 @@ import java.time.DateTimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
-import org.karnak.backend.data.entity.ExcludedTagEntity;
-import org.karnak.backend.data.entity.IncludedTagEntity;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.MultipleActions;
 import org.karnak.backend.model.action.Replace;
-import org.karnak.backend.model.expression.ExprCondition;
-import org.karnak.backend.model.expression.ExpressionError;
-import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
+import org.karnak.backend.model.profilepipe.TagPath;
 import org.karnak.backend.util.DateFormat;
+import org.karnak.backend.util.ShiftApiDate;
 import org.karnak.backend.util.ShiftByTagDate;
 import org.karnak.backend.util.ShiftDate;
 import org.karnak.backend.util.ShiftRangeDate;
@@ -45,70 +43,55 @@ public class ActionDates extends AbstractProfileItem {
 		exceptedTagsAction = new TagActionMap();
 		actionByDefault = new Replace("D");
 		profileValidation();
-		setActionHashMap();
-	}
-
-	private void setActionHashMap() {
-		if (tagEntities != null && !tagEntities.isEmpty()) {
-			for (IncludedTagEntity tag : tagEntities) {
-				tagsAction.put(tag.getTagValue(), actionByDefault);
-			}
-		}
-		if (excludedTagEntities != null && !excludedTagEntities.isEmpty()) {
-			for (ExcludedTagEntity tag : excludedTagEntities) {
-				exceptedTagsAction.put(tag.getTagValue(), actionByDefault);
-			}
-		}
+		mapTagsToAction(tagsAction, exceptedTagsAction, actionByDefault);
 	}
 
 	@Override
 	public void profileValidation() throws ProfileException {
-		try {
-			if (option == null) {
-				throw new ProfileException("Cannot build the profile " + codeName
-						+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, date_format]");
-			}
-			switch (option) {
-				case "shift" -> ShiftDate.verifyShiftArguments(argumentEntities);
-				case "shift_range" -> ShiftRangeDate.verifyShiftArguments(argumentEntities);
-				case "shift_by_tag" -> ShiftByTagDate.verifyShiftArguments(argumentEntities);
-				case "date_format" -> DateFormat.verifyPatternArguments(argumentEntities);
-				default -> throw new ProfileException("Cannot build the profile " + codeName + " with the option given "
-						+ option + " : Option available (shift, shift_range, shift_by_tag, date_format)");
-			}
+		if (option == null) {
+			throw new ProfileException("Cannot build the profile " + codeName
+					+ " : An option must be given. Option available: [shift, shift_range, shift_by_tag, shift_from_api, date_format]");
 		}
-		catch (Exception e) {
-			throw e;
+		switch (option) {
+			case "shift" -> ShiftDate.verifyShiftArguments(argumentEntities);
+			case "shift_range" -> ShiftRangeDate.verifyShiftArguments(argumentEntities);
+			case "shift_by_tag" -> ShiftByTagDate.verifyShiftArguments(argumentEntities);
+			case "shift_from_api" -> ShiftApiDate.verifyShiftArguments(argumentEntities);
+			case "date_format" -> DateFormat.verifyPatternArguments(argumentEntities);
+			default -> throw new ProfileException("Cannot build the profile " + codeName + " with the option given "
+					+ option + " : Option available (shift, shift_range, shift_by_tag, shift_from_api, date_format)");
 		}
 
-		final ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(new Attributes()),
-				Boolean.class);
-		if (condition != null && !expressionError.isValid()) {
-			throw new ProfileException(expressionError.getMsg());
-		}
+		validateTagPaths();
+		validateCondition();
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac) {
+		return getAction(dcm, original, tag, hmac, TagPath.ROOT);
+	}
+
+	@Override
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac, TagPath path) {
 		final VR vr = dcm.getVR(tag);
 
 		if (vr == VR.AS || vr == VR.DA || vr == VR.DT || vr == VR.TM) {
-			if (exceptedTagsAction.get(tag) != null) {
+			if (exceptedTagsAction.get(tag, path) != null) {
 				return null;
 			}
 
-			if (!tagsAction.isEmpty() && tagsAction.get(tag) == null) {
+			if (!tagsAction.isEmpty() && tagsAction.get(tag, path) == null) {
 				return null;
 			}
 			try {
-				String dummyValue = applyOption(dcmCopy, tag, hmac);
+				String dummyValue = applyOption(dcm, original, tag, hmac);
 				if (dummyValue != null) {
 					actionByDefault.setDummyValue(dummyValue);
 					return actionByDefault;
 				}
 			}
 			catch (DateTimeException dateTimeException) {
-				String dcmElValue = dcmCopy.getString(tag);
+				String dcmElValue = dcm.getString(tag);
 				log.warn(String.format("Invalid date %s, the most strictest action will be choose between X/Z/D",
 						dcmElValue), dateTimeException);
 				return new MultipleActions("X/Z/D");
@@ -117,12 +100,34 @@ public class ActionDates extends AbstractProfileItem {
 		return null;
 	}
 
-	private String applyOption(Attributes dcmCopy, int tag, HMAC hmac) throws DateTimeException {
+	/**
+	 * Applies the configured option to the value of {@code tag}.
+	 *
+	 * <p>
+	 * The value to transform always comes from {@code dcm}, the dataset being
+	 * de-identified: it is the one the pipeline will forward, and the only one holding
+	 * the value at this point of the walk.
+	 *
+	 * <p>
+	 * The options that read <b>other</b> attributes get {@code original} in addition and
+	 * resolve them there: read from {@code dcm}, those attributes would already be
+	 * de-identified whenever they sort before {@code tag}, since the pipeline walks the
+	 * tags in ascending order.
+	 * @param dcm dataset being de-identified, at the nesting level of {@code tag}
+	 * @param original untouched copy of {@code dcm}
+	 * @param tag tag whose value must be transformed
+	 * @param hmac hash context of the current patient
+	 * @return the transformed value, or {@code null} when the option does not apply
+	 * @throws DateTimeException if the value of {@code tag} is not a valid date/time
+	 */
+	private @Nullable String applyOption(Attributes dcm, Attributes original, int tag, HMAC hmac)
+			throws DateTimeException {
 		return switch (option) {
-			case "shift" -> ShiftDate.shift(dcmCopy, tag, argumentEntities);
-			case "shift_range" -> ShiftRangeDate.shift(dcmCopy, tag, argumentEntities, hmac);
-			case "shift_by_tag" -> ShiftByTagDate.shift(dcmCopy, tag, argumentEntities, hmac);
-			case "date_format" -> DateFormat.format(dcmCopy, tag, argumentEntities);
+			case "shift" -> ShiftDate.shift(dcm, tag, argumentEntities);
+			case "shift_range" -> ShiftRangeDate.shift(dcm, tag, argumentEntities, hmac);
+			case "shift_by_tag" -> ShiftByTagDate.shift(dcm, original, tag, argumentEntities);
+			case "shift_from_api" -> ShiftApiDate.shift(dcm, original, tag, argumentEntities);
+			case "date_format" -> DateFormat.format(dcm, tag, argumentEntities);
 			default -> null;
 		};
 	}

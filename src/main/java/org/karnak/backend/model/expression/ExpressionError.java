@@ -9,30 +9,20 @@
  */
 package org.karnak.backend.model.expression;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.Nullable;
+
+@Setter
+@Getter
 public class ExpressionError {
 
 	private boolean isValid;
 
-	private String msg;
+	private @Nullable String msg;
 
-	public ExpressionError(boolean isValid, String msg) {
+	public ExpressionError(boolean isValid, @Nullable String msg) {
 		this.isValid = isValid;
-		this.msg = msg;
-	}
-
-	public boolean isValid() {
-		return isValid;
-	}
-
-	public void setValid(boolean valid) {
-		isValid = valid;
-	}
-
-	public String getMsg() {
-		return msg;
-	}
-
-	public void setMsg(String msg) {
 		this.msg = msg;
 	}
 

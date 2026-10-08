@@ -9,18 +9,24 @@
  */
 package org.karnak.frontend;
 
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
-import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.aura.Aura;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Application shell configuration for the Vaadin UI.
- *
+ * <p>
  * All app-shell-level annotations such as @Push, @PWA, @Viewport, etc. must be placed on
  * a class implementing AppShellConfigurator.
  */
 @Push // You can customize mode: @Push(PushMode.AUTOMATIC) or MANUAL if needed
-@Theme("common-theme")
+@StyleSheet(Aura.STYLESHEET) // Aura theme (replaces the deprecated Lumo-based @Theme)
+@CssImport("./themes/common-theme/styles.css") // global application styles (formerly
+												// loaded via @Theme)
+@Generated()
 public class AppShellConfig implements AppShellConfigurator {
 
 	// Add other app-shell settings here later (meta tags, viewport, etc.)

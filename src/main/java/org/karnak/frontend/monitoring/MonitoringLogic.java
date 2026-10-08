@@ -12,26 +12,38 @@ package org.karnak.frontend.monitoring;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.vaadin.flow.component.notification.Notification.Position;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.karnak.backend.data.entity.TransferStatusEntity;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.model.monitoring.DestinationActivityModel;
+import org.karnak.backend.model.monitoring.ErrorBreakdownModel;
+import org.karnak.backend.model.monitoring.MonitoringSearchCriteria;
+import org.karnak.backend.model.monitoring.NodeActivityModel;
+import org.karnak.backend.model.monitoring.SeriesActivityModel;
+import org.karnak.backend.model.monitoring.StudyActivityModel;
+import org.karnak.backend.service.MonitoringAggregationService;
 import org.karnak.backend.service.TransferMonitoringService;
 import org.karnak.frontend.monitoring.component.ExportSettings;
 import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.karnak.frontend.util.NotificationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Monitoring logic service use to make calls to backend and implement logic linked to the
  * monitoring view
  */
-@Service
+@SpringComponent
+@UIScope
 @Slf4j
+@Generated()
+@NullUnmarked
 public class MonitoringLogic {
 
 	// View
@@ -40,32 +52,46 @@ public class MonitoringLogic {
 	private MonitoringView monitoringView;
 
 	// Services
-	private final TransferMonitoringService transferMonitoringService;
+	private final transient TransferMonitoringService transferMonitoringService;
+
+	private final transient MonitoringAggregationService monitoringAggregationService;
 
 	@Autowired
-	public MonitoringLogic(final TransferMonitoringService transferMonitoringService) {
+	public MonitoringLogic(final TransferMonitoringService transferMonitoringService,
+			final MonitoringAggregationService monitoringAggregationService) {
 		this.transferMonitoringService = transferMonitoringService;
+		this.monitoringAggregationService = monitoringAggregationService;
 		this.monitoringView = null;
 	}
 
-	/**
-	 * Retrieve transfer status
-	 * @param filter Filter to apply
-	 * @param pageable Pageable
-	 * @return Page of trnasfer entities
-	 */
-	public Page<TransferStatusEntity> retrieveTransferStatus(TransferStatusFilter filter, Pageable pageable) {
-		return transferMonitoringService.retrieveTransferStatusPageable(filter, pageable);
+	// --- Hierarchy aggregation (Destination / Study / Series / errors) ---------------
+
+	public List<DestinationActivityModel> listDestinations(TransferStatusFilter filter) {
+		return monitoringAggregationService.searchDestinations(MonitoringSearchCriteria.from(filter));
 	}
 
-	/**
-	 * Count number of transfer status
-	 * @param filter Filter to apply
-	 * @return number of transfer status
-	 */
-	public int countTransferStatus(TransferStatusFilter filter) {
-		return transferMonitoringService.countTransferStatus(filter);
+	public List<StudyActivityModel> listStudies(TransferStatusFilter filter, UUID destinationUuid) {
+		return monitoringAggregationService
+			.searchStudies(MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid));
 	}
+
+	public List<SeriesActivityModel> listSeries(TransferStatusFilter filter, UUID destinationUuid, String studyUid) {
+		return monitoringAggregationService.searchSeries(
+				MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid).withStudyUid(studyUid));
+	}
+
+	public List<ErrorBreakdownModel> listErrors(TransferStatusFilter filter, UUID destinationUuid, String serieUid) {
+		return monitoringAggregationService.searchErrors(
+				MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid).withSerieUid(serieUid));
+	}
+
+	// --- Forward node dashboard ------------------------------------------------------
+
+	public List<NodeActivityModel> listNodeActivity(TransferStatusFilter filter) {
+		return monitoringAggregationService.searchNodeActivity(MonitoringSearchCriteria.from(filter));
+	}
+
+	// --- Maintenance & export --------------------------------------------------------
 
 	/**
 	 * Delete all transfer status records
@@ -75,14 +101,14 @@ public class MonitoringLogic {
 	}
 
 	/**
-	 * Build monitoring export in CSV format
+	 * Build monitoring export in CSV format for the matching rows
+	 * @param filter the current filter
 	 * @param exportSettings Export settings
 	 */
-	public byte[] buildCsv(ExportSettings exportSettings) {
+	public byte[] buildCsv(TransferStatusFilter filter, ExportSettings exportSettings) {
 		byte[] csvBuilt = new byte[0];
 		try {
-			csvBuilt = transferMonitoringService
-				.buildCsv(monitoringView.getTransferStatusGrid().getTransferStatusFilter(), exportSettings);
+			csvBuilt = transferMonitoringService.buildCsv(filter, exportSettings);
 		}
 		catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException | IOException e) {
 			String message = "Error when creating monitoring export CSV file";

@@ -46,52 +46,35 @@ public class EchoService {
 	 */
 	public List<DestinationEcho> retrieveStatusConfiguredDestinations(String sourceAet) {
 		List<DestinationEcho> destinationEchos = new ArrayList<>();
-
-		// Fill the list of destinations status
 		gatewaySetUpService.getDestinationNode(sourceAet)
 			.ifPresent(sourceNode -> fillDestinationsStatus(destinationEchos, sourceNode,
 					gatewaySetUpService.getDestinations(sourceNode)));
-
 		return destinationEchos;
 	}
 
 	/**
-	 * Fill the list of destinations status
-	 * @param destinationEchos List to fill
-	 * @param sourceNode Source Node
-	 * @param destinations Destinations found
+	 * Adds an echo status entry for each destination (C-ECHO for DICOM, URL-only for
+	 * STOW).
 	 */
 	private void fillDestinationsStatus(List<DestinationEcho> destinationEchos, ForwardDicomNode sourceNode,
 			List<ForwardDestination> destinations) {
 		destinations.forEach(destination -> {
-			// Case DICOM
-			if (destination instanceof DicomForwardDestination) {
-				DicomNode calledNode = ((DicomForwardDestination) destination).getStreamSCU().getCalledNode();
-				// Retrieve the status of the dicom node
-				DicomState dicomState = Echo.process(buildEchoProcessParams(3000, 5000), sourceNode, calledNode);
-				// Add the destination and its status
+			if (destination instanceof DicomForwardDestination dicomDestination) {
+				DicomNode calledNode = dicomDestination.getStreamSCU().getCalledNode();
+				DicomState dicomState = Echo.process(buildEchoProcessParams(), sourceNode, calledNode);
 				destinationEchos.add(new DestinationEcho(calledNode.getAet(), null, dicomState.getStatus()));
 			}
-			// Case Stow
-			else if (destination instanceof WebForwardDestination) {
-				WebForwardDestination d = (WebForwardDestination) destination;
-				// Add the destination and its status
-				destinationEchos.add(new DestinationEcho(null, d.getRequestURL(), 0));
+			else if (destination instanceof WebForwardDestination webDestination) {
+				destinationEchos.add(new DestinationEcho(null, webDestination.getRequestURL(), 0));
 			}
 		});
 	}
 
-	/**
-	 * Build params for echo process call
-	 * @param connectTimeout Connect Timeout
-	 * @param acceptTimeout Accept Timeout
-	 * @return parameters built
-	 */
-	private AdvancedParams buildEchoProcessParams(int connectTimeout, int acceptTimeout) {
+	private AdvancedParams buildEchoProcessParams() {
 		AdvancedParams params = new AdvancedParams();
 		ConnectOptions connectOptions = new ConnectOptions();
-		connectOptions.setConnectTimeout(connectTimeout);
-		connectOptions.setAcceptTimeout(acceptTimeout);
+		connectOptions.setConnectTimeout(3000);
+		connectOptions.setAcceptTimeout(5000);
 		params.setConnectOptions(connectOptions);
 		return params;
 	}

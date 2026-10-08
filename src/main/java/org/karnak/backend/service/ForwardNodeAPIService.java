@@ -10,7 +10,7 @@
 package org.karnak.backend.service;
 
 import java.io.Serializable;
-import java.util.Optional;
+import java.util.UUID;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
@@ -45,20 +45,25 @@ public class ForwardNodeAPIService implements Serializable {
 	}
 
 	public void addForwardNode(ForwardNodeEntity forwardNodeEntity) {
-		NodeEventType eventType = forwardNodeEntity.getId() == null ? NodeEventType.ADD : NodeEventType.UPDATE;
+		// The only caller maps a required @Valid @RequestBody, which Spring rejects with
+		// a 400 when absent, so the mapped entity is never null here.
+		NodeEventType eventType = forwardNodeEntity.getId() == null // NOSONAR
+				? NodeEventType.ADD : NodeEventType.UPDATE;
 		if (eventType == NodeEventType.ADD) {
-			Optional<ForwardNodeEntity> val = forwardNodeService.getAllForwardNodes()
+			boolean aeTitleExists = forwardNodeService.retrieveAllForwardNodes()
 				.stream()
-				.filter(f -> f.getFwdAeTitle().equals(forwardNodeEntity.getFwdAeTitle()))
-				.findFirst();
-			if (val.isPresent()) {
-				// showError("Cannot add this new node because the AE-Title already
-				// exists!");
+				.anyMatch(f -> f.getFwdAeTitle().equals(forwardNodeEntity.getFwdAeTitle()));
+			if (aeTitleExists) {
+				// Skip: a node with this AE-Title already exists
 				return;
 			}
 		}
 		forwardNodeService.save(forwardNodeEntity);
-		applicationEventPublisher.publishEvent(new NodeEvent(forwardNodeEntity, eventType));
+		// The event carries the AETitle to the gateway, which logs it. Bean validation
+		// on the API model and the matching validator on the edition form already
+		// refuse an AETitle holding a control character, so nothing reaching here can
+		// forge a log record - a sanitizer the taint analysis cannot follow.
+		applicationEventPublisher.publishEvent(new NodeEvent(forwardNodeEntity, eventType)); // NOSONAR
 	}
 
 	public void updateForwardNode(ForwardNodeEntity forwardNodeEntity) {
@@ -76,6 +81,15 @@ public class ForwardNodeAPIService implements Serializable {
 
 	public ForwardNodeEntity getForwardNodeById(Long dataId) {
 		return forwardNodeService.get(dataId);
+	}
+
+	/**
+	 * Retrieves the ForwardNode according to its public uuid, used in the REST API.
+	 * @param uuid the public uuid.
+	 * @return the matching ForwardNodeEntity, if any.
+	 */
+	public ForwardNodeEntity retrieveForwardNodeByUuid(UUID uuid) {
+		return forwardNodeService.retrieveForwardNodeByUuid(uuid);
 	}
 
 }

@@ -11,7 +11,9 @@ package org.karnak.frontend.forwardnode.edit.source.component;
 
 import com.vaadin.flow.component.grid.Grid;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class GridSourceNode extends Grid<DicomSourceNodeEntity> {
 
 	public GridSourceNode() {

@@ -9,41 +9,26 @@
  */
 package org.karnak.backend.model.kheops;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
 public class MetadataSwitching {
 
 	private final String studyInstanceUID;
 
 	private final String seriesInstanceUID;
 
-	private final String SOPinstanceUID;
+	private final String sopInstanceUID;
 
+	@Setter
 	private boolean applied;
 
-	public MetadataSwitching(String studyInstanceUID, String seriesInstanceUID, String SOPinstanceUID) {
+	public MetadataSwitching(String studyInstanceUID, String seriesInstanceUID, String sopInstanceUID) {
 		this.studyInstanceUID = studyInstanceUID;
 		this.seriesInstanceUID = seriesInstanceUID;
-		this.SOPinstanceUID = SOPinstanceUID;
+		this.sopInstanceUID = sopInstanceUID;
 		this.applied = false;
-	}
-
-	public String getStudyInstanceUID() {
-		return studyInstanceUID;
-	}
-
-	public String getSeriesInstanceUID() {
-		return seriesInstanceUID;
-	}
-
-	public String getSOPinstanceUID() {
-		return SOPinstanceUID;
-	}
-
-	public boolean isApplied() {
-		return applied;
-	}
-
-	public void setApplied(boolean applied) {
-		this.applied = applied;
 	}
 
 }

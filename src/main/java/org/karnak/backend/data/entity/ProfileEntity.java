@@ -21,27 +21,47 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
+import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "Profile")
 @Table(name = "profile")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({ "name", "version", "minimumKarnakVersion", "defaultIssuerOfPatientID", "profileElementEntities",
 		"maskEntities" })
+@NullUnmarked
+@Getter
+@Setter
 public class ProfileEntity implements Serializable {
 
-	private static final long serialVersionUID = -7178858361090900170L;
+	@Serial
+	private static final long serialVersionUID = -6455739222045193583L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	@JsonIgnore
+	private UUID uuid;
 
 	private String name;
 
@@ -49,22 +69,35 @@ public class ProfileEntity implements Serializable {
 
 	private String minimumKarnakVersion;
 
+	@Transient // not use in db but used in warning msg profile
 	private String defaultIssuerOfPatientId; // not use in db but used in warning msg
 
 	// profile
 
+	@Column(name = "bydefault")
 	private Boolean byDefault;
 
+	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<ProfileElementEntity> profileElementEntities = new HashSet<>();
 
+	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<MaskEntity> maskEntities = new HashSet<>();
 
+	@OneToMany(mappedBy = "profileEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
 	private List<ProjectEntity> projectEntities;
 
+	// Optional organizational group (null = shown at the root of the list)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "profile_group_id")
+	private ProfileGroupEntity group;
+
 	public ProfileEntity() {
+		this.uuid = UUID.randomUUID();
 	}
 
 	public ProfileEntity(String name, String version, String minimumKarnakVersion, String defaultIssuerOfPatientId) {
+		this.uuid = UUID.randomUUID();
 		this.name = name;
 		this.version = version;
 		this.minimumKarnakVersion = minimumKarnakVersion;
@@ -74,6 +107,7 @@ public class ProfileEntity implements Serializable {
 
 	public ProfileEntity(String name, String version, String minimumKarnakVersion, String defaultIssuerOfPatientId,
 			Boolean byDefault) {
+		this.uuid = UUID.randomUUID();
 		this.name = name;
 		this.version = version;
 		this.minimumKarnakVersion = minimumKarnakVersion;
@@ -81,15 +115,9 @@ public class ProfileEntity implements Serializable {
 		this.byDefault = byDefault;
 	}
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	@JsonIgnore
 	public Long getId() {
 		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public void addProfilePipe(ProfileElementEntity profileElementEntity) {
@@ -98,22 +126,6 @@ public class ProfileEntity implements Serializable {
 
 	public void addMask(MaskEntity maskEntity) {
 		this.maskEntities.add(maskEntity);
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
 	}
 
 	@JsonGetter("minimumKarnakVersion")
@@ -127,7 +139,6 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonGetter("defaultIssuerOfPatientID")
-	@Transient // not use in db but used in warning msg profile
 	public String getDefaultIssuerOfPatientId() {
 		return defaultIssuerOfPatientId;
 	}
@@ -138,7 +149,6 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonGetter("profileElements")
-	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	public Set<ProfileElementEntity> getProfileElementEntities() {
 		return profileElementEntities;
 	}
@@ -149,17 +159,11 @@ public class ProfileEntity implements Serializable {
 	}
 
 	@JsonIgnore
-	@Column(name = "bydefault")
 	public Boolean getByDefault() {
 		return byDefault;
 	}
 
-	public void setByDefault(Boolean bydefault) {
-		this.byDefault = bydefault;
-	}
-
 	@JsonGetter("masks")
-	@OneToMany(mappedBy = "profileEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	public Set<MaskEntity> getMaskEntities() {
 		return maskEntities;
 	}
@@ -169,15 +173,14 @@ public class ProfileEntity implements Serializable {
 		this.maskEntities = maskEntities;
 	}
 
-	@OneToMany(mappedBy = "profileEntity")
-	@LazyCollection(LazyCollectionOption.FALSE)
 	@JsonIgnore
 	public List<ProjectEntity> getProjectEntities() {
 		return projectEntities;
 	}
 
-	public void setProjectEntities(List<ProjectEntity> projectEntities) {
-		this.projectEntities = projectEntities;
+	@JsonIgnore
+	public ProfileGroupEntity getGroup() {
+		return group;
 	}
 
 	@Override

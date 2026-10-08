@@ -9,22 +9,28 @@
  */
 package org.karnak.frontend.extid;
 
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
-@Service
+@SpringComponent
+@UIScope
+@Generated()
+@NullUnmarked
 public class ExternalIDLogic {
 
 	@Getter
 	@Setter
 	private ExternalIDView externalIDView;
 
-	private final ProjectService projectService;
+	private final transient ProjectService projectService;
 
 	@Autowired
 	public ExternalIDLogic(final ProjectService projectService) {
@@ -33,7 +39,7 @@ public class ExternalIDLogic {
 	}
 
 	public List<ProjectEntity> retrieveProject() {
-		return projectService.getAllProjects();
+		return projectService.retrieveAllProjects();
 	}
 
 }

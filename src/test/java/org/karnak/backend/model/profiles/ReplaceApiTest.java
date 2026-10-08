@@ -11,11 +11,13 @@ package org.karnak.backend.model.profiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,18 +30,19 @@ import org.karnak.backend.exception.EndpointException;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
 import org.karnak.backend.service.profilepipe.Profile;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.HttpClientErrorException;
 
 @SpringBootTest
+@TestPropertySource(properties = { "spring.cache.type=none" // Disable caching for tests
+})
 public class ReplaceApiTest {
 
 	// Services
-	@Mock
 	private static EndpointService endpointService;
 
 	private static MockedStatic<ApplicationContextProvider> acp;
@@ -54,8 +57,23 @@ public class ReplaceApiTest {
 
 	private final static String TEST_UNKNOWN_URL = "http://sample.unknown.com/endpoint";
 
+	@BeforeAll
+	static void setUpStatic() {
+		endpointService = Mockito.mock(EndpointService.class);
+		acp = Mockito.mockStatic(ApplicationContextProvider.class);
+	}
+
+	@AfterAll
+	static void tearDown() {
+		if (acp != null) {
+			acp.close();
+		}
+	}
+
 	@BeforeEach
 	void setUp() {
+		// Reset mock to clear any previous interactions
+		reset(endpointService);
 		when(endpointService.get(AUTH_CONFIG, TEST_URL))
 			.thenReturn("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}");
 		when(endpointService.get(null, TEST_URL))
@@ -68,11 +86,6 @@ public class ReplaceApiTest {
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
 		acp.when(() -> ApplicationContextProvider.bean(EndpointService.class)).thenReturn(endpointService);
-	}
-
-	@BeforeAll
-	static void setUpStatic() {
-		acp = Mockito.mockStatic(ApplicationContextProvider.class);
 	}
 
 	@Test
@@ -285,6 +298,68 @@ public class ReplaceApiTest {
 		profileEntity.addProfilePipe(profileElementEntity);
 		Profile profile = new Profile(profileEntity);
 		assertThrows(AbortException.class, () -> profile.applyAction(dataset1, dataset1, null, null, null, null));
+	}
+
+	/**
+	 * Builds a profile replacing {@code includedTag} by the {@code value} field of the
+	 * response of an endpoint whose URL carries the patient identifier.
+	 */
+	private static Profile profileWithPatientIdInTheUrl(String includedTag) {
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "action.replace.api", null, null,
+				null, 0, profileEntity);
+		profileElementEntity
+			.addArgument(new ArgumentEntity("url", TEST_URL + "/{{getString(#Tag.PatientID)}}", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("responsePath", "value", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("authConfig", AUTH_CONFIG, profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity(includedTag, profileElementEntity));
+		profileElementEntity.setProfileEntity(profileEntity);
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		return new Profile(profileEntity);
+	}
+
+	@Test
+	public void urlIsResolvedOnTheOriginalCopyNotOnTheDeIdentifiedDataset() {
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/97035674"))
+			.thenReturn("{\"value\": \"from-the-original-id\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/PSEUDO-1"))
+			.thenReturn("{\"value\": \"from-the-pseudonymized-id\"}");
+
+		final Attributes original = new Attributes();
+		original.setString(Tag.PatientID, VR.LO, "97035674");
+		original.setString(Tag.PatientBirthDate, VR.DA, "19800101");
+		final Attributes dataset = new Attributes(original);
+		// (0010,0020) sorts before (0010,0030): by the time the birth date is visited,
+		// the identifier of the working dataset has already been pseudonymized
+		dataset.setString(Tag.PatientID, VR.LO, "PSEUDO-1");
+
+		profileWithPatientIdInTheUrl("(0010,0030)").applyAction(dataset, original, null, null, null, null);
+
+		assertEquals("from-the-original-id", dataset.getString(Tag.PatientBirthDate));
+	}
+
+	@Test
+	public void replacesATagNestedInASequenceUsingTheOriginalCopyForTheUrl() {
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/97035674"))
+			.thenReturn("{\"value\": \"from-the-original-id\"}");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/PSEUDO-1"))
+			.thenReturn("{\"value\": \"from-the-pseudonymized-id\"}");
+
+		final Attributes original = new Attributes();
+		original.setString(Tag.PatientID, VR.LO, "97035674");
+		final Attributes item = new Attributes();
+		item.setString(Tag.RequestedProcedureID, VR.SH, "RP-1");
+		original.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+		final Attributes dataset = new Attributes(original);
+		dataset.setString(Tag.PatientID, VR.LO, "PSEUDO-1");
+
+		// The nested tag is reached through the sequence recursion: the copy passed down
+		// is the copy of the item, from which the identifier of the study is resolved
+		profileWithPatientIdInTheUrl("(0040,1001)").applyAction(dataset, original, null, null, null, null);
+
+		assertEquals("from-the-original-id",
+				dataset.getNestedDataset(Tag.RequestAttributesSequence).getString(Tag.RequestedProcedureID));
 	}
 
 	@Test

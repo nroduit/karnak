@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024" style="width:100%;max-width:1536px;height:auto;display:block;margin:0 auto" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" role="group" aria-label="Karnak DICOM gateway: DICOM data from every modality is transformed into de-identified, tag-morphed and conformant data.">
+<style>a{cursor:pointer}a:hover text{text-decoration:underline}</style>
+<defs>
+<symbol id="karnak-mark" viewBox="24 24 464 464"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M88 48h336l-24 76H112z"/><path d="M112 124 96 464h320L400 124"/><path d="M189 464 196 224h120l7 240"/></g></symbol>
+<linearGradient id="gHex" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d4f9e"/><stop offset=".55" stop-color="#0f7fc4"/><stop offset="1" stop-color="#19c6d4"/></linearGradient>
+<linearGradient id="gIn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dce2ea"/><stop offset="1" stop-color="#a6b3c3"/></linearGradient>
+<linearGradient id="gOut" gradientUnits="userSpaceOnUse" x1="870" y1="0" x2="1114" y2="0"><stop offset="0" stop-color="#a6b3c3"/><stop offset="1" stop-color="#b9c4d1"/></linearGradient>
+<linearGradient id="gTeal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c9a8b"/><stop offset="1" stop-color="#1cbcaa"/></linearGradient>
+<linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d45c9"/><stop offset="1" stop-color="#6a6cea"/></linearGradient>
+<linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1878df"/><stop offset="1" stop-color="#42a0f4"/></linearGradient>
+<linearGradient id="gBand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9f2fd"/><stop offset=".5" stop-color="#eaf6fa"/><stop offset="1" stop-color="#e9f9f1"/></linearGradient>
+<filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#0d4f9e" flood-opacity=".18"/></filter>
+<marker id="mOut" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#a6b3c3"/></marker>
+</defs>
+<title>Karnak — DICOM gateway</title>
+<desc>Volume imaging, radiography, ultrasound, video, pathology, signal and report objects flow into the Karnak DICOM gateway and come out de-identified, tag-morphed and conformant.</desc>
+<rect width="1536" height="1024" fill="#ffffff"/>
+
+<!-- sources of DICOM data -->
+<text x="56" y="78" font-size="30" fill="#14356e" font-weight="800">DICOM DATA</text>
+<text x="56" y="112" font-size="20" fill="#2f6fb5">From multiple sources</text>
+<rect x="32" y="132" width="320" height="508" rx="22" fill="#e9f2fd"/>
+<rect x="50" y="154" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 164.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 20.4 7.6 12 12 3.6 7.6Z"/><path d="M3.6 12.2 12 16.6l8.4-4.4"/><path d="M3.6 16.6 12 21l8.4-4.4"/></g>
+<text x="108" y="173" font-size="19.5" fill="#14356e" font-weight="700">Volume imaging</text>
+<text x="108" y="193" font-size="16.5" fill="#4a6f9e">(CT, MRI, PET, SPECT)</text>
+<rect x="50" y="208" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 218.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="3.8" r="2"/><path d="M11 6.2 6.2 14.4M12 6.2v8.2M13 6.2 17.8 14.4"/><rect x="3.4" y="15.4" width="17.2" height="5.2" rx="1.4"/></g>
+<text x="108" y="227" font-size="19.5" fill="#14356e" font-weight="700">Radiography</text>
+<text x="108" y="247" font-size="16.5" fill="#4a6f9e">(CR, DX, XA, MG)</text>
+<rect x="50" y="262" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 272.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.6" width="6" height="8.4" rx="3"/><path d="M8.1 14.5A5.5 5.5 0 0 0 15.9 14.5"/><path d="M5.6 17A9 9 0 0 0 18.4 17"/></g>
+<text x="108" y="281" font-size="19.5" fill="#14356e" font-weight="700">Ultrasound</text>
+<text x="108" y="301" font-size="16.5" fill="#4a6f9e">(US, echo, Doppler)</text>
+<rect x="50" y="316" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 326.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="10" rx="2.4"/><path d="M15 11.2 20.5 8v8l-5.5-3.2z"/><path d="M6.5 17v3M11.5 17v3M5 20h8"/></g>
+<text x="108" y="335" font-size="19.5" fill="#14356e" font-weight="700">Video</text>
+<text x="108" y="355" font-size="16.5" fill="#4a6f9e">(endoscopy, surgery)</text>
+<rect x="50" y="370" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 380.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="6.4" width="18.8" height="13" rx="2.6"/><path d="M8.4 6.4 9.8 4.2h4.4l1.4 2.2"/><circle cx="12" cy="13" r="4.2"/><circle cx="18" cy="9.6" r=".9" fill="currentColor" stroke="none"/></g>
+<text x="108" y="389" font-size="19.5" fill="#14356e" font-weight="700">Photography</text>
+<text x="108" y="409" font-size="16.5" fill="#4a6f9e">(clinical, dermatology)</text>
+<rect x="50" y="424" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 434.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 2.8 18.4 6.5 15.6 9.3 11.9 5.6Z"/><path d="M13.7 7.5 11 10.2"/><path d="M11.4 9.4a5.6 5.6 0 0 0 0 7.9"/><path d="M6.2 17.3h7.2"/><path d="M9.6 17.3v3.4"/><path d="M4.6 20.7h14.8"/></g>
+<text x="108" y="443" font-size="19.5" fill="#14356e" font-weight="700">Pathology</text>
+<text x="108" y="463" font-size="16.5" fill="#4a6f9e">(macro / micro)</text>
+<rect x="50" y="478" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 488.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="4.6" width="18.8" height="14.8" rx="2.6"/><path d="M5.6 12.2h2.8l1.4-4.2 2.6 8.4 1.6-4.2h4.4"/></g>
+<text x="108" y="497" font-size="19.5" fill="#14356e" font-weight="700">Signal</text>
+<text x="108" y="517" font-size="16.5" fill="#4a6f9e">(ECG, EEG waveforms)</text>
+<rect x="50" y="532" width="46" height="46" rx="13" fill="#ffffff"/>
+<g transform="translate(60.0 542.0) scale(1.0833)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 2.6h7.6L18.4 7.2v14.2H6.2Z"/><path d="M13.6 2.6v4.8h4.8"/><path d="M9 12.4h6.6M9 15.6h6.6M9 18.8h3.8"/></g>
+<text x="108" y="551" font-size="19.5" fill="#14356e" font-weight="700">Reports</text>
+<text x="108" y="571" font-size="16.5" fill="#4a6f9e">(SR, dose report)</text>
+<g transform="translate(62.0 591.0) scale(0.9167)" fill="none" stroke="#8fb2d6" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></g>
+<text x="108" y="608" font-size="17.5" fill="#4a6f9e">Many other object types</text>
+
+<!-- Karnak lock-up -->
+<a href="https://karnak.weasis.org/" target="_blank" rel="noopener noreferrer">
+<use href="#karnak-mark" x="576" y="45" width="64" height="64" color="#f5b05a"/>
+<text x="652" y="100" font-size="64" fill="#14356e" font-weight="800">Karnak</text>
+</a>
+<text x="730" y="142" font-size="26" fill="#2f6fb5" font-weight="600" text-anchor="middle" letter-spacing="6">DICOM GATEWAY</text>
+<text x="730" y="184" font-size="22" fill="#6a8cb4" text-anchor="middle">Between modalities and archives</text>
+
+<!-- flow in / out -->
+<g transform="translate(0 -8)">
+<text x="470" y="318" font-size="26" fill="#14356e" font-weight="700" text-anchor="middle">DICOM</text>
+<text x="470" y="346" font-size="19" fill="#4a6f9e" text-anchor="middle">(C-STORE)</text>
+<text x="965" y="294" font-size="22" fill="#1f7a52" font-weight="700" text-anchor="middle">Transformed</text>
+<text x="965" y="318" font-size="22" fill="#1f7a52" font-weight="700" text-anchor="middle">DICOM data</text>
+<text x="965" y="344" font-size="16.5" fill="#3d8c68" text-anchor="middle">(C-STORE, STOW-RS)</text>
+
+<!-- the gateway itself -->
+<polygon points="730.0,222.0 875.5,306.0 875.5,474.0 730.0,558.0 584.5,474.0 584.5,306.0" fill="#19c6d4" opacity=".12"/>
+<polygon points="730.0,231.0 867.7,310.5 867.7,469.5 730.0,549.0 592.3,469.5 592.3,310.5" fill="#19c6d4" opacity=".2"/>
+<polygon points="730.0,238.0 861.6,314.0 861.6,466.0 730.0,542.0 598.4,466.0 598.4,314.0" fill="url(#gHex)" filter="url(#shadow)"/>
+<polygon points="730.0,247.0 853.8,318.5 853.8,461.5 730.0,533.0 606.2,461.5 606.2,318.5" fill="none" stroke="#ffffff" stroke-width="2" opacity=".35"/>
+<use href="#karnak-mark" x="686" y="292" width="88" height="88" color="#f5b05a"/>
+<text x="730" y="424" font-size="46" fill="#ffffff" font-weight="800" text-anchor="middle">Karnak</text>
+<text x="730" y="456" font-size="18" fill="#c9eef7" font-weight="600" text-anchor="middle" letter-spacing="3.4">DICOM GATEWAY</text>
+
+</g>
+
+<!-- what it is built on -->
+<g transform="translate(0 5)">
+<a href="https://karnak.weasis.org/en/profiles/profilestructure/" target="_blank" rel="noopener noreferrer">
+<circle cx="470" cy="588" r="30" fill="#ffffff" stroke="#cfe2f5" stroke-width="2"/>
+<g transform="translate(455.0 573.0) scale(1.2500)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 19 5.8v5.4c0 4.5-2.9 7.6-7 9-4.1-1.4-7-4.5-7-9V5.8z"/></g>
+<text x="470" y="644" font-size="20" fill="#14356e" font-weight="700" text-anchor="middle">Rules engine</text>
+<text x="470" y="668" font-size="16" fill="#4a6f9e" text-anchor="middle">profiles in YAML</text>
+</a>
+<a href="https://github.com/dcm4che/dcm4che" target="_blank" rel="noopener noreferrer">
+<circle cx="643" cy="588" r="30" fill="#ffffff" stroke="#cfe2f5" stroke-width="2"/>
+<g transform="translate(628.0 573.0) scale(1.2500)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M18.26 9.91L21.47 10.42L21.47 13.58L18.26 14.09L17.90 14.95L19.81 17.58L17.58 19.81L14.95 17.90L14.09 18.26L13.58 21.47L10.42 21.47L9.91 18.26L9.05 17.90L6.42 19.81L4.19 17.58L6.10 14.95L5.74 14.09L2.53 13.58L2.53 10.42L5.74 9.91L6.10 9.05L4.19 6.42L6.42 4.19L9.05 6.10L9.91 5.74L10.42 2.53L13.58 2.53L14.09 5.74L14.95 6.10L17.58 4.19L19.81 6.42L17.90 9.05Z"/></g>
+<text x="643" y="644" font-size="20" fill="#14356e" font-weight="700" text-anchor="middle">DICOM library</text>
+<text x="643" y="668" font-size="16" fill="#4a6f9e" text-anchor="middle">dcm4che &amp; standard</text>
+</a>
+<path d="M556 556v116" stroke="#d5e5f5" stroke-width="2"/>
+<circle cx="816" cy="588" r="30" fill="#ffffff" stroke="#cfe2f5" stroke-width="2"/>
+<g transform="translate(801.0 573.0) scale(1.2500)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 11v5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-5"/></g>
+<text x="816" y="644" font-size="20" fill="#14356e" font-weight="700" text-anchor="middle">Scalable</text>
+<text x="816" y="668" font-size="16" fill="#4a6f9e" text-anchor="middle">with your hardware</text>
+<path d="M729 556v116" stroke="#d5e5f5" stroke-width="2"/>
+<a href="https://karnak.weasis.org/en/userguide/gateway/destinations/" target="_blank" rel="noopener noreferrer">
+<circle cx="989" cy="588" r="30" fill="#ffffff" stroke="#cfe2f5" stroke-width="2"/>
+<g transform="translate(974.0 573.0) scale(1.2500)" fill="none" stroke="#2f6fb5" stroke-width="1.70" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="11.6" r="3.1"/><circle cx="4.6" cy="5.6" r="2.2"/><circle cx="19.4" cy="5.6" r="2.2"/><circle cx="12" cy="20.4" r="2.2"/><path d="M6.4 7 9.6 9.6M17.6 7 14.4 9.6M12 14.7v3.5"/></g>
+<text x="989" y="644" font-size="20" fill="#14356e" font-weight="700" text-anchor="middle">Integration</text>
+<text x="989" y="668" font-size="16" fill="#4a6f9e" text-anchor="middle">DICOM &amp; DICOMweb</text>
+</a>
+<path d="M902 556v116" stroke="#d5e5f5" stroke-width="2"/>
+
+</g>
+
+<!-- what comes out -->
+<text x="1128" y="78" font-size="30" fill="#14356e" font-weight="800">TRANSFORMED DATA</text>
+<text x="1128" y="112" font-size="20" fill="#2f6fb5">De-identified. Normalized. Validated.</text>
+<rect x="1104" y="132" width="400" height="508" rx="22" fill="#e8f7f1"/>
+<a href="https://karnak.weasis.org/en/profiles/rules/" target="_blank" rel="noopener noreferrer">
+<rect x="1120" y="148" width="368" height="150" rx="20" fill="url(#gTeal)" filter="url(#shadow)"/>
+<circle cx="1176" cy="223" r="30" fill="#ffffff"/>
+<g transform="translate(1160.0 207.0) scale(1.3333)" fill="none" stroke="#2b6fb0" stroke-width="1.60" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.6" cy="7.8" r="3.2"/><path d="M3.6 19.2a6.2 6.2 0 0 1 9.4-5"/><rect x="14" y="13.8" width="7" height="6" rx="1.3"/><path d="M15.8 13.8v-1.6a1.7 1.7 0 0 1 3.4 0v1.6"/></g>
+<text x="1220" y="192" font-size="22" fill="#ffffff" font-weight="700">De-identification</text>
+<text x="1220" y="226" font-size="16.5" fill="#eaf6fb">Basic confidentiality profile</text>
+<text x="1220" y="248" font-size="16.5" fill="#eaf6fb">Pseudonyms per project</text>
+<text x="1220" y="270" font-size="16.5" fill="#eaf6fb">Pixels masked, CT defaced</text>
+</a>
+<a href="https://karnak.weasis.org/en/userguide/gateway/destinations/#7-tag-morphing" target="_blank" rel="noopener noreferrer">
+<rect x="1120" y="311.0" width="368" height="150" rx="20" fill="url(#gPurple)" filter="url(#shadow)"/>
+<circle cx="1176" cy="386.0" r="30" fill="#ffffff"/>
+<g transform="translate(1160.0 370.0) scale(1.3333)" fill="none" stroke="#2b6fb0" stroke-width="1.60" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 3.6h8.8l8 8-8.8 8.8-8-8z"/><circle cx="7.6" cy="7.6" r="1.7"/></g>
+<text x="1220" y="355.0" font-size="22" fill="#ffffff" font-weight="700">Tag morphing</text>
+<text x="1220" y="389.0" font-size="16.5" fill="#eaf6fb">Standard and private tags</text>
+<text x="1220" y="411.0" font-size="16.5" fill="#eaf6fb">Normalized and consistent</text>
+<text x="1220" y="433.0" font-size="16.5" fill="#eaf6fb">Driven by your conditions</text>
+</a>
+<a href="https://karnak.weasis.org/en/userguide/conformancereport/" target="_blank" rel="noopener noreferrer">
+<rect x="1120" y="474.0" width="368" height="150" rx="20" fill="url(#gBlue)" filter="url(#shadow)"/>
+<circle cx="1176" cy="549.0" r="30" fill="#ffffff"/>
+<g transform="translate(1160.0 533.0) scale(1.3333)" fill="none" stroke="#2b6fb0" stroke-width="1.60" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 19 5.8v5.4c0 4.5-2.9 7.6-7 9-4.1-1.4-7-4.5-7-9V5.8z"/><path d="M8.6 11.8 11 14.2l4.4-4.4"/></g>
+<text x="1220" y="518.0" font-size="22" fill="#ffffff" font-weight="700">Conformance report</text>
+<text x="1220" y="552.0" font-size="16.5" fill="#eaf6fb">Checked against the standard</text>
+<text x="1220" y="574.0" font-size="16.5" fill="#eaf6fb">Malformed values flagged</text>
+<text x="1220" y="596.0" font-size="16.5" fill="#eaf6fb">Report emailed per study</text>
+</a>
+
+<!-- data flow: fan-in from the sources, one stream through the gateway, fan-out to the results -->
+<g fill="none" stroke="#a6b3c3" stroke-width="3" stroke-linecap="round">
+<path d="M352 240C392 240 384 382 414 382"/><path d="M352 382H414"/><path d="M352 524C392 524 384 382 414 382"/>
+</g>
+<path d="M422 375 544 371 544 361 590 382 544 403 544 393 422 389Z" fill="url(#gIn)" stroke="url(#gIn)" stroke-width="3" stroke-linejoin="round"/>
+<g fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity=".75">
+<path d="M465 377 470 382 465 387"/><path d="M487 377 492 382 487 387"/><path d="M509 377 514 382 509 387"/>
+</g>
+<circle cx="416" cy="382" r="6" fill="#a6b3c3" stroke="#ffffff" stroke-width="2"/>
+<path d="M870 373 1036 378 1036 386 870 391Z" fill="url(#gOut)" stroke="url(#gOut)" stroke-width="3" stroke-linejoin="round"/>
+<g fill="none" stroke="#a6b3c3" stroke-width="3" stroke-linecap="round" marker-end="url(#mOut)">
+<path d="M1038 382C1082 382 1066 223 1094 223H1108"/><path d="M1038 382C1070 382 1066 386 1094 386H1108"/><path d="M1038 382C1082 382 1066 549 1094 549H1108"/>
+</g>
+<circle cx="1038" cy="382" r="6" fill="#a6b3c3" stroke="#ffffff" stroke-width="2"/>
+
+<!-- why it matters -->
+<rect x="32" y="684" width="1472" height="316" rx="28" fill="url(#gBand)"/>
+<circle cx="132" cy="756" r="42" fill="#0f9b8e"/>
+<g transform="translate(110.0 734.0) scale(1.8333)" fill="none" stroke="#ffffff" stroke-width="2.00" stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 2.8v6.6l-5 8.8a2.3 2.3 0 0 0 2 3.4h11.2a2.3 2.3 0 0 0 2-3.4l-5-8.8V2.8"/><path d="M8.2 2.8h7.6"/><path d="M6.6 15.4h10.8"/></g>
+<text x="188" y="748" font-size="27" fill="#0f9b8e" font-weight="800">FOR RESEARCH</text>
+<text x="188" y="781" font-size="20" fill="#2f6fb5">Reproducible, shareable datasets</text>
+<g transform="translate(97 809) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/profilestructure/#basic-dicom-profile" target="_blank" rel="noopener noreferrer"><text x="130" y="822" font-size="17.5" fill="#25476f">De-identification follows DICOM PS3.15</text></a>
+<g transform="translate(97 840) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/projects/#5-project-secret" target="_blank" rel="noopener noreferrer"><text x="130" y="853" font-size="17.5" fill="#25476f">Deterministic UIDs from a project secret</text></a>
+<g transform="translate(97 871) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/extpseudo/" target="_blank" rel="noopener noreferrer"><text x="130" y="884" font-size="17.5" fill="#25476f">Pseudonyms from CSV, DICOM tags or an API</text></a>
+<g transform="translate(97 902) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/dates/" target="_blank" rel="noopener noreferrer"><text x="130" y="915" font-size="17.5" fill="#25476f">Date shifting or reduced date precision</text></a>
+<g transform="translate(97 933) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/conditions/" target="_blank" rel="noopener noreferrer"><text x="130" y="946" font-size="17.5" fill="#25476f">Conditional rules inside each profile</text></a>
+<g transform="translate(97 964) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/portable/" target="_blank" rel="noopener noreferrer"><text x="130" y="977" font-size="17.5" fill="#25476f">Portable app for collaborative projects</text></a>
+<circle cx="600" cy="756" r="42" fill="#1878df"/>
+<g transform="translate(578.0 734.0) scale(1.8333)" fill="none" stroke="#ffffff" stroke-width="2.00" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2.4"/><rect x="9.6" y="9.6" width="4.8" height="4.8" rx="1"/><path d="M9.5 6V3M14.5 6V3M9.5 21v-3M14.5 21v-3M6 9.5H3M6 14.5H3M21 9.5h-3M21 14.5h-3"/></g>
+<text x="656" y="748" font-size="27" fill="#1878df" font-weight="800">FOR IMAGING IT</text>
+<text x="656" y="781" font-size="20" fill="#2f6fb5">A standard node in your network</text>
+<g transform="translate(565 809) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/gateway/destinations/" target="_blank" rel="noopener noreferrer"><text x="598" y="822" font-size="17.5" fill="#25476f">C-STORE in, C-STORE or STOW-RS out</text></a>
+<g transform="translate(565 840) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/installation/#identity-provider" target="_blank" rel="noopener noreferrer"><text x="598" y="853" font-size="17.5" fill="#25476f">Single sign-on with OpenID Connect</text></a>
+<g transform="translate(565 871) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/gateway/destinations/#9-authorized-sops" target="_blank" rel="noopener noreferrer"><text x="598" y="884" font-size="17.5" fill="#25476f">Per-destination filters and transcoding</text></a>
+<g transform="translate(565 902) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/dicomtools/" target="_blank" rel="noopener noreferrer"><text x="598" y="915" font-size="17.5" fill="#25476f">Echo, worklist and DICOMweb diagnostics</text></a>
+<g transform="translate(565 933) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/gateway/destinations/#5-virtual-destination" target="_blank" rel="noopener noreferrer"><text x="598" y="946" font-size="17.5" fill="#25476f">Virtual destination: validate, don't send</text></a>
+<g transform="translate(565 964) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/installation/" target="_blank" rel="noopener noreferrer"><text x="598" y="977" font-size="17.5" fill="#25476f">Docker or portable deployment</text></a>
+<path d="M534 726v230" stroke="#cfe3ef" stroke-width="2"/>
+<circle cx="1068" cy="756" r="42" fill="#16a34a"/>
+<g transform="translate(1046.0 734.0) scale(1.8333)" fill="none" stroke="#ffffff" stroke-width="2.00" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2.2"/><path d="M7.5 10.5V7.2a4.5 4.5 0 0 1 9 0v3.3"/><circle cx="12" cy="15.8" r="1.3" fill="currentColor" stroke="none"/></g>
+<text x="1124" y="748" font-size="27" fill="#16a34a" font-weight="800">FOR PATIENT PRIVACY</text>
+<text x="1124" y="781" font-size="20" fill="#2f6fb5">No identifiers in tags or pixels</text>
+<g transform="translate(1033 809) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/masks/#automatic-pixel-data-de-identification" target="_blank" rel="noopener noreferrer"><text x="1066" y="822" font-size="17.5" fill="#25476f">Automatic annotation removal with OCR</text></a>
+<g transform="translate(1033 840) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/masks/#defacing" target="_blank" rel="noopener noreferrer"><text x="1066" y="853" font-size="17.5" fill="#25476f">CT defacing (experimental)</text></a>
+<g transform="translate(1033 871) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/masks/#fail-closed-behavior" target="_blank" rel="noopener noreferrer"><text x="1066" y="884" font-size="17.5" fill="#25476f">If masking fails, nothing is sent</text></a>
+<g transform="translate(1033 902) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/gateway/destinations/#4-notifications" target="_blank" rel="noopener noreferrer"><text x="1066" y="915" font-size="17.5" fill="#25476f">Email summaries of transfers and errors</text></a>
+<g transform="translate(1033 933) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/userguide/monitoring/" target="_blank" rel="noopener noreferrer"><text x="1066" y="946" font-size="17.5" fill="#25476f">Monitoring: original vs de-identified values</text></a>
+<g transform="translate(1033 964) scale(0.72)" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></g>
+<a href="https://karnak.weasis.org/en/profiles/masks/" target="_blank" rel="noopener noreferrer"><text x="1066" y="977" font-size="17.5" fill="#25476f">Diagnostic value of the image preserved</text></a>
+<path d="M1002 726v230" stroke="#cfe3ef" stroke-width="2"/>
+</svg>

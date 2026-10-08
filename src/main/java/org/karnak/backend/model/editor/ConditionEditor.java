@@ -32,7 +32,7 @@ public class ConditionEditor implements AttributeEditor {
 	public void apply(Attributes dcm, AttributeEditorContext context) {
 		if (!validateCondition(this.condition, dcm)) {
 			context.setAbort(Abort.FILE_EXCEPTION);
-			context.setAbortMessage("The instance is blocked because is does not meet the condition");
+			context.setAbortMessage("The instance is blocked because it does not meet the condition");
 		}
 	}
 

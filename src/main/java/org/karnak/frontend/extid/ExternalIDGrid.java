@@ -14,6 +14,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
@@ -28,15 +29,18 @@ import java.util.WeakHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.karnak.backend.cache.Patient;
-import org.karnak.backend.cache.PatientClient;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.model.patient.PatientModel;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.component.WarningConfirmDialog;
-import org.vaadin.klaudeta.PaginatedGrid;
+import org.weasis.core.util.annotations.Generated;
 
-public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
+@Generated()
+@NullUnmarked
+public class ExternalIDGrid extends Grid<PatientModel> {
 
 	private static final String ERROR_MESSAGE_PATIENT = "Length must be between 1 and 50.";
 
@@ -46,11 +50,15 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 	private static final String LABEL_FILTER = "Filter";
 
-	private final Binder<Patient> binder;
+	private final Binder<PatientModel> binder;
+
+	private final PatientFilter patientFilter = new PatientFilter();
+
+	private GridListDataView<PatientModel> dataView;
 
 	@Getter
 	@Setter
-	private transient PatientClient externalIDCache;
+	private transient PseudonymCache externalIDCache;
 
 	@Getter
 	@Setter
@@ -60,13 +68,13 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 	private Button deleteAllSelectedPatientsButton;
 
-	private List<Patient> selectedPatients;
+	private List<PatientModel> selectedPatients;
 
 	private Button saveEditPatientButton;
 
 	private Button cancelEditPatientButton;
 
-	private Editor<Patient> editor;
+	private Editor<PatientModel> editor;
 
 	private Collection<Button> editButtons;
 
@@ -80,17 +88,17 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 	private TextField issuerOfPatientIdField;
 
-	private Grid.Column<Patient> deleteColumn;
+	private Grid.Column<PatientModel> deleteColumn;
 
-	private Grid.Column<Patient> extidColumn;
+	private Grid.Column<PatientModel> extidColumn;
 
-	private Grid.Column<Patient> patientIdColumn;
+	private Grid.Column<PatientModel> patientIdColumn;
 
-	private Grid.Column<Patient> patientFirstNameColumn;
+	private Grid.Column<PatientModel> patientFirstNameColumn;
 
-	private Grid.Column<Patient> patientLastNameColumn;
+	private Grid.Column<PatientModel> patientLastNameColumn;
 
-	private Grid.Column<Patient> issuerOfPatientIDColumn;
+	private Grid.Column<PatientModel> issuerOfPatientIDColumn;
 
 	private TextField patientIdFilter;
 
@@ -103,29 +111,27 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 	private TextField issuerOfPatientIDFilter;
 
 	@Getter
-	private List<Patient> patientsListInCache = new ArrayList<>();
+	private List<PatientModel> patientsListInCache = new ArrayList<>();
 
 	@Getter
 	@Setter
-	private transient Collection<Patient> duplicatePatientsList = new ArrayList<>();
+	private transient Collection<PatientModel> duplicatePatientsList = new ArrayList<>();
 
 	public ExternalIDGrid() {
-		binder = new Binder<>(Patient.class);
-		List<Patient> patientList = new ArrayList<>();
+		binder = new Binder<>(PatientModel.class);
 		this.externalIDCache = AppConfig.getInstance().getExternalIDCache();
-		// TODO: to use instead of the current multiple filters..
-		PatientFilter patientFilter = new PatientFilter();
 
 		setSelectionMode(Grid.SelectionMode.MULTI);
-
-		setPageSize(10);
-		setPaginatorSize(2);
-
-		setSizeFull();
+		// Width only: the height is driven by the parent view (flex-grow into the
+		// remaining
+		// space). A height:100% here would fight that flex sizing and collapse the grid.
+		setWidthFull();
 		getElement().addEventListener("keyup", event -> editor.cancel())
 			.setFilter("event.key === 'Escape' || event.key === 'Esc'");
 
-		setItems(patientList);
+		// In-memory data view filtered live through the PatientFilter predicate
+		dataView = setItems(patientsListInCache);
+		dataView.setFilter(this::matchesFilter);
 		setElements();
 		setBinder();
 		readAllCacheValue();
@@ -140,27 +146,28 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		});
 
 		saveEditPatientButton.addClickListener(e -> {
-			final Patient patientEdit = new Patient(externalIdField.getValue(), patientIdField.getValue(),
+			final PatientModel patientEdit = new PatientModel(externalIdField.getValue(), patientIdField.getValue(),
 					patientFirstNameField.getValue(), patientLastNameField.getValue(),
-					issuerOfPatientIdField.getValue(), projectEntity.getId());
+					issuerOfPatientIdField.getValue(), projectEntity.getId(), projectEntity.getUuid());
 			externalIDCache.remove(PatientClientUtil.generateKey(editor.getItem(), projectEntity.getId()));
 			externalIDCache.put(PatientClientUtil.generateKey(patientEdit, projectEntity.getId()), patientEdit);
 			editor.save();
 		});
-		saveEditPatientButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveEditPatientButton.addThemeVariants(ButtonVariant.PRIMARY);
 
 		cancelEditPatientButton.addClickListener(e -> editor.cancel());
 	}
 
 	private void setElements() {
-		extidColumn = addColumn(Patient::getPseudonym).setHeader("External Pseudonym").setSortable(true);
-		patientIdColumn = addColumn(Patient::getPatientId).setHeader("Patient ID").setSortable(true);
-		patientFirstNameColumn = addColumn(Patient::getPatientFirstName).setHeader("Patient first name")
+		extidColumn = addColumn(PatientModel::getPseudonym).setHeader("External Pseudonym").setSortable(true);
+		patientIdColumn = addColumn(PatientModel::getPatientId).setHeader("Patient ID").setSortable(true);
+		patientFirstNameColumn = addColumn(PatientModel::getPatientFirstName).setHeader("Patient first name")
 			.setSortable(true);
-		patientLastNameColumn = addColumn(Patient::getPatientLastName).setHeader("Patient last name").setSortable(true);
-		issuerOfPatientIDColumn = addColumn(Patient::getIssuerOfPatientId).setHeader("Issuer of patient ID")
+		patientLastNameColumn = addColumn(PatientModel::getPatientLastName).setHeader("Patient last name")
 			.setSortable(true);
-		Grid.Column<Patient> editorColumn = addComponentColumn(patient -> {
+		issuerOfPatientIDColumn = addColumn(PatientModel::getIssuerOfPatientId).setHeader("Issuer of patient ID")
+			.setSortable(true);
+		Grid.Column<PatientModel> editorColumn = addComponentColumn(patient -> {
 			Button edit = new Button("Edit");
 			edit.addClassName("edit");
 			edit.addClickListener(e -> {
@@ -170,7 +177,7 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 			edit.setEnabled(!editor.isOpen());
 			editButtons.add(edit);
 			return edit;
-		});
+		}).setAutoWidth(true).setFlexGrow(0);
 
 		addFilterElements();
 
@@ -192,7 +199,7 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		issuerOfPatientIDColumn.setEditorComponent(issuerOfPatientIdField);
 
 		deleteAllSelectedPatientsButton = new Button("Delete selected patients");
-		deleteAllSelectedPatientsButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		deleteAllSelectedPatientsButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		deleteAllSelectedPatientsButton.addClickListener(e -> {
 			if (selectedPatients != null && !selectedPatients.isEmpty()) {
 				Div dialogContent = new Div();
@@ -200,7 +207,7 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 						"Do you confirm the deletion of the " + selectedPatients.size() + " selected patients ?"));
 				WarningConfirmDialog dialog = new WarningConfirmDialog(dialogContent);
 				dialog.addConfirmationListener(componentEvent -> {
-					for (Patient p : selectedPatients) {
+					for (PatientModel p : selectedPatients) {
 						externalIDCache.remove(PatientClientUtil.generateKey(p, projectEntity.getId()));
 					}
 					readAllCacheValue();
@@ -216,7 +223,7 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 		deleteColumn = addComponentColumn(patient -> {
 			deletePatientButton = new Button("Delete");
-			deletePatientButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+			deletePatientButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 			deletePatientButton.addClickListener(e -> {
 				externalIDCache.remove(PatientClientUtil.generateKey(patient, projectEntity.getId()));
 				readAllCacheValue();
@@ -241,12 +248,14 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 		issuerOfPatientIDFilter = createAndConfigureFilterTextField(filterRow, issuerOfPatientIDColumn, false);
 	}
 
-	private TextField createAndConfigureFilterTextField(HeaderRow filterRow, Grid.Column<Patient> column,
+	private TextField createAndConfigureFilterTextField(HeaderRow filterRow, Grid.Column<PatientModel> column,
 			boolean required) {
 		TextField filterField = new TextField();
 		filterField.setRequired(required);
 		filterField.addValueChangeListener(event -> checkAndUpdateAllFilters());
+		// Filters live as the user types (EAGER, no Enter) with the built-in clear button
 		filterField.setValueChangeMode(ValueChangeMode.EAGER);
+		filterField.setClearButtonVisible(true);
 		filterField.setSizeFull();
 		filterField.setPlaceholder(LABEL_FILTER);
 		filterRow.getCell(column).setComponent(filterField);
@@ -256,7 +265,7 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 	public Div setBinder() {
 		Div validationStatus = new Div();
 		validationStatus.setId("validation");
-		validationStatus.getStyle().set("color", "var(--theme-color, red)");
+		validationStatus.addClassName("karnak-error-text");
 		binder.forField(externalIdField)
 			.withValidator(StringUtils::isNotBlank, "External Pseudonym is empty")
 			.withValidator(new StringLengthValidator(ERROR_MESSAGE_PATIENT, 1, 50))
@@ -288,32 +297,30 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 
 	public void readAllCacheValue() {
 		if (externalIDCache != null) {
-			Collection<Patient> patients = externalIDCache.getAll();
-			patientsListInCache = new ArrayList<>();
-			for (final Patient patient : patients) {
+			patientsListInCache.clear();
+			for (final PatientModel patient : externalIDCache.getAll()) {
 				if (projectEntity != null && patient.getProjectID() != null
 						&& patient.getProjectID().equals(projectEntity.getId())) {
 					patientsListInCache.add(patient);
 				}
 			}
-			setItems(patientsListInCache);
 		}
-		refreshPaginator();
+		dataView.refreshAll();
 	}
 
-	public void addPatient(Patient newPatient) {
+	public void addPatient(PatientModel newPatient) {
 		if (!patientExist(newPatient)) {
 			externalIDCache.put(PatientClientUtil.generateKey(newPatient, projectEntity.getId()), newPatient);
 		}
 	}
 
-	public void addPatientList(List<Patient> patientList) {
+	public void addPatientList(List<PatientModel> patientList) {
 		patientList.forEach(this::addPatient);
 		readAllCacheValue();
 	}
 
-	public boolean patientExist(Patient patient) {
-		final Patient duplicatePatient = externalIDCache
+	public boolean patientExist(PatientModel patient) {
+		final PatientModel duplicatePatient = externalIDCache
 			.get(PatientClientUtil.generateKey(patient, projectEntity.getId()));
 		if (duplicatePatient != null) {
 			duplicatePatientsList.add(duplicatePatient);
@@ -323,44 +330,24 @@ public class ExternalIDGrid extends PaginatedGrid<Patient, PatientFilter> {
 	}
 
 	public void checkAndUpdateAllFilters() {
-		// TODO: replace by PatientFilter which will contains all filters and remove
-		// extidFilter, patientIdFilter, patientFirstNameFilter, patientLastNameFilter,
-		// issuerOfPatientIDFilter
-		List<Patient> filterList = patientsListInCache.stream().toList();
+		patientFilter.setExtidFilter(extidFilter.getValue());
+		patientFilter.setPatientIdFilter(patientIdFilter.getValue());
+		patientFilter.setPatientFirstNameFilter(patientFirstNameFilter.getValue());
+		patientFilter.setPatientLastNameFilter(patientLastNameFilter.getValue());
+		patientFilter.setIssuerOfPatientIDFilter(issuerOfPatientIDFilter.getValue());
+		dataView.refreshAll();
+	}
 
-		if (!extidFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPseudonym().contains(extidFilter.getValue()))
-				.toList();
-		}
+	private boolean matchesFilter(PatientModel patient) {
+		return matches(patient.getPseudonym(), patientFilter.getExtidFilter())
+				&& matches(patient.getPatientId(), patientFilter.getPatientIdFilter())
+				&& matches(patient.getPatientFirstName(), patientFilter.getPatientFirstNameFilter())
+				&& matches(patient.getPatientLastName(), patientFilter.getPatientLastNameFilter())
+				&& matches(patient.getIssuerOfPatientId(), patientFilter.getIssuerOfPatientIDFilter());
+	}
 
-		if (!patientIdFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPatientId().contains(patientIdFilter.getValue()))
-				.toList();
-		}
-
-		if (!patientFirstNameFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPatientFirstName()
-					.contains(patientFirstNameFilter.getValue()))
-				.toList();
-		}
-
-		if (!patientLastNameFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getPatientLastName().contains(patientLastNameFilter.getValue()))
-				.toList();
-		}
-
-		if (!issuerOfPatientIDFilter.getValue().isEmpty()) {
-			filterList = filterList.stream()
-				.filter(cachedPatient -> cachedPatient.getIssuerOfPatientId()
-					.contains(issuerOfPatientIDFilter.getValue()))
-				.toList();
-		}
-
-		setItems(filterList);
+	private static boolean matches(String value, String filter) {
+		return StringUtils.isEmpty(filter) || (value != null && value.contains(filter));
 	}
 
 	public void setEnabledDeleteSelectedPatientsButton(Boolean value) {

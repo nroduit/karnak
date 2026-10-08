@@ -10,9 +10,12 @@
 package org.karnak.frontend.profile;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -20,21 +23,25 @@ import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.UploadHandler;
+import jakarta.annotation.security.RolesAllowed;
 import java.io.InputStream;
 import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.frontend.MainLayout;
+import org.karnak.frontend.component.ButtonFactory;
+import org.karnak.frontend.component.NewItemDialog;
 import org.karnak.frontend.profile.component.ProfileGrid;
-import org.karnak.frontend.profile.component.editprofile.ProfileComponent;
-import org.karnak.frontend.profile.component.editprofile.ProfileElementMainView;
+import org.karnak.frontend.profile.component.editprofile.ProfileEditorPanel;
 import org.karnak.frontend.profile.component.errorprofile.ProfileErrorView;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
+import org.weasis.core.util.annotations.Generated;
 
 @Route(value = ProfileView.ROUTE, layout = MainLayout.class)
 @PageTitle("Karnak - Profiles")
-@Secured({ "ROLE_admin" })
-
+@RolesAllowed("admin")
+@Generated()
+@NullUnmarked
 public class ProfileView extends HorizontalLayout implements HasUrlParameter<String> {
 
 	public static final String VIEW_NAME = "Profiles";
@@ -44,10 +51,7 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 	private final ProfileLogic profileLogic;
 
 	@Getter
-	private final ProfileComponent profileComponent;
-
-	@Getter
-	private final ProfileElementMainView profileElementMainView;
+	private final ProfileEditorPanel profileEditorPanel;
 
 	@Getter
 	private final ProfileGrid profileGrid;
@@ -57,8 +61,7 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 
 	private VerticalLayout barAndGridLayout;
 
-	@Getter
-	private final HorizontalLayout profileHorizontalLayout;
+	private VerticalLayout rightPanel;
 
 	private Upload uploadProfile;
 
@@ -70,17 +73,12 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 		this.profileLogic.setProfileView(this);
 
 		profileGrid = new ProfileGrid();
-		profileComponent = new ProfileComponent(profileLogic);
-		profileElementMainView = new ProfileElementMainView();
+		profileEditorPanel = new ProfileEditorPanel(profileLogic);
 		profileErrorView = new ProfileErrorView();
-		profileHorizontalLayout = new HorizontalLayout(profileComponent, profileElementMainView);
 
 		initComponents();
 		buildLayout();
 
-		add(barAndGridLayout, profileHorizontalLayout);
-
-		addEventGridSelection();
 		addAttachListener(event -> this.ui = event.getUI());
 	}
 
@@ -93,33 +91,67 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 			if (idProfilePipe != null) {
 				currentProfileEntity = profileLogic.retrieveProfile(idProfilePipe);
 			}
-			remove(profileErrorView);
-			add(profileHorizontalLayout);
+			showEditorPanel();
 		}
 		profileGrid.selectRow(currentProfileEntity);
-		profileComponent.setProfile(currentProfileEntity);
-		profileElementMainView.setProfile(currentProfileEntity);
+		profileEditorPanel.setProfile(currentProfileEntity);
 	}
 
 	private void buildLayout() {
 		setSizeFull();
-		profileComponent.setWidth("45%");
-		profileElementMainView.setWidth("55%");
-		profileErrorView.setWidth("75%");
-		profileHorizontalLayout.setWidth("75%");
-		profileHorizontalLayout.getStyle().set("overflow-y", "auto");
+		setPadding(false);
+		setSpacing(false);
 
+		Button newProfileButton = ButtonFactory.createAddButton("New profile");
+		newProfileButton.addClickListener(event -> openNewProfileDialog());
+		Button addGroupButton = profileGrid.createAddGroupButton();
 		barAndGridLayout = new VerticalLayout();
+		barAndGridLayout.add(newProfileButton);
 		barAndGridLayout.add(uploadProfile);
+		barAndGridLayout.add(addGroupButton);
 		barAndGridLayout.add(profileGrid);
+		barAndGridLayout.setFlexGrow(0, newProfileButton);
 		barAndGridLayout.setFlexGrow(0, uploadProfile);
+		barAndGridLayout.setFlexGrow(0, addGroupButton);
 		barAndGridLayout.setFlexGrow(1, profileGrid);
-		barAndGridLayout.setWidth("25%");
+		barAndGridLayout.setSizeFull();
+
+		profileEditorPanel.setSizeFull();
+		profileErrorView.setSizeFull();
+
+		rightPanel = new VerticalLayout();
+		rightPanel.setPadding(false);
+		rightPanel.setSpacing(false);
+		rightPanel.setSizeFull();
+		rightPanel.add(profileEditorPanel);
+
+		// Draggable splitter between the profile list (left) and the edit panel (right).
+		SplitLayout splitLayout = new SplitLayout(barAndGridLayout, rightPanel);
+		splitLayout.setSizeFull();
+		splitLayout.setSplitterPosition(25);
+		add(splitLayout);
+	}
+
+	/** Show the profile editor panel on the right side of the split. */
+	public void showEditorPanel() {
+		rightPanel.removeAll();
+		rightPanel.add(profileEditorPanel);
+	}
+
+	/** Show the profile error view on the right side of the split. */
+	public void showErrorView() {
+		rightPanel.removeAll();
+		rightPanel.add(profileErrorView);
+	}
+
+	/** Clear the right side of the split (e.g. after a profile is deleted). */
+	public void clearRightPanel() {
+		rightPanel.removeAll();
 	}
 
 	private void initComponents() {
 		initUploadProfile();
-		profileGrid.setItems(profileLogic);
+		profileGrid.init(profileLogic, this::navigateProfile);
 	}
 
 	private void initUploadProfile() {
@@ -132,8 +164,24 @@ public class ProfileView extends HorizontalLayout implements HasUrlParameter<Str
 		uploadProfile.setDropLabel(new Span("Drag and drop your profile here"));
 	}
 
-	private void addEventGridSelection() {
-		profileGrid.asSingleSelect().addValueChangeListener(event -> navigateProfile(event.getValue()));
+	private void openNewProfileDialog() {
+		TextField name = new TextField("Name");
+		TextField version = new TextField("Version");
+		TextField minVersion = new TextField("Min Karnak version (optional)");
+		name.setWidthFull();
+		version.setWidthFull();
+		minVersion.setWidthFull();
+		NewItemDialog dialog = new NewItemDialog("New profile", "Create", name, version, minVersion);
+		dialog.setOnConfirm(() -> {
+			if (name.getValue() == null || name.getValue().isBlank()) {
+				name.setInvalid(true);
+				name.setErrorMessage("A name is required");
+				return false;
+			}
+			profileLogic.createProfile(name.getValue().trim(), version.getValue(), minVersion.getValue());
+			return true;
+		});
+		dialog.open();
 	}
 
 	/**

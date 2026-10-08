@@ -16,10 +16,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.weasis.core.util.annotations.Generated;
 
 @Configuration
 @EnableCaching
 @Profile("portable")
+@Generated
 public class SimpleCacheConfiguration {
 
 	@Bean

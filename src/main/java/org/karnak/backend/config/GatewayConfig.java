@@ -14,14 +14,16 @@ import java.util.HashSet;
 import java.util.Set;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
 import org.karnak.backend.data.repo.SOPClassUIDRepo;
+import org.karnak.backend.model.dicominnolitics.JsonSOP;
 import org.karnak.backend.model.dicominnolitics.StandardSOPS;
-import org.karnak.backend.model.dicominnolitics.jsonSOP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.weasis.core.util.annotations.Generated;
 
 @Configuration
 @EnableJpaRepositories
+@Generated
 public class GatewayConfig {
 
 	// Repositories
@@ -36,7 +38,7 @@ public class GatewayConfig {
 	private void writeSOPSinDatabase() {
 		final StandardSOPS standardSOPS = new StandardSOPS();
 		Set<SOPClassUIDEntity> sopClassUIDEntitySet = new HashSet<>();
-		for (jsonSOP sop : standardSOPS.getSOPS()) {
+		for (JsonSOP sop : standardSOPS.getSOPS()) {
 			final String ciod = sop.getCiod();
 			final String uid = sop.getId();
 			final String name = sop.getName();

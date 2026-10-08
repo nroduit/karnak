@@ -10,8 +10,14 @@
 package org.karnak.backend.model.dicom;
 
 import java.time.LocalDate;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.Modality;
 
+@NullUnmarked
+@Setter
+@Getter
 public class WorkListQueryData {
 
 	private static final String DEFAULT_VALUE_FOR_CALLING_AET = "DCM-TOOLS";
@@ -41,104 +47,7 @@ public class WorkListQueryData {
 	private String accessionNumber;
 
 	public WorkListQueryData() {
-		callingAet = DEFAULT_VALUE_FOR_CALLING_AET;
-		scheduledModality = Modality.ALL;
-	}
-
-	public String getWorkListAet() {
-		return workListAet;
-	}
-
-	public void setWorkListAet(String workListAet) {
-		this.workListAet = workListAet;
-	}
-
-	public String getWorkListHostname() {
-		return workListHostname;
-	}
-
-	public void setWorkListHostname(String workListHostname) {
-		this.workListHostname = workListHostname;
-	}
-
-	public Integer getWorkListPort() {
-		return workListPort;
-	}
-
-	public void setWorkListPort(Integer workListPort) {
-		this.workListPort = workListPort;
-	}
-
-	public String getCallingAet() {
-		return callingAet;
-	}
-
-	public void setCallingAet(String callingAet) {
-		this.callingAet = callingAet;
-	}
-
-	public String getScheduledStationAet() {
-		return scheduledStationAet;
-	}
-
-	public void setScheduledStationAet(String scheduledStationAet) {
-		this.scheduledStationAet = scheduledStationAet;
-	}
-
-	public Modality getScheduledModality() {
-		return scheduledModality;
-	}
-
-	public void setScheduledModality(Modality scheduledModality) {
-		this.scheduledModality = scheduledModality;
-	}
-
-	public String getPatientId() {
-		return patientId;
-	}
-
-	public void setPatientId(String patientId) {
-		this.patientId = patientId;
-	}
-
-	public String getAdmissionId() {
-		return admissionId;
-	}
-
-	public void setAdmissionId(String admissionId) {
-		this.admissionId = admissionId;
-	}
-
-	public LocalDate getScheduledFrom() {
-		return scheduledFrom;
-	}
-
-	public void setScheduledFrom(LocalDate scheduledFrom) {
-		this.scheduledFrom = scheduledFrom;
-	}
-
-	public LocalDate getScheduledTo() {
-		return scheduledTo;
-	}
-
-	public void setScheduledTo(LocalDate scheduledTo) {
-		this.scheduledTo = scheduledTo;
-	}
-
-	public String getPatientName() {
-		return patientName;
-	}
-
-	public void setPatientName(String patientName) {
-		this.patientName = patientName;
-	}
-
-	public String getAccessionNumber() {
-		return accessionNumber;
-	}
-
-	public void setAccessionNumber(String accessionNumber) {
-		this.accessionNumber = accessionNumber;
+		reset();
 	}
 
 	public void reset() {

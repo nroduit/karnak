@@ -11,7 +11,6 @@ package org.karnak.frontend.authentication;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -20,8 +19,10 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.frontend.image.LogoKarnak;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * UI content when the user is not logged in yet.
@@ -29,7 +30,8 @@ import org.karnak.frontend.image.LogoKarnak;
 @Slf4j
 @Route(LoginScreen.ROUTE)
 @PageTitle("Karnak - Login")
-@CssImport(value = "./styles/shared-styles.css")
+@AnonymousAllowed
+@Generated()
 public class LoginScreen extends FlexLayout implements BeforeEnterObserver {
 
 	public static final String ROUTE = "login";

@@ -15,16 +15,19 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import lombok.Getter;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.karnak.frontend.forwardnode.edit.source.component.GridSourceNode;
 import org.karnak.frontend.util.UIS;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Source View
  */
 
+@Generated()
 public class SourceView extends VerticalLayout {
 
 	// Source Logic
@@ -85,13 +88,17 @@ public class SourceView extends VerticalLayout {
 
 	private void setTextFieldFilter() {
 		filter.setPlaceholder(PLACEHOLDER_FILTER);
+		// Built-in clear button inside the field, like the monitoring UID filters
+		filter.setClearButtonVisible(true);
+		// Filter as the user types (no need to press Enter), like the monitoring filters
+		filter.setValueChangeMode(ValueChangeMode.LAZY);
 		// Apply the filter to grid's data provider. TextField value is never null
 		filter.addValueChangeListener(event -> sourceLogic.setFilter(event.getValue()));
 	}
 
 	private void setButtonNewDestinationDICOM() {
-		newSourceNode.getElement().setAttribute("title", "New destination of type dicom");
-		newSourceNode.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		newSourceNode.getElement().setAttribute("title", "New source of type dicom");
+		newSourceNode.addThemeVariants(ButtonVariant.PRIMARY);
 		newSourceNode.setIcon(VaadinIcon.PLUS_CIRCLE.create());
 	}
 

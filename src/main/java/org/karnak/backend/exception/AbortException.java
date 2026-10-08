@@ -9,31 +9,28 @@
  */
 package org.karnak.backend.exception;
 
+import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
 
+@Getter
 public final class AbortException extends IllegalStateException {
-
-	private static final long serialVersionUID = 3993065212756372490L;
 
 	private final Abort abort;
 
-	public AbortException(Abort abort, String s) {
-		super(s);
+	public AbortException(Abort abort, String message) {
+		super(message);
 		this.abort = abort;
 	}
 
-	public AbortException(Abort abort, String string, Exception e) {
-		super(string, e);
+	public AbortException(Abort abort, String message, Exception e) {
+		super(message, e);
 		this.abort = abort;
 	}
 
 	@Override
-	public String toString() {
+	public @Nullable String toString() {
 		return getMessage();
-	}
-
-	public Abort getAbort() {
-		return abort;
 	}
 
 }

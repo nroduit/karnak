@@ -10,16 +10,20 @@
 package org.karnak.frontend.authconfig;
 
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.AuthConfigEntity;
 import org.karnak.backend.data.repo.AuthConfigRepo;
 import org.karnak.backend.enums.AuthConfigType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
-@Service
+@SpringComponent
+@UIScope
 @Slf4j
+@Generated()
 public class AuthConfigLogic extends ListDataProvider<AuthConfigEntity> {
 
 	private final transient AuthConfigRepo authConfigRepo;

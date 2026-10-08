@@ -16,7 +16,9 @@ import java.util.List;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.TagEntity;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class ProfileElementView extends Div {
 
 	ProfileElementEntity profileElementEntity;
@@ -59,7 +61,10 @@ public class ProfileElementView extends Div {
 	private Div setProfileValue(String value) {
 		Div profileNameDiv = new Div();
 		profileNameDiv.add(new Text(value));
-		profileNameDiv.getStyle().set("color", "grey").set("padding-left", "10px").set("margin-top", "5px");
+		profileNameDiv.getStyle()
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("padding-left", "10px")
+			.set("margin-top", "5px");
 		return profileNameDiv;
 	}
 
@@ -69,7 +74,10 @@ public class ProfileElementView extends Div {
 		for (TagEntity tagEntity : tagEntities) {
 			Div tagDiv = new Div();
 			tagDiv.add(new Text(tagEntity.getTagValue()));
-			tagDiv.getStyle().set("color", "grey").set("padding-left", "15px").set("margin-top", "2px");
+			tagDiv.getStyle()
+				.set("color", "var(--vaadin-text-color-secondary)")
+				.set("padding-left", "15px")
+				.set("margin-top", "2px");
 			verticalLayout.add(tagDiv);
 		}
 		return verticalLayout;
@@ -81,7 +89,10 @@ public class ProfileElementView extends Div {
 		for (ArgumentEntity argumentEntity : argumentEntities) {
 			Div tagDiv = new Div();
 			tagDiv.add(new Text(argumentEntity.getArgumentKey() + " : " + argumentEntity.getArgumentValue()));
-			tagDiv.getStyle().set("color", "grey").set("padding-left", "15px").set("margin-top", "2px");
+			tagDiv.getStyle()
+				.set("color", "var(--vaadin-text-color-secondary)")
+				.set("padding-left", "15px")
+				.set("margin-top", "2px");
 			verticalLayout.add(tagDiv);
 		}
 		return verticalLayout;

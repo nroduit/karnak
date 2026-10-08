@@ -14,21 +14,25 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import java.util.Collection;
-import org.karnak.backend.cache.Patient;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.model.patient.PatientModel;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class DuplicateDialog extends Dialog {
 
-	private final Collection<Patient> duplicateList;
+	private final Collection<PatientModel> duplicateList;
 
-	private Grid<Patient> grid;
+	private Grid<PatientModel> grid;
 
-	public DuplicateDialog(String title, String text, Collection<Patient> duplicateList, String buttonText) {
+	public DuplicateDialog(String title, String text, Collection<PatientModel> duplicateList, String buttonText) {
 		removeAll();
 		this.duplicateList = duplicateList;
 
 		Div divTitle = new Div();
 		divTitle.setText(title);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		Div divContent = new Div();
 		Div divIntro = new Div();
@@ -41,17 +45,17 @@ public class DuplicateDialog extends Dialog {
 
 		Button cancelButton = new Button(buttonText, event -> close());
 
-		cancelButton.getStyle().set("margin-left", "50%");
+		cancelButton.getStyle().set("margin-left", "50%").set("margin-top", "10px");
 		add(divTitle, divContent, grid, cancelButton);
 	}
 
 	public void setGridElement() {
 		grid = new Grid<>();
-		grid.addColumn(Patient::getPseudonym).setHeader("External pseudonym").setSortable(true);
-		grid.addColumn(Patient::getPatientId).setHeader("Patient ID").setSortable(true);
-		grid.addColumn(Patient::getPatientFirstName).setHeader("Patient first name").setSortable(true);
-		grid.addColumn(Patient::getPatientLastName).setHeader("Patient last name").setSortable(true);
-		grid.addColumn(Patient::getIssuerOfPatientId).setHeader("Issuer of patient ID").setSortable(true);
+		grid.addColumn(PatientModel::getPseudonym).setHeader("External pseudonym").setSortable(true);
+		grid.addColumn(PatientModel::getPatientId).setHeader("Patient ID").setSortable(true);
+		grid.addColumn(PatientModel::getPatientFirstName).setHeader("Patient first name").setSortable(true);
+		grid.addColumn(PatientModel::getPatientLastName).setHeader("Patient last name").setSortable(true);
+		grid.addColumn(PatientModel::getIssuerOfPatientId).setHeader("Issuer of patient ID").setSortable(true);
 		grid.setItems(duplicateList);
 	}
 

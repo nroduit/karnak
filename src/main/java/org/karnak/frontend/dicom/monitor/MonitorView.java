@@ -9,28 +9,60 @@
  */
 package org.karnak.frontend.dicom.monitor;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.HasValue.ValueChangeListener;
-import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.data.entity.WebDestinationConfigEntity;
+import org.karnak.backend.enums.MessageFormat;
+import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.model.dicom.DicomNodeList;
-import org.karnak.backend.model.dicom.WadoNodeList;
+import org.karnak.backend.model.dicom.Message;
+import org.karnak.backend.model.dicom.WebDestinationNode;
+import org.karnak.backend.model.dicom.result.DicomCapabilitiesResult;
+import org.karnak.backend.model.dicom.result.DicomNodeCheckResult;
+import org.karnak.backend.model.dicom.result.WebNodeCheckResult;
+import org.karnak.backend.service.WebDestinationConfigService;
+import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckService;
+import org.karnak.backend.service.dicom.DicomWebCheckService;
+import org.karnak.backend.util.DicomNodeUtil;
+import org.karnak.frontend.dicom.AETField;
 import org.karnak.frontend.dicom.AbstractView;
-import org.karnak.frontend.dicom.Util;
+import org.karnak.frontend.dicom.DicomCapabilitiesPanel;
+import org.karnak.frontend.dicom.DicomNodeCheckResultGrid;
+import org.karnak.frontend.dicom.WebDestinationCheckResultGrid;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class MonitorView extends AbstractView {
 
+	private static final String DEFAULT_CALLING_AET = "PACSMONITOR";
+
 	// CONTROLLER
-	private final MonitorLogic logic = new MonitorLogic(this);
+	private final MonitorLogic logic;
 
 	// UI COMPONENTS
-	private VerticalLayout dicomAndWadoLayout;
+	private VerticalLayout dicomLayout;
 
 	// Dicom Layout
 	private HorizontalLayout dicomEchoLayout;
@@ -39,40 +71,59 @@ public class MonitorView extends AbstractView {
 
 	private Select<DicomNodeList> dicomEchoNodeListSelector;
 
+	private TextField callingAetFld;
+
 	private Button dicomEchoBtn;
-
-	// WADO Layout
-	private HorizontalLayout wadoLayout;
-
-	private H6 wadoLayoutTitle;
-
-	private Select<WadoNodeList> wadoNodeListSelector;
-
-	private Button wadoBtn;
 
 	// Result Layout
 	private VerticalLayout resultLayout;
 
 	private H6 resultTitle;
 
-	private Div resultDiv;
+	private Div resultNote;
 
-	public MonitorView() {
-		init();
+	private DicomNodeCheckResultGrid resultGrid;
+
+	// DICOMweb Layout
+	private VerticalLayout webLayout;
+
+	private VerticalLayout webResultLayout;
+
+	private ComboBox<String> webGroupFld;
+
+	private Button webBtn;
+
+	private Div webNote;
+
+	private WebDestinationCheckResultGrid webGrid;
+
+	private final DicomNodeUtil dicomNodeUtil;
+
+	private final transient WebDestinationConfigService webDestinationConfigService;
+
+	public MonitorView(DicomNodeUtil dicomNodeUtil, WebDestinationConfigService webDestinationConfigService,
+			DicomNodeCheckService dicomNodeCheckService, DicomCapabilitiesCheckService dicomCapabilitiesCheckService,
+			DicomWebCheckService dicomWebCheckService) {
+		this.dicomNodeUtil = dicomNodeUtil;
+		this.webDestinationConfigService = webDestinationConfigService;
+		this.logic = new MonitorLogic(this, dicomNodeCheckService, dicomCapabilitiesCheckService, dicomWebCheckService);
 		createView();
 		createMainLayout();
 
 		add(mainLayout);
 	}
 
-	public void displayStatus(String status) {
-		resultDiv.removeAll();
-		resultDiv.add(new Html("<span>" + status + "</span>"));
-
+	public void displayResults(List<DicomNodeCheckResult> results) {
+		resultGrid.setItems(results);
+		resultNote.setText(results.size() + " node(s) checked - select a row to view the details");
 		resultLayout.setVisible(true);
 	}
 
-	private void init() {
+	public void displayWebResults(List<WebNodeCheckResult> results) {
+		webGrid.setItems(results);
+		webNote.setText(results.size() + " DICOMweb destination(s) checked - select a row to view the details");
+		webGrid.setVisible(true);
+		webResultLayout.setVisible(true);
 	}
 
 	private void createView() {
@@ -85,15 +136,42 @@ public class MonitorView extends AbstractView {
 		mainLayout.setSpacing(true);
 		mainLayout.setWidthFull();
 
-		buildDicomAndWadoLayout();
+		buildDicomLayout();
 		buildResultLayout();
+		buildWebLayout();
+		buildWebResultLayout();
 
-		mainLayout.add(dicomAndWadoLayout, resultLayout);
+		// A second tab line switches between the two monitoring sections (DICOM nodes vs
+		// DICOMweb) instead of stacking them on the page.
+		VerticalLayout dicomSection = sectionWrapper(dicomLayout, resultLayout);
+		VerticalLayout webSection = sectionWrapper(webLayout, webResultLayout);
+		webSection.setVisible(false);
+
+		Tab tabDicomNodes = new Tab("DICOM Nodes");
+		Tab tabDicomWeb = new Tab("DICOMweb");
+		Tabs sectionTabs = new Tabs(tabDicomNodes, tabDicomWeb);
+		sectionTabs.setWidthFull();
+		sectionTabs.addSelectedChangeListener(event -> {
+			boolean dicomSelected = event.getSelectedTab() == tabDicomNodes;
+			dicomSection.setVisible(dicomSelected);
+			webSection.setVisible(!dicomSelected);
+		});
+
+		mainLayout.add(sectionTabs, dicomSection, webSection);
+	}
+
+	private static VerticalLayout sectionWrapper(Component... children) {
+		VerticalLayout wrapper = new VerticalLayout(children);
+		wrapper.setWidthFull();
+		wrapper.setPadding(false);
+		wrapper.setSpacing(true);
+		return wrapper;
 	}
 
 	private void buildDicomEchoLayoutTitle() {
 		dicomEchoLayoutTitle = new H6("Dicom Echo");
 		dicomEchoLayoutTitle.getStyle().set("margin-top", "0px");
+		dicomEchoLayoutTitle.getStyle().set("margin-bottom", "10px");
 	}
 
 	private void buildDicomEchoLayout() {
@@ -104,97 +182,79 @@ public class MonitorView extends AbstractView {
 		dicomEchoLayout.setDefaultVerticalComponentAlignment(Alignment.END);
 
 		buildDicomNodeListSelector();
+		buildCallingAetFld();
 		buildDicomEchoBtn();
 
-		dicomEchoLayout.add(dicomEchoNodeListSelector, dicomEchoBtn);
+		dicomEchoLayout.add(dicomEchoNodeListSelector, callingAetFld, dicomEchoBtn);
 	}
 
 	private void buildDicomNodeListSelector() {
 		dicomEchoNodeListSelector = new Select<>();
+		dicomEchoNodeListSelector.setLabel("Group");
 		dicomEchoNodeListSelector.setEmptySelectionAllowed(false);
 
-		DicomNodeList pacsProdDicomNodeList = Util.readnodes(this.getClass().getResource("/config/pacs-nodes-web.csv"),
-				"PACS Public WEB");
-		DicomNodeList newPacsProdDicomNodeList = Util
-			.readnodes(this.getClass().getResource("/config/workstations-nodes.csv"), "Workstations");
+		var dicomNodeTypes = dicomNodeUtil.getAllNodeTypesIncludingWorklist();
 
-		dicomEchoNodeListSelector.setItems(pacsProdDicomNodeList, newPacsProdDicomNodeList);
+		dicomEchoNodeListSelector.setItems(dicomNodeTypes);
 
 		dicomEchoNodeListSelector
 			.addValueChangeListener((ValueChangeListener<ValueChangeEvent<DicomNodeList>>) event -> logic
 				.dicomNodeListSelected(event.getValue()));
 
-		if (!pacsProdDicomNodeList.isEmpty()) {
-			dicomEchoNodeListSelector.setValue(pacsProdDicomNodeList);
+		if (!dicomNodeTypes.isEmpty()) {
+			dicomEchoNodeListSelector.setValue(dicomNodeTypes.getFirst());
 		}
+	}
+
+	private void buildCallingAetFld() {
+		callingAetFld = new AETField("Calling AE Title");
+		callingAetFld.setRequired(true);
+		callingAetFld.setRequiredIndicatorVisible(true);
+		callingAetFld.setValueChangeMode(ValueChangeMode.EAGER);
+		callingAetFld.setValue(DEFAULT_CALLING_AET);
 	}
 
 	private void buildDicomEchoBtn() {
-		dicomEchoBtn = new Button("Check!");
-		dicomEchoBtn.addClickListener(event -> logic.dicomEcho());
+		dicomEchoBtn = new Button("Check DICOM Nodes");
+		dicomEchoBtn.addThemeVariants(ButtonVariant.PRIMARY);
+		dicomEchoBtn.addClickListener(event -> runCheck());
 	}
 
-	private void buildWadoLayoutTitle() {
-		wadoLayoutTitle = new H6("WADO");
-	}
-
-	private void buildWadoLayout() {
-		wadoLayout = new HorizontalLayout();
-		wadoLayout.setMargin(false);
-		wadoLayout.setSpacing(true);
-		wadoLayout.setWidthFull();
-		wadoLayout.setDefaultVerticalComponentAlignment(Alignment.END);
-
-		buildwadoNodeListSelector();
-		buildWadoBtn();
-
-		wadoLayout.add(wadoNodeListSelector, wadoBtn);
-	}
-
-	private void buildwadoNodeListSelector() {
-		wadoNodeListSelector = new Select<>();
-		wadoNodeListSelector.setEmptySelectionAllowed(false);
-
-		WadoNodeList pacsProdWadoNodeList = Util.readWadoNodes(this.getClass().getResource("/config/pacs-wado-web.csv"),
-				"Public web");
-
-		wadoNodeListSelector.setItems(pacsProdWadoNodeList);
-
-		wadoNodeListSelector.addValueChangeListener((ValueChangeListener<ValueChangeEvent<WadoNodeList>>) event -> logic
-			.wadoNodeListSelected(event.getValue()));
-
-		if (!pacsProdWadoNodeList.isEmpty()) {
-			wadoNodeListSelector.setValue(pacsProdWadoNodeList);
+	private void runCheck() {
+		if (callingAetFld.isEmpty()) {
+			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT, "A calling AE Title is required"));
+			return;
 		}
+
+		DicomNodeList selected = dicomEchoNodeListSelector.getValue();
+		if (selected == null || selected.isEmpty()) {
+			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT,
+					"The selected group has no DICOM node to check"));
+			return;
+		}
+
+		logic.dicomEcho(callingAetFld.getValue());
 	}
 
-	private void buildWadoBtn() {
-		wadoBtn = new Button("Check!");
-
-		wadoBtn.addClickListener(event -> logic.wado());
-	}
-
-	private void buildDicomAndWadoLayout() {
-		dicomAndWadoLayout = new VerticalLayout();
-		dicomAndWadoLayout.setWidthFull();
-		dicomAndWadoLayout.setPadding(true);
-		dicomAndWadoLayout.setSpacing(false);
-		dicomAndWadoLayout.getStyle()
+	private void buildDicomLayout() {
+		dicomLayout = new VerticalLayout();
+		dicomLayout.setWidthFull();
+		dicomLayout.setPadding(true);
+		dicomLayout.setSpacing(false);
+		dicomLayout.getStyle()
 			.set("box-shadow",
 					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
-		dicomAndWadoLayout.getStyle().set("border-radius", "4px");
+		dicomLayout.getStyle().set("border-radius", "4px");
 
 		buildDicomEchoLayoutTitle();
 		buildDicomEchoLayout();
-		buildWadoLayoutTitle();
-		buildWadoLayout();
 
-		dicomAndWadoLayout.add(dicomEchoLayoutTitle, dicomEchoLayout, wadoLayoutTitle, wadoLayout);
+		dicomLayout.add(dicomEchoLayoutTitle, dicomEchoLayout);
 	}
 
 	private void buildResultLayout() {
 		resultLayout = new VerticalLayout();
-		resultLayout.setSizeFull();
+		resultLayout.setWidthFull();
 		resultLayout.setPadding(true);
 		resultLayout.setSpacing(false);
 		resultLayout.getStyle()
@@ -204,9 +264,10 @@ public class MonitorView extends AbstractView {
 		resultLayout.setVisible(false);
 
 		buildResultTitle();
-		buildResultDiv();
+		buildResultNote();
+		buildResultGrid();
 
-		resultLayout.add(resultTitle, resultDiv);
+		resultLayout.add(resultTitle, resultNote, resultGrid);
 	}
 
 	private void buildResultTitle() {
@@ -215,10 +276,137 @@ public class MonitorView extends AbstractView {
 		resultTitle.getStyle().set("padding-bottom", "0px");
 	}
 
-	private void buildResultDiv() {
-		resultDiv = new Div();
-		resultDiv.setSizeFull();
-		resultDiv.getStyle().set("overflow-y", "auto");
+	private void buildResultNote() {
+		resultNote = new Div();
+		resultNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
+		resultNote.getStyle().set("font-style", "italic");
+	}
+
+	private void buildResultGrid() {
+		resultGrid = new DicomNodeCheckResultGrid();
+		resultGrid.setWidthFull();
+		resultGrid.setAllRowsVisible(true);
+		resultGrid.setCapabilityProbeAction(this::openCapabilitiesDialog);
+	}
+
+	private void buildWebLayout() {
+		webLayout = new VerticalLayout();
+		webLayout.setWidthFull();
+		webLayout.setPadding(true);
+		webLayout.setSpacing(false);
+		webLayout.getStyle()
+			.set("box-shadow",
+					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
+		webLayout.getStyle().set("border-radius", "4px");
+
+		H6 webTitle = new H6("DICOMweb destinations (STOW-RS)");
+		webTitle.getStyle().set("margin-top", "0px");
+		webTitle.getStyle().set("margin-bottom", "10px");
+
+		webGroupFld = new ComboBox<>("Group");
+		var webGroups = new ArrayList<String>();
+		webGroups.add(DicomNodeUtil.GATEWAY_DESTINATIONS_GROUP_NAME);
+		webGroups.addAll(webDestinationConfigService.getKnownGroups());
+		webGroupFld.setItems(webGroups);
+		webGroupFld.setPlaceholder("All groups");
+		webGroupFld.setClearButtonVisible(true);
+		webGroupFld.setHelperText("empty = all groups");
+
+		webBtn = new Button("Check DICOMweb", (event) -> runWebCheck());
+		webBtn.addThemeVariants(ButtonVariant.PRIMARY);
+
+		HorizontalLayout webBar = new HorizontalLayout(webGroupFld, webBtn);
+		// Align on the input baseline so the button lines up with the combo's field
+		// rather than dropping to the level of its helper text.
+		webBar.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+		webBar.setSpacing(true);
+
+		webLayout.add(webTitle, webBar);
+	}
+
+	private void buildWebResultLayout() {
+		webResultLayout = new VerticalLayout();
+		webResultLayout.setWidthFull();
+		webResultLayout.setPadding(true);
+		webResultLayout.setSpacing(false);
+		webResultLayout.getStyle()
+			.set("box-shadow",
+					"0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12)");
+		webResultLayout.getStyle().set("border-radius", "4px");
+		webResultLayout.setVisible(false);
+
+		webNote = new Div();
+		webNote.getStyle().set("font-size", "var(--aura-font-size-xs)");
+		webNote.getStyle().set("font-style", "italic");
+
+		webGrid = new WebDestinationCheckResultGrid();
+		webGrid.setWidthFull();
+		webGrid.setAllRowsVisible(true);
+		webGrid.setVisible(false);
+
+		webResultLayout.add(webNote, webGrid);
+	}
+
+	private void runWebCheck() {
+		List<WebDestinationNode> destinations = collectWebDestinations();
+		if (destinations.isEmpty()) {
+			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT,
+					"No DICOMweb (STOW-RS) destination is configured"));
+			return;
+		}
+
+		displayWebResults(logic.checkWebDestinations(destinations));
+	}
+
+	/**
+	 * The DICOMweb destinations to check for the selected group, deduplicated by URL: the
+	 * managed endpoints (filtered by group) and, unless a specific managed group is
+	 * selected, the dynamic Gateway STOW destinations (their own
+	 * {@value DicomNodeUtil#GATEWAY_DESTINATIONS_GROUP_NAME} group). An empty selection
+	 * checks everything.
+	 */
+	private List<WebDestinationNode> collectWebDestinations() {
+		String group = webGroupFld.getValue();
+		boolean gatewayGroup = DicomNodeUtil.GATEWAY_DESTINATIONS_GROUP_NAME.equals(group);
+
+		var destinations = new ArrayList<WebDestinationNode>();
+		Set<String> seen = new HashSet<>();
+		if (!gatewayGroup) {
+			for (WebDestinationConfigEntity entity : webDestinationConfigService.findAll(group)) {
+				if (seen.add(entity.getUrl())) {
+					destinations.add(webDestinationConfigService.toWebDestinationNode(entity));
+				}
+			}
+		}
+		if (group == null || gatewayGroup) {
+			for (WebDestinationNode node : dicomNodeUtil.getGatewayStowDestinations()) {
+				if (seen.add(node.url())) {
+					destinations.add(node);
+				}
+			}
+		}
+		return destinations;
+	}
+
+	private void openCapabilitiesDialog(DicomNodeCheckResult result) {
+		if (callingAetFld.isEmpty()) {
+			displayMessage(new Message(MessageLevel.WARN, MessageFormat.TEXT, "A calling AE Title is required"));
+			return;
+		}
+
+		DicomCapabilitiesResult capabilities = logic.probeCapabilities(callingAetFld.getValue(),
+				result.getCalledNode());
+
+		DicomCapabilitiesPanel panel = new DicomCapabilitiesPanel();
+		panel.display(capabilities);
+
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("DICOM Capabilities — " + result.getCalledNodeDescription());
+		dialog.setWidth("900px");
+		dialog.add(panel);
+		Button closeBtn = new Button("Close", (event) -> dialog.close());
+		dialog.getFooter().add(closeBtn);
+		dialog.open();
 	}
 
 }

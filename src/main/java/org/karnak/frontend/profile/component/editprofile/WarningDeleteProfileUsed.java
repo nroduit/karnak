@@ -14,18 +14,16 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class WarningDeleteProfileUsed extends Dialog {
 
 	public void setText(ProfileEntity profileEntity) {
 		removeAll();
 		Div divTitle = new Div();
-		divTitle.setText(String.format("The profile %s can't be remove", profileEntity.getName()));
-		divTitle.getStyle()
-			.set("font-size", "large")
-			.set("font-weight", "bolder")
-			.set("padding-bottom", "10px")
-			.set("color", "red");
+		divTitle.setText(String.format("The profile %s can't be removed", profileEntity.getName()));
+		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
 
 		Div divContent = new Div();
 		Div divIntro = new Div();
@@ -44,6 +42,20 @@ public class WarningDeleteProfileUsed extends Dialog {
 
 		Button cancelButton = new Button("Cancel", event -> close());
 
+		cancelButton.getStyle().set("margin-left", "75%");
+		add(divTitle, divContent, cancelButton);
+	}
+
+	public void setErrorMessage(String errorMessage) {
+		removeAll();
+		Div divTitle = new Div();
+		divTitle.setText("Warning");
+		divTitle.addClassNames("karnak-dialog-title", "karnak-error-text");
+
+		Div divContent = new Div();
+		divContent.setText(errorMessage);
+
+		Button cancelButton = new Button("Cancel", event -> close());
 		cancelButton.getStyle().set("margin-left", "75%");
 		add(divTitle, divContent, cancelButton);
 	}

@@ -1,0 +1,63 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- profile -->
+  <changeSet author="karnak" id="2.7-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="profile" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="profile">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-2" dbms="postgresql">
+    <sql>UPDATE profile SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-3" dbms="h2">
+    <sql>UPDATE profile SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-4">
+    <addNotNullConstraint tableName="profile" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-5">
+    <addUniqueConstraint tableName="profile" columnNames="uuid" constraintName="uk_profile_uuid"/>
+  </changeSet>
+
+  <!-- profile_element -->
+  <changeSet author="karnak" id="2.7-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="profile_element" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="profile_element">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-7" dbms="postgresql">
+    <sql>UPDATE profile_element SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-8" dbms="h2">
+    <sql>UPDATE profile_element SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-9">
+    <addNotNullConstraint tableName="profile_element" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.7-10">
+    <addUniqueConstraint tableName="profile_element" columnNames="uuid" constraintName="uk_profile_element_uuid"/>
+  </changeSet>
+
+</databaseChangeLog>
+

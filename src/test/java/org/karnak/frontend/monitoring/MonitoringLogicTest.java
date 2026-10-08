@@ -11,21 +11,25 @@ package org.karnak.frontend.monitoring;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.karnak.backend.service.MonitoringAggregationService;
 import org.karnak.backend.service.TransferMonitoringService;
 import org.mockito.Mockito;
 
 class MonitoringLogicTest {
 
-	// Service mock
+	// Service mocks
 	private final TransferMonitoringService transferMonitoringServiceMock = Mockito
 		.mock(TransferMonitoringService.class);
+
+	private final MonitoringAggregationService monitoringAggregationServiceMock = Mockito
+		.mock(MonitoringAggregationService.class);
 
 	// Logic under test
 	private MonitoringLogic monitoringLogic;
 
 	@BeforeEach
 	void setUp() {
-		monitoringLogic = new MonitoringLogic(transferMonitoringServiceMock);
+		monitoringLogic = new MonitoringLogic(transferMonitoringServiceMock, monitoringAggregationServiceMock);
 	}
 
 	@Test

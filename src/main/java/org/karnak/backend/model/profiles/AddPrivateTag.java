@@ -14,6 +14,7 @@ import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
@@ -21,9 +22,6 @@ import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.Add;
 import org.karnak.backend.model.action.Keep;
-import org.karnak.backend.model.expression.ExprCondition;
-import org.karnak.backend.model.expression.ExpressionError;
-import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.model.standard.StandardDICOM;
@@ -31,34 +29,36 @@ import org.karnak.backend.model.standard.StandardDICOM;
 @Slf4j
 public class AddPrivateTag extends AbstractProfileItem {
 
-	private final TagActionMap tagsAction;
+	private boolean tagAdded;
 
-	private final ActionItem actionByDefault;
-
-	private boolean tagAdded = false;
+	private String currentInstanceUID;
 
 	private static final String LOG_PATTERN = "SOPInstanceUID={} TAG={} ACTION={} REASON={}";
 
 	public AddPrivateTag(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
 
-		tagsAction = new TagActionMap();
-		actionByDefault = new Keep("K");
+		TagActionMap tagsAction = new TagActionMap();
+		ActionItem actionByDefault = new Keep("K");
 		profileValidation();
-		setActionHashMap();
-	}
-
-	private void setActionHashMap() {
-
-		if (tagEntities != null && !tagEntities.isEmpty()) {
-			for (IncludedTagEntity tag : tagEntities) {
-				tagsAction.put(tag.getTagValue(), actionByDefault);
-			}
-		}
+		mapTagsToAction(tagsAction, null, actionByDefault);
+		this.currentInstanceUID = "";
+		this.tagAdded = false;
 	}
 
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac) {
+		// Read from the untouched copy: the pipeline replaces (0008,0018) early in its
+		// ascending walk, so the working dataset would answer with the original UID for
+		// the
+		// first tags and with the pseudonymized one afterwards, which this latch would
+		// read
+		// as a second instance
+		String currentUID = original.getString(Tag.SOPInstanceUID);
+		if (!currentInstanceUID.equals(currentUID) && currentUID != null) {
+			currentInstanceUID = currentUID;
+			tagAdded = false;
+		}
 		if (!tagAdded) {
 			IncludedTagEntity t = tagEntities.getFirst();
 			String tagValue = StandardDICOM.cleanTagPath(t.getTagValue());
@@ -80,13 +80,17 @@ public class AddPrivateTag extends AbstractProfileItem {
 
 			int creatorTag = TagUtils.creatorTagOf(TagUtils.intFromHexString(tagValue));
 
+			// The private creator is read from the working dataset on purpose: the
+			// question
+			// is which creator the object about to be forwarded already holds, not which
+			// one it held before the pipeline started
 			if (privateCreator != null && dcm.contains(creatorTag)
 					&& !dcm.getString(creatorTag).equals(privateCreator)) {
 				// Collision between multiple Private Creator Tags, do not add the current
 				// tag and log a warning
 				tagAdded = true;
 				if (log.isWarnEnabled()) {
-					log.warn(LOG_PATTERN, dcm.getString(Tag.SOPInstanceUID), tagValue, "A",
+					log.warn(LOG_PATTERN, original.getString(Tag.SOPInstanceUID), tagValue, "A",
 							"Tag not added, PrivateCreatorID collision " + TagUtils.toString(creatorTag) + " existing: "
 									+ dcm.getString(creatorTag) + " - new: " + privateCreator);
 				}
@@ -109,17 +113,15 @@ public class AddPrivateTag extends AbstractProfileItem {
 			throw new ProfileException("Cannot build the profile " + codeName + ": Exactly one tag is required");
 		}
 
+		rejectTagPaths();
+
 		if (!TagUtils.isPrivateTag(
 				TagUtils.intFromHexString(StandardDICOM.cleanTagPath(tagEntities.getFirst().getTagValue())))) {
 			throw new ProfileException("Cannot build the profile " + codeName + ": the tag "
 					+ tagEntities.getFirst().getTagValue() + " is not a private tag");
 		}
 
-		final ExpressionError expressionError = ExpressionResult.isValid(condition, new ExprCondition(new Attributes()),
-				Boolean.class);
-		if (condition != null && !expressionError.isValid()) {
-			throw new ProfileException(expressionError.getMsg());
-		}
+		validateCondition();
 	}
 
 }

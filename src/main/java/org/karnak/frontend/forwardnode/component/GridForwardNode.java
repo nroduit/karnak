@@ -9,9 +9,9 @@
  */
 package org.karnak.frontend.forwardnode.component;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -23,40 +23,45 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.server.VaadinRequest;
 import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.util.SystemPropertyUtil;
 import org.karnak.frontend.util.CollatorUtils;
+import org.karnak.frontend.util.GroupTreeGrid;
+import org.karnak.frontend.util.GroupTreeNode;
+import org.weasis.core.util.annotations.Generated;
 
-public class GridForwardNode extends Grid<ForwardNodeEntity> {
+@Generated()
+@NullUnmarked
+public class GridForwardNode extends GroupTreeGrid<ForwardNodeEntity> {
 
 	public GridForwardNode() {
 		setSizeFull();
 
-		Column<ForwardNodeEntity> forwardAeTitleColumn = addComponentColumn(forwardNode -> {
-			Span span = new Span(forwardNode.getFwdAeTitle());
-			Button copyButton = createCopyButton(forwardNode);
+		var forwardAeTitleColumn = addPrimaryColumn("Forward AETitle", this::buildAeTitleCell,
+				CollatorUtils.comparing(ForwardNodeEntity::getFwdAeTitle))
+			.setFlexGrow(20);
 
-			HorizontalLayout layout = new HorizontalLayout(span, copyButton);
-			layout.setAlignItems(Alignment.CENTER);
-			layout.setSpacing(true);
-			return layout;
-		}).setHeader("Forward AETitle")
-			.setFlexGrow(20)
-			.setSortable(true)
-			.setComparator(CollatorUtils.comparing(ForwardNodeEntity::getFwdAeTitle));
+		addItemTextColumn("Description", ForwardNodeEntity::getFwdDescription,
+				CollatorUtils.comparing(ForwardNodeEntity::getFwdDescription))
+			.setFlexGrow(20);
 
-		addColumn(ForwardNodeEntity::getFwdDescription).setHeader("Description")
-			.setFlexGrow(20)
-			.setSortable(true)
-			.setComparator(CollatorUtils.comparing(ForwardNodeEntity::getFwdDescription));
+		sort(List.of(new GridSortOrder<>(forwardAeTitleColumn, SortDirection.ASCENDING)));
+	}
 
-		GridSortOrder<ForwardNodeEntity> order = new GridSortOrder<>(forwardAeTitleColumn, SortDirection.ASCENDING);
-		sort(List.of(order));
+	private Component buildAeTitleCell(ForwardNodeEntity forwardNode) {
+		Span span = new Span(forwardNode.getFwdAeTitle());
+		Button copyButton = createCopyButton(forwardNode);
+
+		HorizontalLayout layout = new HorizontalLayout(span, copyButton);
+		layout.setAlignItems(Alignment.CENTER);
+		layout.setSpacing(true);
+		return layout;
 	}
 
 	private Button createCopyButton(ForwardNodeEntity forwardNode) {
 		Button copyButton = new Button(VaadinIcon.COPY.create());
-		copyButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+		copyButton.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
 		copyButton.getElement().setAttribute("aria-label", "Copy DICOM configuration");
 
 		copyButton.addClickListener(event -> {
@@ -64,7 +69,7 @@ public class GridForwardNode extends Grid<ForwardNodeEntity> {
 			copyButton.getElement().executeJs("navigator.clipboard.writeText($0).then(() => {}, () => {})", config);
 
 			Notification notification = Notification.show("DICOM configuration copied to clipboard");
-			notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			notification.addThemeVariants(NotificationVariant.SUCCESS);
 			notification.setDuration(2000);
 			notification.setPosition(Position.MIDDLE);
 		});
@@ -89,15 +94,16 @@ public class GridForwardNode extends Grid<ForwardNodeEntity> {
 	}
 
 	public ForwardNodeEntity getSelectedRow() {
-		return asSingleSelect().getValue();
+		GroupTreeNode<ForwardNodeEntity> value = asSingleSelect().getValue();
+		return value instanceof GroupTreeNode.ItemNode<ForwardNodeEntity> item ? item.item() : null;
 	}
 
 	public void refresh(ForwardNodeEntity data) {
-		getDataCommunicator().refresh(data);
+		getDataProvider().refreshItem(new GroupTreeNode.ItemNode<>(data, data.getId()));
 	}
 
 	public void selectRow(ForwardNodeEntity row) {
-		getSelectionModel().select(row);
+		selectItem(row);
 	}
 
 }

@@ -9,8 +9,11 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,89 +21,92 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
+import java.util.UUID;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.util.DateFormat;
 
 @Entity(name = "Project")
 @Table(name = "project")
+@NullUnmarked
+@Getter
+@Setter
 public class ProjectEntity implements Serializable {
 
-	private static final long serialVersionUID = 8809562914582842501L;
-
-	private Long id;
-
-	private String name;
-
-	private List<SecretEntity> secretEntities;
-
-	private List<DestinationEntity> destinationEntities;
-
-	private ProfileEntity profileEntity;
-
-	public ProjectEntity() {
-		this.destinationEntities = new ArrayList<>();
-		this.secretEntities = new ArrayList<>();
-	}
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
+	private Long id;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
 
-	public String getName() {
-		return name;
-	}
+	private String name;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+	@OneToMany(mappedBy = "projectEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonIgnore
+	private List<SecretEntity> secretEntities;
 
-	@OneToMany(mappedBy = "projectEntity", cascade = CascadeType.ALL)
-	@LazyCollection(LazyCollectionOption.FALSE)
-	public List<SecretEntity> getSecretEntities() {
-		return secretEntities;
-	}
+	@OneToMany(mappedBy = "deIdentificationProjectEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
+	private List<DestinationEntity> deidentificationDestinationEntities;
 
-	public void setSecretEntities(List<SecretEntity> secretEntities) {
-		this.secretEntities = secretEntities;
-	}
-
-	@OneToMany(mappedBy = "deIdentificationProjectEntity")
-	@LazyCollection(LazyCollectionOption.FALSE)
-	public List<DestinationEntity> getDestinationEntities() {
-		return destinationEntities;
-	}
-
-	public void setDestinationEntities(List<DestinationEntity> destinationEntities) {
-		this.destinationEntities = destinationEntities;
-	}
+	@OneToMany(mappedBy = "tagMorphingProjectEntity", fetch = FetchType.EAGER)
+	@JsonIgnore
+	private List<DestinationEntity> tagMorphingDestinationEntities;
 
 	@ManyToOne
 	@JoinColumn(name = "profile_pipe_id")
-	public ProfileEntity getProfileEntity() {
-		return profileEntity;
+	private ProfileEntity profileEntity;
+
+	// Optional organizational group (null = shown at the root of the list)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "project_group_id")
+	private ProjectGroupEntity group;
+
+	public ProjectEntity() {
+		this.uuid = UUID.randomUUID();
+		this.deidentificationDestinationEntities = new ArrayList<>();
+		this.tagMorphingDestinationEntities = new ArrayList<>();
+		this.secretEntities = new ArrayList<>();
 	}
 
-	public void setProfileEntity(ProfileEntity profileEntity) {
-		this.profileEntity = profileEntity;
+	/**
+	 * Retrieve all destinations of the project, both de-identification and tag morphing.
+	 * @return combined list of de-identification and tag morphing destinations
+	 */
+	public List<DestinationEntity> getAllDestinations() {
+		List<DestinationEntity> destinations = new ArrayList<>();
+		if (deidentificationDestinationEntities != null) {
+			destinations.addAll(deidentificationDestinationEntities);
+		}
+		if (tagMorphingDestinationEntities != null) {
+			destinations.addAll(tagMorphingDestinationEntities);
+		}
+		return destinations;
 	}
 
 	/**
 	 * Retrieve the active secret of the project
 	 * @return active secret to be used
 	 */
-	public SecretEntity retrieveActiveSecret() {
+	public @Nullable SecretEntity retrieveActiveSecret() {
 		return secretEntities.stream().filter(SecretEntity::isActive).findFirst().orElse(null);
 	}
 
@@ -143,13 +149,15 @@ public class ProjectEntity implements Serializable {
 		ProjectEntity that = (ProjectEntity) o;
 		return Objects.equals(id, that.id) && Objects.equals(name, that.name)
 				&& Objects.equals(secretEntities, that.secretEntities)
-				&& Objects.equals(destinationEntities, that.destinationEntities)
+				&& Objects.equals(deidentificationDestinationEntities, that.deidentificationDestinationEntities)
+				&& Objects.equals(tagMorphingDestinationEntities, that.tagMorphingDestinationEntities)
 				&& Objects.equals(profileEntity, that.profileEntity);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, secretEntities, destinationEntities, profileEntity);
+		return Objects.hash(id, name, secretEntities, deidentificationDestinationEntities,
+				tagMorphingDestinationEntities, profileEntity);
 	}
 
 }

@@ -1,0 +1,1760 @@
+openapi: 3.0.3
+info:
+  title: Karnak API - ForwardNode, Profile, Project, Monitoring, Pseudonym, Echo
+  description: >-
+    OpenAPI 3.x specification covering the REST endpoints of the
+    ForwardNodeController, ProfileController, ProjectController,
+    MonitoringController, PseudonymController and EchoController controllers
+    of Karnak.
+
+    Authentication: Basic Auth (default username/password `admin`/`karnak`,
+    see `application.yml` / `KARNAK_ADMIN` / `KARNAK_PASSWORD`).
+  version: "1.0"
+servers:
+  - url: http://localhost:8081
+    description: Default local instance (server.port in application.yml)
+
+security:
+  - basicAuth: []
+
+tags:
+  - name: ForwardNode
+    description: Management of forward nodes, their source nodes and destinations
+  - name: Profile
+    description: Management of de-identification profiles and their elements
+  - name: Project
+    description: Management of projects
+  - name: Monitoring
+    description: >-
+      Monitoring aggregation data (Destination / Study / Series / error
+      breakdown hierarchy), the per-forward-node dashboard, and the
+      per-series transfer list / count / CSV export
+  - name: Pseudonym
+    description: Management of pseudonyms (patient identity / external ID cache)
+  - name: Echo
+    description: Retrieve C-ECHO status of configured destinations for a source AeTitle
+
+paths:
+  /api/forward-nodes:
+    get:
+      tags: [ForwardNode]
+      summary: List all forward nodes
+      operationId: retrieveAllForwardNodes
+      responses:
+        "200":
+          description: List of forward nodes
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForwardNode"
+        "204":
+          description: No forward node found
+    post:
+      tags: [ForwardNode]
+      summary: Create a forward node
+      operationId: createForwardNode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForwardNodeInput"
+      responses:
+        "201":
+          description: Forward node created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ForwardNode"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/forward-nodes/{forwardNodeUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ForwardNodeUuid"
+    get:
+      tags: [ForwardNode]
+      summary: Retrieve a forward node by its uuid
+      operationId: retrieveForwardNode
+      responses:
+        "200":
+          description: Forward node found
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ForwardNode"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [ForwardNode]
+      summary: Update a forward node
+      operationId: updateForwardNode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForwardNodeInput"
+      responses:
+        "200":
+          description: Forward node updated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ForwardNode"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [ForwardNode]
+      summary: Delete a forward node
+      operationId: deleteForwardNode
+      responses:
+        "204":
+          description: Forward node deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/forward-nodes/{forwardNodeUuid}/source-nodes:
+    parameters:
+      - $ref: "#/components/parameters/ForwardNodeUuid"
+    get:
+      tags: [ForwardNode]
+      summary: List the source nodes of a forward node
+      operationId: retrieveSourceNodes
+      responses:
+        "200":
+          description: List of source nodes
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DicomSourceNode"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [ForwardNode]
+      summary: Add a source node to a forward node
+      operationId: addSourceNode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DicomSourceNodeInput"
+      responses:
+        "201":
+          description: Source node created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/DicomSourceNode"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/forward-nodes/{forwardNodeUuid}/source-nodes/{sourceNodeUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ForwardNodeUuid"
+      - name: sourceNodeUuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      tags: [ForwardNode]
+      summary: Remove a source node from a forward node
+      operationId: deleteSourceNode
+      responses:
+        "204":
+          description: Source node deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/forward-nodes/{forwardNodeUuid}/destinations:
+    parameters:
+      - $ref: "#/components/parameters/ForwardNodeUuid"
+    get:
+      tags: [ForwardNode]
+      summary: List the destinations of a forward node
+      operationId: retrieveDestinations
+      responses:
+        "200":
+          description: List of destinations
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Destination"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [ForwardNode]
+      summary: Add a destination to a forward node
+      operationId: addDestination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DestinationInput"
+      responses:
+        "201":
+          description: Destination created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Destination"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/forward-nodes/{forwardNodeUuid}/destinations/{destinationUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ForwardNodeUuid"
+      - name: destinationUuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [ForwardNode]
+      summary: Update a destination of a forward node
+      operationId: updateDestination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DestinationInput"
+      responses:
+        "200":
+          description: Destination updated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Destination"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [ForwardNode]
+      summary: Delete a destination from a forward node
+      operationId: deleteDestination
+      responses:
+        "204":
+          description: Destination deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/profiles:
+    get:
+      tags: [Profile]
+      summary: List all profiles
+      operationId: retrieveAllProfiles
+      responses:
+        "200":
+          description: List of profiles
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Profile"
+        "204":
+          description: No profile found
+    post:
+      tags: [Profile]
+      summary: Create a profile
+      operationId: createProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/profiles/{profileUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ProfileUuid"
+    get:
+      tags: [Profile]
+      summary: Retrieve a profile by its uuid
+      operationId: retrieveProfile
+      responses:
+        "200":
+          description: Profile found
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Profile]
+      summary: Update a profile
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Profile]
+      summary: Delete a profile
+      operationId: deleteProfile
+      responses:
+        "204":
+          description: Profile deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/profiles/import:
+    post:
+      tags: [Profile]
+      summary: Upload (import) a profile from a YAML file
+      description: >-
+        Parses and validates the uploaded YAML profile (same format as the
+        profile export/editor). The profile is only persisted when the YAML
+        is well-formed, every profile element is valid, and no existing
+        profile shares the same name and version.
+      operationId: importProfile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Profile imported
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          description: Missing file, invalid YAML or missing profile name/elements
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          description: One or more profile elements failed validation
+
+  /api/profiles/{profileUuid}/download:
+    parameters:
+      - $ref: "#/components/parameters/ProfileUuid"
+    get:
+      tags: [Profile]
+      summary: Download a profile as a YAML file
+      description: >-
+        Returns the profile (metadata, masks and ordered elements) serialized
+        as YAML, in the same format accepted by the import endpoint and the
+        raw YAML editor.
+      operationId: downloadProfile
+      responses:
+        "200":
+          description: Profile YAML file
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/profiles/{profileUuid}/elements:
+    parameters:
+      - $ref: "#/components/parameters/ProfileUuid"
+    get:
+      tags: [Profile]
+      summary: List the elements of a profile
+      operationId: retrieveElements
+      responses:
+        "200":
+          description: List of profile elements
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfileElement"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Profile]
+      summary: Add an element to a profile
+      operationId: addElement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileElementInput"
+      responses:
+        "201":
+          description: Element created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ProfileElement"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/profiles/{profileUuid}/elements/{elementUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ProfileUuid"
+      - name: elementUuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [Profile]
+      summary: Update an element of a profile
+      operationId: updateElement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileElementInput"
+      responses:
+        "200":
+          description: Element updated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ProfileElement"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Profile]
+      summary: Delete an element from a profile
+      operationId: deleteElement
+      responses:
+        "204":
+          description: Element deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/projects:
+    get:
+      tags: [Project]
+      summary: List all projects
+      operationId: retrieveAllProjects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+        "204":
+          description: No project found
+    post:
+      tags: [Project]
+      summary: Create a project
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/projects/{projectUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectUuid"
+    get:
+      tags: [Project]
+      summary: Retrieve a project by its uuid
+      operationId: retrieveProject
+      responses:
+        "200":
+          description: Project found
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Project]
+      summary: Update a project
+      operationId: updateProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "200":
+          description: Project updated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Project]
+      summary: Delete a project
+      operationId: deleteProject
+      responses:
+        "204":
+          description: Project deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/projects/{projectUuid}/secrets:
+    parameters:
+      - $ref: "#/components/parameters/ProjectUuid"
+    get:
+      tags: [Project]
+      summary: List secrets of a project
+      operationId: listSecrets
+      responses:
+        "200":
+          description: Secrets found
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SecretModel"
+        "204":
+          description: No secrets
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/projects/{projectUuid}/secrets/generate:
+    parameters:
+      - $ref: "#/components/parameters/ProjectUuid"
+    post:
+      tags: [Project]
+      summary: Generate a new secret for a project
+      description: Generates a random HMAC key and activates it (deactivating previous ones).
+      operationId: generateSecret
+      responses:
+        "201":
+          description: Secret generated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/SecretModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/projects/{projectUuid}/secrets/import:
+    parameters:
+      - $ref: "#/components/parameters/ProjectUuid"
+    post:
+      tags: [Project]
+      summary: Import a secret for a project
+      description: Imports a hex key (32 hex chars, dashed groups allowed) and activates it.
+      operationId: importSecret
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecretModel"
+      responses:
+        "201":
+          description: Secret imported
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/SecretModel"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/projects/{projectUuid}/secrets/{secretUuid}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectUuid"
+      - name: secretUuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      tags: [Project]
+      summary: Delete a secret
+      operationId: deleteSecret
+      responses:
+        "204":
+          description: Secret deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/monitoring/destinations:
+    get:
+      tags: [Monitoring]
+      summary: List all destinations with aggregated transfer activity
+      operationId: searchDestinations
+      parameters:
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+      responses:
+        "200":
+          description: Destinations found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DestinationActivity"
+        "204":
+          description: No destinations configured
+
+  /api/monitoring/studies:
+    get:
+      tags: [Monitoring]
+      summary: List studies under a destination (given by criteria.destinationUuid)
+      operationId: searchStudies
+      parameters:
+        - $ref: "#/components/parameters/CriteriaDestinationUuidRequired"
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+      responses:
+        "200":
+          description: Studies found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyActivity"
+        "204":
+          description: No studies found
+        "400":
+          description: destinationUuid is missing
+
+  /api/monitoring/series:
+    get:
+      tags: [Monitoring]
+      summary: >-
+        List series under a study of a destination (given by
+        criteria.destinationUuid / studyUid)
+      operationId: searchSeries
+      parameters:
+        - $ref: "#/components/parameters/CriteriaDestinationUuidRequired"
+        - $ref: "#/components/parameters/CriteriaStudyUidRequired"
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+      responses:
+        "200":
+          description: Series found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeriesActivity"
+        "204":
+          description: No series found
+        "400":
+          description: destinationUuid or studyUid is missing
+
+  /api/monitoring/errors:
+    get:
+      tags: [Monitoring]
+      summary: >-
+        List error reasons for a series (given by criteria.destinationUuid /
+        serieUid)
+      operationId: searchErrors
+      parameters:
+        - $ref: "#/components/parameters/CriteriaDestinationUuidRequired"
+        - $ref: "#/components/parameters/CriteriaSerieUidRequired"
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+      responses:
+        "200":
+          description: Error reasons found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ErrorBreakdown"
+        "204":
+          description: No errors found
+        "400":
+          description: destinationUuid or serieUid is missing
+
+  /api/monitoring/dashboard:
+    get:
+      tags: [Monitoring]
+      summary: List per-forward-node activity for the dashboard
+      operationId: searchNodeActivity
+      parameters:
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+      responses:
+        "200":
+          description: Node activity found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NodeActivity"
+        "204":
+          description: No node activity found
+
+  /api/monitoring/transfers:
+    get:
+      tags: [Monitoring]
+      summary: List transfer models matching the criteria, paginated
+      operationId: searchTransfers
+      parameters:
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaDestinationUuid"
+        - $ref: "#/components/parameters/CriteriaStudyUid"
+        - $ref: "#/components/parameters/CriteriaSerieUid"
+        - $ref: "#/components/parameters/CriteriaSopInstanceUid"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+          example: lastSeen,desc
+      responses:
+        "200":
+          description: Transfers found (Spring Data Page)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TransferSeriesStatus"
+                  totalElements:
+                    type: integer
+                    format: int64
+                  totalPages:
+                    type: integer
+                  number:
+                    type: integer
+                  size:
+                    type: integer
+        "204":
+          description: No transfer found
+
+  /api/monitoring/transfers/count:
+    get:
+      tags: [Monitoring]
+      summary: Count transfer models matching the criteria
+      operationId: countTransfers
+      parameters:
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaDestinationUuid"
+        - $ref: "#/components/parameters/CriteriaStudyUid"
+        - $ref: "#/components/parameters/CriteriaSerieUid"
+        - $ref: "#/components/parameters/CriteriaSopInstanceUid"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+      responses:
+        "200":
+          description: Count computed
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+
+  /api/monitoring/transfers/export:
+    get:
+      tags: [Monitoring]
+      summary: Export transfer models matching the criteria as CSV
+      operationId: exportTransfers
+      parameters:
+        - $ref: "#/components/parameters/CriteriaStatusType"
+        - $ref: "#/components/parameters/CriteriaDestinationUuid"
+        - $ref: "#/components/parameters/CriteriaStudyUid"
+        - $ref: "#/components/parameters/CriteriaSerieUid"
+        - $ref: "#/components/parameters/CriteriaSopInstanceUid"
+        - $ref: "#/components/parameters/CriteriaStart"
+        - $ref: "#/components/parameters/CriteriaEnd"
+        - name: delimiter
+          in: query
+          description: CSV column delimiter (defaults to comma)
+          schema:
+            type: string
+            default: ","
+      responses:
+        "200":
+          description: CSV export built
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "500":
+          description: Error building the CSV export
+
+  /api/monitoring/all:
+    delete:
+      tags: [Monitoring]
+      summary: Delete all monitoring transfer status records
+      operationId: deleteAllMonitoring
+      responses:
+        "204":
+          description: All monitoring records deleted
+        "404":
+          description: No records to delete
+
+  # --- Pseudonym Controller ---
+  /api/pseudonyms:
+    get:
+      tags: [Pseudonym]
+      summary: List all pseudonyms
+      operationId: listAllPseudonyms
+      responses:
+        "200":
+          description: Pseudonyms found
+          content:
+            application/json;version=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PatientModel"
+        "204":
+          description: No pseudonym configured
+    post:
+      tags: [Pseudonym]
+      summary: Create a pseudonym
+      description: >-
+        The pseudonym will be stored in the external ID cache for the given
+        project. Returns 409 Conflict if a pseudonym already exists for the
+        same patient (patientId + issuerOfPatientId) and project.
+      operationId: createPseudonym
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientModelInput"
+      responses:
+        "201":
+          description: Pseudonym created
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/PatientModel"
+        "400":
+          description: Missing or invalid pseudonym, patientId, or projectUUID
+        "404":
+          description: Project not found
+        "409":
+          description: A pseudonym already exists for this patient and project
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/PatientModel"
+
+  /api/pseudonyms/{pseudonym}:
+    parameters:
+      - name: pseudonym
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Pseudonym]
+      summary: Get a patient by pseudonym
+      operationId: getPseudonym
+      responses:
+        "200":
+          description: Patient found
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/PatientModel"
+        "404":
+          description: Patient not found
+    put:
+      tags: [Pseudonym]
+      summary: Update a pseudonym/patient
+      description: Update the patient identified by pseudonym.
+      operationId: updatePseudonym
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientModelInput"
+      responses:
+        "200":
+          description: Patient updated
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/PatientModel"
+        "400":
+          description: Invalid request body
+        "404":
+          description: Patient not found
+    delete:
+      tags: [Pseudonym]
+      summary: Delete a pseudonym
+      operationId: deletePseudonym
+      responses:
+        "204":
+          description: Patient deleted
+        "404":
+          description: Patient not found
+
+  /api/pseudonyms/project/{projectUUID}:
+    delete:
+      tags: [Pseudonym]
+      summary: Delete all pseudonyms for a project
+      operationId: deleteAllPseudonymsByProject
+      parameters:
+        - name: projectUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: All pseudonyms deleted
+        "404":
+          description: No project found
+
+  # --- Echo Controller ---
+  /api/echo/destinations:
+    get:
+      tags: [Echo]
+      summary: Retrieve status and configured destinations
+      description: Retrieve status and configured destinations from an AeTitle
+      operationId: retrieveStatusConfiguredDestinations
+      parameters:
+        - name: srcAet
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status and configured destinations found from an AeTitle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DestinationEchos"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/DestinationEchos"
+        "204":
+          description: No Content
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  parameters:
+    ForwardNodeUuid:
+      name: forwardNodeUuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProfileUuid:
+      name: profileUuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProjectUuid:
+      name: projectUuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    # --- MonitoringSearchCriteria (bound as query params via @ModelAttribute) ---
+    CriteriaStatusType:
+      name: statusType
+      in: query
+      description: Filter by transfer status
+      schema:
+        $ref: "#/components/schemas/TransferStatusType"
+    CriteriaDestinationUuid:
+      name: destinationUuid
+      in: query
+      description: Filter / scope by destination uuid
+      schema:
+        type: string
+        format: uuid
+    CriteriaDestinationUuidRequired:
+      name: destinationUuid
+      in: query
+      description: Destination uuid to drill into (required)
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CriteriaStudyUid:
+      name: studyUid
+      in: query
+      description: Filter by (original) Study Instance UID
+      schema:
+        type: string
+    CriteriaStudyUidRequired:
+      name: studyUid
+      in: query
+      description: Study Instance UID to drill into (required)
+      required: true
+      schema:
+        type: string
+    CriteriaSerieUid:
+      name: serieUid
+      in: query
+      description: Filter by (original) Series Instance UID
+      schema:
+        type: string
+    CriteriaSerieUidRequired:
+      name: serieUid
+      in: query
+      description: Series Instance UID to drill into (required)
+      required: true
+      schema:
+        type: string
+    CriteriaSopInstanceUid:
+      name: sopInstanceUid
+      in: query
+      description: Filter by (original) SOP Instance UID
+      schema:
+        type: string
+    CriteriaStart:
+      name: start
+      in: query
+      description: Filter by period start (inclusive)
+      schema:
+        type: string
+        format: date-time
+    CriteriaEnd:
+      name: end
+      in: query
+      description: Filter by period end (inclusive)
+      schema:
+        type: string
+        format: date-time
+
+  responses:
+    BadRequest:
+      description: Invalid request
+    NotFound:
+      description: Resource not found
+    Conflict:
+      description: Conflict (resource already exists)
+
+  schemas:
+    # ---------- ForwardNode ----------
+    ForwardNodeInput:
+      type: object
+      required: [fwdAeTitle]
+      properties:
+        fwdAeTitle:
+          type: string
+          maxLength: 16
+          example: KARNAK_FWD
+        fwdDescription:
+          type: string
+          example: Forward node created
+
+    ForwardNode:
+      allOf:
+        - $ref: "#/components/schemas/ForwardNodeInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            sourceNodes:
+              type: array
+              items:
+                $ref: "#/components/schemas/DicomSourceNode"
+            destinations:
+              type: array
+              items:
+                $ref: "#/components/schemas/Destination"
+
+    DicomSourceNodeInput:
+      type: object
+      required: [aeTitle]
+      properties:
+        description:
+          type: string
+          example: Source node created
+        aeTitle:
+          type: string
+          maxLength: 16
+          example: SRC_AET
+        hostname:
+          type: string
+          example: 127.0.0.1
+        checkHostname:
+          type: boolean
+          example: true
+
+    DicomSourceNode:
+      allOf:
+        - $ref: "#/components/schemas/DicomSourceNodeInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+
+    DestinationType:
+      type: string
+      enum: [dicom, stow]
+
+    PseudonymType:
+      type: string
+      enum: [CACHE_EXTID, EXTID_IN_TAG, EXTID_API]
+
+    DestinationInput:
+      type: object
+      required: [destinationType]
+      description: >-
+        `aeTitle`, `hostname` and `port` are required when
+        destinationType=dicom. `url` is required when destinationType=stow.
+      properties:
+        description:
+          type: string
+          example: Destination created
+        destinationType:
+          $ref: "#/components/schemas/DestinationType"
+        activate:
+          type: boolean
+          default: true
+        desidentification:
+          type: boolean
+        deIdentificationProjectUuid:
+          type: string
+          format: uuid
+          description: Project (uuid) used for de-identification, when desidentification is enabled.
+        activateTagMorphing:
+          type: boolean
+        tagMorphingProjectUuid:
+          type: string
+          format: uuid
+          description: Project (uuid) used for tag morphing, when activateTagMorphing is enabled.
+        condition:
+          type: string
+        issuerByDefault:
+          type: string
+        skipIssuerOfPatientId:
+          type: boolean
+        pseudonymType:
+          $ref: "#/components/schemas/PseudonymType"
+        tag:
+          type: string
+        delimiter:
+          type: string
+        position:
+          type: integer
+        pseudonymUrl:
+          type: string
+        responsePath:
+          type: string
+        body:
+          type: string
+        method:
+          type: string
+        authConfig:
+          type: string
+        savePseudonym:
+          type: boolean
+        filterBySOPClasses:
+          type: boolean
+        activateNotification:
+          type: boolean
+        buildConformanceReport:
+          type: boolean
+        checkValueConformity:
+          type: boolean
+        deepSequenceValidation:
+          type: boolean
+        virtualDestination:
+          type: boolean
+        conformanceReportNotify:
+          type: string
+        notify:
+          type: string
+        notifyObjectErrorPrefix:
+          type: string
+        notifyObjectRejectionPrefix:
+          type: string
+        notifyObjectPattern:
+          type: string
+        notifyObjectValues:
+          type: string
+        notifyInterval:
+          type: integer
+        # --- destinationType=dicom ---
+        aeTitle:
+          type: string
+          maxLength: 16
+          example: DEST_AET
+        hostname:
+          type: string
+          example: 127.0.0.1
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          example: 11112
+        useaetdest:
+          type: boolean
+        # --- destinationType=stow ---
+        url:
+          type: string
+          format: uri
+        headers:
+          type: string
+        transferSyntax:
+          type: string
+        transcodeOnlyUncompressed:
+          type: boolean
+        concurrentConnections:
+          type: integer
+          minimum: 1
+          maximum: 50
+        http2:
+          type: boolean
+
+    Destination:
+      allOf:
+        - $ref: "#/components/schemas/DestinationInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            transferInProgress:
+              type: boolean
+              readOnly: true
+            lastTransfer:
+              type: string
+              format: date-time
+              readOnly: true
+            emailLastCheck:
+              type: string
+              format: date-time
+              readOnly: true
+
+    # ---------- Profile ----------
+    ProfileInput:
+      type: object
+      required: [name, version]
+      properties:
+        name:
+          type: string
+          example: Profile
+        version:
+          type: string
+          example: "1.0"
+        minimumKarnakVersion:
+          type: string
+          example: "3.0"
+        byDefault:
+          type: boolean
+
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/ProfileInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            profileElements:
+              type: array
+              items:
+                $ref: "#/components/schemas/ProfileElement"
+
+    ProfileElementInput:
+      type: object
+      required: [name, codename]
+      properties:
+        name:
+          type: string
+          example: Patient Name
+        codename:
+          type: string
+          example: patient.name
+        condition:
+          type: string
+        action:
+          type: string
+          example: REPLACE
+        option:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["00100010"]
+        excludedTags:
+          type: array
+          items:
+            type: string
+        arguments:
+          type: object
+          additionalProperties:
+            type: string
+
+    ProfileElement:
+      allOf:
+        - $ref: "#/components/schemas/ProfileElementInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+
+    # ---------- Project ----------
+    ProjectInput:
+      type: object
+      required: [name, profileUuid]
+      properties:
+        name:
+          type: string
+          example: Project
+        profileUuid:
+          type: string
+          format: uuid
+
+    Project:
+      allOf:
+        - $ref: "#/components/schemas/ProjectInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            destinationUuids:
+              type: array
+              readOnly: true
+              items:
+                type: string
+                format: uuid
+
+    SecretModel:
+      type: object
+      required: [key]
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        key:
+          type: string
+          description: Hexadecimal representation of the HMAC key (dashed groups)
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        creationDate:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+
+    # ---------- Monitoring ----------
+    TransferStatusType:
+      type: string
+      enum: [ALL, SENT, NOT_SENT, EXCLUDED, ERROR]
+
+    DestinationActivity:
+      type: object
+      description: Aggregated transfer activity for a single destination (top level).
+      properties:
+        destinationUuid:
+          type: string
+          format: uuid
+        forwardAet:
+          type: string
+        destinationLabel:
+          type: string
+        studies:
+          type: integer
+          format: int64
+        series:
+          type: integer
+          format: int64
+        instances:
+          type: integer
+          format: int64
+        sent:
+          type: integer
+          format: int64
+        errors:
+          type: integer
+          format: int64
+        retries:
+          type: integer
+          format: int64
+        excluded:
+          type: integer
+          format: int64
+
+    StudyActivity:
+      type: object
+      description: Aggregated transfer activity for a single study under a destination.
+      properties:
+        studyUid:
+          type: string
+        studyUidToSend:
+          type: string
+        description:
+          type: string
+        descriptionToSend:
+          type: string
+        patientIdOriginal:
+          type: string
+        patientIdToSend:
+          type: string
+        accessionNumberOriginal:
+          type: string
+        accessionNumberToSend:
+          type: string
+        studyDateOriginal:
+          type: string
+          format: date-time
+        studyDateToSend:
+          type: string
+          format: date-time
+        series:
+          type: integer
+          format: int64
+        instances:
+          type: integer
+          format: int64
+        sent:
+          type: integer
+          format: int64
+        errors:
+          type: integer
+          format: int64
+        retries:
+          type: integer
+          format: int64
+        excluded:
+          type: integer
+          format: int64
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+
+    SeriesActivity:
+      type: object
+      description: Aggregated transfer activity for a single series under a study.
+      properties:
+        serieUid:
+          type: string
+        serieUidToSend:
+          type: string
+        serieDescription:
+          type: string
+        serieDescriptionToSend:
+          type: string
+        modality:
+          type: string
+        sopClassUids:
+          type: string
+        serieDateOriginal:
+          type: string
+          format: date-time
+        serieDateToSend:
+          type: string
+          format: date-time
+        instances:
+          type: integer
+          format: int64
+        sent:
+          type: integer
+          format: int64
+        errors:
+          type: integer
+          format: int64
+        retries:
+          type: integer
+          format: int64
+        excluded:
+          type: integer
+          format: int64
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+
+    ErrorBreakdown:
+      type: object
+      description: Per-reason breakdown at the leaf level of the monitoring hierarchy.
+      properties:
+        reason:
+          type: string
+        errors:
+          type: integer
+          format: int64
+        excluded:
+          type: integer
+          format: int64
+        retries:
+          type: integer
+          format: int64
+
+    NodeActivity:
+      type: object
+      description: Aggregated activity of a forward node, for the monitoring dashboard.
+      properties:
+        forwardNodeId:
+          type: integer
+          format: int64
+        forwardAet:
+          type: string
+        studies:
+          type: integer
+          format: int64
+        series:
+          type: integer
+          format: int64
+        instances:
+          type: integer
+          format: int64
+        sent:
+          type: integer
+          format: int64
+        errors:
+          type: integer
+          format: int64
+        retries:
+          type: integer
+          format: int64
+        excluded:
+          type: integer
+          format: int64
+        deidentified:
+          type: integer
+          format: int64
+        tagMorphed:
+          type: integer
+          format: int64
+
+    TransferSeriesStatus:
+      type: object
+      description: >-
+        One aggregated row per (forward node, destination, series) matching the
+        search criteria.
+      properties:
+        forwardNodeUuid:
+          type: string
+          format: uuid
+        destinationUuid:
+          type: string
+          format: uuid
+        forwardAeTitle:
+          type: string
+        forwardDescription:
+          type: string
+        destinationDescription:
+          type: string
+        patientIdOriginal:
+          type: string
+        patientIdToSend:
+          type: string
+        accessionNumberOriginal:
+          type: string
+        accessionNumberToSend:
+          type: string
+        studyDescriptionOriginal:
+          type: string
+        studyDescriptionToSend:
+          type: string
+        studyDateOriginal:
+          type: string
+          format: date-time
+        studyDateToSend:
+          type: string
+          format: date-time
+        studyUidOriginal:
+          type: string
+        studyUidToSend:
+          type: string
+        serieDescriptionOriginal:
+          type: string
+        serieDescriptionToSend:
+          type: string
+        serieDateOriginal:
+          type: string
+          format: date-time
+        serieDateToSend:
+          type: string
+          format: date-time
+        serieUidOriginal:
+          type: string
+        serieUidToSend:
+          type: string
+        modality:
+          type: string
+        sopClassUids:
+          type: string
+        instances:
+          type: integer
+          format: int64
+        retries:
+          type: integer
+          format: int64
+        sent:
+          type: integer
+          format: int64
+        errors:
+          type: integer
+          format: int64
+        excluded:
+          type: integer
+          format: int64
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+
+    # ---------- Pseudonym ----------
+    PatientModelInput:
+      type: object
+      required: [pseudonym, patientId, projectUUID]
+      properties:
+        pseudonym:
+          type: string
+          example: PSY_12345
+        patientId:
+          type: string
+          example: PAT_67890
+        patientName:
+          type: string
+        patientFirstName:
+          type: string
+        patientLastName:
+          type: string
+        patientBirthDate:
+          type: string
+          format: date
+        patientSex:
+          type: string
+        issuerOfPatientId:
+          type: string
+        projectUUID:
+          type: string
+          format: uuid
+
+    PatientModel:
+      allOf:
+        - $ref: "#/components/schemas/PatientModelInput"
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+
+    # ---------- Echo ----------
+    DestinationEcho:
+      type: object
+      description: Status and configuration of a single destination for an echo request.
+      properties:
+        aet:
+          type: string
+          description: AeTitle of the destination (dicom destinations only)
+        url:
+          type: string
+          description: Url of the destination (stow destinations only)
+        status:
+          type: integer
+          description: DICOM C-ECHO status (0 = success)
+
+    DestinationEchos:
+      type: object
+      description: Wrapper list of destination echo results for a source AeTitle.
+      properties:
+        destinationEchos:
+          type: array
+          items:
+            $ref: "#/components/schemas/DestinationEcho"

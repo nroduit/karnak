@@ -9,12 +9,14 @@
  */
 package org.karnak.frontend.forwardnode.component;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import lombok.Getter;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
+import org.karnak.frontend.component.NewItemDialog;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class LayoutNewGridForwardNode extends VerticalLayout {
 
 	@Getter
@@ -24,9 +26,7 @@ public class LayoutNewGridForwardNode extends VerticalLayout {
 	private final TextField textFieldNewAETitleForwardNode;
 
 	@Getter
-	private final Button buttonAddNewForwardNode;
-
-	private Button buttonCancelNewForwardNode;
+	private final NewItemDialog newForwardNodeDialog;
 
 	public LayoutNewGridForwardNode() {
 		// UI Components
@@ -35,9 +35,8 @@ public class LayoutNewGridForwardNode extends VerticalLayout {
 
 		add(newForwardNode, gridForwardNode);
 
-		Button buttonNewForwardNode = newForwardNode.getNewForwardNodeBtn();
 		textFieldNewAETitleForwardNode = newForwardNode.getNewAETitleForwardNode();
-		buttonAddNewForwardNode = newForwardNode.getAddNewForwardNode();
+		newForwardNodeDialog = newForwardNode.getDialog();
 	}
 
 	public void load(ForwardNodeEntity forwardNodeEntity) {

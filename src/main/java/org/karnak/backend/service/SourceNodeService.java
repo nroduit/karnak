@@ -10,6 +10,7 @@
 package org.karnak.backend.service;
 
 import java.util.Collection;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.repo.DicomSourceNodeRepo;
@@ -20,30 +21,25 @@ import org.springframework.stereotype.Service;
 @Service
 public class SourceNodeService {
 
-	// Repositories
-	private final DicomSourceNodeRepo dicomSourceNodeRepo;
-
-	// Services
 	private final ForwardNodeService forwardNodeService;
 
-	// Event publisher
+	@Getter
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Autowired
 	public SourceNodeService(final DicomSourceNodeRepo dicomSourceNodeRepo, final ForwardNodeService forwardNodeService,
 			final ApplicationEventPublisher applicationEventPublisher) {
-		this.dicomSourceNodeRepo = dicomSourceNodeRepo;
 		this.forwardNodeService = forwardNodeService;
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
 	public Collection<DicomSourceNodeEntity> retrieveSourceNodes(ForwardNodeEntity forwardNodeEntity) {
-		return forwardNodeService.getAllSourceNodes(forwardNodeEntity);
+		return forwardNodeService.retrieveAllSourceNodes(forwardNodeEntity);
 	}
 
 	/**
 	 * Store given DicomSourceNodeEntity.
-	 * @param forwardNodeEntity
+	 * @param forwardNodeEntity the owning forward node
 	 * @param dicomSourceNodeEntity the updated or new dicomSourceNodeEntity
 	 */
 	public DicomSourceNodeEntity save(ForwardNodeEntity forwardNodeEntity,
@@ -60,10 +56,6 @@ public class SourceNodeService {
 		if (forwardNodeEntityOfDest != null) {
 			forwardNodeService.deleteSourceNode(forwardNodeEntityOfDest, dicomSourceNodeEntity);
 		}
-	}
-
-	public ApplicationEventPublisher getApplicationEventPublisher() {
-		return applicationEventPublisher;
 	}
 
 }

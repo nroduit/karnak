@@ -1,0 +1,128 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- One-level organizational grouping for Profiles, Projects and Forward Nodes. -->
+
+  <!-- Group tables -->
+  <changeSet author="karnak" id="1.7-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="profile_group"/>
+      </not>
+    </preConditions>
+    <createTable tableName="profile_group">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="profile_group_pkey"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.7-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="project_group"/>
+      </not>
+    </preConditions>
+    <createTable tableName="project_group">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="project_group_pkey"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.7-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="forward_node_group"/>
+      </not>
+    </preConditions>
+    <createTable tableName="forward_node_group">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="forward_node_group_pkey"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <!-- Nullable foreign key columns on the item tables -->
+  <changeSet author="karnak" id="1.7-4">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="profile" columnName="profile_group_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="profile">
+      <column name="profile_group_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.7-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="project_group_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="project_group_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.7-6">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="forward_node" columnName="forward_node_group_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="forward_node">
+      <column name="forward_node_group_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <!-- Foreign key constraints (deleting a group detaches its members: SET NULL) -->
+  <changeSet author="karnak" id="1.7-7">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_profile_profile_group"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="profile_group_id" baseTableName="profile"
+      constraintName="fk_profile_profile_group" deferrable="false" initiallyDeferred="false"
+      onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id"
+      referencedTableName="profile_group" validate="true"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.7-8">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_project_project_group"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="project_group_id" baseTableName="project"
+      constraintName="fk_project_project_group" deferrable="false" initiallyDeferred="false"
+      onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id"
+      referencedTableName="project_group" validate="true"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="1.7-9">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_forward_node_forward_node_group"/>
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="forward_node_group_id" baseTableName="forward_node"
+      constraintName="fk_forward_node_forward_node_group" deferrable="false" initiallyDeferred="false"
+      onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id"
+      referencedTableName="forward_node_group" validate="true"/>
+  </changeSet>
+
+</databaseChangeLog>

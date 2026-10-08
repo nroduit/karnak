@@ -11,18 +11,20 @@ package org.karnak.backend.model.standard;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.action.ActionItem;
+import org.karnak.backend.model.dicominnolitics.JsonConfidentialityProfiles;
 import org.karnak.backend.model.dicominnolitics.StandardConfidentialityProfiles;
-import org.karnak.backend.model.dicominnolitics.jsonConfidentialityProfiles;
 import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.model.profiles.AbstractProfileItem;
 import org.karnak.backend.model.profiles.PrivateTags;
 import org.karnak.backend.model.profiles.ProfileItem;
 import org.karnak.backend.util.PrivateTagPattern;
 
+@Getter
 @Slf4j
 public class ConfidentialityProfiles {
 
@@ -31,11 +33,10 @@ public class ConfidentialityProfiles {
 	private final List<ProfileItem> listProfiles = new ArrayList<>();
 
 	public ConfidentialityProfiles() {
-		final StandardConfidentialityProfiles standardConfidentialityProfiles = new StandardConfidentialityProfiles();
-		jsonConfidentialityProfiles[] confidentialityProfiles = StandardConfidentialityProfiles
-			.getConfidentialityProfiles();
+		JsonConfidentialityProfiles[] confidentialityProfiles = StandardConfidentialityProfiles
+			.readJsonConfidentialityProfiles();
 
-		for (jsonConfidentialityProfiles confidentialityProfilesTag : confidentialityProfiles) {
+		for (JsonConfidentialityProfiles confidentialityProfilesTag : confidentialityProfiles) {
 			String tag = confidentialityProfilesTag.getTag();
 			ActionItem action = confidentialityProfilesTag.getBasicProfile();
 			String name = confidentialityProfilesTag.getName();
@@ -60,14 +61,6 @@ public class ConfidentialityProfiles {
 				listProfiles.add(item);
 			}
 		}
-	}
-
-	public TagActionMap getActionMap() {
-		return actionMap;
-	}
-
-	public List<ProfileItem> getListProfiles() {
-		return listProfiles;
 	}
 
 }

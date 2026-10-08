@@ -9,23 +9,27 @@
  */
 package org.karnak.backend.model.profilepipe;
 
-public class HashContext {
+import java.util.Arrays;
+import java.util.Objects;
 
-	private final byte[] secret;
+public record HashContext(byte[] secret, String patientID) {
 
-	private final String PatientID;
-
-	public HashContext(byte[] secret, String PatientID) {
-		this.secret = secret;
-		this.PatientID = PatientID;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		return obj instanceof HashContext other && Arrays.equals(secret, other.secret)
+				&& Objects.equals(patientID, other.patientID);
 	}
 
-	public byte[] getSecret() {
-		return secret;
+	@Override
+	public int hashCode() {
+		return 31 * Arrays.hashCode(secret) + Objects.hashCode(patientID);
 	}
 
-	public String getPatientID() {
-		return PatientID;
+	@Override
+	public String toString() {
+		return "HashContext[secret=" + Arrays.toString(secret) + ", patientID=" + patientID + "]";
 	}
-
 }

@@ -10,21 +10,18 @@
 package org.karnak.frontend.forwardnode.edit.destination.component;
 
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.flow.server.streams.DownloadResponse;
-import java.io.InputStream;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class LoadingImage extends Image {
 
-	private static final String LOADING_IMAGE_PATH = "loading.gif";
+	// Served statically from src/main/resources/META-INF/resources/img/ (relative to the
+	// app base href). A plain static src avoids registering a per-row DownloadHandler
+	// stream inside the grid component column, which broke client-side row rendering.
+	private static final String LOADING_IMAGE_SRC = "img/loading.gif";
 
 	public LoadingImage(String alt, String maxSize) {
-		setAlt(alt);
-		setSrc(DownloadHandler.fromInputStream(event -> {
-			InputStream stream = LoadingImage.class
-				.getResourceAsStream("/META-INF/resources/img/" + LOADING_IMAGE_PATH);
-			return new DownloadResponse(stream, LOADING_IMAGE_PATH, "image/gif", -1);
-		}));
+		super(LOADING_IMAGE_SRC, alt);
 		setMaxHeight(maxSize);
 		setMaxWidth(maxSize);
 	}

@@ -1,0 +1,415 @@
+/*
+ * Copyright (c) 2020-2026 Karnak Team and other contributors.
+ *
+ * This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
+ * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+ */
+import { LitElement, html, css, type PropertyValues } from 'lit';
+
+/**
+ * A lightweight, dependency-free YAML editor with syntax highlighting.
+ *
+ * A native <textarea> is layered, transparent, on top of a <pre> that mirrors the same
+ * text tokenized into colored spans. The textarea keeps caret, selection, undo and IME
+ * behavior; the <pre> underneath supplies the colors. Both layers share identical font
+ * metrics and padding so they stay pixel-aligned, and the highlight layer follows the
+ * textarea's scroll offset.
+ *
+ * Colors are drawn from the app's Aura theme tokens, so they adapt to light/dark mode.
+ * Exposed properties `value` (two-way, fires `value-changed`) and `readonly` are driven
+ * from the Vaadin Java wrapper (org.karnak.frontend.profile.component.editprofile.YamlCodeEditor).
+ */
+class KarnakYamlEditor extends LitElement {
+  value = '';
+
+  readonly = false;
+
+  static get properties() {
+    return {
+      value: { type: String },
+      readonly: { type: Boolean, reflect: true },
+    };
+  }
+
+  static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+
+      /* Width of the line-number gutter; recomputed from the digit count. */
+      --yaml-gutter-width: 3.5em;
+
+      /* Syntax palette — override any of these from the outside to re-theme.
+       * Defaults are built from Aura tokens so they flip with the app theme. */
+      --yaml-key-color: var(--aura-accent-text-color, #2160c4);
+      --yaml-string-color: var(--aura-green, #2a8c4a);
+      --yaml-number-color: var(--aura-orange, #b46a00);
+      --yaml-bool-color: var(--aura-red-text, #c0392b);
+      --yaml-anchor-color: var(--aura-primary-color, #6a4bcc);
+      --yaml-comment-color: var(--vaadin-text-color-secondary, #6b7280);
+      --yaml-punct-color: var(--vaadin-text-color-secondary, #6b7280);
+      --yaml-text-color: var(--vaadin-text-color, #1a1a1a);
+    }
+
+    .editor {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid
+        var(--vaadin-input-field-border-color, color-mix(in srgb, var(--vaadin-text-color, #000) 25%, transparent));
+      border-radius: var(--vaadin-radius-m, 6px);
+      background: var(--vaadin-input-field-background, var(--aura-surface-color, #fff));
+    }
+
+    :host([readonly]) .editor {
+      opacity: 0.85;
+    }
+
+    /* The two stacked text layers must be geometrically identical. They start to the
+     * right of the line-number gutter. */
+    .layer {
+      margin: 0;
+      border: 0;
+      padding: 10px 12px;
+      box-sizing: border-box;
+      position: absolute;
+      inset: 0 0 0 var(--yaml-gutter-width);
+      font-family: var(
+        --vaadin-code-font-family,
+        ui-monospace,
+        'SF Mono',
+        'SFMono-Regular',
+        'Menlo',
+        'Consolas',
+        'Liberation Mono',
+        monospace
+      );
+      font-size: 13px;
+      line-height: 1.5;
+      letter-spacing: normal;
+      tab-size: 2;
+      white-space: pre;
+      word-break: normal;
+      overflow-wrap: normal;
+    }
+
+    pre.highlight {
+      overflow: hidden;
+      z-index: 0;
+      color: var(--yaml-text-color);
+      pointer-events: none;
+    }
+
+    pre.highlight code {
+      font: inherit;
+    }
+
+    textarea {
+      overflow: auto;
+      z-index: 1;
+      resize: none;
+      background: transparent;
+      color: transparent;
+      caret-color: var(--vaadin-text-color, #1a1a1a);
+      -webkit-text-fill-color: transparent;
+      outline: none;
+    }
+
+    textarea::selection {
+      background: color-mix(in srgb, var(--aura-primary-color, #6a4bcc) 28%, transparent);
+    }
+
+    /* Line-number gutter. Shares the layers' font metrics and vertical padding so each
+     * number lines up with its row; scrolls vertically in lock-step with the textarea. */
+    .gutter {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: var(--yaml-gutter-width);
+      margin: 0;
+      padding: 10px 8px;
+      box-sizing: border-box;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+      text-align: right;
+      white-space: pre;
+      font-family: var(
+        --vaadin-code-font-family,
+        ui-monospace,
+        'SF Mono',
+        'SFMono-Regular',
+        'Menlo',
+        'Consolas',
+        'Liberation Mono',
+        monospace
+      );
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--vaadin-text-color-secondary, #6b7280);
+      background: color-mix(in srgb, var(--vaadin-text-color, #000) 4%, transparent);
+      border-right: 1px solid
+        var(--vaadin-input-field-border-color, color-mix(in srgb, var(--vaadin-text-color, #000) 12%, transparent));
+    }
+
+    /* Token colours */
+    .tok-key {
+      color: var(--yaml-key-color);
+    }
+    .tok-string {
+      color: var(--yaml-string-color);
+    }
+    .tok-number {
+      color: var(--yaml-number-color);
+    }
+    .tok-bool {
+      color: var(--yaml-bool-color);
+      font-weight: 600;
+    }
+    .tok-anchor {
+      color: var(--yaml-anchor-color);
+    }
+    .tok-comment {
+      color: var(--yaml-comment-color);
+      font-style: italic;
+    }
+    .tok-punct {
+      color: var(--yaml-punct-color);
+    }
+    .tok-marker {
+      color: var(--yaml-punct-color);
+      font-weight: 600;
+    }
+    .tok-value {
+      color: var(--yaml-text-color);
+    }
+  `;
+
+  render() {
+    return html`
+      <div class="editor">
+        <div class="gutter" aria-hidden="true"></div>
+        <pre class="layer highlight" aria-hidden="true"><code></code></pre>
+        <textarea
+          class="layer"
+          part="input"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          wrap="off"
+          ?readonly=${this.readonly}
+          @input=${this.onInput}
+          @scroll=${this.syncScroll}
+          @keydown=${this.onKeyDown}
+        ></textarea>
+      </div>
+    `;
+  }
+
+  private get textarea(): HTMLTextAreaElement {
+    return this.renderRoot.querySelector('textarea') as HTMLTextAreaElement;
+  }
+
+  private get code(): HTMLElement {
+    return this.renderRoot.querySelector('pre.highlight code') as HTMLElement;
+  }
+
+  private get gutter(): HTMLElement {
+    return this.renderRoot.querySelector('.gutter') as HTMLElement;
+  }
+
+  firstUpdated() {
+    this.textarea.value = this.value ?? '';
+    this.paint();
+  }
+
+  updated(changed: PropertyValues) {
+    // Only push an external `value` (e.g. set from the server) into the textarea; skip
+    // when the change originated from user typing, to avoid resetting the caret position.
+    if (changed.has('value') && this.textarea && this.textarea.value !== (this.value ?? '')) {
+      this.textarea.value = this.value ?? '';
+      this.paint();
+      this.syncScroll();
+    }
+  }
+
+  private onInput() {
+    this.value = this.textarea.value;
+    this.paint();
+    this.dispatchEvent(new CustomEvent('value-changed', { detail: { value: this.value } }));
+  }
+
+  private onKeyDown(event: KeyboardEvent) {
+    // Insert two spaces on Tab so indentation stays fluent; Shift+Tab still moves focus out.
+    if (event.key === 'Tab' && !event.shiftKey && !this.readonly) {
+      event.preventDefault();
+      const ta = this.textarea;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      ta.setRangeText('  ', start, end, 'end');
+      this.onInput();
+    }
+  }
+
+  private syncScroll() {
+    const pre = this.renderRoot.querySelector('pre.highlight') as HTMLElement;
+    const ta = this.textarea;
+    if (pre && ta) {
+      pre.scrollTop = ta.scrollTop;
+      pre.scrollLeft = ta.scrollLeft;
+    }
+    // The gutter follows the vertical scroll only; it never scrolls horizontally.
+    if (this.gutter && ta) {
+      this.gutter.scrollTop = ta.scrollTop;
+    }
+  }
+
+  private paint() {
+    this.code.innerHTML = highlightYaml(this.textarea.value ?? '');
+    this.paintGutter();
+  }
+
+  /** Render the line numbers and size the gutter to fit the widest number. */
+  private paintGutter() {
+    const lineCount = ((this.textarea.value ?? '').match(/\n/g)?.length ?? 0) + 1;
+    let numbers = '';
+    for (let i = 1; i <= lineCount; i++) {
+      numbers += i === 1 ? '1' : `\n${i}`;
+    }
+    this.gutter.textContent = numbers;
+    const digits = String(lineCount).length;
+    // digits worth of monospace glyphs + the gutter's 8px horizontal padding on each side.
+    this.style.setProperty('--yaml-gutter-width', `calc(${digits}ch + 16px)`);
+  }
+}
+
+/* ===================== YAML tokeniser ===================== */
+
+function escapeHtml(text: string): string {
+  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+function span(cls: string, text: string): string {
+  return `<span class="tok-${cls}">${escapeHtml(text)}</span>`;
+}
+
+function highlightYaml(source: string): string {
+  return source.split('\n').map(highlightLine).join('\n');
+}
+
+function highlightLine(line: string): string {
+  const indent = (line.match(/^\s*/) as RegExpMatchArray)[0];
+  const rest = line.slice(indent.length);
+
+  if (rest === '') {
+    return escapeHtml(line);
+  }
+  // Whole-line comment.
+  if (rest.startsWith('#')) {
+    return escapeHtml(indent) + span('comment', rest);
+  }
+  // Document markers.
+  if (rest === '---' || rest === '...') {
+    return escapeHtml(indent) + span('marker', rest);
+  }
+
+  const { content, comment } = splitTrailingComment(rest);
+  let out = escapeHtml(indent);
+  let body = content;
+
+  // Sequence markers ("- " possibly repeated for nested inline sequences).
+  let dash: RegExpMatchArray | null;
+  while ((dash = body.match(/^(-\s+)/))) {
+    out += span('punct', dash[1]);
+    body = body.slice(dash[1].length);
+  }
+  if (body === '-') {
+    return out + span('punct', '-') + (comment ? span('comment', comment) : '');
+  }
+
+  const kv = matchKeyValue(body);
+  if (kv) {
+    out +=
+      span('key', kv.key) +
+      escapeHtml(kv.preColon) +
+      span('punct', ':') +
+      escapeHtml(kv.sep) +
+      highlightValue(kv.value);
+  } else {
+    out += highlightValue(body);
+  }
+
+  if (comment) {
+    out += span('comment', comment);
+  }
+  return out;
+}
+
+/** Split an unquoted trailing `# comment` (a `#` at start of token or after whitespace). */
+function splitTrailingComment(s: string): { content: string; comment: string } {
+  let inSingle = false;
+  let inDouble = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === "'" && !inDouble) {
+      inSingle = !inSingle;
+    } else if (c === '"' && !inSingle) {
+      inDouble = !inDouble;
+    } else if (c === '#' && !inSingle && !inDouble && (i === 0 || /\s/.test(s[i - 1]))) {
+      return { content: s.slice(0, i), comment: s.slice(i) };
+    }
+  }
+  return { content: s, comment: '' };
+}
+
+/** Split `key: value` where the colon is a real mapping colon (followed by space or EOL). */
+function matchKeyValue(body: string): { key: string; preColon: string; sep: string; value: string } | null {
+  // Quoted keys carry their trailing whitespace inside the alternation; plain keys
+  // fold it into group 1 and it is split off below. The pattern avoids adjacent
+  // overlapping quantifiers so matching stays linear (no catastrophic backtracking).
+  const m = body.match(/^("[^"]*"\s*|'[^']*'\s*|[^:#]+):(\s[\s\S]*|)$/);
+  if (!m) {
+    return null;
+  }
+  const keyPart = m[1]; // key plus any whitespace before the colon
+  const key = keyPart.trimEnd();
+  const preColon = keyPart.slice(key.length);
+  const after = m[2]; // '' or leading-whitespace + value
+  const value = after.trimStart();
+  const sep = after.slice(0, after.length - value.length);
+  return { key, preColon, sep, value };
+}
+
+function highlightValue(value: string): string {
+  if (value === '') {
+    return '';
+  }
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length > 1) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length > 1)
+  ) {
+    return span('string', value);
+  }
+  if (/^(true|false|yes|no|on|off|null|~)$/i.test(trimmed)) {
+    return span('bool', value);
+  }
+  if (/^[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?$/.test(trimmed)) {
+    return span('number', value);
+  }
+  if (/^[&*!][^\s]+$/.test(trimmed)) {
+    return span('anchor', value);
+  }
+  return span('value', value);
+}
+
+customElements.define('karnak-yaml-editor', KarnakYamlEditor);

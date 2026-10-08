@@ -9,6 +9,9 @@
  */
 package org.karnak.backend.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum PseudonymType {
 
 	CACHE_EXTID("Pseudonym is already stored in KARNAK"), EXTID_IN_TAG("Pseudonym is in a DICOM tag"),
@@ -18,10 +21,6 @@ public enum PseudonymType {
 
 	PseudonymType(String value) {
 		this.value = value;
-	}
-
-	public String getValue() {
-		return value;
 	}
 
 }

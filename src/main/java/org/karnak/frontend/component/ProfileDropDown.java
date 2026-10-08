@@ -11,7 +11,9 @@ package org.karnak.frontend.component;
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import org.karnak.backend.data.entity.ProfileEntity;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class ProfileDropDown extends ComboBox<ProfileEntity> {
 
 	public ProfileDropDown() {

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Karnak conformance badges</title>
+</head>
+<body>
+
+<!--/*
+  Reusable "pill" badge for the conformance report email.
+
+  Built as a one-cell table rather than a styled span: Outlook for Windows (Word
+  engine) ignores padding/width/height on inline / inline-block spans, which makes
+  a span badge collapse or lose its padding. A table cell with a bgcolor attribute
+  and cell padding renders reliably everywhere. border-radius rounds the corners
+  where supported (Gmail, Apple Mail, Outlook for Mac, web) and is simply ignored
+  on Outlook for Windows, leaving a clean padded rectangle.
+
+  Params:
+   - text     label to display
+   - bg       background colour (hex, e.g. '#c0392b')
+   - bold     true for a bold label
+   - fontSize font size in px (int, no unit)
+   - radius   CSS border-radius (e.g. '9px')
+*/-->
+<table th:fragment="pill(text, bg, bold, fontSize, radius)" role="presentation" cellpadding="0" cellspacing="0"
+       style="display: inline-block; border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+  <tr>
+    <td th:attr="bgcolor=${bg}"
+        th:style="'padding: 2px 9px; border-radius: ' + ${radius} + '; font-family: Arial, Helvetica, sans-serif; font-size: '
+                  + ${fontSize} + 'px; line-height: 1.2; color: #ffffff; white-space: nowrap; '
+                  + (${bold} ? 'font-weight: bold; ' : '') + 'background-color: ' + ${bg} + ';'"
+        th:text="${text}">label</td>
+  </tr>
+</table>
+
+</body>
+</html>

@@ -9,75 +9,59 @@
  */
 package org.karnak.frontend.dicom.monitor;
 
-import java.util.concurrent.ExecutionException;
-import org.karnak.backend.enums.MessageFormat;
-import org.karnak.backend.enums.MessageLevel;
+import java.util.List;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.model.dicom.ConfigNode;
 import org.karnak.backend.model.dicom.DicomNodeList;
-import org.karnak.backend.model.dicom.Message;
-import org.karnak.backend.model.dicom.WadoNodeList;
-import org.karnak.backend.service.dicom.DicomEchoService;
-import org.karnak.backend.service.dicom.WadoService;
+import org.karnak.backend.model.dicom.WebDestinationNode;
+import org.karnak.backend.model.dicom.result.DicomCapabilitiesResult;
+import org.karnak.backend.model.dicom.result.DicomNodeCheckResult;
+import org.karnak.backend.model.dicom.result.WebNodeCheckResult;
+import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckService;
+import org.karnak.backend.service.dicom.DicomWebCheckService;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class MonitorLogic {
 
 	// PAGE
 	private final MonitorView view;
 
 	// SERVICES
-	private final DicomEchoService dicomEchoService;
+	private final DicomNodeCheckService dicomNodeCheckService;
 
-	private final WadoService wadoService;
+	private final DicomCapabilitiesCheckService dicomCapabilitiesCheckService;
+
+	private final DicomWebCheckService dicomWebCheckService;
 
 	// DATA
 	private DicomNodeList dicomNodeListSelected;
 
-	private WadoNodeList wadoNodeListSelected;
-
-	public MonitorLogic(MonitorView view) {
+	public MonitorLogic(MonitorView view, DicomNodeCheckService dicomNodeCheckService,
+			DicomCapabilitiesCheckService dicomCapabilitiesCheckService, DicomWebCheckService dicomWebCheckService) {
 		this.view = view;
-
-		dicomEchoService = new DicomEchoService();
-		wadoService = new WadoService();
+		this.dicomNodeCheckService = dicomNodeCheckService;
+		this.dicomCapabilitiesCheckService = dicomCapabilitiesCheckService;
+		this.dicomWebCheckService = dicomWebCheckService;
 	}
 
 	public void dicomNodeListSelected(DicomNodeList dicomNodeList) {
 		this.dicomNodeListSelected = dicomNodeList;
 	}
 
-	public void wadoNodeListSelected(WadoNodeList wadoNodeList) {
-		this.wadoNodeListSelected = wadoNodeList;
+	public void dicomEcho(String callingAet) {
+		List<DicomNodeCheckResult> results = dicomNodeCheckService.check(callingAet, dicomNodeListSelected);
+		view.displayResults(results);
 	}
 
-	public void dicomEcho() {
-		try {
-			String result = dicomEchoService.dicomEcho(dicomNodeListSelected);
-			view.displayStatus(result);
-		}
-		catch (InterruptedException e) {
-			Message message = new Message(MessageLevel.ERROR, MessageFormat.TEXT, "Execution was interrupted");
-			view.displayMessage(message);
-			Thread.currentThread().interrupt();
-		}
-		catch (ExecutionException e) {
-			Message message = new Message(MessageLevel.ERROR, MessageFormat.TEXT, "Execution failed");
-			view.displayMessage(message);
-		}
+	public DicomCapabilitiesResult probeCapabilities(String callingAet, ConfigNode node) {
+		return dicomCapabilitiesCheckService.probe(callingAet, node);
 	}
 
-	public void wado() {
-		try {
-			String result = wadoService.checkWado(wadoNodeListSelected);
-			view.displayStatus(result);
-		}
-		catch (InterruptedException e) {
-			Message message = new Message(MessageLevel.ERROR, MessageFormat.TEXT, "Execution was interrupted");
-			view.displayMessage(message);
-			Thread.currentThread().interrupt();
-		}
-		catch (ExecutionException e) {
-			Message message = new Message(MessageLevel.ERROR, MessageFormat.TEXT, "Execution failed");
-			view.displayMessage(message);
-		}
+	public List<WebNodeCheckResult> checkWebDestinations(List<WebDestinationNode> destinations) {
+		return dicomWebCheckService.check(destinations);
 	}
 
 }

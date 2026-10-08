@@ -16,23 +16,39 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 public class Study {
 
+	@Getter
 	private final String studyInstanceUID;
 
 	private final Map<String, Series> seriesMap;
 
+	@Setter
+	@Getter
 	private String patientID;
 
-	private String[] otherPatientIDs;
+	@Setter
+	@Getter
+	private String @Nullable [] otherPatientIDs;
 
-	private String studyDescription;
+	@Setter
+	@Getter
+	private @Nullable String studyDescription;
 
-	private String accessionNumber;
+	@Setter
+	@Getter
+	private @Nullable String accessionNumber;
 
-	private LocalDateTime studyDate;
+	@Setter
+	@Getter
+	private @Nullable LocalDateTime studyDate;
 
+	@Setter
+	@Getter
 	private long timeStamp;
 
 	public Study(String studyInstanceUID, String patientID) {
@@ -42,54 +58,21 @@ public class Study {
 		this.seriesMap = new HashMap<>();
 	}
 
-	public String getStudyInstanceUID() {
-		return studyInstanceUID;
-	}
-
-	public String getPatientID() {
-		return patientID;
-	}
-
-	public void setPatientID(String patientID) {
-		this.patientID = patientID;
-	}
-
-	public String getStudyDescription() {
-		return studyDescription;
-	}
-
-	public void setStudyDescription(String studyDesc) {
-		this.studyDescription = studyDesc;
-	}
-
-	public LocalDateTime getStudyDate() {
-		return studyDate;
-	}
-
-	public void setStudyDate(LocalDateTime studyDate) {
-		this.studyDate = studyDate;
-	}
-
 	public void addSeries(Series s) {
 		if (s != null) {
 			seriesMap.put(s.getSeriesInstanceUID(), s);
 		}
 	}
 
-	public Series removeSeries(String seriesUID) {
+	public @Nullable Series removeSeries(String seriesUID) {
 		return seriesMap.remove(seriesUID);
 	}
 
 	public boolean isEmpty() {
-		for (Series s : seriesMap.values()) {
-			if (!s.isEmpty()) {
-				return false;
-			}
-		}
-		return true;
+		return seriesMap.values().stream().allMatch(Series::isEmpty);
 	}
 
-	public Series getSeries(String seriesUID) {
+	public @Nullable Series getSeries(String seriesUID) {
 		return seriesMap.get(seriesUID);
 	}
 
@@ -111,38 +94,10 @@ public class Study {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (obj == null || getClass() != obj.getClass()) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		Study other = (Study) obj;
-		return studyInstanceUID.equals(other.studyInstanceUID);
-	}
-
-	public long getTimeStamp() {
-		return timeStamp;
-	}
-
-	public void setTimeStamp(long timeStamp) {
-		this.timeStamp = timeStamp;
-	}
-
-	public String[] getOtherPatientIDs() {
-		return otherPatientIDs;
-	}
-
-	public void setOtherPatientIDs(String[] otherPatientIDs) {
-		this.otherPatientIDs = otherPatientIDs;
-	}
-
-	public String getAccessionNumber() {
-		return accessionNumber;
-	}
-
-	public void setAccessionNumber(String accessionNumber) {
-		this.accessionNumber = accessionNumber;
+		return studyInstanceUID.equals(((Study) obj).studyInstanceUID);
 	}
 
 }

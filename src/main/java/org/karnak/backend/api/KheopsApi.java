@@ -20,9 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
 @Service
 @Slf4j
+@Generated()
 public class KheopsApi {
 
 	private final HttpClient httpClient;
@@ -42,9 +44,9 @@ public class KheopsApi {
 	// album_id: album id destination
 	// x-authorization-source: main album token
 	// Authorization: album destination token
-	public int shareSerie(String studyInstanceUID, String seriesInstanceUID, String API_URL, String authorizationSource,
+	public int shareSerie(String studyInstanceUID, String seriesInstanceUID, String apiUrl, String authorizationSource,
 			String authorizationDestination) throws IOException, InterruptedException {
-		final String stringURI = String.format("%s/studies/%s/series/%s", API_URL, studyInstanceUID, seriesInstanceUID);
+		final String stringURI = String.format("%s/studies/%s/series/%s", apiUrl, studyInstanceUID, seriesInstanceUID);
 		final URI uri = URI.create(stringURI);
 		HttpRequest request = HttpRequest.newBuilder()
 			.PUT(HttpRequest.BodyPublishers.noBody())
@@ -56,24 +58,18 @@ public class KheopsApi {
 			.build();
 
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-		try {
-			return response.statusCode();
-		}
-		catch (Exception e) {
-			System.err.println(e);
-		}
-		return -1;
+		return response.statusCode();
 	}
 
-	public JSONObject tokenIntrospect(String API_URL, String authorizationToken, String introspectToken)
+	public JSONObject tokenIntrospect(String apiUrl, String authorizationToken, String introspectToken)
 			throws IOException, InterruptedException {
-		final String stringURI = String.format("%s/token/introspect", API_URL);
+		final String stringURI = String.format("%s/token/introspect", apiUrl);
 		final URI uri = URI.create(stringURI);
 
 		Map<Object, Object> data = new HashMap<>();
 		data.put("token", introspectToken);
 		HttpRequest request = HttpRequest.newBuilder()
-			.POST(utils.buildDataFromMap(data))
+			.POST(Utils.buildDataFromMap(data))
 			.uri(uri)
 			.setHeader(HttpHeaders.ACCEPT, "application/json")
 			.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
@@ -81,14 +77,14 @@ public class KheopsApi {
 			.build();
 
 		HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-		try {
-			final int status = response.statusCode();
-			if (status >= 200 && status <= 300) {
+		int status = response.statusCode();
+		if (status >= 200 && status <= 300) {
+			try {
 				return new JSONObject(response.body());
 			}
-		}
-		catch (Exception e) {
-			System.err.println(e);
+			catch (Exception e) {
+				log.error("Cannot parse the token introspection response", e);
+			}
 		}
 		return new JSONObject();
 	}

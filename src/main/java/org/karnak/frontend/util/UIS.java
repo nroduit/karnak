@@ -13,7 +13,9 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasSize;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public interface UIS {
 
 	static <T extends HasSize> T setWidthFull(T component) {

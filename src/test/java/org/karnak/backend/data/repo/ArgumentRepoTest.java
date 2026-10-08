@@ -22,7 +22,7 @@ import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 @DataJpaTest
 @Slf4j
@@ -131,6 +131,38 @@ class ArgumentRepoTest {
 		assertEquals(entity.getId(), entityModified.getId());
 		assertEquals(modifiedText, entityModified.getArgumentKey());
 		log.info("Key of the entity with id [{}]: [{}]", entityModified.getId(), entityModified.getArgumentKey());
+	}
+
+	/**
+	 * Regression test for issue #258: the argument_value column used to be VARCHAR(255),
+	 * so a long "expr" SpEL condition of an expression.on.tags element passed profile
+	 * validation (which only checks SpEL syntax, not length) and then failed at save
+	 * time. It is now mapped as unlimited text and must persist values well over 255
+	 * characters.
+	 */
+	@Test
+	void shouldPersistArgumentValueLongerThan255Characters() {
+		// An argument requires its non-null parent profile element
+		ProfileEntity profileEntity = new ProfileEntity();
+		profileEntity.setName("name");
+		profileEntity = profileRepo.saveAndFlush(profileEntity);
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity();
+		profileElementEntity.setName("expression.on.tags");
+		profileElementEntity.setProfileEntity(profileEntity);
+		profileElementEntity = profileElementRepo.saveAndFlush(profileElementEntity);
+
+		// Build an expr-like value longer than the former VARCHAR(255) limit
+		String longExpr = "tagValueIsPresent(\"(0008,0060)\", \"CT\")"
+			.concat(" || tagValueContains(\"(0008,1030)\", \"BRAIN\")".repeat(20));
+		assertTrue(longExpr.length() > 255);
+
+		ArgumentEntity entity = new ArgumentEntity("expr", longExpr, profileElementEntity);
+		entity = repository.saveAndFlush(entity);
+
+		// Reload from the database to confirm it round-trips untruncated
+		Optional<ArgumentEntity> reloaded = repository.findById(entity.getId());
+		assertTrue(reloaded.isPresent());
+		assertEquals(longExpr, reloaded.get().getArgumentValue());
 	}
 
 	/**

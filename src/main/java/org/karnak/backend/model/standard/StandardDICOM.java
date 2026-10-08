@@ -13,11 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.exception.ModuleNotFoundException;
 import org.karnak.backend.exception.SOPNotFoundException;
 
 public class StandardDICOM {
+
+	private static final Pattern TAG_SEPARATORS = Pattern.compile("[(),]");
 
 	private final SOPS sops;
 
@@ -25,14 +29,17 @@ public class StandardDICOM {
 
 	private final AttributeDetails attributeDetails;
 
+	private final CIODToFunctionalGroupMacros ciodToFunctionalGroupMacros;
+
 	public StandardDICOM() {
 		sops = new SOPS();
 		moduleToAttributes = new ModuleToAttributes();
 		attributeDetails = new AttributeDetails();
+		ciodToFunctionalGroupMacros = new CIODToFunctionalGroupMacros();
 	}
 
 	public static String cleanTagPath(String tagPath) {
-		return tagPath.replaceAll("[(),]", "").toLowerCase();
+		return TAG_SEPARATORS.matcher(tagPath).replaceAll("").toLowerCase();
 	}
 
 	public List<String> getAllSOPuids() {
@@ -59,6 +66,14 @@ public class StandardDICOM {
 		return sops.getModuleToAttribute(sopUID, moduleToAttributes);
 	}
 
+	/**
+	 * The Functional Group Macros of the IOD of a SOP Class with their usage, empty for
+	 * an IOD without functional groups.
+	 */
+	public List<FunctionalGroupMacro> getFunctionalGroupMacrosBySOP(String sopUID) throws SOPNotFoundException {
+		return ciodToFunctionalGroupMacros.getMacros(getIdCIOD(sopUID));
+	}
+
 	public List<String> getModulesNameBySOP(String sopUID) throws SOPNotFoundException {
 		return sops.getSopModulesName(sopUID);
 	}
@@ -80,12 +95,16 @@ public class StandardDICOM {
 		return moduleAttributes;
 	}
 
-	public Map<String, ModuleAttribute> getAttributesByModule(String moduleId) {
+	public @Nullable Map<String, ModuleAttribute> getAttributesByModule(String moduleId) {
 		return moduleToAttributes.getAttributesByModule(moduleId);
 	}
 
 	public List<ModuleAttribute> getAttributeListByModule(String moduleId) {
-		return new ArrayList<>(moduleToAttributes.getAttributesByModule(moduleId).values());
+		Map<String, ModuleAttribute> attributesByModule = moduleToAttributes.getAttributesByModule(moduleId);
+		if (attributesByModule != null && !attributesByModule.isEmpty()) {
+			return new ArrayList<>(attributesByModule.values());
+		}
+		return List.of();
 	}
 
 	public Map<String, ModuleAttribute> getModuleAttributesByType(String moduleId, String type)
@@ -93,8 +112,18 @@ public class StandardDICOM {
 		return moduleToAttributes.getModuleAttributesByType(moduleId, type);
 	}
 
-	public AttributeDetail getAttributeDetail(String tag) {
+	public @Nullable AttributeDetail getAttributeDetail(String tag) {
 		return attributeDetails.getAttributeDetail(tag);
+	}
+
+	/** Search the standard attributes by keyword / name / tag (see AttributeDetails). */
+	public List<AttributeDetail> searchAttributes(String query, boolean includeRetired, int limit) {
+		return attributeDetails.search(query, includeRetired, limit);
+	}
+
+	/** The identifiers of every known module, sorted alphabetically. */
+	public List<String> getModuleIds() {
+		return moduleToAttributes.getModuleIds();
 	}
 
 	public List<AttributeDetail> getListAttributeDetail(List<String> tag) {

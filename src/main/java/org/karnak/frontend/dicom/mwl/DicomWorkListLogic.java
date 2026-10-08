@@ -12,19 +12,23 @@ package org.karnak.frontend.dicom.mwl;
 import java.time.LocalDate;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
+import org.dcm4che3.img.util.DateTimeUtils;
 import org.dcm4che3.net.Status;
-import org.karnak.backend.dicom.DateTimeUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.enums.MessageFormat;
 import org.karnak.backend.enums.MessageLevel;
 import org.karnak.backend.enums.Modality;
 import org.karnak.backend.model.dicom.Message;
 import org.karnak.backend.model.dicom.WorkListQueryData;
+import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.op.CFind;
 import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomParam;
 import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.tool.ModalityWorklist;
 
+@Generated()
+@NullUnmarked
 public class DicomWorkListLogic {
 
 	// PAGE

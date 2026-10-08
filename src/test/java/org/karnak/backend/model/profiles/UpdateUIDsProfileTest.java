@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2026 Karnak Team and other contributors.
+ * Copyright (c) 2026 Karnak Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
@@ -9,47 +9,104 @@
  */
 package org.karnak.backend.model.profiles;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.dcm4che3.data.Attributes;
+import org.dcm4che3.data.Tag;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
+import org.junit.jupiter.api.Test;
+import org.karnak.backend.data.entity.ExcludedTagEntity;
+import org.karnak.backend.data.entity.IncludedTagEntity;
+import org.karnak.backend.data.entity.ProfileElementEntity;
+import org.karnak.backend.exception.ProfileException;
+import org.karnak.backend.model.action.Keep;
+import org.karnak.backend.model.action.Remove;
+import org.karnak.backend.model.action.ReplaceNull;
+import org.karnak.backend.model.action.UID;
+
+@DisplayNameGeneration(ReplaceUnderscores.class)
 class UpdateUIDsProfileTest {
 
-	/*
-	 * private static DicomObject dataset = DicomObject.newDicomObject(); private static
-	 * UpdateUIDsProfile uidProfile;
-	 *
-	 * @BeforeAll protected static void setUpBeforeClass() throws Exception {
-	 * TagPatternProfile curves = new TagPatternProfile("", "50xxxxxx", null);
-	 * curves.put(TagEntity.CurveReferencedOverlaySequence, Action.KEEP); uidProfile = new
-	 * UpdateUIDsProfile("", AbstractProfileItem.Type.REPLACE_UID.getClassAlias(),
-	 * curves); dataset.setNull(TagEntity.OverlayData | (1 << 17), VR.OB);
-	 * dataset.setString(TagEntity.CurveLabel, VR.LO, "curve label");
-	 * dataset.newDicomSequence(TagEntity.CurveReferencedOverlaySequence);
-	 * dataset.setString(TagEntity.SOPInstanceUID, VR.UI, UIDUtils.randomUID());
-	 * dataset.setString(TagEntity.UID, VR.UI, UIDUtils.randomUID()); }
-	 *
-	 * @Test void getAction() { uidProfile.clearTagMap();
-	 * uidProfile.put(TagEntity.SOPInstanceUID, Action.UID); assertEquals(Action.UID,
-	 * uidProfile.getAction(dataset.get(TagEntity.SOPInstanceUID).orElse(null)));
-	 * assertEquals(null, uidProfile.getAction(dataset.get(TagEntity.UID).orElse(null)));
-	 *
-	 * assertEquals(Action.KEEP,
-	 * uidProfile.getAction(dataset.get(TagEntity.CurveReferencedOverlaySequence).orElse(
-	 * null))); assertEquals(Action.REMOVE,
-	 * uidProfile.getAction(dataset.get(TagEntity.CurveLabel).orElse(null)));
-	 * assertEquals(null, uidProfile.getAction(dataset.get(TagEntity.OverlayData | (1 <<
-	 * 17)).orElse(null))); }
-	 *
-	 * @Test void put() { uidProfile.clearTagMap(); assertEquals(0,
-	 * uidProfile.tagMap.size());
-	 *
-	 * uidProfile.put(TagEntity.SOPInstanceUID, Action.UID); uidProfile.put(TagEntity.UID,
-	 * Action.REMOVE);
-	 *
-	 * assertEquals(Action.REMOVE, uidProfile.remove(TagEntity.UID));
-	 *
-	 * Assertions.assertThrows(IllegalStateException.class, () -> {
-	 * uidProfile.put(TagEntity.StudyInstanceUID, Action.KEEP); });
-	 *
-	 * // TODO UI options, should give the list of all UIDs and not allowed other tags //
-	 * TODO Generate random UIDs // TODO Generate random UIDs with consistency }
-	 */
+	private static ProfileElementEntity element(String action) {
+		return new ProfileElementEntity("name", "replace.uid", null, action, null, 0, null);
+	}
+
+	private static UpdateUIDsProfile profile() throws ProfileException {
+		return new UpdateUIDsProfile(element(null));
+	}
+
+	@Test
+	void applies_the_configured_action_to_the_configured_tags() throws ProfileException {
+		ProfileElementEntity element = element("U");
+		element.addIncludedTag(new IncludedTagEntity("(0020,000D)", element));
+		element.addIncludedTag(new IncludedTagEntity("(0020,000E)", element));
+		element.addExceptedtags(new ExcludedTagEntity("(0020,000E)", element));
+		UpdateUIDsProfile profile = new UpdateUIDsProfile(element);
+
+		assertInstanceOf(UID.class, profile.getAction(new Attributes(), new Attributes(), Tag.StudyInstanceUID, null));
+		assertNull(profile.getAction(new Attributes(), new Attributes(), Tag.SeriesInstanceUID, null));
+		assertNull(profile.getAction(new Attributes(), new Attributes(), Tag.SOPInstanceUID, null));
+	}
+
+	@Test
+	void rejects_an_inconsistent_configured_action() {
+		ProfileElementEntity element = element("K");
+		element.addIncludedTag(new IncludedTagEntity("(0020,000D)", element));
+
+		assertThrows(ProfileException.class, () -> new UpdateUIDsProfile(element));
+	}
+
+	@Test
+	void rejects_configured_tags_without_action() {
+		ProfileElementEntity element = element(null);
+		element.addIncludedTag(new IncludedTagEntity("(0020,000D)", element));
+
+		assertThrows(ProfileException.class, () -> new UpdateUIDsProfile(element));
+	}
+
+	@Test
+	void accepts_uid_remove_and_replace_null_actions() throws ProfileException {
+		UpdateUIDsProfile profile = profile();
+
+		profile.put(Tag.StudyInstanceUID, new UID("U"));
+		profile.put(Tag.SeriesInstanceUID, new Remove("X"));
+		profile.put(Tag.SOPInstanceUID, new ReplaceNull("Z"));
+
+		assertInstanceOf(UID.class, profile.getAction(new Attributes(), new Attributes(), Tag.StudyInstanceUID, null));
+		assertInstanceOf(Remove.class,
+				profile.getAction(new Attributes(), new Attributes(), Tag.SeriesInstanceUID, null));
+		assertInstanceOf(ReplaceNull.class,
+				profile.getAction(new Attributes(), new Attributes(), Tag.SOPInstanceUID, null));
+	}
+
+	@Test
+	void rejects_an_inconsistent_action() throws ProfileException {
+		UpdateUIDsProfile profile = profile();
+
+		assertThrows(IllegalStateException.class, () -> profile.put(Tag.StudyInstanceUID, new Keep("K")));
+	}
+
+	@Test
+	void returns_null_for_an_unmapped_tag() throws ProfileException {
+		assertNull(profile().getAction(new Attributes(), new Attributes(), Tag.StudyInstanceUID, null));
+	}
+
+	@Test
+	void removes_and_clears_mapped_actions() throws ProfileException {
+		UpdateUIDsProfile profile = profile();
+		UID uid = new UID("U");
+		profile.put(Tag.StudyInstanceUID, uid);
+
+		assertSame(uid, profile.remove(Tag.StudyInstanceUID));
+		assertNull(profile.getAction(new Attributes(), new Attributes(), Tag.StudyInstanceUID, null));
+
+		profile.put(Tag.SeriesInstanceUID, new Remove("X"));
+		profile.clearTagMap();
+		assertNull(profile.getAction(new Attributes(), new Attributes(), Tag.SeriesInstanceUID, null));
+	}
 
 }

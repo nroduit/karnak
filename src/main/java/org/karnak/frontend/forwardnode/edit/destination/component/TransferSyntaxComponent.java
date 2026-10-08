@@ -16,11 +16,13 @@ import java.util.Arrays;
 import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.enums.UIDType;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Create a transfer syntax component
  */
 @Getter
+@Generated()
 public class TransferSyntaxComponent extends VerticalLayout {
 
 	private Select<String> transferSyntaxSelect;

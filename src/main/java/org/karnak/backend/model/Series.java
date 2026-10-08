@@ -16,16 +16,24 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 public class Series {
 
+	@Getter
 	private final String seriesInstanceUID;
 
 	private final Map<String, SopInstance> sopInstanceMap;
 
+	@Getter
+	@Setter
 	private String seriesDescription;
 
-	private LocalDateTime seriesDate;
+	@Getter
+	@Setter
+	private @Nullable LocalDateTime seriesDate;
 
 	public Series(String seriesInstanceUID) {
 		this.seriesInstanceUID = Objects.requireNonNull(seriesInstanceUID, "seriesInstanceUID is null");
@@ -33,35 +41,15 @@ public class Series {
 		this.seriesDescription = "";
 	}
 
-	public String getSeriesInstanceUID() {
-		return seriesInstanceUID;
-	}
-
-	public String getSeriesDescription() {
-		return seriesDescription;
-	}
-
-	public void setSeriesDescription(String s) {
-		seriesDescription = s;
-	}
-
-	public LocalDateTime getSeriesDate() {
-		return seriesDate;
-	}
-
-	public void setSeriesDate(LocalDateTime seriesDate) {
-		this.seriesDate = seriesDate;
-	}
-
 	public void addSopInstance(SopInstance s) {
 		SopInstance.addSopInstance(sopInstanceMap, s);
 	}
 
-	public SopInstance removeSopInstance(String sopUID) {
+	public @Nullable SopInstance removeSopInstance(String sopUID) {
 		return SopInstance.removeSopInstance(sopInstanceMap, sopUID);
 	}
 
-	public SopInstance getSopInstance(String sopUID) {
+	public @Nullable SopInstance getSopInstance(String sopUID) {
 		return SopInstance.getSopInstance(sopInstanceMap, sopUID);
 	}
 
@@ -87,14 +75,10 @@ public class Series {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (obj == null || getClass() != obj.getClass()) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		Series other = (Series) obj;
-		return seriesInstanceUID.equals(other.seriesInstanceUID);
+		return seriesInstanceUID.equals(((Series) obj).seriesInstanceUID);
 	}
 
 }

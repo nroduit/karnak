@@ -22,7 +22,11 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import org.jspecify.annotations.NullUnmarked;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class WarningConfirmDialog extends Composite<Dialog> {
 
 	private static final String DEFAULT_TITLE = "Warning";
@@ -111,7 +115,7 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 		titleText = new Span(valueTitle);
 		titleText.getStyle().set("font-size", "24px");
 		titleText.getStyle().set("font-weight", "400");
-		titleText.getStyle().set("color", "red");
+		titleText.addClassName("karnak-error-text");
 	}
 
 	private void createButtonsLayout() {
@@ -126,7 +130,7 @@ public class WarningConfirmDialog extends Composite<Dialog> {
 	private void createButtonValidate() {
 		buttonValidate = new Button();
 		buttonValidate.setText(valueValidate);
-		buttonValidate.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		buttonValidate.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		buttonValidate.setWidth("90px");
 		buttonValidate.focus();
 		buttonValidate.addClickListener((ComponentEventListener<ClickEvent<Button>>) event -> {

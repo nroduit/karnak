@@ -9,43 +9,38 @@
  */
 package org.karnak.frontend.project.component;
 
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.provider.SortDirection;
 import java.util.List;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.frontend.util.CollatorUtils;
+import org.karnak.frontend.util.GroupTreeGrid;
+import org.weasis.core.util.annotations.Generated;
 
-public class GridProject extends Grid<ProjectEntity> {
+@Generated()
+public class GridProject extends GroupTreeGrid<ProjectEntity> {
 
 	public GridProject() {
 		setWidthFull();
 
-		Column<ProjectEntity> projectNameColumn = addColumn(ProjectEntity::getName).setHeader("Project Name")
-			.setFlexGrow(15)
-			.setSortable(true)
-			.setComparator(CollatorUtils.comparing(ProjectEntity::getName));
+		var projectNameColumn = addPrimaryColumn("Project Name", project -> new Span(project.getName()),
+				CollatorUtils.comparing(ProjectEntity::getName))
+			.setFlexGrow(15);
 
-		addColumn(project -> String.format("%s [version %s]", project.getProfileEntity().getName(),
-				project.getProfileEntity().getVersion()))
-			.setHeader("De-identification profile")
-			.setFlexGrow(15)
-			.setSortable(true)
-			.setComparator(CollatorUtils.comparingThen(p -> CollatorUtils.nullSafe(p.getProfileEntity().getName()),
-					p -> CollatorUtils.nullSafe(p.getProfileEntity().getVersion())));
+		addItemTextColumn("De-identification profile",
+				project -> String.format("%s [version %s]", project.getProfileEntity().getName(),
+						project.getProfileEntity().getVersion()),
+				CollatorUtils.comparingThen(p -> CollatorUtils.nullSafe(p.getProfileEntity().getName()),
+						p -> CollatorUtils.nullSafe(p.getProfileEntity().getVersion())))
+			.setFlexGrow(15);
 
 		// Set by default the order on the name of the column
-		GridSortOrder<ProjectEntity> order = new GridSortOrder<>(projectNameColumn, SortDirection.ASCENDING);
-		sort(List.of(order));
+		sort(List.of(new GridSortOrder<>(projectNameColumn, SortDirection.ASCENDING)));
 	}
 
 	public void selectRow(ProjectEntity row) {
-		if (row != null) {
-			getSelectionModel().select(row);
-		}
-		else {
-			getSelectionModel().deselectAll();
-		}
+		selectItem(row);
 	}
 
 }

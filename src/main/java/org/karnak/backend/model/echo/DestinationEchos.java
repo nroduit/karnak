@@ -15,17 +15,12 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "destinations")
-public class DestinationEchos {
+public record DestinationEchos(List<DestinationEcho> destinationEchos) {
 
-	private final List<DestinationEcho> destinationEchos;
-
-	public DestinationEchos(List<DestinationEcho> destinationEchos) {
-		this.destinationEchos = destinationEchos;
-	}
-
+	@Override
 	@JacksonXmlProperty(localName = "destination")
 	@JacksonXmlElementWrapper(useWrapping = false)
-	public List<DestinationEcho> getDestinationEchos() {
+	public List<DestinationEcho> destinationEchos() {
 		return destinationEchos;
 	}
 

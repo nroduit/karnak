@@ -1,0 +1,35 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- project -->
+  <changeSet author="karnak" id="2.8-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="uuid" type="UUID"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.8-2" dbms="postgresql">
+    <sql>UPDATE project SET uuid = gen_random_uuid() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.8-3" dbms="h2">
+    <sql>UPDATE project SET uuid = RANDOM_UUID() WHERE uuid IS NULL;</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.8-4">
+    <addNotNullConstraint tableName="project" columnName="uuid" columnDataType="UUID"/>
+  </changeSet>
+
+  <changeSet author="karnak" id="2.8-5">
+    <addUniqueConstraint tableName="project" columnNames="uuid" constraintName="uk_project_uuid"/>
+  </changeSet>
+
+</databaseChangeLog>
+

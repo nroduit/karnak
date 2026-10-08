@@ -1,0 +1,35 @@
+/*
+ * Copyright (c) 2021-2026 Karnak Team and other contributors.
+ *
+ * This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
+ * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+ */
+package org.karnak.backend.data.repo;
+
+import java.util.Collection;
+import java.util.List;
+import org.karnak.backend.data.entity.TransferSeriesInstanceEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TransferSeriesInstanceRepo extends JpaRepository<TransferSeriesInstanceEntity, Long> {
+
+	/**
+	 * Whether the SOP instance is already recorded for the series. Safe to pair with a
+	 * conditional insert because callers hold the pessimistic series lock, so writes for
+	 * the same series are serialized.
+	 */
+	boolean existsBySeriesStatusIdAndSopInstanceUid(Long seriesStatusId, String sopInstanceUid);
+
+	/**
+	 * The instances of the series already recorded among the given UIDs, one round trip
+	 * for a whole batch of outcomes.
+	 */
+	List<TransferSeriesInstanceEntity> findBySeriesStatusIdAndSopInstanceUidIn(Long seriesStatusId,
+			Collection<String> sopInstanceUids);
+
+}

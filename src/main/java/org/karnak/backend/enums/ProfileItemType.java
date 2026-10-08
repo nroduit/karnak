@@ -9,6 +9,9 @@
  */
 package org.karnak.backend.enums;
 
+import java.util.Set;
+import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.model.profiles.ActionDates;
 import org.karnak.backend.model.profiles.ActionTags;
 import org.karnak.backend.model.profiles.AddPrivateTag;
@@ -22,6 +25,7 @@ import org.karnak.backend.model.profiles.ProfileItem;
 import org.karnak.backend.model.profiles.ReplaceApi;
 import org.karnak.backend.model.profiles.UpdateUIDsProfile;
 
+@NullUnmarked
 public enum ProfileItemType {
 
 	BASIC_DICOM(BasicProfile.class, "basic.dicom.profile", "113100", "Basic Application Confidentiality Profile"),
@@ -38,8 +42,13 @@ public enum ProfileItemType {
 	ADD_PRIVATE_TAG(AddPrivateTag.class, "action.add.private.tag", null, null),
 	REPLACE_API(ReplaceApi.class, "action.replace.api", null, null);
 
+	/** Alias of the Basic DICOM confidentiality profile, which must run last. */
+	public static final String BASIC_DICOM_ALIAS = "basic.dicom.profile";
+
+	@Getter
 	private final Class<? extends ProfileItem> profileClass;
 
+	@Getter
 	private final String classAlias;
 
 	private final String codeValue;
@@ -53,6 +62,20 @@ public enum ProfileItemType {
 		this.codeMeaning = codeMeaning;
 	}
 
+	/** Types that may appear at most once in a pipeline (and need no specific name). */
+	private static final Set<ProfileItemType> UNIQUE_TYPES = Set.of(BASIC_DICOM, CLEAN_PIXEL_DATA, DEFACING);
+
+	/** Whether this type may appear at most once in a profile. */
+	public boolean isUnique() {
+		return UNIQUE_TYPES.contains(this);
+	}
+
+	/** Whether the type with this alias may appear at most once in a profile. */
+	public static boolean isUnique(String alias) {
+		ProfileItemType type = getType(alias);
+		return type != null && type.isUnique();
+	}
+
 	public static ProfileItemType getType(String alias) {
 		for (ProfileItemType t : ProfileItemType.values()) {
 			if (t.classAlias.equals(alias)) {
@@ -63,29 +86,13 @@ public enum ProfileItemType {
 	}
 
 	public static String getCodeValue(String alias) {
-		for (ProfileItemType t : ProfileItemType.values()) {
-			if (t.classAlias.equals(alias)) {
-				return t.codeValue;
-			}
-		}
-		return null;
+		ProfileItemType t = getType(alias);
+		return t != null ? t.codeValue : null;
 	}
 
 	public static String getCodeMeaning(String alias) {
-		for (ProfileItemType t : ProfileItemType.values()) {
-			if (t.classAlias.equals(alias)) {
-				return t.codeMeaning;
-			}
-		}
-		return null;
-	}
-
-	public Class<? extends ProfileItem> getProfileClass() {
-		return profileClass;
-	}
-
-	public String getClassAlias() {
-		return classAlias;
+		ProfileItemType t = getType(alias);
+		return t != null ? t.codeMeaning : null;
 	}
 
 }

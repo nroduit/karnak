@@ -10,11 +10,13 @@
 package org.karnak.backend.enums;
 
 import java.util.Arrays;
-import java.util.Optional;
+import lombok.Getter;
+import org.jspecify.annotations.NullUnmarked;
 
+@Getter
+@NullUnmarked
 public enum UIDType {
 
-	// Role admin
 	EXPLICIT_VR_LITTLE_ENDIAN("1.2.840.10008.1.2.1", "Explicit VR - Little Endian"),
 	JPEG_BASELINE_8BIT("1.2.840.10008.1.2.4.50",
 			"JPEG Baseline (Process 1): Default Transfer Syntax for Lossy JPEG 8 Bit Image Compression"),
@@ -32,26 +34,12 @@ public enum UIDType {
 	JPEG_2000_LOSSLESS("1.2.840.10008.1.2.4.90", "JPEG 2000 Image Compression (Lossless Only)"),
 	JPEG_2000("1.2.840.10008.1.2.4.91", "JPEG 2000 Image Compression");
 
-	/**
-	 * Code of the enum
-	 */
-	private final String code;
-
-	/**
-	 * Description of the enum
-	 */
-	private final String description;
-
-	/**
-	 * Default description
-	 */
 	public static final String DEFAULT_DESCRIPTION = "Keep original transfer syntax";
 
-	/**
-	 * Constructor
-	 * @param code Code
-	 * @param description Description
-	 */
+	private final String code;
+
+	private final String description;
+
 	UIDType(String code, String description) {
 		this.code = code;
 		this.description = description;
@@ -88,21 +76,8 @@ public enum UIDType {
 	}
 
 	public static String descriptionOf(final String code) {
-		if (code != null) {
-			Optional<UIDType> uidTypeFound = Arrays.stream(UIDType.values())
-				.filter(u -> code.trim().equalsIgnoreCase(u.getCode()))
-				.findFirst();
-			return uidTypeFound.isPresent() ? uidTypeFound.get().getDescription() : DEFAULT_DESCRIPTION;
-		}
-		return DEFAULT_DESCRIPTION;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public String getDescription() {
-		return description;
+		UIDType uidType = fromCode(code);
+		return uidType != null ? uidType.getDescription() : DEFAULT_DESCRIPTION;
 	}
 
 }

@@ -15,13 +15,16 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.NullUnmarked;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class DicomPane extends Composite<Dialog> {
 
 	// CONTROLLER
@@ -38,8 +41,6 @@ public class DicomPane extends Composite<Dialog> {
 	private Div titleBar;
 
 	private TextArea contentFld;
-
-	private HorizontalLayout buttonBar;
 
 	private Button cancelButton;
 
@@ -75,7 +76,7 @@ public class DicomPane extends Composite<Dialog> {
 		buildContentField();
 		buildButtonBar();
 
-		mainLayout.add(titleBar, contentFld, buttonBar);
+		mainLayout.add(titleBar, contentFld);
 
 		mainLayout.setFlexGrow(1, contentFld);
 	}
@@ -96,19 +97,17 @@ public class DicomPane extends Composite<Dialog> {
 	}
 
 	private void buildButtonBar() {
-		buttonBar = new HorizontalLayout();
-
 		buildDownloadTextAnchor();
 		buildDownloadDicomAnchor();
 		buildCancelButton();
 
-		buttonBar.add(cancelButton, downloadDicomAnchor, downloadTextAnchor);
+		currentDialog.getFooter().add(cancelButton, downloadDicomAnchor, downloadTextAnchor);
 	}
 
 	private void buildDownloadTextAnchor() {
 		Button downloadTextBtn = new Button();
 		downloadTextBtn.setText("Download Text");
-		downloadTextBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		downloadTextBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		downloadTextAnchor = new Anchor();
 		downloadTextAnchor.getElement().setAttribute("download", true);
@@ -121,7 +120,7 @@ public class DicomPane extends Composite<Dialog> {
 	private void buildDownloadDicomAnchor() {
 		Button downloadDicomBtn = new Button();
 		downloadDicomBtn.setText("Download DICOM");
-		downloadDicomBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		downloadDicomBtn.addThemeVariants(ButtonVariant.PRIMARY);
 
 		downloadDicomAnchor = new Anchor();
 		downloadDicomAnchor.getElement().setAttribute("download", true);

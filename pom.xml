@@ -7,49 +7,55 @@
 
   <!-- Pom Parent -->
   <parent>
-    <groupId>ch.hcuge.springcloud</groupId>
-    <artifactId>spring-cloud-core-dependencies</artifactId>
-    <version>3.5.11-2025.0.1-1.1</version>
+    <groupId>ch.hug.spring</groupId>
+    <artifactId>spring-boot-starter-microservice-webmvc</artifactId>
+    <version>4.1.1-2025.1.3-3.3</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
-  <!-- Karnak  -->
   <groupId>org.karnak</groupId>
   <artifactId>karnak</artifactId>
   <name>${project.artifactId}</name>
-  <version>${revision}</version>
+  <version>2.0.1-SNAPSHOT</version>
   <description>Karnak</description>
   <packaging>jar</packaging>
 
-
-  <!-- Properties -->
   <properties>
-    <revision>SNAPSHOT</revision>
-
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>25</java.version>
     <enforcer.jdk-version>[${java.version},)</enforcer.jdk-version>
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
-    <java.version>21</java.version>
 
-    <vaadin.version>24.9.4</vaadin.version>
-    <org.json.version>20250517</org.json.version>
+    <vaadin.version>25.2.6</vaadin.version>
+    <org.json.version>20260814</org.json.version>
     <gson.version>2.10.1</gson.version>
     <opencsv.version>5.12.0</opencsv.version>
-    <node.version>v22.13.0</node.version>
-    <weasis-dicom-tools.version>5.34.1.1</weasis-dicom-tools.version>
+    <node.version>v24.14.0</node.version>
+    <weasis-dicom-tools.version>5.35.0</weasis-dicom-tools.version>
+    <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
 
     <h2.version>2.4.240</h2.version>
-    <mockito.version>5.20.0</mockito.version>
-    <swagger.version>2.2.40</swagger.version>
+    <mockito.version>5.23.0</mockito.version>
+    <swagger.version>2.2.54</swagger.version>
 
     <sonar.language>java</sonar.language>
     <sonar.java.source>${java.version}</sonar.java.source>
     <sonar.test.exclusions>src/test/**/*</sonar.test.exclusions>
+    <!-- The Vaadin frontend is excluded from JaCoCo (see the coverage profile); mirror that
+         exclusion here so SonarCloud does not count its lines as 0%-covered in the denominator. -->
+    <sonar.coverage.exclusions>**/org/karnak/frontend/**/*</sonar.coverage.exclusions>
 
     <bash.executable>bash</bash.executable>
+    <!-- Tests require the native library and can only be run on Linux, Windows and macOS-->
+    <argLine>-Djava.library.path=${project.build.outputDirectory}/lib/${os-name}-${cpu-name}</argLine>
 
-  </properties>
+    <!-- JUnit tag filtering. By default the slow "performance" tests are skipped; run them
+         with -Pperformance. -->
+    <karnak.test.groups/>
+    <karnak.test.excludedGroups>performance</karnak.test.excludedGroups>
+    <nullability.skip>true</nullability.skip>
+ </properties>
 
   <licenses>
     <license>
@@ -64,7 +70,6 @@
     </license>
   </licenses>
 
-  <!-- Repositories -->
   <repositories>
     <repository>
       <id>HUG_Nexus3</id>
@@ -81,6 +86,10 @@
       </releases>
     </repository>
     <repository>
+      <id>vaadin-addons</id>
+      <url>https://maven.vaadin.com/vaadin-addons</url>
+    </repository>
+    <repository>
       <id>mvn-repo-master</id>
       <url>https://raw.github.com/nroduit/mvn-repo/master/</url>
     </repository>
@@ -91,7 +100,6 @@
     </repository>
   </repositories>
 
-  <!-- Build-->
   <build>
     <defaultGoal>spring-boot:run</defaultGoal>
     <pluginManagement>
@@ -99,18 +107,50 @@
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.41.1</version>
+          <version>3.0.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
 
     <plugins>
       <plugin>
+        <groupId>am.ik.maven</groupId>
+        <artifactId>nullability-maven-plugin</artifactId>
+        <configuration>
+          <skip>${nullability.skip}</skip>
+          <checking>main</checking>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- Reused/persisted CI workspaces (e.g. Jenkins agents that don't run
+               `mvn clean`) can trip the source/.class staleness check after a fresh
+               git checkout resets file timestamps: a newly added test class then
+               looks "already compiled" even though target/test-classes has no
+               matching .class, and surefire fails with ClassNotFoundException while
+               scanning the classpath. Disabling incremental compilation forces a
+               full recompile every run and avoids that class of failure. -->
+          <useIncrementalCompilation>false</useIncrementalCompilation>
+<!--          <release>${java.version}</release>-->
+<!--          <parameters>true</parameters>-->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <image>
-            <runImage>${docker-registry}/vna-docker-base-image:4.12.0-jammy</runImage>
+            <runImage>${docker-registry}/vna-docker-base-image:5.0.0</runImage>
           </image>
         </configuration>
       </plugin>
@@ -132,9 +172,17 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
+        <version>3.10.1</version>
         <configuration>
           <!-- define a language-specific format -->
           <java>
+            <!-- Organize imports: drop unused, sort alphabetically, never use '*'.
+                 Group order matches spring-javaformat: static imports first, a blank
+                 line, then all other imports (so the two plugins do not conflict). -->
+            <removeUnusedImports />
+            <importOrder>
+              <order>\#,</order>
+            </importOrder>
             <licenseHeader>
               <!-- @formatter:off -->
               <content>
@@ -153,7 +201,52 @@
           </java>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+          <parallel>all</parallel>
+          <groups>${karnak.test.groups}</groups>
+          <excludedGroups>${karnak.test.excludedGroups}</excludedGroups>
+        </configuration>
+      </plugin>
+
+      <!-- Disable the checkstyle-validation execution inherited from the parent POM. Rebinding the
+           inherited execution to phase "none" disables it without removing the
+           plugin declaration itself. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>checkstyle-validation</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
+
+<!--    <resources>-->
+<!--      <resource>-->
+<!--        <filtering>true</filtering>-->
+<!--        <directory>src/main/resources</directory>-->
+<!--        <includes>-->
+<!--          <include>**/application*.yml</include>-->
+<!--          <include>**/application*.yaml</include>-->
+<!--          <include>**/application*.properties</include>-->
+<!--        </includes>-->
+<!--      </resource>-->
+<!--      <resource>-->
+<!--        <directory>src/main/resources</directory>-->
+<!--        <excludes>-->
+<!--          <exclude>**/application*.yml</exclude>-->
+<!--          <exclude>**/application*.yaml</exclude>-->
+<!--          <exclude>**/application*.properties</exclude>-->
+<!--        </excludes>-->
+<!--      </resource>-->
+<!--    </resources>-->
+
   </build>
 
   <!-- Dependency Management -->
@@ -188,24 +281,15 @@
     </snapshotRepository>
   </distributionManagement>
 
-
-  <!-- Dependencies -->
   <dependencies>
-
-    <!-- =========== -->
-    <!-- Springboot  -->
-    <!-- =========== -->
-
     <dependency>
       <artifactId>spring-boot-starter-web</artifactId>
       <groupId>org.springframework.boot</groupId>
     </dependency>
-
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -221,29 +305,66 @@
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
 
-    <!-- jpa, crud repository -->
+    <dependency>
+      <artifactId>json</artifactId>
+      <groupId>org.json</groupId>
+      <version>${org.json.version}</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>gson</artifactId>
+      <groupId>com.google.code.gson</groupId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <version>${opencsv.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.weasis</groupId>
+      <artifactId>weasis-dicom-tools</artifactId>
+      <version>${weasis-dicom-tools.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>libopencv_java</artifactId>
+          <groupId>org.weasis.thirdparty.org.opencv</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>opencv_java</artifactId>
+          <groupId>org.weasis.thirdparty.org.opencv</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
 
-    <!-- Oauth2 -->
+    <!-- Spring Security -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-    </dependency>
+
+    <!-- Oauth2 -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>ch.hcuge.springcloud</groupId>
-      <artifactId>spring-cloud-security</artifactId>
-      <version>${spring-cloud-parent.version}</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
     </dependency>
 
     <!-- Eureka -->
@@ -266,77 +387,28 @@
       </exclusions>
     </dependency>
 
-    <!-- ====== -->
     <!-- Swagger -->
-    <!-- ====== -->
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations</artifactId>
       <version>${swagger.version}</version>
     </dependency>
 
-    <!-- ====== -->
     <!-- Lombok -->
-    <!-- ====== -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
 
-    <!-- ====== -->
-    <!-- Weasis -->
-    <!-- ====== -->
-    <!-- Dicom-tools-->
-    <dependency>
-      <artifactId>weasis-dicom-tools</artifactId>
-      <groupId>org.weasis</groupId>
-      <version>${weasis-dicom-tools.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-
-    <!-- ========= -->
-    <!-- Open Csv  -->
-    <!-- ========= -->
-    <dependency>
-      <groupId>com.opencsv</groupId>
-      <artifactId>opencsv</artifactId>
-      <version>${opencsv.version}</version>
-    </dependency>
-
-    <dependency>
-      <artifactId>json</artifactId>
-      <groupId>org.json</groupId>
-      <version>${org.json.version}</version>
-    </dependency>
-
-    <dependency>
-      <artifactId>gson</artifactId>
-      <groupId>com.google.code.gson</groupId>
-      <version>${gson.version}</version>
-    </dependency>
-
-    <!-- ============ -->
-    <!--  Validation  -->
-    <!-- ============ -->
+    <!-- Bean validation implementation -->
     <dependency>
       <artifactId>hibernate-validator</artifactId>
       <groupId>org.hibernate.validator</groupId>
     </dependency>
 
-    <!-- ============ -->
-    <!--  Postgresql  -->
-    <!-- ============ -->
+    <!-- PostgreSQL -->
     <dependency>
       <artifactId>postgresql</artifactId>
       <groupId>org.postgresql</groupId>
@@ -347,9 +419,14 @@
     <!-- Liquibase -->
     <!-- ========= -->
     <dependency>
-      <artifactId>liquibase-maven-plugin</artifactId>
       <groupId>org.liquibase</groupId>
-      <version>${liquibase.version}</version>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+    <!-- Spring Boot 4 moved the Liquibase auto-configuration into this module:
+      without it the changelogs are never applied at startup -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-liquibase</artifactId>
     </dependency>
 
     <!-- ========= -->
@@ -357,7 +434,9 @@
     <!-- ========= -->
     <!-- Vaadin Spring -->
     <dependency>
+      <groupId>com.vaadin</groupId>
       <artifactId>vaadin-spring-boot-starter</artifactId>
+      <version>${vaadin.version}</version>
       <exclusions>
         <!-- Excluding so that webjars are not included. -->
         <exclusion>
@@ -369,9 +448,14 @@
           <groupId>org.springframework.boot</groupId>
         </exclusion>
       </exclusions>
-      <groupId>com.vaadin</groupId>
-      <version>${vaadin.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>33.7.1-jre</version>
+    </dependency>
+
     <dependency>
       <groupId>com.vaadin</groupId>
       <artifactId>vaadin</artifactId>
@@ -408,26 +492,30 @@
       <artifactId>vaadin-confirm-dialog-flow</artifactId>
       <groupId>com.vaadin</groupId>
     </dependency>
+
+    <!-- Vaadin dev-mode server (Vaadin 25: no longer transitive). Needed to run
+         in development mode, e.g. from the IDE without -Dvaadin.productionMode=true.
+         Optional so it is not propagated transitively; production mode ignores it. -->
     <dependency>
-      <groupId>org.vaadin.artur</groupId>
-      <artifactId>spring-data-provider</artifactId>
-      <version>2.1.0</version>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-dev</artifactId>
+      <optional>true</optional>
     </dependency>
+
     <!-- Vaadin - Addons -->
     <dependency>
       <artifactId>togglebutton</artifactId>
       <groupId>com.vaadin.componentfactory</groupId>
-      <version>3.0.0</version>
+      <version>4.2.0</version>
     </dependency>
+    <!-- Single-calendar date-range picker for the monitoring filter (Vaadin 25, Apache-2.0) -->
     <dependency>
-      <groupId>org.vaadin.klaudeta</groupId>
-      <artifactId>grid-pagination</artifactId>
-      <version>4.0.1</version>
+      <groupId>com.vaadin.componentfactory</groupId>
+      <artifactId>vcf-date-range-picker</artifactId>
+      <version>6.0.0</version>
     </dependency>
 
-    <!-- ========== -->
-    <!--   Jackson  -->
-    <!-- ========== -->
+    <!--	Jackson -->
     <dependency>
       <artifactId>jackson-annotations</artifactId>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -450,6 +538,7 @@
       <groupId>com.fasterxml.jackson.dataformat</groupId>
     </dependency>
 
+
     <!-- Tests -->
     <dependency>
       <artifactId>janino</artifactId>
@@ -460,6 +549,18 @@
     <dependency>
       <artifactId>spring-boot-starter-test</artifactId>
       <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jdbc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa-test</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -478,12 +579,14 @@
       <version>${h2.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.vaadin.artur</groupId>
+      <artifactId>spring-data-provider</artifactId>
+      <version>2.1.0</version>
+    </dependency>
   </dependencies>
 
-
-  <!-- Profiles -->
   <profiles>
-
     <!--  For Unit test: no need to rebuild front as in pipeline it is done before  -->
     <profile>
       <id>unit-test</id>
@@ -526,6 +629,15 @@
       </build>
     </profile>
 
+    <!-- Profile: performance — also runs the @Tag("performance") gateway throughput/saturation
+         tests, which are skipped by default. Use: mvn test -Pperformance -->
+    <profile>
+      <id>performance</id>
+      <properties>
+        <karnak.test.groups>performance</karnak.test.groups>
+        <karnak.test.excludedGroups/>
+      </properties>
+    </profile>
     <!--  Profile: production -->
     <profile>
       <activation>
@@ -533,7 +645,7 @@
       </activation>
 
       <!-- Production mode is activated using -Pproduction -->
-      <id>production</id>
+        <id>production</id>
       <properties>
         <vaadin.productionMode>true</vaadin.productionMode>
       </properties>
@@ -603,7 +715,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <version>3.4.0</version>
+            <version>3.6.3</version>
             <executions>
               <execution>
                 <id>run-portable-package-script</id>
@@ -641,4 +753,6 @@
       </dependencies>
     </profile>
   </profiles>
+
 </project>
+

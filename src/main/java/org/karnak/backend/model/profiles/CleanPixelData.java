@@ -10,6 +10,7 @@
 package org.karnak.backend.model.profiles;
 
 import org.dcm4che3.data.Attributes;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.model.action.ActionItem;
@@ -17,13 +18,24 @@ import org.karnak.backend.model.profilepipe.HMAC;
 
 public class CleanPixelData extends AbstractProfileItem {
 
+	private final boolean automaticMasksGeneration;
+
 	public CleanPixelData(ProfileElementEntity profileElementEntity) throws ProfileException {
 		super(profileElementEntity);
+		this.automaticMasksGeneration = argumentEntities != null && argumentEntities.stream()
+			.filter(argument -> "automaticMasksGeneration".equals(argument.getArgumentKey()))
+			.map(argument -> Boolean.parseBoolean(argument.getArgumentValue()))
+			.findFirst()
+			.orElse(false);
 		profileValidation();
 	}
 
+	public boolean isAutomaticMasksGeneration() {
+		return automaticMasksGeneration;
+	}
+
 	@Override
-	public ActionItem getAction(Attributes dcm, Attributes dcmCopy, int tag, HMAC hmac) {
+	public @Nullable ActionItem getAction(Attributes dcm, Attributes original, int tag, HMAC hmac) {
 		// Action handles in the DICOM content not in metadata.
 		return null;
 	}

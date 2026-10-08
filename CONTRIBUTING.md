@@ -1,0 +1,105 @@
+# Contributing to Karnak
+
+Thank you for your interest in improving Karnak! This document explains how to report issues and
+submit changes so they can be handled efficiently.
+
+Karnak is a DICOM gateway that de-identifies and forwards medical-imaging data. Everything you
+publish in this repository is public, so the first rule overrides all others: **never post real
+patient data** (see [Handling medical data](#handling-medical-data)).
+
+For usage questions, start with the [Karnak User Guide](https://weasis.org/karnak-documentation/).
+
+By participating in this project you agree to abide by our
+[Code of Conduct](.github/CODE_OF_CONDUCT.md). Security issues must be reported privately, following
+the [Security Policy](.github/SECURITY.md) — never in a public issue or pull request.
+
+## Handling medical data
+
+- **Never attach or link DICOM objects, screenshots, logs, or database dumps containing protected
+  health information (PHI/PII).** Use synthetic or fully anonymized data.
+- Karnak logs and monitoring screens contain patient names, IDs, accession numbers and
+  AE Titles — redact them before pasting.
+- De-identification profiles (YAML) and configuration exports may embed hostnames, AE Titles and
+  project secrets; strip anything sensitive before sharing.
+- Content containing patient data will be removed without notice.
+
+## Reporting issues
+
+Before opening an issue:
+
+1. **Search first** — check [existing issues](https://github.com/nroduit/karnak/issues), the
+   [Karnak User Guide](https://weasis.org/karnak-documentation/). Duplicates will be closed.
+2. **Give the context needed to reproduce.** A useful bug report includes:
+   - the Karnak version and how it is deployed (the `nroduit/karnak` docker image, the portable
+     package, or built from source) and the host OS,
+   - the components involved (DICOM listener, DICOMWeb/STOW-RS destination, de-identification
+     profile, pseudonym mapping, Vaadin UI, REST API…),
+   - the database and cache in use (Postgres + Redis, or the embedded H2 + in-memory cache of the
+     portable build),
+   - clear steps to reproduce, what you expected, and what actually happened,
+   - the relevant **anonymized** log output, and when applicable the de-identification profile and
+     a screenshot.
+3. **Use synthetic DICOM data** to reproduce, and say which dataset you used so others can follow
+   the same steps.
+
+Issues that cannot be reproduced or acted upon with the information provided may be closed with a
+reference to this document. You are welcome to reopen the discussion once the missing details are
+available.
+
+## Submitting pull requests
+
+1. **Discuss significant changes first.** For anything beyond a small fix, open an issue before
+   investing time, so the approach can be aligned with the maintainers. This matters especially for
+   changes to the de-identification pipeline, the database schema, or the security configuration.
+2. **Keep pull requests focused.** One logical change per PR. Avoid mixing refactoring, formatting,
+   and functional changes.
+3. **Follow the project conventions.** Read the [README](README.md) for build and debug
+   instructions. Before committing, apply both formatters:
+
+   ```bash
+   mvn spring-javaformat:apply spotless:apply
+   ```
+
+   They enforce the Spring Java code style, the import order, and the EPL-2.0 OR Apache-2.0 license
+   header. CI and Sonar flag any violation.
+4. **Make sure the build passes** — `mvn -B verify` (add `-Pcoverage` to reproduce what CI runs).
+   Prerequisites are JDK 25 and Maven 3.3+.
+5. **Explain the motivation.** The PR description must state what problem is being solved and why
+   this approach was chosen — not just restate the diff.
+6. **Test your change.** Add or update unit tests, and describe how it was verified (which tests,
+   which manual scenario, which synthetic dataset). Untested changes will not be merged.
+7. **Be extra careful with de-identification.** Any change that can affect which attributes are
+   kept, removed, or replaced must come with tests demonstrating the resulting DICOM output. A
+   regression here leaks patient data in production.
+
+## AI-assisted and AI-generated contributions
+
+AI tools (Claude, ChatGPT, Copilot, etc.) are welcome as an *assistant* — but **you**, the human
+contributor, are the author and remain fully responsible for everything you submit.
+
+Requirements for any AI-assisted issue or pull request:
+
+- **Understand what you submit.** You must be able to explain the problem, the change, and answer
+  review questions yourself. "The AI wrote it" is not an acceptable answer during review.
+- **Verify before submitting.** Reproduce the bug yourself before reporting it; build, run, and test
+  the code yourself before opening a PR. AI output frequently references APIs, settings, or
+  behaviors that do not exist in Karnak.
+- **Be transparent.** If a substantial part of an issue or PR was generated by an AI tool, say so in
+  the description.
+- **Never paste real patient data into an AI tool** while working on Karnak, and never let an AI
+  tool generate "sample" data that originates from a real dataset.
+- **No unsolicited bulk submissions.** Mass-generated issues, speculative "findings" (e.g.,
+  unverified security or bug reports produced by scanning tools or LLMs), and large
+  machine-generated refactorings are not accepted.
+
+Maintainer time is the scarcest resource in this project. Issues and pull requests that show signs
+of unreviewed AI generation — vague or generic descriptions, code that does not compile or does not
+match the codebase, fabricated references, boilerplate padding, or missing information — **may be
+closed without detailed review, citing this section**. This is not a judgment of the contributor; it
+simply keeps the tracker usable. You are welcome to resubmit after verifying and completing the
+content yourself.
+
+## License
+
+By submitting a patch, you agree to allow the project owner to license your work under the same
+license as that used by the project (EPL-2.0 OR Apache-2.0).

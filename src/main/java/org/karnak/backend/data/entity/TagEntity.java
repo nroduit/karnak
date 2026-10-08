@@ -9,6 +9,7 @@
  */
 package org.karnak.backend.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,9 +20,13 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.DiscriminatorOptions;
+import org.jspecify.annotations.NullUnmarked;
 
 /*https://stackoverflow.com/questions/14810287/hibernate-inheritance-and-relationship-mapping-generics/14919535*/
 /*https://docs.jboss.org/hibernate/orm/5.3/javadocs/org/hibernate/annotations/DiscriminatorOptions.html*/
@@ -30,12 +35,21 @@ import org.hibernate.annotations.DiscriminatorOptions;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tag_type")
 @DiscriminatorOptions(force = true)
+@NullUnmarked
+@Getter
+@Setter
 public abstract class TagEntity implements Serializable {
 
-	private static final long serialVersionUID = -1172918773653197764L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	@ManyToOne
+	@JoinColumn(name = "profile_element_id", nullable = false)
+	@JsonIgnore
 	private ProfileElementEntity profileElementEntity;
 
 	private String tagValue;
@@ -46,34 +60,6 @@ public abstract class TagEntity implements Serializable {
 	public TagEntity(String tagValue, ProfileElementEntity profileElementEntity) {
 		this.tagValue = tagValue;
 		this.profileElementEntity = profileElementEntity;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@ManyToOne()
-	@JoinColumn(name = "profile_element_id", nullable = false)
-	public ProfileElementEntity getProfileElementEntity() {
-		return profileElementEntity;
-	}
-
-	public void setProfileElementEntity(ProfileElementEntity profileElementEntity) {
-		this.profileElementEntity = profileElementEntity;
-	}
-
-	public String getTagValue() {
-		return tagValue;
-	}
-
-	public void setTagValue(String tagValue) {
-		this.tagValue = tagValue;
 	}
 
 	@Override

@@ -10,6 +10,8 @@
 package org.karnak.frontend.component.converter;
 
 import com.vaadin.flow.data.converter.StringToIntegerConverter;
+import com.vaadin.flow.data.binder.Result;
+import com.vaadin.flow.data.binder.ValueContext;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -18,6 +20,15 @@ public class HStringToIntegerConverter extends StringToIntegerConverter {
 
 	public HStringToIntegerConverter() {
 		super(0, "Could not convert value to " + Integer.class.getName() + ".");
+	}
+
+	@Override
+	public Result<Integer> convertToModel(String value, ValueContext context) {
+		// Allow empty string or null to be converted to the default value (0)
+		if (value == null || value.trim().isEmpty()) {
+			return Result.ok(0);
+		}
+		return super.convertToModel(value, context);
 	}
 
 	@Override

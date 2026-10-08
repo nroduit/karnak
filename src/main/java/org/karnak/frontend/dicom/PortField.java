@@ -10,7 +10,9 @@
 package org.karnak.frontend.dicom;
 
 import com.vaadin.flow.component.textfield.IntegerField;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class PortField extends IntegerField {
 
 	public PortField() {

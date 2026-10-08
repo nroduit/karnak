@@ -18,12 +18,16 @@ import com.vaadin.flow.data.binder.Binder;
 import java.util.Objects;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.BoxShadowComponent;
 import org.karnak.frontend.component.converter.HStringToIntegerConverter;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 import org.karnak.frontend.util.UIS;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class FormDICOM extends VerticalLayout {
 
 	private Binder<DestinationEntity> binder;
@@ -35,6 +39,8 @@ public class FormDICOM extends VerticalLayout {
 	private TextField hostname;
 
 	private TextField port;
+
+	private TextField concurrentConnections;
 
 	private Checkbox useAETitleCheckbox;
 
@@ -55,6 +61,9 @@ public class FormDICOM extends VerticalLayout {
 	private final NotificationComponent notificationComponent;
 
 	@Getter
+	private final ConformanceReportComponent conformanceReportComponent;
+
+	@Getter
 	private final TransferSyntaxComponent transferSyntaxComponent;
 
 	@Getter
@@ -66,6 +75,7 @@ public class FormDICOM extends VerticalLayout {
 		this.filterBySOPClassesForm = new FilterBySOPClassesForm();
 		this.destinationCondition = new DestinationCondition();
 		this.notificationComponent = new NotificationComponent();
+		this.conformanceReportComponent = new ConformanceReportComponent();
 		this.transferSyntaxComponent = new TransferSyntaxComponent();
 		this.transcodeOnlyUncompressedComponent = new TranscodeOnlyUncompressedComponent();
 	}
@@ -77,22 +87,25 @@ public class FormDICOM extends VerticalLayout {
 		filterBySOPClassesForm.init(this.binder);
 		destinationCondition.init(this.binder);
 		notificationComponent.init(this.binder);
+		conformanceReportComponent.init(this.binder);
 		transferSyntaxComponent.init(this.binder);
 		transcodeOnlyUncompressedComponent.init(this.binder);
 
 		setSizeFull();
+		buttonSaveDeleteCancel.getStyle().set("padding-bottom", "var(--vaadin-gap-l)");
 
 		aeTitle = new TextField("AETitle");
 		description = new TextField("Description");
 		hostname = new TextField("Hostname");
 		port = new TextField("Port");
+		concurrentConnections = new TextField("Concurrent connections");
 		useAETitleCheckbox = new Checkbox("Use AETitle destination");
 		activate = new Checkbox("Enable destination");
 
 		// Define layout
 		VerticalLayout destinationLayout = new VerticalLayout(
 				UIS.setWidthFull(new HorizontalLayout(aeTitle, description)), destinationCondition,
-				UIS.setWidthFull(new HorizontalLayout(hostname, port)));
+				UIS.setWidthFull(new HorizontalLayout(hostname, port, concurrentConnections)));
 		VerticalLayout transferLayout = new VerticalLayout(
 				new HorizontalLayout(transferSyntaxComponent, transcodeOnlyUncompressedComponent));
 		VerticalLayout useaetdestLayout = new VerticalLayout(new HorizontalLayout(useAETitleCheckbox));
@@ -109,6 +122,7 @@ public class FormDICOM extends VerticalLayout {
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(transferLayout))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(useaetdestLayout))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(notificationComponent))),
+				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(conformanceReportComponent))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(tagMorphingComponent))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(deIdentificationComponent))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(filterBySOPClassesForm))),
@@ -117,6 +131,41 @@ public class FormDICOM extends VerticalLayout {
 
 		setElements();
 		setBinder();
+
+		// When the destination becomes virtual (report-only) the delivery fields are
+		// irrelevant: disable them. Re-validate on user toggle so stale mandatory-field
+		// errors clear once the fields no longer apply.
+		conformanceReportComponent.getVirtualDestination().addValueChangeListener(event -> {
+			updateVirtualState();
+			if (event.isFromClient()) {
+				binder.validate();
+			}
+		});
+	}
+
+	/**
+	 * Enable or disable the delivery-related fields depending on whether the destination
+	 * is virtual (report-only). Kept package-visible so the parent view can re-apply it
+	 * after reading a bean.
+	 */
+	public void updateVirtualState() {
+		boolean delivery = !isVirtual();
+		aeTitle.setEnabled(delivery);
+		hostname.setEnabled(delivery);
+		port.setEnabled(delivery);
+		concurrentConnections.setEnabled(delivery);
+		useAETitleCheckbox.setEnabled(delivery);
+		transferSyntaxComponent.setEnabled(delivery);
+		notificationComponent.setEnabled(delivery);
+		if (!delivery) {
+			// Transcode is otherwise driven by the selected transfer syntax; only force
+			// it off for a virtual destination.
+			transcodeOnlyUncompressedComponent.setEnabled(false);
+		}
+	}
+
+	private boolean isVirtual() {
+		return Boolean.TRUE.equals(conformanceReportComponent.getVirtualDestination().getValue());
 	}
 
 	private void setElements() {
@@ -128,28 +177,45 @@ public class FormDICOM extends VerticalLayout {
 		hostname.setRequired(true);
 
 		port.setWidth("30%");
-		port.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+		port.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
+
+		concurrentConnections.setWidth("30%");
+		concurrentConnections.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
+		UIS.setTooltip(concurrentConnections,
+				"Number of parallel DICOM associations to this destination (1 = single connection). "
+						+ "Increase to speed up heavy multi-source forwarding, but keep it within the "
+						+ "destination PACS's concurrent-association limit.");
 
 		UIS.setTooltip(useAETitleCheckbox,
 				"if \"true\" then use the destination AETitle as the calling AETitle instead of the Forward Node AETitle");
 	}
 
 	private void setBinder() {
+		// A virtual (report-only) destination forwards nothing, so the delivery fields
+		// are
+		// not mandatory: every delivery validator is bypassed while "virtual" is checked.
 		binder.forField(aeTitle)
-			.withValidator(StringUtils::isNotBlank, "AETitle is mandatory")
-			.withValidator(value -> value.length() <= 16, "AETitle has more than 16 characters")
-			.withValidator(UIS::containsNoWhitespace, "AETitle contains white spaces")
+			.withValidator(value -> isVirtual() || StringUtils.isNotBlank(value), "AETitle is mandatory")
+			.withValidator(value -> isVirtual() || value.length() <= 16, "AETitle has more than 16 characters")
+			.withValidator(value -> isVirtual() || UIS.containsNoWhitespace(value), "AETitle contains white spaces")
 			.bind(DestinationEntity::getAeTitle, DestinationEntity::setAeTitle);
 
 		binder.forField(description).bind(DestinationEntity::getDescription, DestinationEntity::setDescription);
 		binder.forField(hostname)
-			.withValidator(StringUtils::isNotBlank, "Hostname is mandatory")
+			.withValidator(value -> isVirtual() || StringUtils.isNotBlank(value), "Hostname is mandatory")
 			.bind(DestinationEntity::getHostname, DestinationEntity::setHostname);
 		binder.forField(port)
 			.withConverter(new HStringToIntegerConverter())
-			.withValidator(Objects::nonNull, "Port is mandatory")
-			.withValidator(value -> 1 <= value && value <= 65535, "Port should be between 1 and 65535")
+			.withValidator(value -> isVirtual() || Objects.nonNull(value), "Port is mandatory")
+			.withValidator(value -> isVirtual() || (1 <= value && value <= 65535), "Port should be between 1 and 65535")
 			.bind(DestinationEntity::getPort, DestinationEntity::setPort);
+
+		binder.forField(concurrentConnections)
+			.withConverter(new HStringToIntegerConverter())
+			.withValidator(value -> isVirtual() || Objects.nonNull(value), "Concurrent connections is mandatory")
+			.withValidator(value -> isVirtual() || (1 <= value && value <= 50),
+					"Concurrent connections should be between 1 and 50")
+			.bind(DestinationEntity::getConcurrentConnections, DestinationEntity::setConcurrentConnections);
 
 		binder.forField(useAETitleCheckbox).bind(DestinationEntity::getUseaetdest, DestinationEntity::setUseaetdest);
 

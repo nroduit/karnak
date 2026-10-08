@@ -23,7 +23,9 @@ import org.karnak.backend.model.expression.ExprCondition;
 import org.karnak.backend.model.expression.ExpressionError;
 import org.karnak.backend.model.expression.ExpressionResult;
 import org.karnak.backend.service.kheops.SwitchingAlbum;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class TextFieldsBindSwitchingAlbum {
 
 	private final KheopsApi kheopsApi;

@@ -22,8 +22,10 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.frontend.component.ProfileDropDown;
+import org.weasis.core.util.annotations.Generated;
 
 @Getter
+@Generated()
 public class TextFieldsBindProject {
 
 	private final Binder<ProjectEntity> binder;

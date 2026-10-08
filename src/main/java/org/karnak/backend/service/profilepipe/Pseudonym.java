@@ -14,73 +14,69 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.util.TagUtils;
-import org.karnak.backend.cache.PatientClient;
+import org.jspecify.annotations.Nullable;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.DestinationEntity;
-import org.karnak.backend.enums.PseudonymType;
 import org.karnak.backend.exception.EndpointException;
 import org.karnak.backend.model.profilepipe.PatientMetadata;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.backend.util.SpecialCharacter;
+import org.weasis.core.util.annotations.Generated;
 
 @Slf4j
+@Generated()
 public class Pseudonym {
 
-	private final PatientClient externalIdCache;
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private EndpointService endpointService;
+	private final PseudonymCache externalIdCache;
+
+	private @Nullable EndpointService endpointService;
 
 	public Pseudonym() {
 		this.externalIdCache = AppConfig.getInstance().getExternalIDCache();
 	}
 
 	public String generatePseudonym(DestinationEntity destinationEntity, Attributes dcm) {
-
-		PatientMetadata patientMetadata;
-		if (destinationEntity.getIssuerByDefault() == null || !destinationEntity.getIssuerByDefault().isEmpty()) {
-			patientMetadata = new PatientMetadata(dcm);
-		}
-		else {
-			patientMetadata = new PatientMetadata(dcm, destinationEntity.getIssuerByDefault());
-		}
-
-		if (destinationEntity.getPseudonymType().equals(PseudonymType.CACHE_EXTID)) {
-			return getCacheExtid(patientMetadata, destinationEntity.getDeIdentificationProjectEntity().getId(),
+		return switch (destinationEntity.getPseudonymType()) {
+			case CACHE_EXTID -> getCacheExtid(buildPatientMetadata(destinationEntity, dcm),
+					destinationEntity.getDeIdentificationProjectEntity().getId(),
 					destinationEntity.isSkipIssuerOfPatientId());
-		}
+			case EXTID_IN_TAG -> getPseudonymInDicom(dcm, destinationEntity);
+			case EXTID_API -> getPseudonymFromApi(dcm, destinationEntity);
+		};
+	}
 
-		if (destinationEntity.getPseudonymType().equals(PseudonymType.EXTID_IN_TAG)) {
-			return getPseudonymInDicom(dcm, destinationEntity);
+	/**
+	 * Builds the patient metadata used to resolve the cached pseudonym. When an "issuer
+	 * by default" is configured on the destination, it is used as a fallback for a
+	 * missing IssuerOfPatientID; otherwise the issuer is left empty so it does not take
+	 * part in the cache key.
+	 */
+	private static PatientMetadata buildPatientMetadata(DestinationEntity destinationEntity, Attributes dcm) {
+		String issuerByDefault = destinationEntity.getIssuerByDefault();
+		if (issuerByDefault == null || issuerByDefault.isEmpty()) {
+			return new PatientMetadata(dcm);
 		}
-
-		if (destinationEntity.getPseudonymType().equals(PseudonymType.EXTID_API)) {
-			return getPseudonymFromApi(dcm, destinationEntity);
-		}
-
-		return null;
+		return new PatientMetadata(dcm, issuerByDefault);
 	}
 
 	private String getPseudonymFromApi(Attributes dcm, DestinationEntity destinationEntity) {
 		if (endpointService == null) {
 			endpointService = ApplicationContextProvider.bean(EndpointService.class);
 		}
-		String response = null;
-		if (destinationEntity.getMethod().equalsIgnoreCase("post")) {
-			response = endpointService.post(destinationEntity.getAuthConfig(),
-					EndpointService.evaluateStringWithExpression(destinationEntity.getPseudonymUrl(), dcm),
-					EndpointService.evaluateStringWithExpression(destinationEntity.getBody(), dcm));
-		}
-		else {
-			response = endpointService.get(destinationEntity.getAuthConfig(),
-					EndpointService.evaluateStringWithExpression(destinationEntity.getPseudonymUrl(), dcm));
-		}
+		String url = EndpointService.evaluateStringWithExpression(destinationEntity.getPseudonymUrl(), dcm);
+		String response = destinationEntity.getMethod().equalsIgnoreCase("post")
+				? endpointService.post(destinationEntity.getAuthConfig(), url,
+						EndpointService.evaluateStringWithExpression(destinationEntity.getBody(), dcm))
+				: endpointService.get(destinationEntity.getAuthConfig(), url);
 
-		ObjectMapper objectMapper = new ObjectMapper();
-		String value = null;
+		String value;
 		try {
-			value = objectMapper.readTree(response).at(destinationEntity.getResponsePath()).textValue();
+			value = OBJECT_MAPPER.readTree(response).at(destinationEntity.getResponsePath()).textValue();
 		}
 		catch (JsonProcessingException e) {
 			throw new EndpointException("An error occurred while parsing the JSON response ", e);

@@ -10,7 +10,6 @@
 package org.karnak.backend.model.editor;
 
 import java.util.Set;
-import java.util.function.Predicate;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.karnak.backend.data.entity.SOPClassUIDEntity;
@@ -29,11 +28,12 @@ public class FilterEditor implements AttributeEditor {
 	@Override
 	public void apply(Attributes dcm, AttributeEditorContext context) {
 		String classUID = dcm.getString(Tag.SOPClassUID);
-		Predicate<SOPClassUIDEntity> sopClassUIDPredicate = sopClassUID -> sopClassUID.getUid().equals(classUID);
-		if (sopClassUIDEntitySet.stream().noneMatch(sopClassUIDPredicate)) {
+		if (sopClassUIDEntitySet.stream().noneMatch(sopClassUID -> sopClassUID.getUid().equals(classUID))) {
 			context.setAbort(Abort.FILE_EXCEPTION);
-			context.setAbortMessage(dcm.getString(Tag.SOPInstanceUID) + " is blocked because " + classUID
-					+ " is not in the SOPClassUID filter");
+			// Keep the message stable per SOP Class (no per-instance SOP Instance UID) so
+			// every instance blocked by the same filter aggregates into one monitoring
+			// reason line instead of one line per instance.
+			context.setAbortMessage("SOP Class " + classUID + " is not in the SOPClassUID filter");
 		}
 	}
 

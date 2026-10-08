@@ -12,10 +12,12 @@ package org.karnak.frontend.dicom;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class DicomWebToolsBrand extends Composite<Div> {
 
-	private static final String TEXT = "Dicom Web Tools";
+	private static final String TEXT = "DICOM Web Tools";
 
 	private Span textSpan;
 

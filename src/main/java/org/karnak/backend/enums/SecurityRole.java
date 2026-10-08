@@ -10,31 +10,22 @@
 package org.karnak.backend.enums;
 
 import java.util.Arrays;
+import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
+@Getter
 public enum SecurityRole {
 
-	// Role admin
-	ADMIN_ROLE("ROLE_admin", "admin"),
-	// Role Investigator
-	INVESTIGATOR_ROLE("ROLE_investigator", "investigator"),
-	// Role user
-	USER_ROLE("ROLE_user", "user");
+	ADMIN_ROLE("ROLE_admin", "admin"), INVESTIGATOR_ROLE("ROLE_investigator", "investigator"),
+	USER_ROLE("ROLE_user", "user"), COLLABORATOR_ROLE("collaborator", "collaborator"),
+	BACKEND_ROLE("backend", "backend"), API_READ_ROLE("karnak_read", "karnak_read"),
+	API_SEARCH_ROLE("karnak_search", "karnak_search"), API_CREATE_ROLE("karnak_create", "karnak_create"),
+	API_UPDATE_ROLE("karnak_update", "karnak_update"), API_DELETE_ROLE("karnak_delete", "karnak_delete");
 
-	/**
-	 * Role of the enum
-	 */
 	private final String role;
 
-	/**
-	 * Type of the enum
-	 */
 	private final String type;
 
-	/**
-	 * Constructor
-	 * @param role Role of the enum
-	 * @param type Type of the enum
-	 */
 	SecurityRole(final String role, final String type) {
 		this.role = role;
 		this.type = type;
@@ -45,7 +36,7 @@ public enum SecurityRole {
 	 * @param role Role of the enum
 	 * @return SecurityRole found
 	 */
-	public static SecurityRole fromCode(final String role) {
+	public static @Nullable SecurityRole fromCode(final String role) {
 		if (role != null) {
 			return Arrays.stream(SecurityRole.values())
 				.filter(r -> role.trim().equalsIgnoreCase(r.getRole()))
@@ -56,24 +47,23 @@ public enum SecurityRole {
 	}
 
 	/**
-	 * Getter for code
-	 * @return Role of the enum
+	 * Get the enum from the type in parameter
+	 * @param type Type of the enum
+	 * @return SecurityRole found
 	 */
-	public String getRole() {
-		return role;
-	}
-
-	/**
-	 * Getter for type
-	 * @return Type of the enum
-	 */
-	public String getType() {
-		return type;
+	public static @Nullable SecurityRole fromType(final String type) {
+		if (type != null) {
+			return Arrays.stream(SecurityRole.values())
+				.filter(r -> type.trim().equalsIgnoreCase(r.getType()))
+				.findFirst()
+				.orElse(null);
+		}
+		return null;
 	}
 
 	@Override
 	public String toString() {
-		return "SecurityRole{" + "role='" + role + '\'' + "type='" + type + '\'' + '}';
+		return "SecurityRole{role='" + role + "', type='" + type + "'}";
 	}
 
 }

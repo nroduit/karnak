@@ -9,11 +9,18 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProjectRepo extends JpaRepository<ProjectEntity, Long> {
+
+	Optional<ProjectEntity> findByUuid(UUID uuid);
+
+	List<ProjectEntity> findByProfileEntityUuid(UUID profileUuid);
 
 }

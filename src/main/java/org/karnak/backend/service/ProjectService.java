@@ -10,9 +10,14 @@
 package org.karnak.backend.service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.UUID;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.entity.ProjectGroupEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
+import org.karnak.backend.data.repo.ProjectGroupRepo;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
@@ -25,10 +30,15 @@ import org.springframework.stereotype.Service;
  * Project service
  */
 @Service
+@NullUnmarked
 public class ProjectService {
 
 	// Repositories
 	private final ProjectRepo projectRepo;
+
+	private final ProjectGroupRepo projectGroupRepo;
+
+	private final DestinationRepo destinationRepo;
 
 	// Event publisher
 	private final ApplicationEventPublisher applicationEventPublisher;
@@ -36,12 +46,69 @@ public class ProjectService {
 	/**
 	 * Autowired constructor
 	 * @param projectRepo Project repository
+	 * @param projectGroupRepo Project group repository
+	 * @param destinationRepo Destination repository
 	 * @param applicationEventPublisher Application Event Publisher
 	 */
 	@Autowired
-	public ProjectService(final ProjectRepo projectRepo, final ApplicationEventPublisher applicationEventPublisher) {
+	public ProjectService(final ProjectRepo projectRepo, final ProjectGroupRepo projectGroupRepo,
+			final DestinationRepo destinationRepo, final ApplicationEventPublisher applicationEventPublisher) {
 		this.projectRepo = projectRepo;
+		this.projectGroupRepo = projectGroupRepo;
+		this.destinationRepo = destinationRepo;
 		this.applicationEventPublisher = applicationEventPublisher;
+	}
+
+	/** Retrieve all project groups, sorted by name. */
+	public List<ProjectGroupEntity> getAllGroups() {
+		List<ProjectGroupEntity> groups = projectGroupRepo.findAll();
+		groups.sort(CollatorUtils.comparing(ProjectGroupEntity::getName));
+		return groups;
+	}
+
+	/** Create and persist a new project group. */
+	public ProjectGroupEntity saveGroup(String name) {
+		return projectGroupRepo.saveAndFlush(new ProjectGroupEntity(name));
+	}
+
+	/** Rename an existing project group. */
+	public void renameGroup(ProjectGroupEntity group, String name) {
+		if (group == null || group.getId() == null) {
+			return;
+		}
+		projectGroupRepo.findById(group.getId()).ifPresent(persisted -> {
+			persisted.setName(name);
+			projectGroupRepo.saveAndFlush(persisted);
+		});
+	}
+
+	/**
+	 * Delete a project group. Members are detached first (their group is set to null) so
+	 * they fall back to the root of the list instead of being deleted.
+	 */
+	public void deleteGroup(ProjectGroupEntity group) {
+		if (group == null || group.getId() == null) {
+			return;
+		}
+		projectRepo.findAll().forEach(project -> {
+			if (project.getGroup() != null && Objects.equals(project.getGroup().getId(), group.getId())) {
+				project.setGroup(null);
+				projectRepo.saveAndFlush(project);
+			}
+		});
+		projectGroupRepo.deleteById(group.getId());
+		projectGroupRepo.flush();
+	}
+
+	/** Assign a project to a group (null group removes it from any group). */
+	public void assignToGroup(ProjectEntity project, ProjectGroupEntity group) {
+		if (project == null || project.getId() == null) {
+			return;
+		}
+		projectRepo.findById(project.getId()).ifPresent(persisted -> {
+			persisted.setGroup(group);
+			projectRepo.saveAndFlush(persisted);
+		});
 	}
 
 	/**
@@ -64,11 +131,17 @@ public class ProjectService {
 	}
 
 	/**
-	 * Update destinations
-	 * @param projectEntity Project destinations to update
+	 * Publishes an update event for every destination that uses this project, so the
+	 * gateway rebuilds their pipelines. {@code getDestinationEntities()} only maps the
+	 * de-identification side of the association; destinations that reference the project
+	 * for tag morphing are on a separate FK and must be queried explicitly, otherwise
+	 * their (tag-morphing) pipeline keeps running the previously loaded project/profile.
 	 */
 	private void updateDestinations(ProjectEntity projectEntity) {
-		for (DestinationEntity destinationEntity : projectEntity.getDestinationEntities()) {
+		projectEntity.getAllDestinations()
+			.forEach(destinationEntity -> applicationEventPublisher
+				.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE)));
+		for (DestinationEntity destinationEntity : destinationRepo.findByTagMorphingProjectEntity(projectEntity)) {
 			applicationEventPublisher.publishEvent(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
 		}
 	}
@@ -86,7 +159,7 @@ public class ProjectService {
 	 * Retrieve all projects
 	 * @return projects found
 	 */
-	public List<ProjectEntity> getAllProjects() {
+	public List<ProjectEntity> retrieveAllProjects() {
 		List<ProjectEntity> projects = projectRepo.findAll();
 		projects.sort(CollatorUtils.comparing(ProjectEntity::getName));
 		return projects;
@@ -98,14 +171,16 @@ public class ProjectService {
 	 * @return project found
 	 */
 	public ProjectEntity retrieveProject(Long id) {
-		ProjectEntity projectEntity = null;
-		if (id != null) {
-			Optional<ProjectEntity> projectEntityOptional = projectRepo.findById(id);
-			if (projectEntityOptional.isPresent()) {
-				projectEntity = projectEntityOptional.get();
-			}
-		}
-		return projectEntity;
+		return id == null ? null : projectRepo.findById(id).orElse(null);
+	}
+
+	/**
+	 * Retrieves the Project according to its public uuid, used in the REST API.
+	 * @param uuid the public uuid.
+	 * @return the matching ProjectEntity, or {@code null} when it does not exist.
+	 */
+	public ProjectEntity retrieveProjectByUuid(UUID uuid) {
+		return uuid == null ? null : projectRepo.findByUuid(uuid).orElse(null);
 	}
 
 }

@@ -9,17 +9,15 @@
  */
 package org.karnak.backend.model.expression;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.img.util.DicomUtils;
-import org.karnak.backend.exception.ExpressionActionException;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.ExcludeInstance;
 import org.karnak.backend.model.action.Keep;
@@ -30,24 +28,38 @@ import org.karnak.backend.model.action.UID;
 import org.karnak.backend.util.DicomObjectTools;
 import org.weasis.core.util.StringUtil;
 
+/**
+ * Exposes the attributes of the object being de-identified to the expression of a profile
+ * item, and builds the action it returns.
+ *
+ * <p>
+ * The dataset it reads from is the untouched copy of the object at the nesting level of
+ * the tag being processed: {@link #getString(int)} resolves a tag from that level
+ * outwards, so an expression written for an attribute nested in a sequence sees both the
+ * attributes of its item and those of the enclosing study.
+ */
+@NullUnmarked
 public class ExprAction implements ExpressionItem {
 
+	@Setter
+	@Getter
 	private int tag;
 
+	@Setter
+	@Getter
 	private VR vr;
 
+	@Setter
+	@Getter
 	private String stringValue;
 
-	private Attributes dcm;
+	private @Nullable Attributes original;
 
-	private Attributes dcmCopy;
-
-	public ExprAction(int tag, VR vr, Attributes dcm, Attributes dcmCopy) {
+	public ExprAction(int tag, VR vr, Attributes original) {
 		this.tag = tag;
 		this.vr = Objects.requireNonNull(vr);
-		this.stringValue = dcmCopy.getString(this.tag);
-		this.dcmCopy = dcmCopy;
-		this.dcm = dcm;
+		this.stringValue = original.getString(this.tag);
+		this.original = original;
 	}
 
 	public ExprAction(int tag, VR vr, String stringValue) {
@@ -65,30 +77,6 @@ public class ExprAction implements ExpressionItem {
 		return cleanElem.matches("[0-9A-FX]+");
 	}
 
-	public int getTag() {
-		return tag;
-	}
-
-	public void setTag(int tag) {
-		this.tag = tag;
-	}
-
-	public VR getVr() {
-		return vr;
-	}
-
-	public void setVr(VR vr) {
-		this.vr = vr;
-	}
-
-	public String getStringValue() {
-		return stringValue;
-	}
-
-	public void setStringValue(String stringValue) {
-		this.stringValue = stringValue;
-	}
-
 	public ActionItem Keep() {
 		return new Keep("K");
 	}
@@ -103,34 +91,6 @@ public class ExprAction implements ExpressionItem {
 		return replace;
 	}
 
-	public ActionItem ReplaceFromUriPost(String dummyValue) {
-		String response = null;
-
-		if (stringValue != null) {
-			try {
-				// TODO: to improve
-				HttpResponse<String> httpResponse = HttpClient.newBuilder()
-					.build()
-					.send(HttpRequest.newBuilder()
-						.uri(new URI(dummyValue))
-						.POST(HttpRequest.BodyPublishers.ofString(stringValue))
-						.build(), BodyHandlers.ofString());
-				response = httpResponse.body();
-			}
-			catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-			catch (Exception e) {
-				throw new ExpressionActionException(
-						"Issue when using action ReplaceFromUriPost:%s".formatted(e.getMessage()));
-			}
-		}
-
-		ActionItem replace = new Replace("D");
-		replace.setDummyValue(response);
-		return replace;
-	}
-
 	public ActionItem UID() {
 		return new UID("U");
 	}
@@ -139,17 +99,35 @@ public class ExprAction implements ExpressionItem {
 		return new ReplaceNull("Z");
 	}
 
-	public String getString(int tag) {
-		return DicomUtils.getStringFromDicomElement(dcmCopy, tag);
+	/**
+	 * Returns the value of a tag, looked up from the dataset the expression is evaluated
+	 * on outwards: a tag of the enclosing study is visible from an expression evaluated
+	 * for an attribute nested in a sequence.
+	 * @param tag tag to look up
+	 * @return the value found in the innermost dataset holding the tag, or {@code null}
+	 */
+	public @Nullable String getString(int tag) {
+		return original == null ? null : DicomObjectTools.getStringInScope(original, tag);
 	}
 
+	/**
+	 * Tells whether a tag is present anywhere in the object, at any nesting level, and
+	 * not only below the dataset the expression is evaluated on.
+	 * @param tag tag to look up
+	 * @return {@code true} when any dataset of the object holds the tag
+	 */
 	public boolean tagIsPresent(int tag) {
-		return DicomObjectTools.containsTagInAllAttributes(tag, dcmCopy);
+		return original != null && DicomObjectTools.containsTagInAllAttributes(tag, original.getRoot());
 	}
 
 	public ActionItem ComputePatientAge() {
 		ActionItem replace = new Replace("D");
-		replace.setDummyValue(DicomUtils.getPatientAgeInPeriod(this.dcmCopy, Tag.PatientAge, false));
+		Attributes localCopy = original;
+		if (localCopy != null) {
+			// The age is derived from the patient and study modules, which live at the
+			// top level even when the expression is evaluated inside a sequence
+			replace.setDummyValue(DicomUtils.getPatientAgeInPeriod(localCopy.getRoot(), Tag.PatientAge, false));
+		}
 		return replace;
 	}
 

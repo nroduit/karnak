@@ -22,39 +22,38 @@ public class JsonDicomFilesTest {
 
 	@Test
 	public void loadAttributes() {
-		jsonAttributes[] attributes = StandardAttributes.readJsonAttributes();
+		JsonAttributes[] attributes = StandardAttributes.readJsonAttributes();
 		assertEquals(attributes.length, 5129);
 	}
 
 	@Test
 	public void loadCiodsToModules() {
-		jsonCIODtoModule[] ciodsToModules = StandardCIODtoModules.readJsonCIODToModules();
+		JsonCIODtoModule[] ciodsToModules = StandardCIODtoModules.readJsonCIODToModules();
 		assertEquals(ciodsToModules.length, 3258);
 	}
 
 	@Test
 	public void loadCiods() {
-		jsonCIOD[] ciods = StandardCIODS.readJsonCIODS();
+		JsonCIOD[] ciods = StandardCIODS.readJsonCIODS();
 		assertEquals(ciods.length, 171);
 	}
 
 	@Test
 	public void loadConfidentialityProfiles() {
-		StandardConfidentialityProfiles standardConfidentialityProfiles = new StandardConfidentialityProfiles();
-		jsonConfidentialityProfiles[] confidentialityProfiles = standardConfidentialityProfiles
-			.getConfidentialityProfiles();
+		JsonConfidentialityProfiles[] confidentialityProfiles = StandardConfidentialityProfiles
+			.readJsonConfidentialityProfiles();
 		assertEquals(confidentialityProfiles.length, 621);
 	}
 
 	@Test
 	public void loadModulesToAttributes() {
-		jsonModuleToAttribute[] moduleToAttributes = StandardModuleToAttributes.readJsonModuleToAttributes();
+		JsonModuleToAttribute[] moduleToAttributes = StandardModuleToAttributes.readJsonModuleToAttributes();
 		assertEquals(moduleToAttributes.length, 93241);
 	}
 
 	@Test
 	public void loadSops() {
-		jsonSOP[] sops = StandardSOPS.readJsonSOPS();
+		JsonSOP[] sops = StandardSOPS.readJsonSOPS();
 		assertEquals(sops.length, 175);
 	}
 

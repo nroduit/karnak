@@ -9,33 +9,27 @@
  */
 package org.karnak.backend.model.action;
 
-import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.VR;
-import org.dcm4che3.util.TagUtils;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilepipe.HMAC;
-import org.slf4j.MDC;
 
-@Slf4j
 public class Add extends AbstractAction {
 
-	private String privateCreator;
+	private @Nullable String privateCreator;
 
 	public Add(String symbol, int newTag, VR vr, String dummyValue) {
 		super(symbol, newTag, vr, dummyValue);
 	}
 
-	public Add(String symbol, int newTag, VR vr, String dummyValue, String privateCreator) {
+	public Add(String symbol, int newTag, @Nullable VR vr, String dummyValue, @Nullable String privateCreator) {
 		super(symbol, newTag, vr, dummyValue);
 		this.privateCreator = privateCreator;
 	}
 
 	@Override
 	public void execute(Attributes dcm, int tag, HMAC hmac) {
-		if (log.isTraceEnabled()) {
-			log.trace(CLINICAL_MARKER, PATTERN_WITH_INOUT, MDC.get("SOPInstanceUID"), TagUtils.toString(newTag), symbol,
-					null, dummyValue);
-		}
+		traceInOut(newTag, null, dummyValue);
 
 		if (dcm == null) {
 			return;

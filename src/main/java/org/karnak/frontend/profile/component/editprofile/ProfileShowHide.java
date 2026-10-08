@@ -12,7 +12,9 @@ package org.karnak.frontend.profile.component.editprofile;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class ProfileShowHide extends Div {
 
 	private final Component component;

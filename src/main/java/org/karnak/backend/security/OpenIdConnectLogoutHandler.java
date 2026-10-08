@@ -11,16 +11,20 @@ package org.karnak.backend.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * Handle IDP logout
+ * Logs out the local security context and propagates the logout to the OpenID Connect
+ * identity provider.
  */
 @Slf4j
 public class OpenIdConnectLogoutHandler extends SecurityContextLogoutHandler {
@@ -29,33 +33,44 @@ public class OpenIdConnectLogoutHandler extends SecurityContextLogoutHandler {
 
 	private static final String ID_TOKEN_HINT = "id_token_hint";
 
+	private static final Duration IDP_TIMEOUT = Duration.ofSeconds(5);
+
+	private final RestClient restClient;
+
+	public OpenIdConnectLogoutHandler() {
+		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+		requestFactory.setConnectTimeout(IDP_TIMEOUT);
+		requestFactory.setReadTimeout(IDP_TIMEOUT);
+		this.restClient = RestClient.builder().requestFactory(requestFactory).build();
+	}
+
 	@Override
-	public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-		// Security context logout
+	public void logout(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+			@Nullable Authentication authentication) {
 		super.logout(request, response, authentication);
 
-		if (authentication != null && authentication.getPrincipal() instanceof OidcUser) {
-			// Idp logout
-			propagateLogoutToIdp((OidcUser) authentication.getPrincipal());
+		if (authentication != null && authentication.getPrincipal() instanceof OidcUser oidcUser) {
+			propagateLogoutToIdp(oidcUser);
 		}
 	}
 
 	/**
-	 * Propagate logout to IDP
-	 * @param user OpenId Connect user
+	 * Best-effort IDP logout: the local logout already succeeded, so failures are only
+	 * logged.
 	 */
 	private void propagateLogoutToIdp(OidcUser user) {
-		RestTemplate restTemplate = new RestTemplate();
-
-		// Build logout URI
 		String endSessionEndpoint = user.getIssuer() + END_SESSION_ENDPOINT;
-		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endSessionEndpoint)
-			.queryParam(ID_TOKEN_HINT, user.getIdToken().getTokenValue());
+		String logoutUri = UriComponentsBuilder.fromUriString(endSessionEndpoint)
+			.queryParam(ID_TOKEN_HINT, user.getIdToken().getTokenValue())
+			.toUriString();
 
-		// Call IDP logout endpoint
-		ResponseEntity<String> logoutResponse = restTemplate.getForEntity(builder.toUriString(), String.class);
-		log.info(logoutResponse.getStatusCode().is2xxSuccessful() ? "Successful IDP logout"
-				: "Could not propagate logout to IDP");
+		try {
+			restClient.get().uri(logoutUri).retrieve().toBodilessEntity();
+			log.info("Successful IDP logout");
+		}
+		catch (RuntimeException e) {
+			log.warn("Could not propagate logout to IDP", e);
+		}
 	}
 
 }

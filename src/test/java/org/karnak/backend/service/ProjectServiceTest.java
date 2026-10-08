@@ -9,18 +9,21 @@
  */
 package org.karnak.backend.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.entity.ProjectGroupEntity;
+import org.karnak.backend.data.repo.DestinationRepo;
+import org.karnak.backend.data.repo.ProjectGroupRepo;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.model.event.NodeEvent;
 import org.mockito.Mockito;
@@ -34,6 +37,10 @@ class ProjectServiceTest {
 
 	// Repositories
 	private final ProjectRepo projectRepositoryMock = Mockito.mock(ProjectRepo.class);
+
+	private final ProjectGroupRepo projectGroupRepositoryMock = Mockito.mock(ProjectGroupRepo.class);
+
+	private final DestinationRepo destinationRepositoryMock = Mockito.mock(DestinationRepo.class);
 
 	// Service
 	private ProjectService projectService;
@@ -50,7 +57,8 @@ class ProjectServiceTest {
 		Mockito.when(projectRepositoryMock.findById(Mockito.anyLong())).thenReturn(Optional.of(projectEntity));
 
 		// Build mocked service
-		projectService = new ProjectService(projectRepositoryMock, applicationEventPublisherMock);
+		projectService = new ProjectService(projectRepositoryMock, projectGroupRepositoryMock,
+				destinationRepositoryMock, applicationEventPublisherMock);
 	}
 
 	@Test
@@ -78,13 +86,39 @@ class ProjectServiceTest {
 		ForwardNodeEntity forwardNodeEntitySecond = new ForwardNodeEntity();
 		destinationEntityFirst.setForwardNodeEntity(forwardNodeEntityFirst);
 		destinationEntitySecond.setForwardNodeEntity(forwardNodeEntitySecond);
-		projectEntity.setDestinationEntities(Arrays.asList(destinationEntityFirst, destinationEntitySecond));
+		projectEntity
+			.setDeidentificationDestinationEntities(Arrays.asList(destinationEntityFirst, destinationEntitySecond));
 
 		// Call service
 		projectService.update(projectEntity);
 
 		// Test results
 		Mockito.verify(projectRepositoryMock, Mockito.times(1)).saveAndFlush(Mockito.any(ProjectEntity.class));
+		Mockito.verify(applicationEventPublisherMock, Mockito.times(2)).publishEvent(Mockito.any(NodeEvent.class));
+	}
+
+	@Test
+	void should_also_publish_event_for_tag_morphing_destinations() {
+		// The project is used for de-identification by one destination and for tag
+		// morphing by another. getDestinationEntities() only maps the de-identification
+		// side, so the tag-morphing destination must be queried and notified separately.
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+
+		DestinationEntity deidentifyDestination = new DestinationEntity();
+		deidentifyDestination.setForwardNodeEntity(new ForwardNodeEntity());
+		projectEntity.setDeidentificationDestinationEntities(List.of(deidentifyDestination));
+
+		DestinationEntity tagMorphingDestination = new DestinationEntity();
+		tagMorphingDestination.setForwardNodeEntity(new ForwardNodeEntity());
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(projectEntity))
+			.thenReturn(List.of(tagMorphingDestination));
+
+		// Call service
+		projectService.update(projectEntity);
+
+		// One event for the de-identification destination and one for the tag-morphing
+		// one
 		Mockito.verify(applicationEventPublisherMock, Mockito.times(2)).publishEvent(Mockito.any(NodeEvent.class));
 	}
 
@@ -108,7 +142,7 @@ class ProjectServiceTest {
 		projectEntity.setId(1L);
 
 		// Call service
-		List<ProjectEntity> projects = projectService.getAllProjects();
+		List<ProjectEntity> projects = projectService.retrieveAllProjects();
 
 		// Test results
 		Mockito.verify(projectRepositoryMock, Mockito.times(1)).findAll();
@@ -127,6 +161,45 @@ class ProjectServiceTest {
 		assertNotNull(projectEntity);
 		assertEquals(Long.valueOf(1), projectEntity.getId());
 		assertEquals("projectEntityName", projectEntity.getName());
+	}
+
+	@Test
+	void should_assign_project_to_group() {
+		// Init data
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+		ProjectGroupEntity group = new ProjectGroupEntity("Group A");
+		group.setId(10L);
+		Mockito.when(projectRepositoryMock.findById(1L)).thenReturn(Optional.of(projectEntity));
+
+		// Call service
+		projectService.assignToGroup(projectEntity, group);
+
+		// Test results
+		assertEquals(group, projectEntity.getGroup());
+		Mockito.verify(projectRepositoryMock, Mockito.times(1)).saveAndFlush(projectEntity);
+	}
+
+	@Test
+	void should_delete_group_and_detach_only_its_members() {
+		// Init data
+		ProjectGroupEntity group = new ProjectGroupEntity("Group A");
+		group.setId(10L);
+		ProjectEntity member = new ProjectEntity();
+		member.setId(1L);
+		member.setGroup(group);
+		ProjectEntity other = new ProjectEntity();
+		other.setId(2L);
+		Mockito.when(projectRepositoryMock.findAll()).thenReturn(List.of(member, other));
+
+		// Call service
+		projectService.deleteGroup(group);
+
+		// Test results
+		assertNull(member.getGroup());
+		Mockito.verify(projectRepositoryMock, Mockito.times(1)).saveAndFlush(member);
+		Mockito.verify(projectRepositoryMock, Mockito.never()).saveAndFlush(other);
+		Mockito.verify(projectGroupRepositoryMock, Mockito.times(1)).deleteById(10L);
 	}
 
 }

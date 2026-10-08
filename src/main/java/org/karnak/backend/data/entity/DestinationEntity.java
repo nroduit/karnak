@@ -10,6 +10,7 @@
 package org.karnak.backend.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -36,12 +37,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.validator.group.GroupSequenceProvider;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider.DestinationDicomGroup;
 import org.karnak.backend.data.validator.DestinationGroupSequenceProvider.DestinationStowGroup;
@@ -51,15 +56,27 @@ import org.karnak.backend.enums.PseudonymType;
 @GroupSequenceProvider(value = DestinationGroupSequenceProvider.class)
 @Entity(name = "Destination")
 @Table(name = "destination")
+@NullUnmarked
+@Getter
+@Setter
+@EqualsAndHashCode
 public class DestinationEntity implements Serializable {
 
 	@Serial
-	private static final long serialVersionUID = 4835879567037810171L;
+	private static final long serialVersionUID = 1218477670532121223L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
 
 	private String description;
 
+	@NotNull(message = "Type is mandatory")
+	@Column(name = "type")
 	private DestinationType destinationType;
 
 	private boolean activate;
@@ -72,8 +89,6 @@ public class DestinationEntity implements Serializable {
 
 	private String issuerByDefault;
 
-	@Setter
-	@Getter
 	private boolean skipIssuerOfPatientId;
 
 	private PseudonymType pseudonymType;
@@ -98,18 +113,57 @@ public class DestinationEntity implements Serializable {
 
 	private boolean filterBySOPClasses;
 
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "sop_class_filter", joinColumns = @JoinColumn(name = "destination_id"),
+			inverseJoinColumns = @JoinColumn(name = "sop_class_uid_id"))
 	private Set<SOPClassUIDEntity> SOPClassUIDEntityFilters = new HashSet<>();
 
+	@OneToMany(mappedBy = "destinationEntity", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
 	private List<KheopsAlbumsEntity> kheopsAlbumEntities;
 
+	@ManyToOne
+	@JoinColumn(name = "deidentification_project_id")
 	private ProjectEntity deIdentificationProjectEntity;
 
+	@ManyToOne
+	@JoinColumn(name = "tag_morphing_project_id")
 	private ProjectEntity tagMorphingProjectEntity;
 
+	@ManyToOne
+	@JoinColumn(name = "forward_node_id")
+	@JsonIgnore
 	private ForwardNodeEntity forwardNodeEntity;
 
 	// Activate notification
 	private boolean activateNotification;
+
+	// Build and email a DICOM conformance validation report for each study sent
+	private boolean buildConformanceReport;
+
+	// Also check that attribute values obey their VR length/format rules (PS3.5).
+	// Off by default: real-world data deviates often and this is noisy.
+	private boolean checkValueConformity;
+
+	// Recurse the conformance checks through every sequence level (SR content tree,
+	// enhanced multiframe functional groups, …) instead of only the first one.
+	// Off by default: deeper recursion enlarges the snapshot kept in memory.
+	private boolean deepSequenceValidation;
+
+	// When true, each forwarded image is OCR-checked (via the de-identification image
+	// service) for identifying data still burned into the pixel data; the detected
+	// tags are listed in the conformance report. Off by default.
+	private boolean imageIdentityCheck;
+
+	// When true, this destination is a virtual "report-only" destination: the
+	// de-identified / tag-morphed dataset is validated and a conformance report is
+	// emailed, but nothing is forwarded to a real node (the DICOM is routed to
+	// devnull). Delivery settings (AETitle/host/port or URL, transfer syntax,
+	// notification, …) are therefore irrelevant and disabled in the UI.
+	private boolean virtualDestination;
+
+	// list of emails (comma separated) the conformance report is sent to. When
+	// blank, the notification email list (notify) is used as a fallback.
+	private String conformanceReportNotify;
 
 	// list of emails (comma separated) used when the images have been sent (or
 	// partially sent) to the final destination. Note: if an issue appears before
@@ -139,14 +193,20 @@ public class DestinationEntity implements Serializable {
 	// DICOM properties
 	// the AETitle of the destination node.
 	// mandatory[type=dicom]
+	@NotBlank(groups = DestinationDicomGroup.class, message = "AETitle is mandatory")
+	@Size(groups = DestinationDicomGroup.class, max = 16, message = "AETitle has more than 16 characters")
 	private String aeTitle;
 
 	// the host or IP of the destination node.
 	// mandatory[type=dicom]
+	@NotBlank(groups = DestinationDicomGroup.class, message = "Hostname is mandatory")
 	private String hostname;
 
 	// the port of the destination node.
 	// mandatory[type=dicom]
+	@NotNull(groups = DestinationDicomGroup.class, message = "Port is mandatory")
+	@Min(groups = DestinationDicomGroup.class, value = 1, message = "Port should be between 1 and 65535")
+	@Max(groups = DestinationDicomGroup.class, value = 65535, message = "Port should be between 1 and 65535")
 	private Integer port;
 
 	// false by default; if "true" then use the destination AETitle as the calling
@@ -158,9 +218,11 @@ public class DestinationEntity implements Serializable {
 	// STOW properties
 	// the destination STOW-RS URL.
 	// mandatory[type=stow]
+	@NotBlank(groups = DestinationStowGroup.class, message = "URL is mandatory")
 	private String url;
 
 	// headers for HTTP request.
+	@Size(max = 4096, message = "Headers has more than 4096 characters")
 	private String headers;
 
 	// UID corresponding to the Transfer Syntax
@@ -168,6 +230,15 @@ public class DestinationEntity implements Serializable {
 
 	// Transcode Only Uncompressed
 	private boolean transcodeOnlyUncompressed;
+
+	// Number of concurrent DICOM associations (forward connection pool)
+	@Column(name = "concurrent_connections")
+	@Min(groups = DestinationDicomGroup.class, value = 1, message = "Concurrent connections must be at least 1")
+	@Max(groups = DestinationDicomGroup.class, value = 50, message = "Concurrent connections must be 50 or less")
+	private Integer concurrentConnections = 1;
+
+	// Use HTTP/2 for STOW-RS uploads. Default false (HTTP/1.1)
+	private boolean http2;
 
 	// Flag to know if there are some transfer activities on this destination
 	private boolean transferInProgress;
@@ -183,13 +254,14 @@ public class DestinationEntity implements Serializable {
 	}
 
 	protected DestinationEntity(DestinationType destinationType) {
+		this.uuid = UUID.randomUUID();
 		this.destinationType = destinationType;
 		this.activate = true;
 		this.condition = "";
 		this.description = "";
 		this.desidentification = false;
 		this.issuerByDefault = "";
-		this.skipIssuerOfPatientId = false;
+		this.skipIssuerOfPatientId = true;
 		this.pseudonymType = PseudonymType.CACHE_EXTID;
 		this.tag = null;
 		this.delimiter = null;
@@ -216,6 +288,7 @@ public class DestinationEntity implements Serializable {
 		this.headers = "";
 
 		this.transcodeOnlyUncompressed = false;
+		this.http2 = false;
 	}
 
 	public static DestinationEntity ofDicomEmpty() {
@@ -245,290 +318,16 @@ public class DestinationEntity implements Serializable {
 		return destinationEntity;
 	}
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public boolean isActivate() {
-		return activate;
-	}
-
-	public void setActivate(boolean activate) {
-		this.activate = activate;
-	}
-
-	public String getCondition() {
-		return condition;
-	}
-
-	public void setCondition(String condition) {
-		this.condition = condition;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	@NotNull(message = "Type is mandatory")
-	@Column(name = "type")
-	public DestinationType getDestinationType() {
-		return destinationType;
-	}
-
-	public void setDestinationType(DestinationType destinationType) {
-		this.destinationType = destinationType;
-	}
-
-	public boolean isDesidentification() {
-		return desidentification;
-	}
-
-	public void setDesidentification(boolean desidentification) {
-		this.desidentification = desidentification;
-	}
-
-	public String getIssuerByDefault() {
-		return issuerByDefault;
-	}
-
-	public void setIssuerByDefault(String issuerByDefault) {
-		this.issuerByDefault = issuerByDefault;
-	}
-
-	public boolean isFilterBySOPClasses() {
-		return filterBySOPClasses;
-	}
-
-	public void setFilterBySOPClasses(boolean filterBySOPClasses) {
-		this.filterBySOPClasses = filterBySOPClasses;
-	}
-
-	public String getNotify() {
-		return notify;
-	}
-
-	public void setNotify(String notify) {
-		this.notify = notify;
-	}
-
-	public String getNotifyObjectErrorPrefix() {
-		return notifyObjectErrorPrefix;
-	}
-
-	public void setNotifyObjectErrorPrefix(String notifyObjectErrorPrefix) {
-		this.notifyObjectErrorPrefix = notifyObjectErrorPrefix;
-	}
-
-	public String getNotifyObjectRejectionPrefix() {
-		return notifyObjectRejectionPrefix;
-	}
-
-	public void setNotifyObjectRejectionPrefix(String notifyObjectRejectionPrefix) {
-		this.notifyObjectRejectionPrefix = notifyObjectRejectionPrefix;
-	}
-
-	public String getNotifyObjectPattern() {
-		return notifyObjectPattern;
-	}
-
-	public void setNotifyObjectPattern(String notifyObjectPattern) {
-		this.notifyObjectPattern = notifyObjectPattern;
-	}
-
-	public String getNotifyObjectValues() {
-		return notifyObjectValues;
-	}
-
-	public void setNotifyObjectValues(String notifyObjectValues) {
-		this.notifyObjectValues = notifyObjectValues;
-	}
-
-	public Integer getNotifyInterval() {
-		return notifyInterval;
-	}
-
-	public void setNotifyInterval(Integer notifyInterval) {
-		this.notifyInterval = notifyInterval;
-	}
-
-	@NotBlank(groups = DestinationDicomGroup.class, message = "AETitle is mandatory")
-	@Size(groups = DestinationDicomGroup.class, max = 16, message = "AETitle has more than 16 characters")
-	public String getAeTitle() {
-		return aeTitle;
-	}
-
-	public void setAeTitle(String aeTitle) {
-		this.aeTitle = aeTitle;
-	}
-
-	@NotBlank(groups = DestinationDicomGroup.class, message = "Hostname is mandatory")
-	public String getHostname() {
-		return hostname;
-	}
-
-	public void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	@NotNull(groups = DestinationDicomGroup.class, message = "Port is mandatory")
-	@Min(groups = DestinationDicomGroup.class, value = 1, message = "Port should be between 1 and 65535")
-	@Max(groups = DestinationDicomGroup.class, value = 65535, message = "Port should be between 1 and 65535")
-	public Integer getPort() {
-		return port;
-	}
-
-	public void setPort(Integer port) {
-		this.port = port;
-	}
-
-	public Boolean getUseaetdest() {
-		return useaetdest;
-	}
-
-	public void setUseaetdest(Boolean useaetdest) {
-		this.useaetdest = useaetdest;
-	}
-
-	@NotBlank(groups = DestinationStowGroup.class, message = "URL is mandatory")
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	@Size(max = 4096, message = "Headers has more than 4096 characters")
-	public String getHeaders() {
-		return headers;
-	}
-
-	public void setHeaders(String headers) {
-		this.headers = headers;
-	}
-
-	@JsonGetter("forwardNode")
-	@ManyToOne
-	@JoinColumn(name = "forward_node_id")
-	public ForwardNodeEntity getForwardNodeEntity() {
-		return forwardNodeEntity;
-	}
-
 	@JsonSetter("forwardNode")
 	public void setForwardNodeEntity(ForwardNodeEntity forwardNodeEntity) {
 		this.forwardNodeEntity = forwardNodeEntity;
 	}
 
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "sop_class_filter", joinColumns = @JoinColumn(name = "destination_id"),
-			inverseJoinColumns = @JoinColumn(name = "sop_class_uid_id"))
-	public Set<SOPClassUIDEntity> getSOPClassUIDEntityFilters() {
-		return this.SOPClassUIDEntityFilters;
-	}
-
-	public void setSOPClassUIDEntityFilters(Set<SOPClassUIDEntity> sopClassUIDEntities) {
-		this.SOPClassUIDEntityFilters = sopClassUIDEntities;
-	}
-
 	public Set<String> retrieveSOPClassUIDFiltersName() {
-		Set<String> sopList = new HashSet<>();
-		this.SOPClassUIDEntityFilters.forEach(sopClassUID -> sopList.add(sopClassUID.getName()));
-		return sopList;
-	}
-
-	public PseudonymType getPseudonymType() {
-		return pseudonymType;
-	}
-
-	public void setPseudonymType(PseudonymType pseudonymType) {
-		this.pseudonymType = pseudonymType;
-	}
-
-	public String getTag() {
-		return tag;
-	}
-
-	public void setTag(String tag) {
-		this.tag = tag;
-	}
-
-	public String getDelimiter() {
-		return delimiter;
-	}
-
-	public void setDelimiter(String delimiter) {
-		this.delimiter = delimiter;
-	}
-
-	public Integer getPosition() {
-		return position;
-	}
-
-	public void setPosition(Integer position) {
-		this.position = position;
-	}
-
-	public Boolean getSavePseudonym() {
-		return savePseudonym;
-	}
-
-	public void setSavePseudonym(Boolean savePseudonym) {
-		this.savePseudonym = savePseudonym;
-	}
-
-	public String getPseudonymUrl() {
-		return pseudonymUrl;
-	}
-
-	public void setPseudonymUrl(String pseudonymUrl) {
-		this.pseudonymUrl = pseudonymUrl;
-	}
-
-	public String getResponsePath() {
-		return responsePath;
-	}
-
-	public void setResponsePath(String responsePath) {
-		this.responsePath = responsePath;
-	}
-
-	public String getBody() {
-		return body;
-	}
-
-	public void setBody(String body) {
-		this.body = body;
-	}
-
-	public String getMethod() {
-		return method;
-	}
-
-	public void setMethod(String method) {
-		this.method = method;
-	}
-
-	public String getAuthConfig() {
-		return authConfig;
-	}
-
-	public void setAuthConfig(String authConfig) {
-		this.authConfig = authConfig;
+		return SOPClassUIDEntityFilters.stream().map(SOPClassUIDEntity::getName).collect(Collectors.toSet());
 	}
 
 	@JsonGetter("kheopsAlbums")
-	@OneToMany(mappedBy = "destinationEntity", cascade = CascadeType.REMOVE)
-	@LazyCollection(LazyCollectionOption.FALSE)
 	public List<KheopsAlbumsEntity> getKheopsAlbumEntities() {
 		return kheopsAlbumEntities;
 	}
@@ -539,8 +338,6 @@ public class DestinationEntity implements Serializable {
 	}
 
 	@JsonGetter("deIdentificationProject")
-	@ManyToOne
-	@JoinColumn(name = "deidentification_project_id")
 	public ProjectEntity getDeIdentificationProjectEntity() {
 		return deIdentificationProjectEntity;
 	}
@@ -551,8 +348,6 @@ public class DestinationEntity implements Serializable {
 	}
 
 	@JsonGetter("tagMorphingProject")
-	@ManyToOne
-	@JoinColumn(name = "tag_morphing_project_id")
 	public ProjectEntity getTagMorphingProjectEntity() {
 		return tagMorphingProjectEntity;
 	}
@@ -560,62 +355,6 @@ public class DestinationEntity implements Serializable {
 	@JsonSetter("tagMorphingProject")
 	public void setTagMorphingProjectEntity(ProjectEntity tagMorphingProjectEntity) {
 		this.tagMorphingProjectEntity = tagMorphingProjectEntity;
-	}
-
-	public boolean isActivateNotification() {
-		return activateNotification;
-	}
-
-	public void setActivateNotification(boolean activateNotification) {
-		this.activateNotification = activateNotification;
-	}
-
-	public String getTransferSyntax() {
-		return transferSyntax;
-	}
-
-	public void setTransferSyntax(String transferSyntax) {
-		this.transferSyntax = transferSyntax;
-	}
-
-	public boolean isTranscodeOnlyUncompressed() {
-		return transcodeOnlyUncompressed;
-	}
-
-	public void setTranscodeOnlyUncompressed(boolean transcodeOnlyUncompressed) {
-		this.transcodeOnlyUncompressed = transcodeOnlyUncompressed;
-	}
-
-	public boolean isTransferInProgress() {
-		return transferInProgress;
-	}
-
-	public void setTransferInProgress(boolean transferInProgress) {
-		this.transferInProgress = transferInProgress;
-	}
-
-	public LocalDateTime getEmailLastCheck() {
-		return emailLastCheck;
-	}
-
-	public void setEmailLastCheck(LocalDateTime emailLastCheck) {
-		this.emailLastCheck = emailLastCheck;
-	}
-
-	public LocalDateTime getLastTransfer() {
-		return lastTransfer;
-	}
-
-	public void setLastTransfer(LocalDateTime lastTransfer) {
-		this.lastTransfer = lastTransfer;
-	}
-
-	public boolean isActivateTagMorphing() {
-		return activateTagMorphing;
-	}
-
-	public void setActivateTagMorphing(boolean activateTagMorphing) {
-		this.activateTagMorphing = activateTagMorphing;
 	}
 
 	/**
@@ -671,100 +410,13 @@ public class DestinationEntity implements Serializable {
 	}
 
 	public String retrieveStringReference() {
-		if (destinationType != null) {
-			switch (destinationType) {
-				case dicom:
-					return getAeTitle();
-				case stow:
-					return getUrl() + ":" + getPort();
-			}
+		if (destinationType == null) {
+			return "Type of destination is unknown";
 		}
-		return "Type of destination is unknown";
-	}
-	//
-	// @Override
-	// public boolean equals(Object o) {
-	// if (this == o) {
-	// return true;
-	// }
-	// if (o == null || getClass() != o.getClass()) {
-	// return false;
-	// }
-	// DestinationEntity that = (DestinationEntity) o;
-	// return desidentification == that.desidentification
-	// && issuerByDefault == that.issuerByDefault
-	// && filterBySOPClasses == that.filterBySOPClasses
-	// && Objects.equals(id, that.id)
-	// && Objects.equals(description, that.description)
-	// && destinationType == that.destinationType
-	// && pseudonymType == that.pseudonymType
-	// && Objects.equals(tag, that.tag)
-	// && Objects.equals(delimiter, that.delimiter)
-	// && Objects.equals(position, that.position)
-	// && Objects.equals(savePseudonym, that.savePseudonym)
-	// && Objects.equals(transferSyntax, that.transferSyntax)
-	// && Objects.equals(transcodeOnlyUncompressed, that.transcodeOnlyUncompressed)
-	// && Objects.equals(activateNotification, that.activateNotification)
-	// && Objects.equals(notify, that.notify)
-	// && Objects.equals(notifyObjectErrorPrefix, that.notifyObjectErrorPrefix)
-	// && Objects.equals(notifyObjectPattern, that.notifyObjectPattern)
-	// && Objects.equals(notifyObjectValues, that.notifyObjectValues)
-	// && Objects.equals(notifyInterval, that.notifyInterval)
-	// && Objects.equals(aeTitle, that.aeTitle)
-	// && Objects.equals(hostname, that.hostname)
-	// && Objects.equals(port, that.port)
-	// && Objects.equals(useaetdest, that.useaetdest)
-	// && Objects.equals(url, that.url)
-	// && Objects.equals(urlCredentials, that.urlCredentials)
-	// && Objects.equals(headers, that.headers);
-	// }
-	//
-	// @Override
-	// public int hashCode() {
-	// return Objects.hash(
-	// id,
-	// description,
-	// destinationType,
-	// desidentification,
-	// issuerByDefault,
-	// pseudonymType,
-	// tag,
-	// delimiter,
-	// position,
-	// savePseudonym,
-	// filterBySOPClasses,
-	// transferSyntax,
-	// transcodeOnlyUncompressed,
-	// activateNotification,
-	// notify,
-	// notifyObjectErrorPrefix,
-	// notifyObjectPattern,
-	// notifyObjectValues,
-	// notifyInterval,
-	// aeTitle,
-	// hostname,
-	// port,
-	// useaetdest,
-	// url,
-	// urlCredentials,
-	// headers);
-	// }
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		DestinationEntity that = (DestinationEntity) o;
-		return Objects.equals(id, that.id);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(id);
+		return switch (destinationType) {
+			case dicom -> getAeTitle();
+			case stow -> getUrl() + ":" + getPort();
+		};
 	}
 
 	public String toStringDicomNotificationDestination() {

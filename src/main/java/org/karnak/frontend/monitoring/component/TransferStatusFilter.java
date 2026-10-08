@@ -11,9 +11,18 @@ package org.karnak.frontend.monitoring.component;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import org.apache.commons.lang3.StringUtils;
-import org.karnak.backend.enums.TransferStatusType;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.enums.TransferStatusType;
+import org.weasis.core.util.annotations.Generated;
+
+@Setter
+@Getter
+@Generated()
+@NullUnmarked
 public class TransferStatusFilter {
 
 	private String studyUid;
@@ -33,54 +42,6 @@ public class TransferStatusFilter {
 		this.serieUid = "";
 		this.sopInstanceUid = "";
 		this.transferStatusType = TransferStatusType.ALL;
-	}
-
-	public String getStudyUid() {
-		return studyUid;
-	}
-
-	public void setStudyUid(String studyUid) {
-		this.studyUid = studyUid;
-	}
-
-	public String getSerieUid() {
-		return serieUid;
-	}
-
-	public void setSerieUid(String serieUid) {
-		this.serieUid = serieUid;
-	}
-
-	public String getSopInstanceUid() {
-		return sopInstanceUid;
-	}
-
-	public void setSopInstanceUid(String sopInstanceUid) {
-		this.sopInstanceUid = sopInstanceUid;
-	}
-
-	public TransferStatusType getTransferStatusType() {
-		return transferStatusType;
-	}
-
-	public void setTransferStatusType(TransferStatusType transferStatusType) {
-		this.transferStatusType = transferStatusType;
-	}
-
-	public LocalDateTime getStart() {
-		return start;
-	}
-
-	public void setStart(LocalDateTime start) {
-		this.start = start;
-	}
-
-	public LocalDateTime getEnd() {
-		return end;
-	}
-
-	public void setEnd(LocalDateTime end) {
-		this.end = end;
 	}
 
 	public boolean hasFilter() {

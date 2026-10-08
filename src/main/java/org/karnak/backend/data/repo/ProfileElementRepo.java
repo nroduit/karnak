@@ -9,11 +9,15 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.Optional;
+import java.util.UUID;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProfileElementRepo extends JpaRepository<ProfileElementEntity, Long> {
+
+	Optional<ProfileElementEntity> findByUuid(UUID uuid);
 
 }

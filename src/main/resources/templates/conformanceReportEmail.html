@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <title>Karnak DICOM Conformance Report</title>
+</head>
+
+<body style="margin: 0; padding: 16px; background-color: #eef1f4; font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #2d3436;">
+<table style="width: 100%; max-width: 1000px; margin: auto; border-collapse: collapse; background-color: #ffffff; border: 1px solid #d8dee4;">
+  <tr>
+    <td style="padding: 0;">
+
+      <!-- Header -->
+      <table style="width: 100%; border-collapse: collapse; background-color: #2c3e50;">
+        <tr>
+          <td style="padding: 18px 24px;">
+            <span style="font-size: 22px; color: #ffffff; font-weight: bold;">Karnak DICOM Conformance Report</span><br/>
+            <span style="font-size: 13px; color: #bdc3c7;">Destination
+              <b style="color: #ecf0f1;" th:text="${destinationDescription}"></b> &nbsp;&bull;&nbsp; Source AET
+              <b style="color: #ecf0f1;" th:text="${report.sourceAet()}"></b></span>
+          </td>
+          <td align="right" style="padding: 18px 24px; text-align: right; vertical-align: middle;">
+            <th:block th:replace="~{fragments/conformanceBadges :: pill(
+                        ${report.passed()} ? 'PASSED' : 'FAILED',
+                        ${report.passed()} ? '#27ae60' : '#c0392b', true, 18, '4px')}"></th:block>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Totals strip -->
+      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f8f9fa; border-bottom: 1px solid #d8dee4;">
+        <tr>
+          <td style="padding: 10px 24px;">
+            <!-- Layout table instead of margins (Outlook drops margins on inline
+                 elements). The colour swatches are filled table cells, not styled
+                 spans: Outlook ignores width/height/padding on inline spans, so a
+                 span dot collapses to nothing -->
+            <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+              <tr>
+                <td width="10" height="10" bgcolor="#c0392b" style="width: 10px; height: 10px; background-color: #c0392b; border-radius: 5px; font-size: 0; line-height: 10px; mso-line-height-rule: exactly; vertical-align: middle;">&nbsp;</td>
+                <td style="padding: 0 24px 0 6px; font-size: 13px; white-space: nowrap; vertical-align: middle;"><b th:text="${report.errorCount()}"></b> error(s)</td>
+                <td width="10" height="10" bgcolor="#e67e22" style="width: 10px; height: 10px; background-color: #e67e22; border-radius: 5px; font-size: 0; line-height: 10px; mso-line-height-rule: exactly; vertical-align: middle;">&nbsp;</td>
+                <td style="padding: 0 24px 0 6px; font-size: 13px; white-space: nowrap; vertical-align: middle;"><b th:text="${report.warningCount()}"></b> warning(s)</td>
+                <td width="10" height="10" bgcolor="#7f8c8d" style="width: 10px; height: 10px; background-color: #7f8c8d; border-radius: 5px; font-size: 0; line-height: 10px; mso-line-height-rule: exactly; vertical-align: middle;">&nbsp;</td>
+                <td style="padding: 0 0 0 6px; font-size: 13px; white-space: nowrap; vertical-align: middle;"><b th:text="${report.infoCount()}"></b> info</td>
+              </tr>
+            </table>
+          </td>
+          <td style="padding: 10px 24px; text-align: right; color: #7f8c8d; font-size: 11px;">
+            Generated <span th:text="${generatedAt}"></span> &nbsp;&bull;&nbsp;
+            Karnak <span th:text="${karnakVersion}"></span> &nbsp;&bull;&nbsp;
+            <span th:text="${dicomStandardSource}"></span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Body -->
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 18px 24px;">
+
+            <!-- Study summary -->
+            <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Study summary</h2>
+            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 4px 8px; width: 16%; color: #7f8c8d;">Patient ID</td>
+                <td style="padding: 4px 8px; width: 34%;"><b th:text="${report.patientId()}"></b></td>
+                <td style="padding: 4px 8px; width: 16%; color: #7f8c8d;">Patient name</td>
+                <td style="padding: 4px 8px; width: 34%;">
+                  <b th:if="${report.deidentified()}" th:text="${report.patientName()}"></b>
+                  <i th:unless="${report.deidentified()}" style="color: #7f8c8d;">(hidden — destination not de-identified)</i>
+                </td>
+              </tr>
+              <tr style="background-color: #f8f9fa;">
+                <td style="padding: 4px 8px; color: #7f8c8d;">Study UID</td>
+                <td style="padding: 4px 8px;"><span style="font-family: Consolas, monospace; font-size: 11px;" th:text="${report.key().studyInstanceUid()}"></span></td>
+                <td style="padding: 4px 8px; color: #7f8c8d;">Study date</td>
+                <td style="padding: 4px 8px;"><b th:text="${report.studyDate()}"></b></td>
+              </tr>
+              <tr>
+                <td style="padding: 4px 8px; color: #7f8c8d;">Description</td>
+                <td style="padding: 4px 8px;" th:text="${report.studyDescription()}"></td>
+                <td style="padding: 4px 8px; color: #7f8c8d;">Accession number</td>
+                <td style="padding: 4px 8px;" th:text="${report.accessionNumber()}"></td>
+              </tr>
+              <tr style="background-color: #f8f9fa;">
+                <td style="padding: 4px 8px; color: #7f8c8d;">Content</td>
+                <td style="padding: 4px 8px;">
+                  <b th:text="${report.seriesCount()}"></b> series, <b th:text="${report.instanceCount()}"></b> instance(s),
+                  modalities: <b th:text="${#strings.setJoin(report.modalities(), ', ')}"></b>
+                </td>
+                <td style="padding: 4px 8px; color: #7f8c8d;">Failed transfers</td>
+                <td style="padding: 4px 8px;">
+                  <b th:style="${report.failedInstanceCount()} > 0 ? 'color: #c0392b;' : ''"
+                     th:text="${report.failedInstanceCount()}"></b>
+                  <span th:if="${!report.failureReasons().isEmpty()}" style="color: #c0392b;"
+                        th:text="' — ' + ${#strings.listJoin(report.failureReasons(), '; ')}"></span>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Content sent -->
+            <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Content sent</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">SOP Class</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">UID</th>
+              </tr>
+              <tr th:each="entry, rowStat : ${sopClassNames}"
+                  th:style="${rowStat.odd} ? 'background-color: #f8f9fa;' : ''">
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${entry.value}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; font-family: Consolas, monospace; font-size: 11px; color: #57606f;" th:text="${entry.key}"></td>
+              </tr>
+            </table>
+            <!-- Spacer: these two tables are not separated by a heading, so the gap
+                 uses an explicit spacer row rather than a table margin (Outlook drops
+                 margins on tables) -->
+            <div style="font-size: 0; line-height: 12px; mso-line-height-rule: exactly;">&nbsp;</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <tr>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Transfer syntax</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">UID</th>
+              </tr>
+              <tr th:each="entry, rowStat : ${transferSyntaxNames}"
+                  th:style="${rowStat.odd} ? 'background-color: #f8f9fa;' : ''">
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${entry.value}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; font-family: Consolas, monospace; font-size: 11px; color: #57606f;" th:text="${entry.key}"></td>
+              </tr>
+            </table>
+
+            <!-- Series -->
+            <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Series</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <tr>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Series UID</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Modality</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">SOP Class(es)</th>
+                <th style="padding: 6px 8px; text-align: right; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Instances</th>
+              </tr>
+              <tr th:each="serie, rowStat : ${report.series()}"
+                  th:style="${rowStat.odd} ? 'background-color: #f8f9fa;' : ''">
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; font-family: Consolas, monospace; font-size: 11px;" th:text="${serie.seriesInstanceUid()}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${serie.modality()}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; font-family: Consolas, monospace; font-size: 11px; color: #57606f;" th:text="${#strings.setJoin(serie.sopClassUids(), ', ')}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; text-align: right;" th:text="${serie.instanceCount()}"></td>
+              </tr>
+            </table>
+
+            <!-- Findings per SOP Class -->
+            <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Conformance findings per SOP Class</h2>
+            <p th:if="${report.findingsBySopClass().isEmpty()}"
+               style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
+              No conformance finding.</p>
+            <div th:each="sopEntry : ${report.findingsBySopClass()}" style="margin-bottom: 20px;">
+              <p style="margin: 0 0 6px 0; font-size: 14px;">
+                <b th:text="${sopClassNames.containsKey(sopEntry.key)} ? ${sopClassNames.get(sopEntry.key)} : ${sopEntry.key}"></b>
+                <span style="font-family: Consolas, monospace; font-size: 11px; color: #7f8c8d;" th:text="' ' + ${sopEntry.key}"></span>
+              </p>
+              <p th:if="${sopEntry.value.isEmpty()}"
+                 style="margin: 0; padding: 6px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
+                No finding for this SOP Class.</p>
+              <table th:if="${!sopEntry.value.isEmpty()}" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Severity</th>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Issue</th>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Tag</th>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Attribute / Module</th>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Expected</th>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Found</th>
+                  <th style="padding: 6px 8px; text-align: right; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Instances</th>
+                </tr>
+                <tr th:each="summary, rowStat : ${sopEntry.value}"
+                    th:style="${rowStat.odd} ? 'background-color: #f8f9fa;' : ''">
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; white-space: nowrap;">
+                    <th:block th:replace="~{fragments/conformanceBadges :: pill(
+                                ${summary.finding().severity().name()}, ${summary.finding().severity().getColor()}, true, 11, '9px')}"></th:block>
+                  </td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; white-space: nowrap;">
+                    <th:block th:replace="~{fragments/conformanceBadges :: pill(
+                                ${summary.finding().kind().getLabel()}, ${summary.finding().kind().getColor()}, false, 11, '9px')}"></th:block>
+                  </td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; font-family: Consolas, monospace; font-size: 11px; white-space: nowrap;" th:text="${summary.finding().tagPath()}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${summary.finding().attributeName()}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; color: #57606f;" th:text="${summary.finding().expected()}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${summary.finding().found()}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; text-align: right;" th:text="${summary.count()}"></td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Consistency -->
+            <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Study consistency</h2>
+            <p th:if="${report.consistencyFindings().isEmpty()}"
+               style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
+              No consistency issue across the dataset.</p>
+            <table th:if="${!report.consistencyFindings().isEmpty()}" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <tr>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Severity</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Issue</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Attribute</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Expected</th>
+                <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Found</th>
+              </tr>
+              <tr th:each="finding, rowStat : ${report.consistencyFindings()}"
+                  th:style="${rowStat.odd} ? 'background-color: #f8f9fa;' : ''">
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; white-space: nowrap;">
+                  <th:block th:replace="~{fragments/conformanceBadges :: pill(
+                              ${finding.severity().name()}, ${finding.severity().getColor()}, true, 11, '9px')}"></th:block>
+                </td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; white-space: nowrap;">
+                  <th:block th:replace="~{fragments/conformanceBadges :: pill(
+                              ${finding.kind().getLabel()}, ${finding.kind().getColor()}, false, 11, '9px')}"></th:block>
+                </td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${finding.attributeName()}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; color: #57606f;" th:text="${finding.expected()}"></td>
+                <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${finding.found()}"></td>
+              </tr>
+            </table>
+
+            <!-- Identifying data on image -->
+            <th:block th:if="${imageIdentityCheckEnabled}">
+              <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">Identifying data on image</h2>
+              <p th:if="${report.detectedIdentityTags().isEmpty()}"
+                 style="margin: 0 0 8px 0; padding: 8px 12px; background-color: #eafaf1; color: #146c43; border: 1px solid #a9dfbf;">
+                No identifying data detected on the <b th:text="${report.imageIdentityCheckedInstances()}"></b> image(s) analyzed.</p>
+              <table th:unless="${report.detectedIdentityTags().isEmpty()}" style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                <tr>
+                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Identifying attribute</th>
+                  <th style="padding: 6px 8px; text-align: right; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Images affected</th>
+                </tr>
+                <tr th:each="entry, rowStat : ${report.detectedIdentityTags()}"
+                    th:style="${rowStat.odd} ? 'background-color: #fdeaea;' : 'background-color: #fbdcdc;'">
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; color: #922b21;" th:text="${entry.key}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; text-align: right; color: #922b21;" th:text="${entry.value}"></td>
+                </tr>
+              </table>
+              <p th:if="${report.imageIdentityCheckErrors() > 0}"
+                 style="margin: 0 0 20px 0; padding: 8px 12px; background-color: #fef5e7; color: #8a5709; border: 1px solid #f5cba7;">
+                <b th:text="${report.imageIdentityCheckErrors()}"></b> image(s) could not be analyzed (de-identification image service unavailable).</p>
+              <div th:unless="${report.imageIdentityCheckErrors() > 0}" style="font-size: 0; line-height: 12px; mso-line-height-rule: exactly;">&nbsp;</div>
+            </th:block>
+
+            <!-- Legend -->
+            <h2 style="margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; border-left: 4px solid #2c3e50; padding-left: 8px;">How to read this report</h2>
+            <table style="width: 100%; border-collapse: collapse; color: #57606f; font-size: 12px;">
+              <tr>
+                <td style="padding: 3px 8px; width: 130px; vertical-align: top;">
+                  <th:block th:replace="~{fragments/conformanceBadges :: pill('ERROR', '#c0392b', true, 11, '9px')}"></th:block>
+                </td>
+                <td style="padding: 3px 8px;">Violation of the DICOM standard: missing/empty Type 1 attribute, missing mandatory module, wrong VR or VM.</td>
+              </tr>
+              <tr>
+                <td style="padding: 3px 8px; vertical-align: top;">
+                  <th:block th:replace="~{fragments/conformanceBadges :: pill('WARNING', '#e67e22', true, 11, '9px')}"></th:block>
+                </td>
+                <td style="padding: 3px 8px;">Recommended-practice deviation: missing Type 2 attribute, unexpected enumerated value, consistency issue. An <i>empty</i> Type 2 attribute is conformant.</td>
+              </tr>
+              <tr>
+                <td style="padding: 3px 8px; vertical-align: top;">
+                  <th:block th:replace="~{fragments/conformanceBadges :: pill('INFO', '#7f8c8d', true, 11, '9px')}"></th:block>
+                </td>
+                <td style="padding: 3px 8px;">Informational only: retired attributes, unknown VR.</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 8px 3px 8px; vertical-align: top; color: #7f8c8d;">Issue colors</td>
+                <td style="padding: 8px 8px 3px 8px;">
+                  <!-- One cell per pill: cell padding spaces the badges reliably in
+                       Outlook, which would drop margins between inline elements -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                    <tr>
+                      <td style="padding-right: 6px;">
+                        <th:block th:replace="~{fragments/conformanceBadges :: pill('presence', '#e74c3c', false, 11, '9px')}"></th:block>
+                      </td>
+                      <td style="padding-right: 6px;">
+                        <th:block th:replace="~{fragments/conformanceBadges :: pill('encoding (VR/VM)', '#8e44ad', false, 11, '9px')}"></th:block>
+                      </td>
+                      <td style="padding-right: 6px;">
+                        <th:block th:replace="~{fragments/conformanceBadges :: pill('value constraints', '#16a085', false, 11, '9px')}"></th:block>
+                      </td>
+                      <td style="padding-right: 6px;">
+                        <th:block th:replace="~{fragments/conformanceBadges :: pill('consistency', '#2980b9', false, 11, '9px')}"></th:block>
+                      </td>
+                      <td>
+                        <th:block th:replace="~{fragments/conformanceBadges :: pill('retired usage', '#7f8c8d', false, 11, '9px')}"></th:block>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 8px 3px 8px; vertical-align: top; color: #7f8c8d;">Notes</td>
+                <td style="padding: 8px 8px 3px 8px;">
+                  Conditional modules and Type 1C/2C attributes are validated only when present (their conditions are free text in the standard).
+                  De-identification may legitimately empty or remove attributes; all values shown are the de-identified ones actually sent.
+                  Pixel data and other bulk values are not inspected; private tags are not validated.
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
+
+      <!-- Footer -->
+      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #2c3e50;">
+        <tr>
+          <td style="padding: 8px 24px; text-align: center; color: #bdc3c7; font-size: 11px;">Copyright Karnak Team</td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+</body>
+</html>

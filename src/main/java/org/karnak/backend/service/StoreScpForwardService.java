@@ -12,12 +12,13 @@ package org.karnak.backend.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.net.ApplicationEntity;
 import org.dcm4che3.net.Connection;
@@ -26,19 +27,25 @@ import org.dcm4che3.net.TransferCapability;
 import org.dcm4che3.net.service.BasicCEchoSCP;
 import org.dcm4che3.net.service.DicomServiceRegistry;
 import org.dcm4che3.tool.common.CLIUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.AdvancedParams;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomNode;
 
 @Service
 @Slf4j
+@Generated()
+@NullUnmarked
 public class StoreScpForwardService {
 
+	@Getter
 	private final Device device;
 
 	private final ApplicationEntity ae;
@@ -47,11 +54,18 @@ public class StoreScpForwardService {
 
 	private volatile int priority;
 
+	@Setter
 	private volatile int status;
 
 	private Map<ForwardDicomNode, List<ForwardDestination>> destinations;
 
 	private final CStoreSCPService cStoreSCPService;
+
+	// Maximum number of open incoming associations; 0 means auto: twice the
+	// transfer-permit ceiling, leaving room for associations idling between
+	// objects and for C-ECHO
+	@Value("${gateway.max-open-associations:0}")
+	private int maxOpenAssociations;
 
 	@Autowired
 	public StoreScpForwardService(final CStoreSCPService cStoreSCPService) {
@@ -78,24 +92,40 @@ public class StoreScpForwardService {
 		DicomForwardDestination uniqueDestination = new DicomForwardDestination(forwardParams, fwdNode, destinationNode,
 				attributesEditor);
 		this.destinations = new HashMap<>();
-		destinations.put(fwdNode, Collections.singletonList(uniqueDestination));
+		destinations.put(fwdNode, List.of(uniqueDestination));
 		cStoreSCPService.init(destinations);
-
-		device.setDimseRQHandler(createServiceRegistry());
-		device.addConnection(conn);
-		device.addApplicationEntity(ae);
-		ae.setAssociationAcceptor(true);
-		ae.addConnection(conn);
+		configureDevice();
 	}
 
 	public void init(Map<ForwardDicomNode, List<ForwardDestination>> destinations) {
 		this.destinations = Objects.requireNonNull(destinations);
 		cStoreSCPService.init(destinations);
+		configureDevice();
+	}
+
+	private void configureDevice() {
 		device.setDimseRQHandler(createServiceRegistry());
 		device.addConnection(conn);
 		device.addApplicationEntity(ae);
+		configureAssociationLimit();
 		ae.setAssociationAcceptor(true);
 		ae.addConnection(conn);
+	}
+
+	/**
+	 * Caps the open incoming associations on the device. Every accepted association holds
+	 * PDU buffers and a dedicated thread (a cheap virtual one by default, see
+	 * {@code GatewayDeviceListenerService}) even while it only waits for a transfer
+	 * permit, so without this cap the memory footprint grows with the number of clients
+	 * instead of the work admitted - the transfer permits bound processing, not
+	 * connections. Beyond the limit dcm4che rejects the association up front (transient
+	 * A-ASSOCIATE-RJ), the protocol-correct "busy, retry later" signal, before any thread
+	 * or buffer is committed.
+	 */
+	private void configureAssociationLimit() {
+		int limit = maxOpenAssociations > 0 ? maxOpenAssociations : 2 * cStoreSCPService.getMaxTransferPermits();
+		device.setLimitOpenAssociations(limit);
+		log.info("DICOM listener limited to {} open associations", limit);
 	}
 
 	public final void setPriority(int priority) {
@@ -109,22 +139,12 @@ public class StoreScpForwardService {
 		return serviceRegistry;
 	}
 
-	public void setStatus(int status) {
-		this.status = status;
-	}
-
 	public void loadDefaultTransferCapability(URL transferCapabilityFile) {
 		Properties p = new Properties();
 
-		try {
-			if (transferCapabilityFile != null) {
-				try (InputStream in = transferCapabilityFile.openStream()) {
-					p.load(in);
-				}
-			}
-			else {
-				p.load(this.getClass().getResourceAsStream("sop-classes.properties"));
-			}
+		try (InputStream in = transferCapabilityFile != null ? transferCapabilityFile.openStream()
+				: getClass().getResourceAsStream("sop-classes.properties")) {
+			p.load(in);
 		}
 		catch (IOException e) {
 			log.error("Cannot read sop-classes", e);
@@ -144,10 +164,6 @@ public class StoreScpForwardService {
 
 	public Connection getConnection() {
 		return conn;
-	}
-
-	public Device getDevice() {
-		return device;
 	}
 
 	public void stop() {

@@ -10,6 +10,7 @@
 package org.karnak.backend.model.profiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import org.karnak.backend.data.entity.ArgumentEntity;
 import org.karnak.backend.data.entity.IncludedTagEntity;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.exception.ProfileException;
 import org.karnak.backend.service.profilepipe.Profile;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -228,6 +230,59 @@ class AddTagTest {
 
 		// The BurnedInAnnotation attribute is added and its value set to YES
 		assertNull(attributes.getString(Tag.PixelPaddingRangeLimit));
+	}
+
+	/** Builds the profile item alone, so that the walk can be driven tag by tag. */
+	private static AddTag burnedInAnnotationItem() throws ProfileException {
+		ProfileElementEntity element = new ProfileElementEntity();
+		element.setCodename("action.add.tag");
+		element.setName("Add tag BurnedInAnnotation");
+		element.addArgument(new ArgumentEntity("value", "YES", element));
+		element.addIncludedTag(new IncludedTagEntity("(0028,0301)", element));
+		element.setPosition(1);
+		return new AddTag(element);
+	}
+
+	private static Attributes xRayAngiographicInstance() {
+		Attributes dcm = new Attributes();
+		dcm.setString(Tag.SOPClassUID, VR.UI, "1.2.840.10008.5.1.4.1.1.12.1");
+		dcm.setString(Tag.SOPInstanceUID, VR.UI, "1.2.3.4");
+		dcm.setString(Tag.Modality, VR.CS, "XA");
+		return dcm;
+	}
+
+	@Test
+	void addsTheTagOnceWhenTheInstanceUidIsReplacedDuringTheWalk() throws ProfileException {
+		AddTag item = burnedInAnnotationItem();
+		Attributes original = xRayAngiographicInstance();
+		Attributes working = new Attributes(original);
+
+		int adds = 0;
+		for (int tag : new int[] { Tag.SOPClassUID, Tag.SOPInstanceUID, Tag.StudyDate, Tag.PatientName }) {
+			if (tag == Tag.StudyDate) {
+				// The pipeline walks the tags in ascending order: (0008,0018) has just
+				// been
+				// replaced by a new UID
+				working.setString(Tag.SOPInstanceUID, VR.UI, "9.9.9.9");
+			}
+			if (item.getAction(working, original, tag, null) != null) {
+				adds++;
+			}
+		}
+
+		assertEquals(1, adds);
+	}
+
+	@Test
+	void checksTheSopClassOfTheOriginalCopy() throws ProfileException {
+		AddTag item = burnedInAnnotationItem();
+		Attributes original = xRayAngiographicInstance();
+		Attributes working = new Attributes(original);
+		// (0008,0016) sorts before most tags, so a profile emptying it leaves the working
+		// dataset without a SOP class by the time the tag to add is considered
+		working.setString(Tag.SOPClassUID, VR.UI, "");
+
+		assertNotNull(item.getAction(working, original, Tag.PatientName, null));
 	}
 
 }

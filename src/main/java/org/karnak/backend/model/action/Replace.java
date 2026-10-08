@@ -9,13 +9,9 @@
  */
 package org.karnak.backend.model.action;
 
-import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
-import org.dcm4che3.util.TagUtils;
 import org.karnak.backend.model.profilepipe.HMAC;
-import org.slf4j.MDC;
 
-@Slf4j
 public class Replace extends AbstractAction {
 
 	public Replace(String symbol) {
@@ -28,11 +24,7 @@ public class Replace extends AbstractAction {
 
 	@Override
 	public void execute(Attributes dcm, int tag, HMAC hmac) {
-		if (log.isTraceEnabled()) {
-			String tagValueIn = AbstractAction.getStringValue(dcm, tag);
-			log.trace(CLINICAL_MARKER, PATTERN_WITH_INOUT, MDC.get("SOPInstanceUID"), TagUtils.toString(tag), symbol,
-					tagValueIn, dummyValue);
-		}
+		traceInOut(dcm, tag, dummyValue);
 
 		if (dummyValue != null) {
 			dcm.setString(tag, dcm.getVR(tag), dummyValue);

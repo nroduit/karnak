@@ -17,11 +17,15 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import java.util.Collection;
 import java.util.Objects;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.frontend.component.WarningConfirmDialog;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class ProjectSecret extends Div {
 
 	private static final String WARNING_TEXT = "If you change the project secret, the consistency of previously de-identified DICOM files cannot be guaranteed anymore.";
@@ -29,7 +33,7 @@ public class ProjectSecret extends Div {
 	private static final String REFER_LINK_TEXT = "For more details on the use of the project secret, please refer to the following link";
 
 	private static final Anchor REFER_LINK = new Anchor(
-			"https://osirix-foundation.github.io/karnak-documentation/en/userguide/projects/index.html#4-project-secret",
+			"https://weasis.org/karnak-documentation/en/userguide/projects/index.html#5-project-secret",
 			"Project Secret Documentation");
 
 	private final Div messageWarningLayout = new Div();

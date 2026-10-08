@@ -10,6 +10,7 @@
 package org.karnak.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
 
 import org.dcm4che3.data.Attributes;
@@ -150,6 +151,30 @@ public class EndpointServiceTest {
 		attributes.setString(Tag.ClinicalTrialSponsorName, VR.LO, "project_A");
 		assertEquals("{ \"patientId\": 1234, \"project\": \"project_A\" }",
 				evaluateStringWithExpression(testBody, attributes));
+	}
+
+	@Test
+	void test_replaceURL_withUnresolvedParameter() {
+		String testUrl = "http://example.com/{{getString(#Tag.PatientID)}}/endpoint";
+
+		// The tag is absent: the placeholder resolves to nothing and is replaced by an
+		// empty string instead of failing with a NullPointerException
+		assertEquals("http://example.com//endpoint", evaluateStringWithExpression(testUrl, new Attributes()));
+	}
+
+	@Test
+	void test_replaceURL_withRegexSpecialCharactersInTheValue() {
+		String testUrl = "http://example.com/{{getString(#Tag.PatientID)}}/endpoint";
+
+		Attributes attributes = new Attributes();
+		attributes.setString(Tag.PatientID, VR.LO, "$1\\2");
+		assertEquals("http://example.com/$1\\2/endpoint", evaluateStringWithExpression(testUrl, attributes));
+	}
+
+	@Test
+	void test_replaceURL_returnsNullWhenBlank() {
+		assertNull(evaluateStringWithExpression(null, new Attributes()));
+		assertNull(evaluateStringWithExpression("", new Attributes()));
 	}
 
 }

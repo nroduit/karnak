@@ -12,7 +12,6 @@ spring:
             client-secret: '${OIDC_CLIENT_SECRET:undefined}'
             authorization-grant-type: authorization_code
             redirect-uri: '${BACKEND_URI:undefined}/login/oauth2/code/{registrationId}'
-            #            redirect-uri: '{baseUrl}/login/oauth2/code/{registrationId}'
             scope:
               - openid
         provider:

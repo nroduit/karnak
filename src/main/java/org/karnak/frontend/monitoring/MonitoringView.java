@@ -9,142 +9,203 @@
  */
 package org.karnak.frontend.monitoring;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.flow.server.streams.DownloadResponse;
-import java.io.ByteArrayInputStream;
-import lombok.Getter;
-import org.karnak.backend.data.entity.TransferStatusEntity;
+import jakarta.annotation.security.RolesAllowed;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.component.WarningConfirmDialog;
-import org.karnak.frontend.monitoring.component.ExportSettingsDialog;
-import org.karnak.frontend.monitoring.component.TransferStatusGrid;
+import org.karnak.frontend.monitoring.component.ExportDialog;
+import org.karnak.frontend.monitoring.component.MonitoringDetailPanel;
+import org.karnak.frontend.monitoring.component.MonitoringFilterBar;
+import org.karnak.frontend.monitoring.component.MonitoringTreeGrid;
+import org.karnak.frontend.monitoring.component.NodeActivityDashboard;
+import org.karnak.frontend.monitoring.component.TransferStatusFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
+import org.weasis.core.util.annotations.Generated;
 
 /**
- * Monitoring View
+ * Monitoring view: a shared date-range filter over two tabs — an Activity tab showing the
+ * Destination / Study / Series hierarchy (with one error-reason line per failing series)
+ * and a Dashboard tab showing per-forward-node activity.
  */
 @Route(value = MonitoringView.ROUTE, layout = MainLayout.class)
 @PageTitle("Karnak - Monitoring")
-@Secured({ "ROLE_admin" })
+@RolesAllowed("admin")
+@Generated()
 public class MonitoringView extends VerticalLayout {
 
 	public static final String VIEW_NAME = "Monitoring";
 
 	public static final String ROUTE = "monitoring";
 
-	// Monitoring Logic
 	private final MonitoringLogic monitoringLogic;
 
-	// UI components
-	@Getter
-	private TransferStatusGrid transferStatusGrid;
+	private MonitoringFilterBar filterBar;
 
-	private final TransferStatusDataProvider<TransferStatusEntity> transferStatusDataProvider;
+	private MonitoringTreeGrid treeGrid;
 
-	private Button refreshGridButton;
+	private MonitoringDetailPanel detailPanel;
 
-	private Anchor exportAnchor;
+	private NodeActivityDashboard dashboard;
 
-	private Button exportSettingsButton;
+	private ExportDialog exportDialog;
 
-	private Button deleteButton;
+	private Component activityPanel;
 
-	private ExportSettingsDialog exportSettingsDialog;
+	private Tabs tabs;
 
-	/**
-	 * Autowired constructor.
-	 * @param monitoringLogic Monitoring Logic used to call backend services and implement
-	 * logic linked to the monitoring view
-	 */
+	private Tab activityTab;
+
+	private Tab dashboardTab;
+
+	private final Div content = new Div();
+
+	private Button expandErrorsButton;
+
+	private boolean errorsExpanded;
+
 	@Autowired
-	public MonitoringView(final MonitoringLogic monitoringLogic,
-			final TransferStatusDataProvider<TransferStatusEntity> transferStatusDataProvider) {
-		// Bind the autowired service
+	public MonitoringView(final MonitoringLogic monitoringLogic) {
 		this.monitoringLogic = monitoringLogic;
-		this.transferStatusDataProvider = transferStatusDataProvider;
-
-		// Set the view in the service
 		this.monitoringLogic.setMonitoringView(this);
 
-		// Build components
 		buildComponents();
-
-		// Add components in the view
 		addComponentsView();
 	}
 
-	/**
-	 * Build components
-	 */
+	/** The filter currently applied (used by the CSV export). */
+	public TransferStatusFilter getCurrentFilter() {
+		return filterBar.getFilter();
+	}
+
 	private void buildComponents() {
-		// Paginated Grid + data provider
-		transferStatusGrid = new TransferStatusGrid(transferStatusDataProvider);
-		transferStatusDataProvider.setFilter(transferStatusGrid.getTransferStatusFilter());
-		transferStatusGrid.setDataProvider(transferStatusDataProvider);
+		filterBar = new MonitoringFilterBar(this::onFilterChanged);
+		treeGrid = new MonitoringTreeGrid(monitoringLogic, filterBar::getFilter);
+		detailPanel = new MonitoringDetailPanel();
+		treeGrid.setSelectionListener(detailPanel::show);
+		dashboard = new NodeActivityDashboard(monitoringLogic, filterBar::getFilter);
+		exportDialog = new ExportDialog(
+				() -> monitoringLogic.buildCsv(getCurrentFilter(), exportDialog.getExportSettings()));
 
-		// Refresh button
-		refreshGridButton = new Button("Refresh", new Icon(VaadinIcon.REFRESH));
-		refreshGridButton.addClickListener(buttonClickEvent -> transferStatusDataProvider.refreshAll());
-		refreshGridButton.setWidth("25%");
+		expandErrorsButton = new Button("Expand errors", new Icon(VaadinIcon.WARNING));
+		activityPanel = buildActivityPanel();
 
-		// Export Settings Dialog
-		exportSettingsDialog = new ExportSettingsDialog();
+		activityTab = new Tab(VaadinIcon.LIST_OL.create(), new Text("Activity"));
+		dashboardTab = new Tab(VaadinIcon.DASHBOARD.create(), new Text("Dashboard"));
+		tabs = new Tabs(activityTab, dashboardTab);
+		tabs.addSelectedChangeListener(event -> showSelectedTab());
 
-		// Export Settings Button
-		exportSettingsButton = new Button("Export Settings", new Icon(VaadinIcon.COGS));
-		exportSettingsButton.setWidth("25%");
-		exportSettingsButton.addClickListener(buttonClickEvent -> exportSettingsDialog.open());
+		content.setSizeFull();
+		content.getStyle().set("min-height", "0");
+		content.add(activityPanel);
+	}
 
-		// Export button
-		exportAnchor = new Anchor();
-		exportAnchor.setHref(DownloadHandler.fromInputStream(event -> new DownloadResponse(
-				new ByteArrayInputStream(monitoringLogic.buildCsv(exportSettingsDialog.getExportSettings())),
-				"export.csv", "text/csv", -1)));
-		exportAnchor.setWidth("25%");
-		Button exportButton = new Button("Export", new Icon(VaadinIcon.DOWNLOAD_ALT));
-		exportButton.setWidthFull();
-		exportAnchor.getElement().setAttribute("download", true);
-		exportAnchor.add(exportButton);
-
-		// Delete button
-		deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
-		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
-		deleteButton.setWidth("25%");
-		deleteButton.addClickListener(buttonClickEvent -> {
-			Div dialogContent = new Div();
-			dialogContent.add(new Text(
-					"You are about to delete all entries from monitoring. This action cannot be undone. Are you sure?"));
-			WarningConfirmDialog dialog = new WarningConfirmDialog("Delete all monitoring entries", dialogContent,
-					"Delete", "Cancel");
-			dialog.addConfirmationListener(componentEvent -> {
-				monitoringLogic.deleteAllTransferStatus();
-				transferStatusDataProvider.refreshAll();
-			});
-			dialog.open();
+	private Component buildActivityPanel() {
+		expandErrorsButton.addClickListener(event -> {
+			if (errorsExpanded) {
+				treeGrid.collapseErrors();
+				resetErrorsToggle();
+			}
+			else {
+				treeGrid.expandErrors();
+				expandErrorsButton.setText("Collapse errors");
+				expandErrorsButton.setIcon(new Icon(VaadinIcon.CHEVRON_UP));
+				errorsExpanded = true;
+			}
 		});
+
+		Button refreshButton = new Button("Refresh", new Icon(VaadinIcon.REFRESH));
+		refreshButton.addClickListener(event -> {
+			filterBar.refreshRange();
+			treeGrid.refresh();
+			resetErrorsToggle();
+		});
+
+		Button exportButton = new Button("Export", new Icon(VaadinIcon.DOWNLOAD_ALT));
+		exportButton.addClickListener(event -> exportDialog.open());
+
+		Button deleteButton = new Button("Delete All", new Icon(VaadinIcon.TRASH));
+		deleteButton.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
+		deleteButton.addClickListener(event -> confirmDeleteAll());
+
+		HorizontalLayout buttonLayout = new HorizontalLayout(expandErrorsButton, exportButton, refreshButton,
+				deleteButton);
+		buttonLayout.setWidthFull();
+
+		VerticalLayout treeSide = new VerticalLayout(treeGrid, buttonLayout);
+		treeSide.setSizeFull();
+		treeSide.setFlexGrow(1, treeGrid);
+		treeSide.setPadding(false);
+		treeSide.getStyle().set("min-height", "0");
+		treeGrid.getStyle().set("min-height", "0");
+
+		SplitLayout split = new SplitLayout(treeSide, detailPanel);
+		split.setSizeFull();
+		split.setSplitterPosition(62);
+		return split;
 	}
 
 	/**
-	 * Add components in the view
+	 * Restore the "Expand errors" button to its collapsed state (after a tree reload).
 	 */
+	private void resetErrorsToggle() {
+		errorsExpanded = false;
+		expandErrorsButton.setText("Expand errors");
+		expandErrorsButton.setIcon(new Icon(VaadinIcon.WARNING));
+	}
+
+	private void confirmDeleteAll() {
+		Div dialogContent = new Div();
+		dialogContent.add(new Text(
+				"You are about to delete all entries from monitoring. This action cannot be undone. Are you sure?"));
+		WarningConfirmDialog dialog = new WarningConfirmDialog("Delete all monitoring entries", dialogContent, "Delete",
+				"Cancel");
+		dialog.addConfirmationListener(event -> {
+			monitoringLogic.deleteAllTransferStatus();
+			treeGrid.refresh();
+			resetErrorsToggle();
+		});
+		dialog.open();
+	}
+
+	private void onFilterChanged() {
+		if (tabs.getSelectedTab() == dashboardTab) {
+			dashboard.refresh();
+		}
+		else {
+			treeGrid.refresh();
+			resetErrorsToggle();
+		}
+	}
+
+	private void showSelectedTab() {
+		content.removeAll();
+		if (tabs.getSelectedTab() == dashboardTab) {
+			content.add(dashboard);
+			dashboard.refresh();
+		}
+		else {
+			content.add(activityPanel);
+			treeGrid.refresh();
+			resetErrorsToggle();
+		}
+	}
+
 	private void addComponentsView() {
-		add(transferStatusGrid);
-		HorizontalLayout buttonLayout = new HorizontalLayout(exportSettingsButton, exportAnchor, refreshGridButton,
-				deleteButton);
-		buttonLayout.setWidthFull();
-		add(buttonLayout);
+		add(filterBar, tabs, content);
+		setFlexGrow(1, content);
 		setSizeFull();
 		setWidthFull();
 	}

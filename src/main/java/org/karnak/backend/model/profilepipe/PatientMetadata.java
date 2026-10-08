@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.img.util.DateTimeUtils;
-import org.karnak.backend.cache.Patient;
+import org.jspecify.annotations.Nullable;
+import org.karnak.backend.model.patient.PatientModel;
 import org.weasis.core.util.StringUtil;
 
 @Getter
@@ -23,6 +24,8 @@ import org.weasis.core.util.StringUtil;
 public class PatientMetadata {
 
 	private static final String PATIENT_SEX_OTHER = "O";
+
+	private static final String NAME_SEPARATOR_REGEX = "\\^";
 
 	private final String patientID;
 
@@ -34,12 +37,18 @@ public class PatientMetadata {
 
 	private final String patientSex;
 
+	/**
+	 * Builds the metadata without an issuer of patient ID: the DICOM IssuerOfPatientID is
+	 * intentionally ignored so the issuer does not take part in the cache key. Use
+	 * {@link #PatientMetadata(Attributes, String)} to honor the DICOM issuer (with a
+	 * configurable fallback).
+	 */
 	public PatientMetadata(Attributes dcm) {
 		patientID = dcm.getString(Tag.PatientID, "");
 		patientName = dcm.getString(Tag.PatientName, "");
 		patientBirthDate = formatPatientBirthDate(dcm.getString(Tag.PatientBirthDate));
 		issuerOfPatientID = "";
-		patientSex = setPatientSex(dcm.getString(Tag.PatientSex, PATIENT_SEX_OTHER));
+		patientSex = normalizePatientSex(dcm.getString(Tag.PatientSex, PATIENT_SEX_OTHER));
 	}
 
 	public PatientMetadata(Attributes dcm, String issuerOfPatientIDByDefault) {
@@ -47,10 +56,10 @@ public class PatientMetadata {
 		patientName = dcm.getString(Tag.PatientName, "");
 		patientBirthDate = formatPatientBirthDate(dcm.getString(Tag.PatientBirthDate));
 		issuerOfPatientID = dcm.getString(Tag.IssuerOfPatientID, issuerOfPatientIDByDefault);
-		patientSex = setPatientSex(dcm.getString(Tag.PatientSex, PATIENT_SEX_OTHER));
+		patientSex = normalizePatientSex(dcm.getString(Tag.PatientSex, PATIENT_SEX_OTHER));
 	}
 
-	private String setPatientSex(String patientSex) {
+	private String normalizePatientSex(String patientSex) {
 		if (!patientSex.equals("M") && !patientSex.equals("F")) {
 			return PATIENT_SEX_OTHER;
 		}
@@ -71,29 +80,26 @@ public class PatientMetadata {
 	}
 
 	public String getPatientLastName() {
-		return patientName.split("\\^")[0];
+		return patientName.split(NAME_SEPARATOR_REGEX)[0];
 	}
 
 	public String getPatientFirstName() {
-		String[] patientNameSplit = patientName.split("\\^");
-		if (patientNameSplit.length > 1) {
-			return patientNameSplit[1];
-		}
-		return "";
+		String[] parts = patientName.split(NAME_SEPARATOR_REGEX);
+		return parts.length > 1 ? parts[1] : "";
 	}
 
-	public LocalDate getLocalDatePatientBirthDate() {
+	public @Nullable LocalDate getLocalDatePatientBirthDate() {
 		if (StringUtil.hasText(patientBirthDate)) {
 			return DateTimeUtils.parseDA(patientBirthDate);
 		}
 		return null;
 	}
 
-	public boolean compareCachedPatient(Patient patient) {
+	public boolean compareCachedPatient(PatientModel patient) {
 		return compareCachedPatient(patient, false);
 	}
 
-	public boolean compareCachedPatient(Patient patient, boolean skipIssuerOfPatientId) {
+	public boolean compareCachedPatient(PatientModel patient, boolean skipIssuerOfPatientId) {
 		if (patient != null) {
 			boolean samePatient = patient.getPatientId().equals(patientID);
 			if (!skipIssuerOfPatientId) {

@@ -9,12 +9,14 @@
  */
 package org.karnak.frontend.forwardnode.edit.component;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import java.nio.file.Files;
@@ -23,15 +25,18 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
+import org.karnak.backend.model.forwardnode.ForwardNodeModel;
 import org.karnak.backend.util.SystemPropertyUtil;
 import org.karnak.frontend.forwardnode.ForwardNodeLogic;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.weasis.core.util.StringUtil;
+import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.op.CStore;
 import org.weasis.dicom.param.DicomNode;
 
-public class EditAETitleDescription extends HorizontalLayout {
+@Generated()
+public class EditAETitleDescription extends VerticalLayout {
 
 	private final TextField textFieldAETitle;
 
@@ -39,11 +44,16 @@ public class EditAETitleDescription extends HorizontalLayout {
 
 	private final Button selectFolderButton;
 
+	private final HorizontalLayout fieldsRow;
+
 	private final Binder<ForwardNodeEntity> binder;
 
 	public EditAETitleDescription(Binder<ForwardNodeEntity> binder, ForwardNodeLogic forwardNodeLogic,
 			Environment environment) {
 		this.binder = binder;
+		setPadding(false);
+		setSpacing(false);
+
 		this.textFieldAETitle = new TextField("Forward AETitle");
 		this.textFieldDescription = new TextField("Description");
 		this.selectFolderButton = new Button("Upload local folder", VaadinIcon.FOLDER_OPEN.create());
@@ -65,17 +75,42 @@ public class EditAETitleDescription extends HorizontalLayout {
 			}
 		});
 
-		setVerticalComponentAlignment(Alignment.BASELINE, textFieldAETitle, textFieldDescription);
-
+		// AE title and description are edited inline on the same row; action buttons
+		// (added
+		// via setActionButtons) sit on the same row and align with the fields.
 		textFieldAETitle.setWidth("30%");
-		textFieldDescription.setWidth("70%");
-		add(textFieldAETitle, textFieldDescription);
+		textFieldDescription.setWidthFull();
+		fieldsRow = new HorizontalLayout(textFieldAETitle, textFieldDescription);
+		fieldsRow.setWidthFull();
+		fieldsRow.expand(textFieldDescription);
+		fieldsRow.setAlignItems(Alignment.BASELINE);
+		add(fieldsRow);
 
 		if (environment.acceptsProfiles(Profiles.of("portable"))) {
-			setVerticalComponentAlignment(Alignment.END, selectFolderButton);
-			add(selectFolderButton);
+			add(buildUploadFolderRow());
 		}
 		setBinder();
+	}
+
+	/**
+	 * Place the forward-node action buttons on the fields row, aligned with the fields.
+	 */
+	public void setActionButtons(Component actions) {
+		fieldsRow.add(actions);
+		fieldsRow.setVerticalComponentAlignment(Alignment.BASELINE, actions);
+	}
+
+	/** The local-folder upload sits on its own line with a short explanation. */
+	private HorizontalLayout buildUploadFolderRow() {
+		Span explanation = new Span(
+				"Send DICOM files from a local folder to the active destinations of this forward node.");
+		explanation.getStyle()
+			.set("color", "var(--vaadin-text-color-secondary)")
+			.set("font-size", "var(--aura-font-size-s)");
+		HorizontalLayout uploadRow = new HorizontalLayout(selectFolderButton, explanation);
+		uploadRow.setVerticalComponentAlignment(Alignment.CENTER, selectFolderButton, explanation);
+		uploadRow.getStyle().set("margin-top", "var(--vaadin-gap-s)");
+		return uploadRow;
 	}
 
 	private void selectFolder() {
@@ -87,7 +122,7 @@ public class EditAETitleDescription extends HorizontalLayout {
 		pathField.setWidthFull();
 
 		Span errorMessage = new Span();
-		errorMessage.getStyle().set("color", "var(--lumo-error-text-color)");
+		errorMessage.addClassName("karnak-error-text");
 		errorMessage.setVisible(false);
 
 		Button confirmButton = new Button("Confirm", e -> {
@@ -150,8 +185,14 @@ public class EditAETitleDescription extends HorizontalLayout {
 		binder.forField(textFieldAETitle)
 			.withValidator(value -> !value.isEmpty(), "Forward AE Title is mandatory")
 			.withValidator(value -> value.length() <= 16, "Forward AETitle has more than 16 characters")
+			// Same constraint as the REST API: the AETitle reaches the DICOM gateway
+			// and its logs, where a pasted CR/LF would forge log records
+			.withValidator(value -> value.matches(ForwardNodeModel.AE_TITLE),
+					"Forward AETitle contains characters not allowed in an AETitle")
 			.bind(ForwardNodeEntity::getFwdAeTitle, ForwardNodeEntity::setFwdAeTitle);
 		binder.forField(textFieldDescription)
+			.withValidator(value -> value.matches(ForwardNodeModel.NO_CONTROL_CHARACTERS),
+					"Forward description contains control characters")
 			.bind(ForwardNodeEntity::getFwdDescription, ForwardNodeEntity::setFwdDescription);
 	}
 

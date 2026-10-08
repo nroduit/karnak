@@ -16,87 +16,82 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NullUnmarked;
 
 @Entity(name = "ForwardNode")
 @Table(name = "forward_node")
+@NullUnmarked
+@Getter
+@Setter
 public class ForwardNodeEntity implements Serializable {
 
-	private static final long serialVersionUID = 2095439136652046994L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	// Public, stable identifier used in the REST API (URL paths) instead of the
+	// technical database id.
+	@Column(name = "uuid", unique = true, nullable = false, updatable = false)
+	@JdbcTypeCode(SqlTypes.UUID)
+	private UUID uuid;
+
+	@Column(name = "description")
 	private String fwdDescription;
 
 	// AETitle which defined a mapping of the gateway. This AETitle is configured as
 	// a destination in the DICOM component that sends images to the gateway.
+	@NotBlank(message = "Forward AETitle is mandatory")
+	@Size(max = 16, message = "Forward AETitle has more than 16 characters")
 	private String fwdAeTitle;
 
 	// Specification of a DICOM source node (the one which sends images to the
 	// gateway). When no source node is defined all the DICOM nodes are accepted by
 	// the gateway.
+	@OneToMany(mappedBy = "forwardNodeEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<DicomSourceNodeEntity> sourceNodes = new HashSet<>();
 
 	// Specification of a final DICOM destination node. Multiple destinations can be
 	// defined either as a DICOM or DICOMWeb type.
+	@OneToMany(mappedBy = "forwardNodeEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private Set<DestinationEntity> destinationEntities = new HashSet<>();
 
+	// Optional organizational group (null = shown at the root of the list)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "forward_node_group_id")
+	private ForwardNodeGroupEntity group;
+
 	public ForwardNodeEntity() {
+		this.uuid = UUID.randomUUID();
 		this.fwdAeTitle = "";
 		this.fwdDescription = "";
 	}
 
 	public ForwardNodeEntity(String fwdAeTitle) {
+		this.uuid = UUID.randomUUID();
 		this.fwdAeTitle = fwdAeTitle;
 		this.fwdDescription = "";
 	}
 
 	public static ForwardNodeEntity ofEmpty() {
 		return new ForwardNodeEntity();
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@Column(name = "description")
-	public String getFwdDescription() {
-		return this.fwdDescription;
-	}
-
-	public void setFwdDescription(String fwdDescription) {
-		this.fwdDescription = fwdDescription;
-	}
-
-	@NotBlank(message = "Forward AETitle is mandatory")
-	@Size(max = 16, message = "Forward AETitle has more than 16 characters")
-	public String getFwdAeTitle() {
-		return this.fwdAeTitle;
-	}
-
-	public void setFwdAeTitle(String fwdAeTitle) {
-		this.fwdAeTitle = fwdAeTitle;
-	}
-
-	@OneToMany(mappedBy = "forwardNodeEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	public Set<DicomSourceNodeEntity> getSourceNodes() {
-		return this.sourceNodes;
-	}
-
-	public void setSourceNodes(Set<DicomSourceNodeEntity> sourceNodes) {
-		this.sourceNodes = sourceNodes;
 	}
 
 	public void addSourceNode(DicomSourceNodeEntity sourceNode) {
@@ -106,15 +101,6 @@ public class ForwardNodeEntity implements Serializable {
 
 	public void removeSourceNode(DicomSourceNodeEntity sourceNode) {
 		this.sourceNodes.remove(sourceNode);
-	}
-
-	@OneToMany(mappedBy = "forwardNodeEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	public Set<DestinationEntity> getDestinationEntities() {
-		return destinationEntities;
-	}
-
-	public void setDestinationEntities(Set<DestinationEntity> destinationEntities) {
-		this.destinationEntities = destinationEntities;
 	}
 
 	public void addDestination(DestinationEntity destinationEntity) {

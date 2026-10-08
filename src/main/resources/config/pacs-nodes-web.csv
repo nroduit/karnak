@@ -1,3 +1,0 @@
-# Comma separator file (double quotes for descriptions containing separator)
-# Hostname,AEtitle,Description,Port
-"Public dicomserver.co.uk", "DICOMSERVER", "dicomserver.co.uk", 11112

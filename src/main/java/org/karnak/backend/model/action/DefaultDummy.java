@@ -17,7 +17,7 @@ import org.karnak.backend.util.ShiftRangeDate;
 
 public class DefaultDummy extends AbstractAction {
 
-	static final List<ArgumentEntity> argumentEntities = List.of(new ArgumentEntity("max_days", "365"),
+	private static final List<ArgumentEntity> ARGUMENT_ENTITIES = List.of(new ArgumentEntity("max_days", "365"),
 			new ArgumentEntity("max_seconds", "86400"));
 
 	public DefaultDummy(String symbol) {
@@ -33,11 +33,12 @@ public class DefaultDummy extends AbstractAction {
 		String defaultDummyValue = switch (dcm.getVR(tag)) {
 			case AE, CS, LO, LT, PN, SH, ST, UN, UT, UC, UR -> "UNKNOWN";
 			case DS, IS -> "0";
-			case AS, DA, DT, TM -> ShiftRangeDate.shift(dcm, tag, argumentEntities, hmac);
+			case AS, DA, DT, TM -> ShiftRangeDate.shift(dcm, tag, ARGUMENT_ENTITIES, hmac);
 			case UI -> hmac.uidHash(dcm.getString(tag));
 			default -> null;
 		};
-		ActionItem replace = new Replace(symbol, defaultDummyValue);
+		Replace replace = new Replace(symbol);
+		replace.setDummyValue(defaultDummyValue);
 		replace.execute(dcm, tag, hmac);
 	}
 

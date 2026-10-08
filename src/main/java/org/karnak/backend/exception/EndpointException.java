@@ -9,11 +9,11 @@
  */
 package org.karnak.backend.exception;
 
+import org.jspecify.annotations.Nullable;
+
 public final class EndpointException extends IllegalStateException {
 
-	private static final long serialVersionUID = 3993065212756372490L;
-
-	public EndpointException(String s) {
+	public EndpointException(@Nullable String s) {
 		super(s);
 	}
 
@@ -22,7 +22,7 @@ public final class EndpointException extends IllegalStateException {
 	}
 
 	@Override
-	public String toString() {
+	public @Nullable String toString() {
 		return getMessage();
 	}
 

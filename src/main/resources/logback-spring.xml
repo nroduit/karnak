@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <include resource="ch/hcuge/springcloud/logging/logback-spring.xml" />
-  <springProfile name="!docker">
-    <root level="INFO">
-      <appender-ref ref="CONSOLE"/>
-    </root>
-  </springProfile>
-  <springProfile name="docker">
-    <logger name="org.dcm4che3" level="WARN">
-      <appender-ref ref="logstash"/>
-      <appender-ref ref="OpenTelemetry" />
-    </logger>
-    <logger name="org.weasis.dicom.web.DicomStowRS" level="WARN">
-      <appender-ref ref="logstash"/>
-      <appender-ref ref="OpenTelemetry" />
-    </logger>
-    <logger name="org.weasis.dicom.util.StoreFromStreamSCU" level="WARN">
-        <appender-ref ref="logstash"/>
-        <appender-ref ref="OpenTelemetry" />
-    </logger>
-    <root level="INFO">
-      <appender-ref ref="logstash"/>
-      <appender-ref ref="OpenTelemetry" />
-    </root>
-  </springProfile>
+    <include resource="ch/hug/spring/logging/logback-spring.xml" />
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+    <springProfile name="!local">
+        <logger name="org.dcm4che3" level="WARN">
+            <appender-ref ref="logstash"/>
+            <appender-ref ref="OpenTelemetry" />
+        </logger>
+        <logger name="org.weasis.dicom.web.DicomStowRS" level="WARN">
+            <appender-ref ref="logstash"/>
+            <appender-ref ref="OpenTelemetry" />
+        </logger>
+        <logger name="org.weasis.dicom.util.StoreFromStreamSCU" level="WARN">
+            <appender-ref ref="logstash"/>
+            <appender-ref ref="OpenTelemetry" />
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="logstash"/>
+            <appender-ref ref="OpenTelemetry" />
+        </root>
+    </springProfile>
 </configuration>

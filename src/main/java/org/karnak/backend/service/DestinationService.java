@@ -11,7 +11,8 @@ package org.karnak.backend.service;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import lombok.Getter;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
@@ -34,6 +35,7 @@ public class DestinationService {
 	private final KheopsAlbumsService kheopsAlbumsService;
 
 	// Event publisher
+	@Getter
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	/**
@@ -54,10 +56,18 @@ public class DestinationService {
 
 	/**
 	 * Store given Destination to the backing destinationEntity service.
+	 *
+	 * <p>
+	 * A destination is always owned by a forward node: without one
+	 * {@link ForwardNodeService#updateDestination} returns null and the destination
+	 * cannot be attached, so the missing owner is reported here rather than surfacing as
+	 * a null dereference further down.
 	 * @param forwardNodeEntity ForwardNode Entity
 	 * @param destinationEntity the updated or new destinationEntity
 	 */
 	public DestinationEntity save(ForwardNodeEntity forwardNodeEntity, DestinationEntity destinationEntity) {
+		Objects.requireNonNull(forwardNodeEntity, "Cannot save a destination without a forward node");
+		Objects.requireNonNull(destinationEntity, "Cannot save a null destination");
 		DestinationEntity dataUpdated = forwardNodeService.updateDestination(forwardNodeEntity, destinationEntity);
 
 		if (destinationEntity.getId() != null) {
@@ -78,13 +88,10 @@ public class DestinationService {
 	 */
 	public void refreshLastTransferEmailLastCheck(DestinationEntity destinationEntity) {
 		if (destinationEntity.getId() != null) {
-			Optional<DestinationEntity> refreshedDestinationEntityOpt = destinationRepo
-				.findById(destinationEntity.getId());
-			if (refreshedDestinationEntityOpt.isPresent()) {
-				DestinationEntity destinationEntityRefreshed = refreshedDestinationEntityOpt.get();
-				destinationEntity.setLastTransfer(destinationEntityRefreshed.getLastTransfer());
-				destinationEntity.setEmailLastCheck(destinationEntityRefreshed.getEmailLastCheck());
-			}
+			destinationRepo.findById(destinationEntity.getId()).ifPresent(refreshed -> {
+				destinationEntity.setLastTransfer(refreshed.getLastTransfer());
+				destinationEntity.setEmailLastCheck(refreshed.getEmailLastCheck());
+			});
 		}
 	}
 
@@ -109,17 +116,13 @@ public class DestinationService {
 		}
 	}
 
-	public ApplicationEventPublisher getApplicationEventPublisher() {
-		return applicationEventPublisher;
-	}
-
 	/**
 	 * Retrieve destinations of a forward node
 	 * @param forwardNodeEntity forward node
 	 * @return destinations found
 	 */
 	public Collection<DestinationEntity> retrieveDestinations(ForwardNodeEntity forwardNodeEntity) {
-		return forwardNodeService.getAllDestinations(forwardNodeEntity);
+		return forwardNodeService.retrieveAllDestinations(forwardNodeEntity);
 	}
 
 	public List<DestinationEntity> retrieveDestinationsFromIds(List<Long> ids) {

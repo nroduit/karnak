@@ -10,11 +10,14 @@
 package org.karnak.backend.model.standard;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.exception.ModuleNotFoundException;
+import org.karnak.backend.model.dicominnolitics.JsonModuleToAttribute;
 import org.karnak.backend.model.dicominnolitics.StandardModuleToAttributes;
-import org.karnak.backend.model.dicominnolitics.jsonModuleToAttribute;
 
 public class ModuleToAttributes {
 
@@ -27,25 +30,26 @@ public class ModuleToAttributes {
 		HMapModuleAttributes = initializeAttributes(StandardModuleToAttributes.readJsonModuleToAttributes());
 	}
 
-	private Map<String, Map<String, ModuleAttribute>> initializeAttributes(jsonModuleToAttribute[] moduleToAttributes) {
+	private Map<String, Map<String, ModuleAttribute>> initializeAttributes(JsonModuleToAttribute[] moduleToAttributes) {
 		Map<String, Map<String, ModuleAttribute>> HMapModuleAttributes = new HashMap<>();
 
-		for (jsonModuleToAttribute moduleToAttribute : moduleToAttributes) {
+		for (JsonModuleToAttribute moduleToAttribute : moduleToAttributes) {
 			ModuleAttribute moduleAttribute = new ModuleAttribute(moduleToAttribute.getPath(),
 					moduleToAttribute.getType(), moduleToAttribute.getModuleId());
-
-			String moduleKey = moduleToAttribute.getModuleId();
-			if (!HMapModuleAttributes.containsKey(moduleKey)) {
-				HMapModuleAttributes.put(moduleKey, new HashMap<>());
-			}
-			HMapModuleAttributes.get(moduleKey).put(moduleAttribute.getTagPath(), moduleAttribute);
+			HMapModuleAttributes.computeIfAbsent(moduleToAttribute.getModuleId(), k -> new HashMap<>())
+				.put(moduleAttribute.getTagPath(), moduleAttribute);
 		}
 
 		return HMapModuleAttributes;
 	}
 
-	public Map<String, ModuleAttribute> getAttributesByModule(String moduleID) {
+	public @Nullable Map<String, ModuleAttribute> getAttributesByModule(String moduleID) {
 		return HMapModuleAttributes.get(moduleID);
+	}
+
+	/** The identifiers of every known module, sorted alphabetically. */
+	public List<String> getModuleIds() {
+		return HMapModuleAttributes.keySet().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
 	}
 
 	public Map<String, ModuleAttribute> getModuleAttributesByType(String moduleID, String type)

@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: karnak
 Upstream-Contact: Nicolas Roduit
-Source: https://github.com/OsiriX-Foundation/karnak
+Source: https://github.com/nroduit/karnak
 
 Files: *
 Copyright: APPLICATION_COPYRIGHT

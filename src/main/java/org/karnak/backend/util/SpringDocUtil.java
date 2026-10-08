@@ -17,8 +17,7 @@ public class SpringDocUtil {
 	/**
 	 * Echo
 	 */
-	// Examples
-	// Destinations (with status)
+	// Examples Destinations (with status)
 	public static final String EXAMPLE_VALUES_STATUS_DESTINATIONS_ECHO = "<destinations>\n" + "    <destination>\n"
 			+ "        <url>https://test.com/studies</url>\n" + "        <status>0</status>\n" + "    </destination>\n"
 			+ "    <destination>\n" + "        <aet>AET</aet>\n" + "        <status>0</status>\n"

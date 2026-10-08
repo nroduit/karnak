@@ -12,14 +12,16 @@ package org.karnak.frontend.extid;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class WarningDialog extends Dialog {
 
 	public WarningDialog(String title, String text, String buttonText) {
 		removeAll();
 		Div divTitle = new Div();
 		divTitle.setText(title);
-		divTitle.getStyle().set("font-size", "large").set("font-weight", "bolder").set("padding-bottom", "10px");
+		divTitle.addClassName("karnak-dialog-title");
 
 		Div divContent = new Div();
 		Div divIntro = new Div();

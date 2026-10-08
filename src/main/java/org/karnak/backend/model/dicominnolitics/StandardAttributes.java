@@ -9,13 +9,6 @@
  */
 package org.karnak.backend.model.dicominnolitics;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.stream.JsonReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-
 public class StandardAttributes {
 
 	private static final String ATTRIBUTES_FILENAME = "attributes.json";
@@ -23,20 +16,8 @@ public class StandardAttributes {
 	private StandardAttributes() {
 	}
 
-	public static jsonAttributes[] readJsonAttributes() {
-		URL url = StandardCIODS.class.getResource(ATTRIBUTES_FILENAME);
-		return read(url);
-	}
-
-	private static jsonAttributes[] read(URL url) {
-		Gson gson = new Gson();
-		try {
-			JsonReader reader = new JsonReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8));
-			return gson.fromJson(reader, jsonAttributes[].class);
-		}
-		catch (Exception e) {
-			throw new JsonParseException(String.format("Cannot parse json %s correctly", ATTRIBUTES_FILENAME), e);
-		}
+	public static JsonAttributes[] readJsonAttributes() {
+		return JsonStandardReader.read(ATTRIBUTES_FILENAME, JsonAttributes[].class);
 	}
 
 }

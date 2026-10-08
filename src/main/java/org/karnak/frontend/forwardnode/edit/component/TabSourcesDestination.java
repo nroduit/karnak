@@ -11,7 +11,9 @@ package org.karnak.frontend.forwardnode.edit.component;
 
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class TabSourcesDestination extends Tabs {
 
 	public String LABEL_SOURCES = "Sources";

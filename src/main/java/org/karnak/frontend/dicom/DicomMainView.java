@@ -15,23 +15,37 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.util.HashMap;
+import jakarta.annotation.security.RolesAllowed;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.service.DicomNodeConfigService;
+import org.karnak.backend.service.WebDestinationConfigService;
+import org.karnak.backend.service.dicom.DicomCapabilitiesCheckService;
+import org.karnak.backend.service.dicom.DicomNodeCheckHistoryService;
+import org.karnak.backend.service.dicom.DicomNodeCheckService;
+import org.karnak.backend.service.dicom.DicomWebCheckService;
+import org.karnak.backend.util.DicomNodeUtil;
 import org.karnak.frontend.MainLayout;
 import org.karnak.frontend.dicom.echo.DicomEchoView;
 import org.karnak.frontend.dicom.monitor.MonitorView;
 import org.karnak.frontend.dicom.mwl.DicomWorkListView;
-import org.springframework.security.access.annotation.Secured;
+import org.karnak.frontend.dicom.web.DicomWebView;
+import org.karnak.frontend.dicom.web.ManageDicomWebView;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.weasis.core.util.annotations.Generated;
 
 @Route(value = DicomMainView.ROUTE, layout = MainLayout.class)
-@PageTitle("Karnak - DICOM Tools")
-@Secured({ "ROLE_admin" })
+@PageTitle("Karnak - DICOM Web Tools")
+@RolesAllowed("admin")
+@Generated()
+@NullUnmarked
 public class DicomMainView extends VerticalLayout {
 
-	public static final String VIEW_NAME = "DICOM Tools";
+	public static final String VIEW_NAME = "DICOM Web Tools";
 
 	public static final String ROUTE = "dicom";
 
@@ -40,34 +54,43 @@ public class DicomMainView extends VerticalLayout {
 
 	private Tabs menu;
 
-	private Tab tabDicomEchoView;
-
-	private Tab tabDicomWorkListView;
-
-	private Tab tabMonitorView;
-
 	private Map<Tab, Component> tabsToPages;
-
-	private AbstractView pageDicomEchoView;
-
-	private AbstractView pageDicomWorkListView;
-
-	private AbstractView pageMonitorView;
 
 	private Set<Component> pagesShown;
 
 	// DATA
-	private Map<Class<? extends Component>, Tab> navigationTargetToTab;
+	private final DicomNodeUtil dicomNodeUtil;
 
-	public DicomMainView() {
-		init();
+	private final DicomNodeConfigService dicomNodeConfigService;
+
+	private final WebDestinationConfigService webDestinationConfigService;
+
+	private final DicomNodeCheckService dicomNodeCheckService;
+
+	private final DicomCapabilitiesCheckService dicomCapabilitiesCheckService;
+
+	private final DicomWebCheckService dicomWebCheckService;
+
+	private final DicomNodeCheckHistoryService dicomNodeCheckHistoryService;
+
+	// Kept to refresh the persisted echo history when its tab is (re)selected.
+	private DicomEchoView dicomEchoView;
+
+	@Autowired
+	public DicomMainView(DicomNodeUtil dicomNodeUtil, DicomNodeConfigService dicomNodeConfigService,
+			WebDestinationConfigService webDestinationConfigService, DicomNodeCheckService dicomNodeCheckService,
+			DicomCapabilitiesCheckService dicomCapabilitiesCheckService, DicomWebCheckService dicomWebCheckService,
+			DicomNodeCheckHistoryService dicomNodeCheckHistoryService) {
+		this.dicomNodeUtil = dicomNodeUtil;
+		this.dicomNodeConfigService = dicomNodeConfigService;
+		this.webDestinationConfigService = webDestinationConfigService;
+		this.dicomNodeCheckService = dicomNodeCheckService;
+		this.dicomCapabilitiesCheckService = dicomCapabilitiesCheckService;
+		this.dicomWebCheckService = dicomWebCheckService;
+		this.dicomNodeCheckHistoryService = dicomNodeCheckHistoryService;
 
 		createDicomWebToolsBrand();
 		createMenu();
-	}
-
-	private void init() {
-		navigationTargetToTab = new HashMap<>();
 	}
 
 	private void createDicomWebToolsBrand() {
@@ -75,25 +98,34 @@ public class DicomMainView extends VerticalLayout {
 	}
 
 	private void createMenu() {
-		tabDicomEchoView = new Tab("DICOM Echo");
-		pageDicomEchoView = new DicomEchoView();
+		// Tabs follow the DICOM Web Tools section order.
+		var pages = new LinkedHashMap<Tab, Component>();
+		dicomEchoView = new DicomEchoView(dicomNodeUtil, dicomNodeCheckService, dicomCapabilitiesCheckService,
+				dicomNodeCheckHistoryService);
+		pages.put(new Tab("DICOM Echo"), dicomEchoView);
+		pages.put(new Tab("DICOM Worklist"), new DicomWorkListView(dicomNodeUtil));
+		pages.put(new Tab("Manage DICOM Nodes"), new ManageDicomNodesView(dicomNodeConfigService, dicomNodeUtil));
+		pages.put(new Tab("DICOMweb"),
+				new DicomWebView(dicomWebCheckService, webDestinationConfigService, dicomNodeUtil));
+		pages.put(new Tab("Manage DICOMweb"), new ManageDicomWebView(webDestinationConfigService, dicomNodeUtil));
+		pages.put(new Tab("Monitor"), new MonitorView(dicomNodeUtil, webDestinationConfigService, dicomNodeCheckService,
+				dicomCapabilitiesCheckService, dicomWebCheckService));
 
-		tabDicomWorkListView = new Tab("DICOM Worklist");
-		pageDicomWorkListView = new DicomWorkListView();
+		tabsToPages = pages;
 
-		tabMonitorView = new Tab("Monitor");
-		pageMonitorView = new MonitorView();
+		// Fill the available height so a page can flex-grow its content (e.g. the
+		// management
+		// grids, which scroll internally instead of overflowing the page).
+		setSizeFull();
 
-		tabsToPages = new HashMap<>();
-		tabsToPages.put(tabDicomEchoView, pageDicomEchoView);
-		tabsToPages.put(tabDicomWorkListView, pageDicomWorkListView);
-		tabsToPages.put(tabMonitorView, pageMonitorView);
-
-		menu = new Tabs(tabDicomEchoView, tabDicomWorkListView, tabMonitorView);
+		menu = new Tabs(pages.keySet().toArray(Tab[]::new));
 		add(menu);
-		pagesShown = Stream.of(pageDicomEchoView).collect(Collectors.toSet());
 
-		add(pageDicomEchoView);
+		Component firstPage = pages.values().iterator().next();
+		pagesShown = Stream.of(firstPage).collect(Collectors.toSet());
+		add(firstPage);
+		setFlexGrow(1, firstPage);
+
 		menu.addSelectedChangeListener(event -> {
 			pagesShown.forEach(page -> page.setVisible(false));
 			pagesShown.clear();
@@ -101,6 +133,11 @@ public class DicomMainView extends VerticalLayout {
 			selectedPage.setVisible(true);
 			pagesShown.add(selectedPage);
 			add(selectedPage);
+			setFlexGrow(1, selectedPage);
+
+			if (selectedPage == dicomEchoView) {
+				dicomEchoView.onSelected();
+			}
 		});
 	}
 

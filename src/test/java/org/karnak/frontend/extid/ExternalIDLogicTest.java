@@ -9,8 +9,6 @@
  */
 package org.karnak.frontend.extid;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +35,7 @@ class ExternalIDLogicTest {
 		List<ProjectEntity> projectEntities = externalIDLogic.retrieveProject();
 
 		// Test result
-		Mockito.verify(projectServiceMock, Mockito.times(1)).getAllProjects();
+		Mockito.verify(projectServiceMock, Mockito.times(1)).retrieveAllProjects();
 	}
 
 }

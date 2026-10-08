@@ -10,6 +10,7 @@
 package org.karnak.backend.security;
 
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
 import org.karnak.backend.enums.ApplicationProfile;
 import org.karnak.backend.enums.EnvironmentVariable;
 import org.springframework.context.annotation.Condition;
@@ -17,14 +18,13 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
- * Default behaviour to load the IDP If property IDP is missing or different from oidc:
- * load the in memory IDP
+ * Matches when no OpenID Connect identity provider is configured (the {@code IDP}
+ * property is missing or not {@code oidc}), so that the in-memory IDP is loaded instead.
  */
 public class DefaultIdpLoadCondition implements Condition {
 
 	@Override
-	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		// Define default IDP
+	public boolean matches(ConditionContext context, @NonNull AnnotatedTypeMetadata metadata) {
 		return !Objects.equals(context.getEnvironment().getProperty(EnvironmentVariable.IDP.getCode()),
 				ApplicationProfile.OIDC.getCode());
 	}

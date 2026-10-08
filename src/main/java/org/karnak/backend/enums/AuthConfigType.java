@@ -9,6 +9,9 @@
  */
 package org.karnak.backend.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum AuthConfigType {
 
 	OAUTH2("OAuth 2.0");
@@ -17,10 +20,6 @@ public enum AuthConfigType {
 
 	AuthConfigType(final String code) {
 		this.code = code;
-	}
-
-	public String getCode() {
-		return code;
 	}
 
 }

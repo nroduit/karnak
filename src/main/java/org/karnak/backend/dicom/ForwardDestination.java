@@ -10,34 +10,72 @@
 package org.karnak.backend.dicom;
 
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.dcm4che3.data.UID;
 import org.dcm4che3.img.DicomImageReader;
 import org.dcm4che3.img.DicomOutputData;
 import org.dcm4che3.img.util.DicomUtils;
+import org.jspecify.annotations.Nullable;
+import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomState;
 
+@Getter
+@Generated()
 public abstract class ForwardDestination {
 
-	protected final List<AttributeEditor> dicomEditors;
+	protected final @Nullable List<AttributeEditor> dicomEditors;
 
-	private final Long id;
+	private final @Nullable Long id;
 
+	@Setter
 	private boolean transcodeOnlyUncompressed = true;
+
+	/** When true, a DICOM conformance report is collected and emailed per study sent. */
+	@Setter
+	private boolean buildConformanceReport;
+
+	/**
+	 * When true, the conformance report also checks value-content conformity (VR rules).
+	 */
+	@Setter
+	private boolean checkValueConformity;
+
+	/**
+	 * When true, the conformance checks recurse through every sequence level (SR content
+	 * tree, enhanced multiframe functional groups, …) instead of only the first one.
+	 */
+	@Setter
+	private boolean deepSequenceValidation;
+
+	/**
+	 * Whether de-identification is enabled; drives PHI redaction in the conformance
+	 * report.
+	 */
+	@Setter
+	private boolean deidentified;
+
+	/**
+	 * When true, each forwarded image is OCR-checked for identifying data still burned
+	 * into the pixel data, and the findings are added to the conformance report.
+	 */
+	@Setter
+	private boolean imageIdentityCheck;
+
+	/**
+	 * When true, this is a virtual "report-only" destination: the dataset is processed
+	 * (editors applied) and a conformance report is produced, but it is never forwarded
+	 * to a real node — the DICOM is discarded (devnull).
+	 */
+	@Setter
+	private boolean virtual;
 
 	private String outputTransferSyntax = "";
 
-	protected ForwardDestination(Long id, List<AttributeEditor> dicomEditors) {
+	protected ForwardDestination(@Nullable Long id, @Nullable List<AttributeEditor> dicomEditors) {
 		this.dicomEditors = dicomEditors;
 		this.id = id;
-	}
-
-	public List<AttributeEditor> getDicomEditors() {
-		return dicomEditors;
-	}
-
-	public Long getId() {
-		return id;
 	}
 
 	public abstract ForwardDicomNode getForwardDicomNode();
@@ -46,20 +84,8 @@ public abstract class ForwardDestination {
 
 	public abstract DicomState getState();
 
-	public String getOutputTransferSyntax() {
-		return outputTransferSyntax;
-	}
-
-	public void setOutputTransferSyntax(String outputTransferSyntax) {
+	public void setOutputTransferSyntax(@Nullable String outputTransferSyntax) {
 		this.outputTransferSyntax = outputTransferSyntax != null ? outputTransferSyntax : "";
-	}
-
-	public boolean isTranscodeOnlyUncompressed() {
-		return transcodeOnlyUncompressed;
-	}
-
-	public void setTranscodeOnlyUncompressed(boolean transcodeOnlyUncompressed) {
-		this.transcodeOnlyUncompressed = transcodeOnlyUncompressed;
 	}
 
 	public String getOutputTransferSyntax(String originalTsuid) {

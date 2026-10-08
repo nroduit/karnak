@@ -12,11 +12,12 @@ package org.karnak.backend.service.kheops;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.json.JSONObject;
+import org.jspecify.annotations.Nullable;
 import org.karnak.backend.api.KheopsApi;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.entity.KheopsAlbumsEntity;
@@ -31,8 +32,10 @@ import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.backend.model.profiles.CleanPixelData;
 import org.karnak.backend.model.profiles.ProfileItem;
 import org.karnak.backend.service.profilepipe.Profile;
+import org.weasis.core.util.annotations.Generated;
 
 @Slf4j
+@Generated()
 public class SwitchingAlbum {
 
 	public static final List<String> MIN_SCOPE_SOURCE = List.of("read", "send");
@@ -41,13 +44,13 @@ public class SwitchingAlbum {
 
 	private final KheopsApi kheopsAPI;
 
-	private final Map<Long, List> switchingAlbumToDo = new WeakHashMap<>();
+	private final Map<Long, List<MetadataSwitching>> switchingAlbumToDo = new ConcurrentHashMap<>();
 
 	public SwitchingAlbum() {
 		kheopsAPI = new KheopsApi();
 	}
 
-	private static HMAC generateHMAC(DestinationEntity destinationEntity) {
+	private static @Nullable HMAC generateHMAC(DestinationEntity destinationEntity) {
 		if (destinationEntity.isDesidentification()) {
 			ProjectEntity projectEntity = destinationEntity.getDeIdentificationProjectEntity();
 			SecretEntity secretEntity = projectEntity.retrieveActiveSecret();
@@ -56,8 +59,8 @@ public class SwitchingAlbum {
 		return null;
 	}
 
-	private static String hashUIDonDeidentification(DestinationEntity destinationEntity, String inputUID, HMAC hmac,
-			int tag) {
+	private static String hashUIDonDeidentification(DestinationEntity destinationEntity, String inputUID,
+			@Nullable HMAC hmac, int tag) {
 		return destinationEntity.isDesidentification() && hmac != null
 				&& getAction(destinationEntity, tag) instanceof UID ? hmac.uidHash(inputUID) : inputUID;
 	}
@@ -68,18 +71,14 @@ public class SwitchingAlbum {
 	}
 
 	public static boolean validateIntrospectedToken(JSONObject introspectObject, List<String> validMinScope) {
-		boolean valid = true;
 		if (!introspectObject.getBoolean("active")) {
 			return false;
 		}
 		final String scope = introspectObject.getString("scope");
-		for (String minScope : validMinScope) {
-			valid = scope.contains(minScope) && valid;
-		}
-		return valid;
+		return validMinScope.stream().allMatch(scope::contains);
 	}
 
-	public static ActionItem getAction(DestinationEntity destinationEntity, int tag) {
+	public static @Nullable ActionItem getAction(DestinationEntity destinationEntity, int tag) {
 		if (destinationEntity.getDeIdentificationProjectEntity() != null
 				&& destinationEntity.getDeIdentificationProjectEntity().getProfileEntity() != null) {
 			List<ProfileItem> profileItems = Profile
@@ -113,10 +112,7 @@ public class SwitchingAlbum {
 		String sopInstanceUID = dcm.getString(Tag.SOPInstanceUID);
 		String urlAPI = kheopsAlbumsEntity.getUrlAPI();
 		Long id = kheopsAlbumsEntity.getId();
-		if (!switchingAlbumToDo.containsKey(id)) {
-			switchingAlbumToDo.put(id, new ArrayList<MetadataSwitching>());
-		}
-		ArrayList<MetadataSwitching> metadataToDo = (ArrayList<MetadataSwitching>) switchingAlbumToDo.get(id);
+		List<MetadataSwitching> metadataToDo = switchingAlbumToDo.computeIfAbsent(id, k -> new ArrayList<>());
 
 		if ((condition == null || condition.isEmpty() || validateCondition(condition, dcm)) && metadataToDo.stream()
 			.noneMatch(metadataSwitching -> metadataSwitching.getSeriesInstanceUID().equals(seriesInstanceUID))) {
@@ -159,9 +155,12 @@ public class SwitchingAlbum {
 		String authorizationDestination = kheopsAlbumsEntity.getAuthorizationDestination();
 		String urlAPI = kheopsAlbumsEntity.getUrlAPI();
 
-		ArrayList<MetadataSwitching> metadataToDo = (ArrayList<MetadataSwitching>) switchingAlbumToDo.get(id);
+		List<MetadataSwitching> metadataToDo = switchingAlbumToDo.get(id);
+		if (metadataToDo == null) {
+			return;
+		}
 		metadataToDo.forEach(metadataSwitching -> {
-			if (metadataSwitching.getSOPinstanceUID().equals(sopInstanceUID) && !metadataSwitching.isApplied()) {
+			if (metadataSwitching.getSopInstanceUID().equals(sopInstanceUID) && !metadataSwitching.isApplied()) {
 				int status = shareSerie(urlAPI, metadataSwitching.getStudyInstanceUID(),
 						metadataSwitching.getSeriesInstanceUID(), authorizationSource, authorizationDestination);
 				if (status >= 400 && status <= 599) {

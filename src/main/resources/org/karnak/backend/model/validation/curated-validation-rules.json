@@ -1,0 +1,3525 @@
+{
+  "comment": "Curated validation rules supplementing the innolitics DICOM standard JSON, which has no machine-readable enumerated values or conditional-requirement predicates. Keys of enumeratedValues are lowercase 8-digit hex tags. See doc/dicom-standard-json.md.",
+  "source": "innolitics/dicom-standard JSON (vendored 2025-02)",
+  "enumeratedValues": {
+    "00100040": { "closed": true, "values": ["M", "F", "O"] },
+    "00200060": { "closed": true, "values": ["R", "L"] },
+    "00200062": { "closed": true, "values": ["R", "L", "U", "B"] },
+    "00080068": { "closed": true, "values": ["FOR PRESENTATION", "FOR PROCESSING"] },
+    "00280006": { "closed": true, "values": ["0", "1"] },
+    "00280103": { "closed": true, "values": ["0", "1"] },
+    "00280300": { "closed": true, "values": ["YES", "NO"] },
+    "00280301": { "closed": true, "values": ["YES", "NO"] },
+    "00280302": { "closed": true, "values": ["YES", "NO"] },
+    "00282110": { "closed": true, "values": ["00", "01"] },
+    "00189004": { "closed": true, "values": ["PRODUCT", "RESEARCH", "SERVICE"] },
+    "00089206": { "closed": true, "values": ["VOLUME", "SAMPLED", "DISTORTED", "MIXED"] },
+    "00280004": {
+      "closed": true,
+      "values": [
+        "MONOCHROME1",
+        "MONOCHROME2",
+        "PALETTE COLOR",
+        "RGB",
+        "YBR_FULL",
+        "YBR_FULL_422",
+        "YBR_PARTIAL_422",
+        "YBR_PARTIAL_420",
+        "YBR_ICT",
+        "YBR_RCT"
+      ]
+    }
+  },
+  "sopClassToModalities": {
+    "1.2.840.10008.5.1.4.1.1.1": ["CR"],
+    "1.2.840.10008.5.1.4.1.1.1.1": ["DX"],
+    "1.2.840.10008.5.1.4.1.1.1.1.1": ["DX"],
+    "1.2.840.10008.5.1.4.1.1.1.2": ["MG"],
+    "1.2.840.10008.5.1.4.1.1.1.2.1": ["MG"],
+    "1.2.840.10008.5.1.4.1.1.2": ["CT"],
+    "1.2.840.10008.5.1.4.1.1.2.1": ["CT"],
+    "1.2.840.10008.5.1.4.1.1.3.1": ["US"],
+    "1.2.840.10008.5.1.4.1.1.4": ["MR"],
+    "1.2.840.10008.5.1.4.1.1.4.1": ["MR"],
+    "1.2.840.10008.5.1.4.1.1.6.1": ["US"],
+    "1.2.840.10008.5.1.4.1.1.12.1": ["XA"],
+    "1.2.840.10008.5.1.4.1.1.12.2": ["RF"],
+    "1.2.840.10008.5.1.4.1.1.20": ["NM"],
+    "1.2.840.10008.5.1.4.1.1.104.1": ["DOC"],
+    "1.2.840.10008.5.1.4.1.1.128": ["PT"],
+    "1.2.840.10008.5.1.4.1.1.130": ["PT"],
+    "1.2.840.10008.5.1.4.1.1.481.1": ["RTIMAGE"],
+    "1.2.840.10008.5.1.4.1.1.481.2": ["RTDOSE"],
+    "1.2.840.10008.5.1.4.1.1.481.3": ["RTSTRUCT"],
+    "1.2.840.10008.5.1.4.1.1.481.5": ["RTPLAN"],
+    "1.2.840.10008.5.1.4.1.1.88.11": ["SR"],
+    "1.2.840.10008.5.1.4.1.1.88.22": ["SR"],
+    "1.2.840.10008.5.1.4.1.1.88.33": ["SR"],
+    "1.2.840.10008.5.1.4.1.1.88.34": ["SR"]
+  },
+  "retiredTransferSyntaxes": [
+    "1.2.840.10008.1.2.2",
+    "1.2.840.10008.1.2.4.52",
+    "1.2.840.10008.1.2.4.53",
+    "1.2.840.10008.1.2.4.54",
+    "1.2.840.10008.1.2.4.55",
+    "1.2.840.10008.1.2.4.56",
+    "1.2.840.10008.1.2.4.58",
+    "1.2.840.10008.1.2.4.59",
+    "1.2.840.10008.1.2.4.60",
+    "1.2.840.10008.1.2.4.61",
+    "1.2.840.10008.1.2.4.62",
+    "1.2.840.10008.1.2.4.63",
+    "1.2.840.10008.1.2.4.64",
+    "1.2.840.10008.1.2.4.65",
+    "1.2.840.10008.1.2.4.66"
+  ],
+  "conditionalRequirements":
+  {
+    "breast-projection-x-ray-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "breast-projection-x-ray-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "breast-projection-x-ray-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "breast-tomosynthesis-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "breast-tomosynthesis-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "breast-tomosynthesis-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "breast-view/00281300": {
+      "requiredWhen": {
+        "tag": "00080060",
+        "equals": "MG"
+      },
+      "_condition": "Required if Modality (0008,0060) is MG."
+    },
+    "clinical-trial-context/00120081": {
+      "requiredWhen": {
+        "tag": "00120082",
+        "present": true
+      },
+      "_condition": "Required if Clinical Trial Protocol Ethics Committee Approval Number (0012,0082) is present."
+    },
+    "clinical-trial-study/00120053": {
+      "requiredWhen": {
+        "tag": "00120052",
+        "present": true
+      },
+      "_condition": "Required if Longitudinal Temporal Offset from Event (0012,0052) is present."
+    },
+    "clinical-trial-subject/00120081": {
+      "requiredWhen": {
+        "tag": "00120082",
+        "present": true
+      },
+      "_condition": "Required if Clinical Trial Protocol Ethics Committee Approval Number (0012,0082) is present."
+    },
+    "confocal-microscopy-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "confocal-microscopy-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "confocal-microscopy-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "confocal-microscopy-tiled-pyramidal-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "confocal-microscopy-tiled-pyramidal-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "confocal-microscopy-tiled-pyramidal-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "corneal-topography-map-image/00280a04": {
+      "requiredWhen": {
+        "tag": "00280a02",
+        "present": true
+      },
+      "_condition": "Required if Pixel Spacing Calibration Type (0028,0A02) is present."
+    },
+    "corneal-topography-map-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "corneal-topography-map-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "cr-image/00280a04": {
+      "requiredWhen": {
+        "tag": "00280a02",
+        "present": true
+      },
+      "_condition": "Required if Pixel Spacing Calibration Type (0028,0A02) is present."
+    },
+    "ct-image/00181272": {
+      "requiredWhen": {
+        "tag": "00181271",
+        "present": true
+      },
+      "_condition": "Required if Water Equivalent Diameter (0018,1271) is present."
+    },
+    "cutaneous-confocal-microscopy-image-acquisition-parameters/00620020": {
+      "requiredWhen": {
+        "tag": "00620021",
+        "present": true
+      },
+      "_condition": "Required if Tracking UID (0062,0021) is present."
+    },
+    "cutaneous-confocal-microscopy-image-acquisition-parameters/00620021": {
+      "requiredWhen": {
+        "tag": "00620020",
+        "present": true
+      },
+      "_condition": "Required if Tracking ID (0062,0020) is present."
+    },
+    "dermoscopic-image/00161004": {
+      "requiredWhen": {
+        "tag": "00161003",
+        "equals": "CONTACT"
+      },
+      "_condition": "Required if Contact Method (0016,1003) is CONTACT."
+    },
+    "dermoscopic-image/00620020": {
+      "requiredWhen": {
+        "tag": "00620021",
+        "present": true
+      },
+      "_condition": "Required if Tracking UID (0062,0021) is present."
+    },
+    "dermoscopic-image/00620021": {
+      "requiredWhen": {
+        "tag": "00620020",
+        "present": true
+      },
+      "_condition": "Required if Tracking ID (0062,0020) is present."
+    },
+    "display-shutter/00181602": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is RECTANGULAR."
+    },
+    "display-shutter/00181604": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is RECTANGULAR."
+    },
+    "display-shutter/00181606": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is RECTANGULAR."
+    },
+    "display-shutter/00181608": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is RECTANGULAR."
+    },
+    "display-shutter/00181610": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "CIRCULAR"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is CIRCULAR."
+    },
+    "display-shutter/00181612": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "CIRCULAR"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is CIRCULAR."
+    },
+    "display-shutter/00181620": {
+      "requiredWhen": {
+        "tag": "00181600",
+        "equals": "POLYGONAL"
+      },
+      "_condition": "Required if Shutter Shape (0018,1600) is POLYGONAL."
+    },
+    "double-floating-point-image-pixel/00280125": {
+      "requiredWhen": {
+        "tag": "00280123",
+        "present": true
+      },
+      "_condition": "Required if Double Float Pixel Padding Value (0028,0123) is present."
+    },
+    "dx-detector/00187032": {
+      "requiredWhen": {
+        "tag": "00187034",
+        "present": true
+      },
+      "_condition": "Required if Field of View Horizontal Flip (0018,7034) is present."
+    },
+    "dx-detector/00187034": {
+      "requiredWhen": {
+        "tag": "00187032",
+        "present": true
+      },
+      "_condition": "Required if Field of View Rotation (0018,7032) is present."
+    },
+    "dx-detector/00280a04": {
+      "requiredWhen": {
+        "tag": "00280a02",
+        "present": true
+      },
+      "_condition": "Required if Pixel Spacing Calibration Type (0028,0A02) is present."
+    },
+    "dx-image/00281051": {
+      "requiredWhen": {
+        "tag": "00281050",
+        "present": true
+      },
+      "_condition": "Required if Window Center (0028,1050) is present."
+    },
+    "dx-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "encapsulated-document/0040a040": {
+      "requiredWhen": {
+        "tag": "0040a730",
+        "present": true
+      },
+      "_condition": "Required if Content Sequence (0040,A730) is present."
+    },
+    "encapsulated-document/0040a050": {
+      "requiredWhen": {
+        "tag": "0040a730",
+        "present": true
+      },
+      "_condition": "Required if Content Sequence (0040,A730) is present."
+    },
+    "enhanced-continuous-rt-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-continuous-rt-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-continuous-rt-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-ct-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-ct-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-ct-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-ct-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-ct-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-mammography-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-mammography-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-mr-color-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-mr-color-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-mr-color-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-mr-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-mr-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-mr-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-mr-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-mr-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-mr-image/20500020": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "enhanced-pet-acquisition/00189715": {
+      "requiredWhen": {
+        "tag": "00180073",
+        "equals": "DENS"
+      },
+      "_condition": "Required if Acquisition Start Condition (0018,0073) equals DENS."
+    },
+    "enhanced-pet-acquisition/00189716": {
+      "requiredWhen": {
+        "tag": "00180073",
+        "equals": "RDD"
+      },
+      "_condition": "Required if Acquisition Start Condition (0018,0073) equals RDD."
+    },
+    "enhanced-pet-acquisition/00189717": {
+      "requiredWhen": {
+        "tag": "00180073",
+        "equals": "CARD_TRIG"
+      },
+      "_condition": "Required if Acquisition Start Condition (0018,0073) equals CARD_TRIG."
+    },
+    "enhanced-pet-acquisition/00189718": {
+      "requiredWhen": {
+        "tag": "00180073",
+        "equals": "RESP_TRIG"
+      },
+      "_condition": "Required if Acquisition Start Condition (0018,0073) equals RESP_TRIG."
+    },
+    "enhanced-pet-acquisition/00189719": {
+      "requiredWhen": {
+        "tag": "00180071",
+        "equals": "CNTS"
+      },
+      "_condition": "Required if Acquisition Termination Condition (0018,0071) equals CNTS."
+    },
+    "enhanced-pet-acquisition/00189720": {
+      "requiredWhen": {
+        "tag": "00180071",
+        "equals": "DENS"
+      },
+      "_condition": "Required if Acquisition Termination Condition (0018,0071) equals DENS."
+    },
+    "enhanced-pet-acquisition/00189721": {
+      "requiredWhen": {
+        "tag": "00180071",
+        "equals": "RDD"
+      },
+      "_condition": "Required if Acquisition Termination Condition (0018,0071) equals RDD."
+    },
+    "enhanced-pet-acquisition/00189722": {
+      "requiredWhen": {
+        "tag": "00180071",
+        "equals": "TIME"
+      },
+      "_condition": "Required if Acquisition Termination Condition (0018,0071) equals TIME."
+    },
+    "enhanced-pet-acquisition/00189723": {
+      "requiredWhen": {
+        "tag": "00180071",
+        "equals": "CARD_TRIG"
+      },
+      "_condition": "Required if Acquisition Termination Condition (0018,0071) equals CARD_TRIG."
+    },
+    "enhanced-pet-acquisition/00189724": {
+      "requiredWhen": {
+        "tag": "00180071",
+        "equals": "RESP_TRIG"
+      },
+      "_condition": "Required if Acquisition Termination Condition (0018,0071) equals RESP_TRIG."
+    },
+    "enhanced-pet-corrections/00189701": {
+      "requiredWhen": {
+        "tag": "00189758",
+        "equals": "YES"
+      },
+      "_condition": "Required if Decay Corrected (0018,9758) equals YES."
+    },
+    "enhanced-pet-corrections/00189738": {
+      "requiredWhen": {
+        "tag": "00189759",
+        "equals": "YES"
+      },
+      "_condition": "Required if Attenuation Corrected (0018,9759) equals YES."
+    },
+    "enhanced-pet-corrections/00189770": {
+      "requiredWhen": {
+        "tag": "00189759",
+        "equals": "YES"
+      },
+      "_condition": "Required if Attenuation Corrected (0018,9759) equals YES."
+    },
+    "enhanced-pet-corrections/00541100": {
+      "requiredWhen": {
+        "tag": "00189765",
+        "equals": "YES"
+      },
+      "_condition": "Required if Randoms Corrected (0018,9765) equals YES."
+    },
+    "enhanced-pet-corrections/00541105": {
+      "requiredWhen": {
+        "tag": "00189760",
+        "equals": "YES"
+      },
+      "_condition": "Required if Scatter Corrected (0018,9760) equals YES."
+    },
+    "enhanced-pet-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-pet-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-pet-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-pet-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-pet-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-rt-image-device/300a0659": {
+      "requiredWhen": {
+        "tag": "30020105",
+        "equals": "YES"
+      },
+      "_condition": "Required if Beam Modifier Coordinates Presence Flag (3002,0105) equals YES."
+    },
+    "enhanced-rt-image-device/300a0688": {
+      "requiredWhen": {
+        "tag": "30020105",
+        "equals": "YES"
+      },
+      "_condition": "Required if Beam Modifier Coordinates Presence Flag (3002,0105) equals YES."
+    },
+    "enhanced-rt-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-rt-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-rt-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-us-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-us-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-us-series/00400261": {
+      "requiredWhen": {
+        "tag": "00400260",
+        "present": true
+      },
+      "_condition": "Required if Performed Protocol Code Sequence (0040,0260) is present."
+    },
+    "enhanced-us-volume-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-us-volume-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-us-volume-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-xa-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-xa-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-xa-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-xa-xrf-image/00089092": {
+      "requiredWhen": {
+        "tag": "00081140",
+        "present": true
+      },
+      "_condition": "Required if the Referenced Image Sequence (0008,1140) is present."
+    },
+    "enhanced-xa-xrf-image/00089154": {
+      "requiredWhen": {
+        "tag": "00082112",
+        "present": true
+      },
+      "_condition": "Required if the Source Image Sequence (0008,2112) is present."
+    },
+    "enhanced-xa-xrf-image/00089410": {
+      "requiredWhen": {
+        "tag": "00189410",
+        "equals": "BIPLANE"
+      },
+      "_condition": "Required if Planes in Acquisition (0018,9410) is BIPLANE."
+    },
+    "enhanced-xa-xrf-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-xa-xrf-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "enhanced-xrf-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-xrf-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "enhanced-xrf-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "floating-point-image-pixel/00280124": {
+      "requiredWhen": {
+        "tag": "00280122",
+        "present": true
+      },
+      "_condition": "Required if Float Pixel Padding Value (0028,0122) is present."
+    },
+    "general-ophthalmic-refractive-measurements/00460145": {
+      "requiredWhen": {
+        "tag": "00460121",
+        "present": true
+      },
+      "_condition": "Required if Visual Acuity Type Code Sequence (0046,0121) is present."
+    },
+    "generic-implant-template-description/00686224": {
+      "requiredWhen": {
+        "tag": "00686223",
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Implant Type (0068,6223) is DERIVED."
+    },
+    "generic-implant-template-description/00686225": {
+      "requiredWhen": {
+        "tag": "00686223",
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Implant Type (0068,6223) is DERIVED."
+    },
+    "implant-assembly-template/0076000c": {
+      "requiredWhen": {
+        "tag": "0076000a",
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Implant Assembly Template Type (0076,000A) is DERIVED."
+    },
+    "implant-assembly-template/0076000e": {
+      "requiredWhen": {
+        "tag": "0076000a",
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Implant Assembly Template Type (0076,000A) is DERIVED."
+    },
+    "intravascular-oct-acquisition-parameters/00520004": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PROCESSING"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) is FOR PROCESSING."
+    },
+    "intravascular-oct-image/00280304": {
+      "requiredWhen": {
+        "tag": "00089205",
+        "equals": "COLOR_REF"
+      },
+      "_condition": "Required if Pixel Presentation (0008,9205) is COLOR_REF."
+    },
+    "intravascular-oct-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "intravascular-oct-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "intravascular-oct-image/00520039": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PRESENTATION"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) equals FOR PRESENTATION."
+    },
+    "intravascular-oct-image/20500020": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PRESENTATION"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) equals FOR PRESENTATION."
+    },
+    "intravascular-optical-coherence-tomography-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "intravascular-optical-coherence-tomography-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "intravascular-optical-coherence-tomography-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "inventory-creation/0008040a": {
+      "requiredWhen": {
+        "tag": "00080409",
+        "present": true
+      },
+      "_condition": "Required if File Access URI (0008,0409) is present."
+    },
+    "inventory-creation/0008040b": {
+      "requiredWhen": {
+        "tag": "0008040a",
+        "in": [
+          "ZIP",
+          "TAR",
+          "TARGZIP"
+        ]
+      },
+      "_condition": "Required if Container File Type (0008,040A) is ZIP, TAR, or TARGZIP."
+    },
+    "inventory-creation/0008040c": {
+      "requiredWhen": {
+        "tag": "0008040a",
+        "equals": "BLOB"
+      },
+      "_condition": "Required if Container File Type (0008,040A) is BLOB."
+    },
+    "inventory-creation/0008040d": {
+      "requiredWhen": {
+        "tag": "0008040a",
+        "equals": "BLOB"
+      },
+      "_condition": "Required if Container File Type (0008,040A) is BLOB."
+    },
+    "inventory-creation/0008040e": {
+      "requiredWhen": {
+        "tag": "00080409",
+        "present": true
+      },
+      "_condition": "Required if File Access URI (0008,0409) is present."
+    },
+    "inventory-creation/04000015": {
+      "requiredWhen": {
+        "tag": "04000404",
+        "present": true
+      },
+      "_condition": "Required if MAC (0400,0404) is present."
+    },
+    "legacy-converted-enhanced-ct-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-ct-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-ct-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-mr-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-mr-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-mr-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-pet-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-pet-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "legacy-converted-enhanced-pet-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "mr-pulse-sequence/00189092": {
+      "requiredWhen": {
+        "tag": "00189014",
+        "equals": "YES"
+      },
+      "_condition": "Required if Phase Contrast (0018,9014) equals YES."
+    },
+    "mr-spectroscopy-data/56000010": {
+      "requiredWhen": {
+        "tag": "00189198",
+        "equals": "YES"
+      },
+      "_condition": "Required if First Order Phase Correction (0018,9198) equals YES."
+    },
+    "mr-spectroscopy-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "mr-spectroscopy-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "mr-spectroscopy-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "mr-spectroscopy/0008114a": {
+      "requiredWhen": {
+        "tag": "00189297",
+        "equals": "REFERENCED"
+      },
+      "_condition": "Required if Water Reference Acquisition (0018,9297) equals REFERENCED."
+    },
+    "mr-spectroscopy/00189060": {
+      "requiredWhen": {
+        "tag": "00189059",
+        "equals": "YES"
+      },
+      "_condition": "Required if De-coupling (0018,9059) equals YES."
+    },
+    "mr-spectroscopy/00189061": {
+      "requiredWhen": {
+        "tag": "00189059",
+        "equals": "YES"
+      },
+      "_condition": "Required if De-coupling (0018,9059) equals YES."
+    },
+    "mr-spectroscopy/00189062": {
+      "requiredWhen": {
+        "tag": "00189059",
+        "equals": "YES"
+      },
+      "_condition": "Required if De-coupling (0018,9059) equals YES."
+    },
+    "mr-spectroscopy/00189063": {
+      "requiredWhen": {
+        "tag": "00189059",
+        "equals": "YES"
+      },
+      "_condition": "Required if De-coupling (0018,9059) equals YES."
+    },
+    "multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-grayscale-byte-secondary-capture-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-grayscale-byte-secondary-capture-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-grayscale-byte-secondary-capture-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-grayscale-word-secondary-capture-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-grayscale-word-secondary-capture-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-grayscale-word-secondary-capture-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-true-color-secondary-capture-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-true-color-secondary-capture-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-frame-true-color-secondary-capture-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "multi-planar-reconstruction-geometry/00701507": {
+      "requiredWhen": {
+        "tag": "00701501",
+        "equals": "PLANAR"
+      },
+      "_condition": "Required if Multi Planar Reconstruction Style (0070,1501) is PLANAR."
+    },
+    "multi-planar-reconstruction-geometry/00701508": {
+      "requiredWhen": {
+        "tag": "00701501",
+        "equals": "PLANAR"
+      },
+      "_condition": "Required if Multi Planar Reconstruction Style (0070,1501) is PLANAR."
+    },
+    "multi-planar-reconstruction-geometry/00701511": {
+      "requiredWhen": {
+        "tag": "00701501",
+        "equals": "PLANAR"
+      },
+      "_condition": "Required if Multi Planar Reconstruction Style (0070,1501) is PLANAR."
+    },
+    "multi-planar-reconstruction-geometry/00701512": {
+      "requiredWhen": {
+        "tag": "00701501",
+        "equals": "PLANAR"
+      },
+      "_condition": "Required if Multi Planar Reconstruction Style (0070,1501) is PLANAR."
+    },
+    "ophthalmic-axial-measurements/00221044": {
+      "requiredWhen": {
+        "tag": "00221009",
+        "equals": "ULTRASOUND"
+      },
+      "_condition": "Required if Ophthalmic Axial Measurements Device Type (0022,1009) is ULTRASOUND."
+    },
+    "ophthalmic-optical-coherence-tomography-b-scan-volume-analysis-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "ophthalmic-optical-coherence-tomography-b-scan-volume-analysis-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "ophthalmic-optical-coherence-tomography-b-scan-volume-analysis-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "ophthalmic-optical-coherence-tomography-en-face-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-optical-coherence-tomography-en-face-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-optical-coherence-tomography-en-face-image/20500020": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "ophthalmic-patient-clinical-information-and-test-lens-parameters/00240114": {
+      "requiredWhen": {
+        "tag": "00240113",
+        "in": [
+          "L",
+          "B"
+        ]
+      },
+      "_condition": "Required if Measurement Laterality (0024,0113) is L or B."
+    },
+    "ophthalmic-patient-clinical-information-and-test-lens-parameters/00240115": {
+      "requiredWhen": {
+        "tag": "00240113",
+        "in": [
+          "R",
+          "B"
+        ]
+      },
+      "_condition": "Required if Measurement Laterality (0024,0113) is R or B."
+    },
+    "ophthalmic-photography-acquisition-parameters/00220006": {
+      "requiredWhen": {
+        "tag": "00220005",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value of Patient Eye Movement Commanded (0022,0005) is YES."
+    },
+    "ophthalmic-photography-acquisition-parameters/0022000e": {
+      "requiredWhen": {
+        "tag": "0022000d",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value of Pupil Dilated (0022,000D) is YES."
+    },
+    "ophthalmic-photography-acquisition-parameters/00220058": {
+      "requiredWhen": {
+        "tag": "0022000d",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value of Pupil Dilated (0022,000D) is YES."
+    },
+    "ophthalmic-photography-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-photography-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-photography-image/20500020": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "ophthalmic-thickness-map/00082112": {
+      "requiredWhen": {
+        "tag": "00221415",
+        "equals": "OCT"
+      },
+      "_condition": "Required if Ophthalmic Mapping Device Type (0022,1415) is OCT."
+    },
+    "ophthalmic-thickness-map/00221472": {
+      "requiredWhen": {
+        "tag": "00221415",
+        "equals": "OCT"
+      },
+      "_condition": "Required if Ophthalmic Mapping Device Type (0022,1415) is OCT."
+    },
+    "ophthalmic-thickness-map/00280304": {
+      "requiredWhen": {
+        "tag": "00089205",
+        "equals": "COLOR_REF"
+      },
+      "_condition": "Required if Pixel Presentation (0008,9205) is COLOR_REF."
+    },
+    "ophthalmic-thickness-map/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-thickness-map/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-tomography-acquisition-parameters/0022000e": {
+      "requiredWhen": {
+        "tag": "0022000d",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value of Pupil Dilated (0022,000D) is YES."
+    },
+    "ophthalmic-tomography-acquisition-parameters/00220058": {
+      "requiredWhen": {
+        "tag": "0022000d",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value of Pupil Dilated (0022,000D) is YES."
+    },
+    "ophthalmic-tomography-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "ophthalmic-tomography-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "ophthalmic-tomography-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "ophthalmic-tomography-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "ophthalmic-tomography-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "parametric-map-image/00280101": {
+      "requiredWhen": {
+        "tag": "00287fe0",
+        "present": true
+      },
+      "_condition": "Required if Pixel Data (7FE0,0010) or Pixel Data Provider URL (0028,7FE0) is present."
+    },
+    "parametric-map-image/00280102": {
+      "requiredWhen": {
+        "tag": "00287fe0",
+        "present": true
+      },
+      "_condition": "Required if Pixel Data (7FE0,0010) or Pixel Data Provider URL (0028,7FE0) is present."
+    },
+    "parametric-map-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "parametric-map-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "parametric-map-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "photoacoustic-acquisition-parameters/0018982a": {
+      "requiredWhen": {
+        "tag": "00189829",
+        "equals": "YES"
+      },
+      "_condition": "Required if Acoustic Coupling Medium Flag (0018,9829) is YES."
+    },
+    "photoacoustic-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "photoacoustic-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "photoacoustic-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "photoacoustic-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "photoacoustic-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "photoacoustic-image/20500020": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "presentation-animation/00701a06": {
+      "requiredWhen": {
+        "tag": "00701a01",
+        "equals": "SWIVEL"
+      },
+      "_condition": "Required if Presentation Animation Style (0070,1A01) is SWIVEL."
+    },
+    "presentation-state-mask/00281090": {
+      "requiredWhen": {
+        "tag": "00286100",
+        "present": true
+      },
+      "_condition": "Required if Mask Subtraction Sequence (0028,6100) is present."
+    },
+    "rt-dose/30080030": {
+      "requiredWhen": {
+        "tag": "3004000a",
+        "equals": "RECORD"
+      },
+      "_condition": "Required if Dose Summation Type (3004,000A) is RECORD."
+    },
+    "rt-dose/300c0002": {
+      "requiredWhen": {
+        "tag": "3004000a",
+        "in": [
+          "PLAN",
+          "MULTI_PLAN",
+          "FRACTION",
+          "BEAM",
+          "BRACHY",
+          "FRACTION_SESSION",
+          "BEAM_SESSION",
+          "BRACHY_SESSION",
+          "CONTROL_POINT"
+        ]
+      },
+      "_condition": "Required if Dose Summation Type (3004,000A) is PLAN, MULTI_PLAN, FRACTION, BEAM, BRACHY, FRACTION_SESSION, BEAM_SESSION, BRACHY_SESSION or CONTROL_POINT."
+    },
+    "rt-dose/300c0116": {
+      "requiredWhen": {
+        "tag": "3004000a",
+        "equals": "PLAN_OVERVIEW"
+      },
+      "_condition": "Required if Dose Summation Type (3004,000A) is PLAN_OVERVIEW."
+    },
+    "rt-image/00281041": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "present": true
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) is present."
+    },
+    "rt-image/3002000a": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "in": [
+          "SIMULATOR",
+          "PORTAL"
+        ]
+      },
+      "_condition": "Required if Value 3 of Image Type (0008,0008) is SIMULATOR or PORTAL."
+    },
+    "rt-image/30020010": {
+      "requiredWhen": {
+        "tag": "3002000c",
+        "equals": "NON_NORMAL"
+      },
+      "_condition": "Required if RT Image Plane (3002,000C) is NON_NORMAL."
+    },
+    "rt-image/30020040": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "equals": "FLUENCE"
+      },
+      "_condition": "Required if the third value of Image Type (0008,0008) is FLUENCE."
+    },
+    "sc-image/00280a04": {
+      "requiredWhen": {
+        "tag": "00280a02",
+        "present": true
+      },
+      "_condition": "Required if Pixel Spacing Calibration Type (0028,0A02) is present."
+    },
+    "sc-multi-frame-image/00280a04": {
+      "requiredWhen": {
+        "tag": "00280a02",
+        "present": true
+      },
+      "_condition": "Required if Pixel Spacing Calibration Type (0028,0A02) is present."
+    },
+    "segmentation-image/0062000e": {
+      "requiredWhen": {
+        "tag": "00620001",
+        "equals": "FRACTIONAL"
+      },
+      "_condition": "Required if Segmentation Type (0062,0001) is FRACTIONAL."
+    },
+    "segmentation-image/00620010": {
+      "requiredWhen": {
+        "tag": "00620001",
+        "equals": "FRACTIONAL"
+      },
+      "_condition": "Required if Segmentation Type (0062,0001) is FRACTIONAL."
+    },
+    "segmentation-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "segmentation-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "segmentation-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "sparse-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "sparse-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "sparse-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "sr-document-content/0040a043": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "in": [
+          "TEXT",
+          "NUM",
+          "CODE",
+          "DATETIME",
+          "DATE",
+          "TIME",
+          "UIDREF",
+          "TABLE",
+          "PNAME"
+        ]
+      },
+      "_condition": "Required if Value Type (0040,A040) is TEXT, NUM, CODE, DATETIME, DATE, TIME, UIDREF, TABLE or PNAME."
+    },
+    "sr-document-content/0040a120": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "equals": "DATETIME"
+      },
+      "_condition": "Required if Value Type (0040,A040) is DATETIME."
+    },
+    "sr-document-content/0040a121": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "equals": "DATE"
+      },
+      "_condition": "Required if Value Type (0040,A040) is DATE."
+    },
+    "sr-document-content/0040a122": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "equals": "TIME"
+      },
+      "_condition": "Required if Value Type (0040,A040) is TIME."
+    },
+    "sr-document-content/0040a123": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "equals": "PNAME"
+      },
+      "_condition": "Required if Value Type (0040,A040) is PNAME."
+    },
+    "sr-document-content/0040a124": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "equals": "UIDREF"
+      },
+      "_condition": "Required if Value Type (0040,A040) is UIDREF."
+    },
+    "sr-document-content/0040a160": {
+      "requiredWhen": {
+        "tag": "0040a040",
+        "equals": "TEXT"
+      },
+      "_condition": "Required if Value Type (0040,A040) is TEXT."
+    },
+    "sr-document-general/0040a073": {
+      "requiredWhen": {
+        "tag": "0040a493",
+        "equals": "VERIFIED"
+      },
+      "_condition": "Required if Verification Flag (0040,A493) is VERIFIED."
+    },
+    "ultrasound-frame-of-reference/00209308": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "APEX"
+      },
+      "_condition": "Required if value of Ultrasound Acquisition Geometry (0020,9307) is APEX."
+    },
+    "ultrasound-frame-of-reference/0020930a": {
+      "requiredWhen": {
+        "tag": "0020930c",
+        "equals": "TABLE"
+      },
+      "_condition": "Required if Patient Frame of Reference Source (0020,930C) is TABLE."
+    },
+    "ultrasound-frame-of-reference/00209313": {
+      "requiredWhen": {
+        "tag": "0020930c",
+        "equals": "TABLE"
+      },
+      "_condition": "Required if Patient Frame of Reference Source (0020,930C) is TABLE."
+    },
+    "visual-field-static-perimetry-test-measurements/00240038": {
+      "requiredWhen": {
+        "tag": "00240037",
+        "equals": "YES"
+      },
+      "_condition": "Required if Presented Visual Stimuli Data Flag (0024,0037) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240058": {
+      "requiredWhen": {
+        "tag": "00240057",
+        "equals": "YES"
+      },
+      "_condition": "Required if Test Point Normals Data Flag (0024,0057) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240065": {
+      "requiredWhen": {
+        "tag": "00240057",
+        "equals": "YES"
+      },
+      "_condition": "Required if Test Point Normals Data Flag (0024,0057) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240067": {
+      "requiredWhen": {
+        "tag": "00240057",
+        "equals": "YES"
+      },
+      "_condition": "Required if Test Point Normals Data Flag (0024,0057) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240087": {
+      "requiredWhen": {
+        "tag": "00240086",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value for Foveal Sensitivity Measured (0024,0086) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240107": {
+      "requiredWhen": {
+        "tag": "00240106",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value for Blind Spot Localized (0024,0106) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240108": {
+      "requiredWhen": {
+        "tag": "00240106",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value for Blind Spot Localized (0024,0106) is YES."
+    },
+    "visual-field-static-perimetry-test-measurements/00240122": {
+      "requiredWhen": {
+        "tag": "00240120",
+        "equals": "YES"
+      },
+      "_condition": "Required if the value for Screening Baseline Measured (0024,0120) is YES."
+    },
+    "visual-field-static-perimetry-test-results/00240064": {
+      "requiredWhen": {
+        "tag": "00240063",
+        "equals": "YES"
+      },
+      "_condition": "Required if Visual Field Test Normals Flag (0024,0063) is YES."
+    },
+    "visual-field-static-perimetry-test-results/00240075": {
+      "requiredWhen": {
+        "tag": "00240074",
+        "equals": "YES"
+      },
+      "_condition": "Required if Short Term Fluctuation Calculated (0024,0074) is YES."
+    },
+    "visual-field-static-perimetry-test-results/00240077": {
+      "requiredWhen": {
+        "tag": "00240076",
+        "equals": "YES"
+      },
+      "_condition": "Required if Short Term Fluctuation Probability Calculated (0024,0076) is YES."
+    },
+    "visual-field-static-perimetry-test-results/00240079": {
+      "requiredWhen": {
+        "tag": "00240078",
+        "equals": "YES"
+      },
+      "_condition": "Required if Corrected Localized Deviation From Normal Calculated (0024,0078) is YES."
+    },
+    "visual-field-static-perimetry-test-results/00240081": {
+      "requiredWhen": {
+        "tag": "00240080",
+        "equals": "YES"
+      },
+      "_condition": "Required if Corrected Localized Deviation From Normal Probability Calculated (0024,0080) is YES."
+    },
+    "vl-image/00281051": {
+      "requiredWhen": {
+        "tag": "00281050",
+        "present": true
+      },
+      "_condition": "Required if Window Center (0028,1050) is present."
+    },
+    "vl-whole-slide-microscopy-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "vl-whole-slide-microscopy-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "vl-whole-slide-microscopy-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "voi-lut/00281051": {
+      "requiredWhen": {
+        "tag": "00281050",
+        "present": true
+      },
+      "_condition": "Required if Window Center (0028,1050) is present."
+    },
+    "volumetric-presentation-state-identification/00701103": {
+      "requiredWhen": {
+        "tag": "00701102",
+        "present": true
+      },
+      "_condition": "Required if Presentation Sequence Collection UID (0070,1102) is present."
+    },
+    "whole-slide-microscopy-image/00281052": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "whole-slide-microscopy-image/00281053": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "whole-slide-microscopy-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "whole-slide-microscopy-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "whole-slide-microscopy-image/20500020": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "x-ray-3d-angiographic-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "x-ray-3d-angiographic-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "x-ray-3d-angiographic-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "x-ray-3d-craniofacial-image-multi-frame-functional-groups/00200242": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "x-ray-3d-craniofacial-image-multi-frame-functional-groups/00209162": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "x-ray-3d-craniofacial-image-multi-frame-functional-groups/00209228": {
+      "requiredWhen": {
+        "tag": "00209161",
+        "present": true
+      },
+      "_condition": "Required if Concatenation UID (0020,9161) is present."
+    },
+    "x-ray-3d-image/00089092": {
+      "requiredWhen": {
+        "tag": "00081140",
+        "present": true
+      },
+      "_condition": "Required if the Referenced Image Sequence (0008,1140) is present."
+    },
+    "x-ray-3d-image/00282112": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "x-ray-3d-image/00282114": {
+      "requiredWhen": {
+        "tag": "00282110",
+        "equals": "01"
+      },
+      "_condition": "Required if Lossy Image Compression (0028,2110) is \"01\"."
+    },
+    "x-ray-acquisition/00280a04": {
+      "requiredWhen": {
+        "tag": "00280a02",
+        "present": true
+      },
+      "_condition": "Required if Pixel Spacing Calibration Type (0028,0A02) is present."
+    },
+    "x-ray-collimator/00181702": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is RECTANGULAR."
+    },
+    "x-ray-collimator/00181704": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is RECTANGULAR."
+    },
+    "x-ray-collimator/00181706": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is RECTANGULAR."
+    },
+    "x-ray-collimator/00181708": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "RECTANGULAR"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is RECTANGULAR."
+    },
+    "x-ray-collimator/00181710": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "CIRCULAR"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is CIRCULAR."
+    },
+    "x-ray-collimator/00181712": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "CIRCULAR"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is CIRCULAR."
+    },
+    "x-ray-collimator/00181720": {
+      "requiredWhen": {
+        "tag": "00181700",
+        "equals": "POLYGONAL"
+      },
+      "_condition": "Required if a value of Collimator Shape (0018,1700) is POLYGONAL."
+    },
+    "x-ray-detector/00189430": {
+      "requiredWhen": {
+        "tag": "00189462",
+        "present": true
+      },
+      "_condition": "Required if Isocenter Reference System Sequence (0018,9462) is present."
+    },
+    "xa-positioner/00181520": {
+      "requiredWhen": {
+        "tag": "00181500",
+        "equals": "DYNAMIC"
+      },
+      "_condition": "Required if Positioner Motion (0018,1500) equals DYNAMIC."
+    },
+    "xa-positioner/00181521": {
+      "requiredWhen": {
+        "tag": "00181500",
+        "equals": "DYNAMIC"
+      },
+      "_condition": "Required if Positioner Motion (0018,1500) equals DYNAMIC."
+    },
+    "xa-xrf-acquisition/00189474": {
+      "requiredWhen": {
+        "tag": "00181508",
+        "equals": "CARM"
+      },
+      "_condition": "Required if Positioner Type (0018,1508) equals CARM."
+    }
+  },
+  "_identifyingAttributesComment": "Direct patient/operator identifiers a de-identification profile is expected to remove or empty; presence with a value in a forwarded instance is flagged as a residual privacy risk. NOTE: this check is NOT performed by the dciodvfy verifier — the tag set mirrors the attributes deleted by dciodvfy's companion de-identifier dcanon (appsrc/dcfile/dcanon.script -d entries). Lowercase 8-digit hex tags.",
+  "identifyingAttributes": [
+    "00080080",
+    "00080081",
+    "00080092",
+    "00080094",
+    "00081010",
+    "00081040",
+    "00081048",
+    "00081050",
+    "00081060",
+    "00081070",
+    "00100032",
+    "00101000",
+    "00101001",
+    "00101005",
+    "00101040",
+    "00101060",
+    "00101080",
+    "00101081",
+    "00102154",
+    "00102155",
+    "00102180",
+    "001021f0",
+    "00102297",
+    "00102299",
+    "00104000",
+    "00403001"
+  ],
+  "_unpairedBodyPartsComment": "Body Part Examined (0018,0015) Defined Terms that denote an unpaired (midline) structure; any body part NOT in this list is treated as paired and is expected to carry a Laterality. Verbatim from dciodvfy's LateralityRequired condition (libsrc/standard/condn.tpl). Uppercase.",
+  "unpairedBodyParts": [
+    "ABDOMEN", "ABDOMENPELVIS", "AORTA", "BACK", "BLADDER", "BRAIN",
+    "CEREBELLUM", "CSPINE", "CTSPINE", "CERVIX", "CHEST", "CHESTABDOMEN",
+    "CHESTABDPELVIS", "CIRCLEOFWILLIS", "COCCYX", "COLON", "CORONARYARTERY",
+    "DUODENUM", "WHOLEBODY", "ESOPHAGUS", "FACE", "GALLBLADDER", "HEAD",
+    "HEADNECK", "HEART", "ILEUM", "ILIUM", "JAW", "JEJUNUM", "LARYNX", "LIVER",
+    "LSPINE", "LSSPINE", "MAXILLA", "MEDIASTINUM", "MOUTH", "NECK", "NECKCHEST",
+    "NECKCHESTABDOMEN", "NECKCHESTABDPELV", "NOSE", "PANCREAS", "PELVIS",
+    "PENIS", "PHARYNX", "PROSTATE", "RECTUM", "SSPINE", "SCALP", "SKULL",
+    "SPINE", "SPLEEN", "STERNUM", "STOMACH", "TSPINE", "TLSPINE", "THYMUS",
+    "THYROID", "TONGUE", "TRACHEA", "URETER", "URETHRA", "UTERUS", "VAGINA",
+    "VULVA"
+  ],
+  "_zeroComment": "Numeric attributes whose value must not be zero. zeroIsError = structural counts / geometry where zero is illegal (dciodvfy NotZeroError); zeroIsWarning = acquisition / physics parameters where zero is implausible (dciodvfy NotZeroWarning). Lowercase 8-digit hex tags.",
+  "zeroIsError": [
+    "00280010",
+    "00280011",
+    "00280100",
+    "00280101",
+    "00280002",
+    "00280008",
+    "00280030",
+    "00181164",
+    "00180050",
+    "00281053"
+  ],
+  "zeroIsWarning": [
+    "00180060",
+    "00181150",
+    "00181151",
+    "00181152",
+    "00181110",
+    "00181111",
+    "00180081",
+    "00180080",
+    "00180082",
+    "00181314",
+    "00180087",
+    "00181170",
+    "00101030",
+    "00101020"
+  ],
+  "_functionalGroupMacrosComment": "Top-level sequence (and its Type within the macro) carried by each Functional Group Macro, keyed by the macroId of ciod_to_func_group_macros.json. Derived from innolitics macro_to_attributes.json (top-level SQ attributes). The vendored module_to_attributes.json flattens each macro under both the Shared (5200,9229) and the Per-frame (5200,9230) Functional Groups Sequences; the validator uses this map with the macro usage instead.",
+  "functionalGroupMacros": {
+    "breast-biopsy-target": {
+      "00182041": "1C"
+    },
+    "breast-x-ray-acquisition-dose": {
+      "00189542": "1"
+    },
+    "breast-x-ray-detector": {
+      "00189541": "1"
+    },
+    "breast-x-ray-geometry": {
+      "00189476": "1"
+    },
+    "breast-x-ray-isocenter-reference-system": {
+      "00189462": "1"
+    },
+    "breast-x-ray-positioner": {
+      "00189405": "1"
+    },
+    "camera-position": {
+      "0034000b": "1"
+    },
+    "cardiac-synchronization": {
+      "00189118": "1"
+    },
+    "confocal-microscopy-image-frame-type": {
+      "00480116": "1"
+    },
+    "contrast-bolus-usage": {
+      "00189341": "1"
+    },
+    "ct-acquisition-details": {
+      "00189304": "1"
+    },
+    "ct-acquisition-type": {
+      "00189301": "1"
+    },
+    "ct-additional-x-ray-source": {
+      "00189360": "1"
+    },
+    "ct-exposure": {
+      "00189321": "1"
+    },
+    "ct-geometry": {
+      "00189312": "1"
+    },
+    "ct-image-frame-type": {
+      "00189329": "1"
+    },
+    "ct-pixel-value-transformation": {
+      "00289145": "1"
+    },
+    "ct-position": {
+      "00189326": "1"
+    },
+    "ct-reconstruction": {
+      "00189314": "1"
+    },
+    "ct-table-dynamics": {
+      "00189308": "1"
+    },
+    "ct-x-ray-details": {
+      "00189325": "1"
+    },
+    "derivation-image": {
+      "00089124": "2"
+    },
+    "frame-anatomy": {
+      "00209071": "1"
+    },
+    "frame-content": {
+      "00209111": "1"
+    },
+    "frame-display-shutter": {
+      "00189472": "1"
+    },
+    "frame-pixel-shift": {
+      "00289415": "1"
+    },
+    "frame-usefulness": {
+      "00340009": "1"
+    },
+    "frame-voi-lut": {
+      "00289132": "1"
+    },
+    "frame-voi-lut-with-lut": {
+      "00289132": "1"
+    },
+    "functional-mr": {
+      "00189621": "1"
+    },
+    "identity-pixel-value-transformation": {
+      "00289145": "1"
+    },
+    "image-data-type": {
+      "00189807": "1"
+    },
+    "image-frame-conversion-source": {
+      "00209172": "1"
+    },
+    "intravascular-frame-content": {
+      "00520027": "1"
+    },
+    "intravascular-oct-frame-content": {
+      "00520029": "1"
+    },
+    "intravascular-oct-frame-type": {
+      "00520025": "1"
+    },
+    "irradiation-event-identification": {
+      "00189477": "1"
+    },
+    "mr-arterial-spin-labeling": {
+      "00189251": "1"
+    },
+    "mr-averages": {
+      "00189119": "1"
+    },
+    "mr-diffusion": {
+      "00189117": "1"
+    },
+    "mr-echo": {
+      "00189114": "1"
+    },
+    "mr-fov-geometry": {
+      "00189125": "1"
+    },
+    "mr-image-frame-type": {
+      "00189226": "1"
+    },
+    "mr-imaging-modifier": {
+      "00189006": "1"
+    },
+    "mr-metabolite-map": {
+      "00189152": "1"
+    },
+    "mr-modifier": {
+      "00189115": "1"
+    },
+    "mr-receive-coil": {
+      "00189042": "1"
+    },
+    "mr-spatial-saturation": {
+      "00189107": "2"
+    },
+    "mr-spectroscopy-fov-geometry": {
+      "00189103": "1"
+    },
+    "mr-spectroscopy-frame-type": {
+      "00189227": "1"
+    },
+    "mr-timing-and-related-parameters": {
+      "00189112": "1"
+    },
+    "mr-transmit-coil": {
+      "00189049": "1"
+    },
+    "mr-velocity-encoding": {
+      "00189197": "1"
+    },
+    "multi-energy-ct-characteristics": {
+      "00189364": "1C"
+    },
+    "multi-energy-ct-processing": {
+      "00189363": "3"
+    },
+    "ophthalmic-frame-location": {
+      "00220031": "1"
+    },
+    "optical-path-identification": {
+      "00480207": "1"
+    },
+    "parametric-map-frame-type": {
+      "00409092": "1"
+    },
+    "patient-orientation-in-frame": {
+      "00209450": "1"
+    },
+    "patient-physiological-state": {
+      "00189771": "1"
+    },
+    "pet-detector-motion-details": {
+      "00189733": "1"
+    },
+    "pet-frame-acquisition": {
+      "00189732": "1"
+    },
+    "pet-frame-correction-factors": {
+      "00189736": "1"
+    },
+    "pet-frame-type": {
+      "00189751": "1"
+    },
+    "pet-position": {
+      "00189735": "1"
+    },
+    "pet-reconstruction": {
+      "00189749": "1"
+    },
+    "pet-table-dynamics": {
+      "00189734": "1"
+    },
+    "photoacoustic-excitation-characteristics": {
+      "00189821": "1"
+    },
+    "photoacoustic-image-data-type": {
+      "00189807": "1"
+    },
+    "photoacoustic-image-frame-type": {
+      "00189835": "1"
+    },
+    "photoacoustic-reconstruction-algorithm": {
+      "0018993d": "3"
+    },
+    "pixel-intensity-relationship-lut": {
+      "00289422": "1"
+    },
+    "pixel-measures": {
+      "00289110": "1"
+    },
+    "pixel-value-transformation": {
+      "00289145": "1"
+    },
+    "plane-orientation-patient": {
+      "00209116": "1"
+    },
+    "plane-orientation-volume": {
+      "0020930f": "1"
+    },
+    "plane-position-patient": {
+      "00209113": "1"
+    },
+    "plane-position-slide": {
+      "0048021a": "1"
+    },
+    "plane-position-volume": {
+      "0020930e": "1"
+    },
+    "radiopharmaceutical-usage": {
+      "00189737": "1"
+    },
+    "real-world-value-mapping": {
+      "00409096": "1"
+    },
+    "referenced-image": {
+      "00081140": "2"
+    },
+    "respiratory-synchronization": {
+      "00209253": "1"
+    },
+    "rt-beam-limiting-device-opening-sequence": {
+      "300a0656": "1C"
+    },
+    "rt-image-frame-context": {
+      "30020103": "1"
+    },
+    "rt-image-frame-general-content": {
+      "30020102": "1"
+    },
+    "rt-image-frame-imaging-device-position": {
+      "30020109": "1"
+    },
+    "rt-image-frame-radiation-acquisition-parameters": {
+      "3002010c": "1"
+    },
+    "segmentation": {
+      "0062000a": "1"
+    },
+    "specimen-reference": {
+      "00480110": "2"
+    },
+    "stored-value-color-range": {
+      "00281230": "1"
+    },
+    "temporal-position": {
+      "00209310": "1"
+    },
+    "time-of-frame": {
+      "0034000d": "1"
+    },
+    "unassigned-per-frame-converted-attributes": {
+      "00209171": "1C"
+    },
+    "unassigned-shared-converted-attributes": {
+      "00209170": "1C"
+    },
+    "us-image-description": {
+      "00189806": "1"
+    },
+    "whole-slide-microscopy-image-frame-type": {
+      "00400710": "1"
+    },
+    "x-ray-3d-frame-type": {
+      "00189504": "1"
+    },
+    "x-ray-calibration-device-usage": {
+      "00189455": "1"
+    },
+    "x-ray-collimator": {
+      "00189407": "1"
+    },
+    "x-ray-exposure-control-sensing-regions": {
+      "00189434": "1"
+    },
+    "x-ray-field-of-view": {
+      "00189432": "1"
+    },
+    "x-ray-filter": {
+      "00189556": "1"
+    },
+    "x-ray-frame-acquisition": {
+      "00189417": "1"
+    },
+    "x-ray-frame-characteristics": {
+      "00189412": "1"
+    },
+    "x-ray-frame-detector-parameters": {
+      "00189451": "1"
+    },
+    "x-ray-frame-pixel-data-properties": {
+      "00289443": "1"
+    },
+    "x-ray-geometry": {
+      "00189476": "1"
+    },
+    "x-ray-grid": {
+      "00189555": "1"
+    },
+    "x-ray-isocenter-reference-system": {
+      "00189462": "1"
+    },
+    "x-ray-object-thickness": {
+      "00189456": "1"
+    },
+    "x-ray-positioner": {
+      "00189405": "1"
+    },
+    "x-ray-projection-pixel-calibration": {
+      "00189401": "1"
+    },
+    "x-ray-table-position": {
+      "00189406": "1"
+    }
+  },
+  "_perFrameOnlyFunctionalGroupMacrosComment": "Functional Group Macros that may only be part of the Per-frame Functional Groups Sequence (PS3.3 C.7.6.16.2.2 Frame Content), whatever their conditional statement says. Macros whose conditional statement says they shall/may not be used as a Shared Functional Group are detected automatically.",
+  "perFrameOnlyFunctionalGroupMacros": [
+    "frame-content"
+  ],
+  "_functionalGroupConditionsComment": "Machine-evaluable usage conditions of Functional Group Macros with usage C, keyed by ciodId/macroId and evaluated on the top-level dataset. A C macro without an entry (condition on frame content, other macros or free text) is only validated when present. valueIndex (1-based) restricts the comparison to one value of a multi-valued attribute.",
+  "functionalGroupConditions": {
+    "breast-projection-x-ray-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "breast-projection-x-ray-image/derivation-image": {
+      "requiredWhen": {
+        "anyOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "DERIVED"
+          },
+          {
+            "allOf": [
+              {
+                "tag": "00080008",
+                "valueIndex": 1,
+                "equals": "ORIGINAL"
+              },
+              {
+                "tag": "00080068",
+                "equals": "FOR PRESENTATION"
+              }
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if the Image Type (0008,0008) Value 1 equals DERIVED or Value 1 is ORIGINAL and Presentation Intent Type equals FOR PRESENTATION. May be present otherwise."
+    },
+    "breast-tomosynthesis-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "breast-tomosynthesis-image/derivation-image": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals DERIVED."
+    },
+    "confocal-microscopy-image/optical-path-identification": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "confocal-microscopy-tiled-pyramidal-image/optical-path-identification": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "enhanced-continuous-rt-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise"
+    },
+    "enhanced-continuous-rt-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-continuous-rt-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-continuous-rt-image/rt-image-frame-radiation-acquisition-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL. May be present otherwise."
+    },
+    "enhanced-ct-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-ct-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-ct-image/ct-acquisition-details": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-acquisition-type": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-exposure": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-geometry": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-position": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise"
+    },
+    "enhanced-ct-image/ct-table-dynamics": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/ct-x-ray-details": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED, may be present otherwise."
+    },
+    "enhanced-ct-image/real-world-value-mapping": {
+      "requiredWhen": {
+        "tag": "00189361",
+        "equals": "YES"
+      },
+      "_condition": "Required if Multi-energy CT Acquisition (0018,9361) is YES. May be present otherwise."
+    },
+    "enhanced-ct-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-mr-color-image/mr-arterial-spin-labeling": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "ASL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 is ASL. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-averages": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-echo": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-imaging-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-metabolite-map": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "METABOLITE_MAP"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 equals METABOLITE_MAP. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-receive-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-timing-and-related-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/mr-transmit-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-color-image/pixel-value-transformation": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "enhanced-mr-color-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-mr-image/mr-arterial-spin-labeling": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "ASL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 is ASL. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-averages": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-echo": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-imaging-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-metabolite-map": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 3,
+        "equals": "METABOLITE_MAP"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 3 equals METABOLITE_MAP. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-receive-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-timing-and-related-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/mr-transmit-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-mr-image/pixel-value-transformation": {
+      "requiredWhen": {
+        "tag": "00280004",
+        "equals": "MONOCHROME2"
+      },
+      "_condition": "Required if Photometric Interpretation (0028,0004) is MONOCHROME2."
+    },
+    "enhanced-mr-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-pet-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "tag": "00189037",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-detector-motion-details": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00540202",
+            "notIn": [
+              "STATIONARY"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and Type of Detector Motion (0054,0202) is not equal to STATIONARY."
+    },
+    "enhanced-pet-image/pet-frame-acquisition": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-frame-correction-factors": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-position": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-reconstruction": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-pet-image/pet-table-dynamics": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00181134",
+            "equals": "DYNAMIC"
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and Table Motion (0018,1134) is equal to DYNAMIC."
+    },
+    "enhanced-pet-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "tag": "00189170",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE. May be present otherwise."
+    },
+    "enhanced-rt-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-rt-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "enhanced-rt-image/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "enhanced-rt-image/rt-image-frame-radiation-acquisition-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL. May be present otherwise."
+    },
+    "enhanced-us-volume/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "enhanced-us-volume/plane-orientation-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "enhanced-us-volume/plane-position-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "enhanced-xa-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "enhanced-xa-image/patient-orientation-in-frame": {
+      "requiredWhen": {
+        "tag": "00189474",
+        "equals": "YES"
+      },
+      "_condition": "Required if C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES. May be present otherwise."
+    },
+    "enhanced-xa-image/pixel-intensity-relationship-lut": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "equals": "LOG"
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) equals LOG. May be present otherwise."
+    },
+    "enhanced-xa-image/x-ray-collimator": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "ORIGINAL"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL. May be present otherwise."
+    },
+    "enhanced-xa-image/x-ray-frame-detector-parameters": {
+      "requiredWhen": {
+        "tag": "00189420",
+        "equals": "DIGITAL_DETECTOR"
+      },
+      "_condition": "Required if X-Ray Receptor Type (0018,9420) is present and equals DIGITAL_DETECTOR."
+    },
+    "enhanced-xa-image/x-ray-positioner": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00189474",
+            "equals": "YES"
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES. May be present otherwise."
+    },
+    "enhanced-xa-image/x-ray-projection-pixel-calibration": {
+      "requiredWhen": {
+        "tag": "00189474",
+        "equals": "YES"
+      },
+      "_condition": "Required if C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES."
+    },
+    "enhanced-xa-image/x-ray-table-position": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "equals": "ORIGINAL"
+          },
+          {
+            "tag": "00189474",
+            "equals": "YES"
+          }
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals ORIGINAL and C-arm Positioner Tabletop Relationship (0018,9474) is present and equals YES. May be present otherwise."
+    },
+    "enhanced-xrf-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "enhanced-xrf-image/pixel-intensity-relationship-lut": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "equals": "LOG"
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) equals LOG. May be present otherwise."
+    },
+    "enhanced-xrf-image/x-ray-frame-detector-parameters": {
+      "requiredWhen": {
+        "tag": "00189420",
+        "equals": "DIGITAL_DETECTOR"
+      },
+      "_condition": "Required if X-Ray Receptor Type (0018,9420) is present and equals DIGITAL_DETECTOR."
+    },
+    "intravascular-optical-coherence-tomography-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "tag": "00189037",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE. May be present otherwise."
+    },
+    "intravascular-optical-coherence-tomography-image/intravascular-frame-content": {
+      "requiredWhen": {
+        "anyOf": [
+          {
+            "tag": "00183100",
+            "equals": "MEASURED"
+          },
+          {
+            "tag": "00080068",
+            "equals": "FOR PRESENTATION"
+          }
+        ]
+      },
+      "_condition": "Required if Intravascular Acquisition (0018,3100) equals MEASURED or Presentation Intent Type (0008,0068) equals FOR PRESENTATION."
+    },
+    "intravascular-optical-coherence-tomography-image/intravascular-oct-frame-content": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PROCESSING"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) equals FOR PROCESSING."
+    },
+    "intravascular-optical-coherence-tomography-image/pixel-intensity-relationship-lut": {
+      "requiredWhen": {
+        "tag": "00281040",
+        "equals": "LOG"
+      },
+      "_condition": "Required if Pixel Intensity Relationship (0028,1040) equals LOG. May be present otherwise."
+    },
+    "intravascular-optical-coherence-tomography-image/pixel-measures": {
+      "requiredWhen": {
+        "tag": "00080068",
+        "equals": "FOR PRESENTATION"
+      },
+      "_condition": "Required if Presentation Intent Type (0008,0068) is FOR PRESENTATION."
+    },
+    "mr-spectroscopy/cardiac-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189037",
+            "notIn": [
+              "NONE"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used."
+    },
+    "mr-spectroscopy/mr-averages": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-echo": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-modifier": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-receive-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-timing-and-related-parameters": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/mr-transmit-coil": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "in": [
+          "ORIGINAL",
+          "MIXED"
+        ]
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "mr-spectroscopy/respiratory-synchronization": {
+      "requiredWhen": {
+        "allOf": [
+          {
+            "tag": "00189170",
+            "notIn": [
+              "NONE",
+              "REALTIME",
+              "BREATH_HOLD"
+            ]
+          },
+          {
+            "tag": "00080008",
+            "valueIndex": 1,
+            "in": [
+              "ORIGINAL",
+              "MIXED"
+            ]
+          }
+        ]
+      },
+      "_condition": "Required if Respiratory Motion Compensation Technique (0018,9170) equals other than NONE, REALTIME or BREATH_HOLD and if Image Type (0008,0008) Value 1 is ORIGINAL or MIXED. May be present otherwise."
+    },
+    "ophthalmic-tomography-image/cardiac-synchronization": {
+      "requiredWhen": {
+        "tag": "00189037",
+        "notIn": [
+          "NONE"
+        ]
+      },
+      "_condition": "Required if Cardiac Synchronization Technique (0018,9037) equals other than NONE. May be present otherwise."
+    },
+    "ophthalmic-tomography-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if Contrast/Bolus Agent Sequence (0018,0012) is used. May not be used as a Shared Functional Group"
+    },
+    "parametric-map/stored-value-color-range": {
+      "requiredWhen": {
+        "tag": "00089205",
+        "equals": "COLOR_RANGE"
+      },
+      "_condition": "Required if Pixel Presentation (0008,9205) in the Parametric Map Image Module equals COLOR_RANGE."
+    },
+    "photoacoustic-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "photoacoustic-image/plane-orientation-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "photoacoustic-image/plane-position-patient": {
+      "requiredWhen": {
+        "tag": "00209307",
+        "equals": "PATIENT"
+      },
+      "_condition": "Required if Ultrasound Acquisition Geometry (0020,9307) has a value of PATIENT. May be present otherwise. See Section A.59.4.1.2."
+    },
+    "segmentation/segmentation": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL"
+    },
+    "vl-whole-slide-microscopy-image/optical-path-identification": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "vl-whole-slide-microscopy-image/plane-position-slide": {
+      "requiredWhen": {
+        "tag": "00209311",
+        "notIn": [
+          "TILED_FULL"
+        ]
+      },
+      "_condition": "Required if Dimension Organization Type (0020,9311) is not TILED_FULL; may be present otherwise."
+    },
+    "x-ray-3d-angiographic-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "x-ray-3d-angiographic-image/derivation-image": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals DERIVED."
+    },
+    "x-ray-3d-craniofacial-image/contrast-bolus-usage": {
+      "requiredWhen": {
+        "tag": "00180012",
+        "present": true
+      },
+      "_condition": "Required if the Enhanced Contrast/Bolus Module is present."
+    },
+    "x-ray-3d-craniofacial-image/derivation-image": {
+      "requiredWhen": {
+        "tag": "00080008",
+        "valueIndex": 1,
+        "equals": "DERIVED"
+      },
+      "_condition": "Required if Image Type (0008,0008) Value 1 equals DERIVED."
+    }
+  }
+}

@@ -9,29 +9,24 @@
  */
 package org.karnak.backend.model.image;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.dcm4che3.img.util.Editable;
+import org.jspecify.annotations.NullUnmarked;
 import org.weasis.opencv.data.PlanarImage;
 
+@Setter
+@Getter
+@NullUnmarked
 public class TransformedPlanarImage {
 
-	Editable<PlanarImage> editablePlanarImage;
+	private Editable<PlanarImage> editablePlanarImage;
 
-	PlanarImage planarImage;
+	private PlanarImage planarImage;
 
-	public Editable<PlanarImage> getEditablePlanarImage() {
-		return editablePlanarImage;
-	}
+	private byte[] pixelDataBytes;
 
-	public void setEditablePlanarImage(Editable<PlanarImage> editablePlanarImage) {
-		this.editablePlanarImage = editablePlanarImage;
-	}
-
-	public PlanarImage getPlanarImage() {
-		return planarImage;
-	}
-
-	public void setPlanarImage(PlanarImage planarImage) {
-		this.planarImage = planarImage;
-	}
+	// Whether a mask/defacing transformation was configured for this image.
+	private boolean transformApplied;
 
 }

@@ -1,5 +1,3 @@
-version: '3.7'
-
 name: karnak
 
 services:
@@ -34,11 +32,11 @@ services:
 
 secrets:
   karnak_login_password:
-    file: secrets/karnak_login_password
+    file: secrets/karnak_user_password
   postgres_karnak_password:
     file: secrets/karnak_postgres_password
   postgres_karnak_key:
-      file: secrets/karnak_postgres_key
+    file: secrets/karnak_postgres_key
   oidc_client_secret:
     file: secrets/oidc_client_secret
 

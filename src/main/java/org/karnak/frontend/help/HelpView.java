@@ -18,14 +18,16 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
 import org.karnak.frontend.MainLayout;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.annotation.Secured;
+import org.weasis.core.util.annotations.Generated;
 
 @Route(value = HelpView.ROUTE, layout = MainLayout.class)
 @PageTitle("Karnak - Help")
 @Tag("help-view")
-@Secured({ "ROLE_admin", "ROLE_user" })
+@RolesAllowed({ "admin", "user" })
+@Generated()
 public class HelpView extends VerticalLayout {
 
 	public static final String VIEW_NAME = "Help";
@@ -39,15 +41,14 @@ public class HelpView extends VerticalLayout {
 		setSizeFull();
 		H1 heading = new H1("Help");
 
-		Anchor generalDoc = new Anchor("https://osirix-foundation.github.io/karnak-documentation/",
-				"General documentation");
+		Anchor generalDoc = new Anchor("https://weasis.org/karnak-documentation/", "General documentation");
 		generalDoc.setTarget("_blank");
 
-		Anchor installation = new Anchor("https://osirix-foundation.github.io/karnak-documentation/en/userguide/",
+		Anchor installation = new Anchor("https://weasis.org/karnak-documentation/en/userguide/",
 				"User guide: configuration and administration");
 		installation.setTarget("_blank");
 
-		Anchor profile = new Anchor("https://osirix-foundation.github.io/karnak-documentation/en/profiles/",
+		Anchor profile = new Anchor("https://weasis.org/karnak-documentation/en/profiles/",
 				"Build your own profile for de-identification or for tag morphing");
 		profile.setTarget("_blank");
 

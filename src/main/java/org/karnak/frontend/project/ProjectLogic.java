@@ -10,14 +10,19 @@
 package org.karnak.frontend.project;
 
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.NamedGroupEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.entity.ProjectGroupEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SecretService;
@@ -28,16 +33,20 @@ import org.karnak.frontend.project.component.EditProject;
 import org.karnak.frontend.project.component.GridProject;
 import org.karnak.frontend.project.component.NewProject;
 import org.karnak.frontend.util.CollatorUtils;
+import org.karnak.frontend.util.GroupTreeController;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Project logic service use to make calls to backend and implement logic linked to the
  * project view
  */
-@Service
+@SpringComponent
+@UIScope
 @Slf4j
-public class ProjectLogic extends ListDataProvider<ProjectEntity> {
+@Generated()
+@NullUnmarked
+public class ProjectLogic extends ListDataProvider<ProjectEntity> implements GroupTreeController<ProjectEntity> {
 
 	// View
 	@Getter
@@ -49,7 +58,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 
 	private final transient ProfilePipeService profilePipeService;
 
-	private final SecretService secretService;
+	private final transient SecretService secretService;
 
 	/**
 	 * Autowired constructor
@@ -70,15 +79,60 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 	@Override
 	public void refreshAll() {
 		getItems().clear();
-		getItems().addAll(projectService.getAllProjects());
+		getItems().addAll(projectService.retrieveAllProjects());
 		super.refreshAll();
+		if (projectView != null) {
+			projectView.getGridProject().reload();
+		}
+	}
+
+	// --- GroupTreeController ---------------------------------------------------------
+
+	@Override
+	public List<ProjectEntity> listItems() {
+		return projectService.retrieveAllProjects();
+	}
+
+	@Override
+	public List<? extends NamedGroupEntity> listGroups() {
+		return projectService.getAllGroups();
+	}
+
+	@Override
+	public NamedGroupEntity groupOf(ProjectEntity item) {
+		return item.getGroup();
+	}
+
+	@Override
+	public Long itemId(ProjectEntity item) {
+		return item.getId();
+	}
+
+	@Override
+	public NamedGroupEntity createGroup(String name) {
+		return projectService.saveGroup(name);
+	}
+
+	@Override
+	public void renameGroup(NamedGroupEntity group, String name) {
+		projectService.renameGroup((ProjectGroupEntity) group, name);
+	}
+
+	@Override
+	public void deleteGroup(NamedGroupEntity group) {
+		projectService.deleteGroup((ProjectGroupEntity) group);
+	}
+
+	@Override
+	public void assign(ProjectEntity item, NamedGroupEntity group) {
+		projectService.assignToGroup(item, (ProjectGroupEntity) group);
 	}
 
 	/**
 	 * Initialize the data provider
 	 */
 	private void initDataProvider() {
-		getItems().addAll(projectService.getAllProjects());
+		getItems().addAll(projectService.retrieveAllProjects());
 	}
 
 	public Long enter(String dataIdStr) {
@@ -128,10 +182,10 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 		editProject.getButtonUpdate().addClickListener(event -> {
 			if (editProject.getProjectEntity() != null
 					&& editProject.getBinder().writeBeanIfValid(editProject.getProjectEntity())) {
-				if (editProject.getProjectEntity().getDestinationEntities() != null
-						&& !editProject.getProjectEntity().getDestinationEntities().isEmpty()) {
+				List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getAllDestinations();
+				if (destinationEntities != null && !destinationEntities.isEmpty()) {
 					ConfirmDialog dialog = new ConfirmDialog(
-							String.format("The project %s is used, are you sure you want to updated ?",
+							String.format("The project %s is used, are you sure you want to update it?",
 									editProject.getProjectEntity().getName()));
 					dialog.addConfirmationListener(componentEvent -> {
 						projectService.update(editProject.getProjectEntity());
@@ -155,7 +209,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 	 */
 	public void addEditEventButtonRemove(EditProject editProject) {
 		editProject.getButtonRemove().addClickListener(e -> {
-			List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getDestinationEntities();
+			List<DestinationEntity> destinationEntities = editProject.getProjectEntity().getAllDestinations();
 			if (destinationEntities != null && !destinationEntities.isEmpty()) {
 				editProject.getDialogWarning().setText(editProject.getProjectEntity());
 				editProject.getDialogWarning().open();
@@ -179,7 +233,7 @@ public class ProjectLogic extends ListDataProvider<ProjectEntity> {
 	}
 
 	private void addDropDownProfileList(ProfileDropDown profileDropDown) {
-		List<ProfileEntity> profiles = profilePipeService.getAllProfiles();
+		List<ProfileEntity> profiles = profilePipeService.retrieveAllProfiles();
 		profiles.sort(CollatorUtils.comparingThen(ProfileEntity::getName, ProfileEntity::getVersion));
 
 		profileDropDown.setItems(profiles);

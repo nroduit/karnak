@@ -17,7 +17,6 @@ import org.karnak.backend.data.repo.SOPClassUIDRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@SuppressWarnings("serial")
 @Service
 public class SOPClassUIDService extends ListDataProvider<SOPClassUIDEntity> {
 
@@ -40,10 +39,7 @@ public class SOPClassUIDService extends ListDataProvider<SOPClassUIDEntity> {
 	}
 
 	public List<SOPClassUIDEntity> getAllSOPClassUIDs() {
-		List<SOPClassUIDEntity> list = new ArrayList<>();
-		sopClassUIDRepo.findAll() //
-			.forEach(list::add);
-		return list;
+		return new ArrayList<>(sopClassUIDRepo.findAll());
 	}
 
 	public List<String> getAllSOPClassUIDsName() {

@@ -17,9 +17,13 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.frontend.component.ProfileDropDown;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
+@NullUnmarked
 public class EditProject extends VerticalLayout {
 
 	@Getter
@@ -84,8 +88,8 @@ public class EditProject extends VerticalLayout {
 		profileDropDown.setLabel("De-identification Profile");
 		profileDropDown.setWidthFull();
 		buttonUpdate = new Button("Update");
-		buttonRemove = new Button("Remove");
-		buttonRemove.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+		buttonRemove = new Button("Delete");
+		buttonRemove.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
 		horizontalLayoutButtons = new HorizontalLayout(buttonUpdate, buttonRemove);
 	}
 

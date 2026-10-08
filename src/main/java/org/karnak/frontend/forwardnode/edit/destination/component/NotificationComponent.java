@@ -11,6 +11,7 @@ package org.karnak.frontend.forwardnode.edit.destination.component;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -20,14 +21,18 @@ import com.vaadin.flow.data.binder.ValidationResult;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.constant.Notification;
 import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.frontend.component.converter.HStringToIntegerConverter;
 import org.karnak.frontend.util.UIS;
+import org.weasis.core.util.annotations.Generated;
 
 /**
  * Create a notification component
  */
+@Generated()
+@NullUnmarked
 public class NotificationComponent extends VerticalLayout {
 
 	// Components
@@ -87,14 +92,23 @@ public class NotificationComponent extends VerticalLayout {
 	 * Add components in notification components
 	 */
 	private void addComponents() {
-		// notificationObjectsDiv.add(UIS.setWidthFull(new HorizontalLayout(notify)),
-		// UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix,
-		// notifyObjectRejectionPrefix)));
 		notificationInputsDiv.add(UIS.setWidthFull(new VerticalLayout(UIS.setWidthFull(new HorizontalLayout(notify)),
-				UIS.setWidthFull(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectRejectionPrefix)),
-				UIS.setWidthFull(new HorizontalLayout(notifyObjectPattern, notifyObjectValues, notifyInterval)))));
+				spreadRow(new HorizontalLayout(notifyObjectErrorPrefix, notifyObjectRejectionPrefix)),
+				spreadRow(new HorizontalLayout(notifyObjectPattern, notifyObjectValues, notifyInterval)))));
 
 		add(UIS.setWidthFull(new HorizontalLayout(activateNotification)), notificationInputsDiv);
+	}
+
+	/**
+	 * Make a row fill the full width and spread its fixed-width fields so the last one
+	 * aligns with the right edge.
+	 * @param row Row to configure
+	 * @return the configured row
+	 */
+	private static HorizontalLayout spreadRow(HorizontalLayout row) {
+		row.setWidthFull();
+		row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+		return row;
 	}
 
 	/**
@@ -110,16 +124,21 @@ public class NotificationComponent extends VerticalLayout {
 	private void buildListenerActivateNotification() {
 		activateNotification.addValueChangeListener(event -> {
 			if (event != null && event.getValue()) {
-				notificationInputsDiv.setVisible(true);
-				notificationObjectsDiv.setVisible(true);
 				// Set default values if null or empty
 				updateDefaultValuesNotificationTextFields();
 			}
-			else {
-				notificationInputsDiv.setVisible(false);
-				notificationObjectsDiv.setVisible(false);
-			}
+			updateNotificationInputsVisibility();
 		});
+	}
+
+	/**
+	 * The notification inputs (recipients...) are needed as soon as the notification is
+	 * enabled
+	 */
+	private void updateNotificationInputsVisibility() {
+		boolean visible = Boolean.TRUE.equals(activateNotification.getValue());
+		notificationInputsDiv.setVisible(visible);
+		notificationObjectsDiv.setVisible(visible);
 	}
 
 	/**
@@ -190,7 +209,7 @@ public class NotificationComponent extends VerticalLayout {
 	private void buildNotifyInterval() {
 		notifyInterval = new TextField(String.format("Notif.: interval (Default: %s)", Notification.DEFAULT_INTERVAL));
 		notifyInterval.setWidth("32%");
-		notifyInterval.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+		notifyInterval.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
 		UIS.setTooltip(notifyInterval, String.format(
 				"Interval in seconds for sending a notification (when no new image is arrived in the archive folder). Default value: %s",
 				Notification.DEFAULT_INTERVAL));
@@ -303,6 +322,7 @@ public class NotificationComponent extends VerticalLayout {
 
 		// Interval
 		binder.forField(getNotifyInterval()) //
+			.withNullRepresentation("") //
 			.withConverter(new HStringToIntegerConverter()) //
 			.bind(DestinationEntity::getNotifyInterval, DestinationEntity::setNotifyInterval);
 

@@ -9,16 +9,17 @@
  */
 package org.karnak.frontend.authconfig;
 
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
 import org.karnak.backend.data.entity.AuthConfigEntity;
 import org.karnak.backend.enums.AuthConfigType;
 import org.karnak.frontend.MainLayout;
@@ -26,12 +27,13 @@ import org.karnak.frontend.authconfig.component.AuthConfigComponent;
 import org.karnak.frontend.authconfig.component.NewAuthConfigComponent;
 import org.karnak.frontend.component.WarningConfirmDialog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
+import org.weasis.core.util.annotations.Generated;
 
 @Route(value = AuthConfigView.ROUTE, layout = MainLayout.class)
 @PageTitle("Karnak - Authentication Config")
 @Tag("auth-config-view")
-@Secured({ "ROLE_admin" })
+@RolesAllowed("admin")
+@Generated()
 public class AuthConfigView extends HorizontalLayout {
 
 	public static final String VIEW_NAME = "Authentication Config";
@@ -55,7 +57,7 @@ public class AuthConfigView extends HorizontalLayout {
 
 		authConfigGrid = new Grid<>();
 		authConfigComponent = new AuthConfigComponent();
-		authConfigComponent.setWidth("72%");
+		authConfigComponent.setWidth("100%");
 
 		initComponents();
 		buildLayout();
@@ -68,7 +70,11 @@ public class AuthConfigView extends HorizontalLayout {
 
 		setAlignItems(Alignment.STRETCH);
 		this.getStyle().setDisplay(Style.Display.FLEX);
-		add(barAndGridLayout, authConfigComponent);
+
+		SplitLayout splitLayout = new SplitLayout(barAndGridLayout, authConfigComponent);
+		splitLayout.setSizeFull();
+		splitLayout.setSplitterPosition(25);
+		add(splitLayout);
 	}
 
 	private void initComponents() {
@@ -86,7 +92,7 @@ public class AuthConfigView extends HorizontalLayout {
 		barAndGridLayout = new VerticalLayout();
 		barAndGridLayout.add(newAuthConfigComponent);
 		barAndGridLayout.add(authConfigGrid);
-		barAndGridLayout.setWidth("25%");
+		barAndGridLayout.setWidth("100%");
 
 	}
 
@@ -116,25 +122,29 @@ public class AuthConfigView extends HorizontalLayout {
 	}
 
 	private void addEventCreateAuthConfig() {
-		newAuthConfigComponent.getSaveAuthConfig().addClickListener(buttonClickEvent -> validateIdentifier());
-		newAuthConfigComponent.getNewNameField().addKeyDownListener(Key.ENTER, keyDownEvent -> validateIdentifier());
+		newAuthConfigComponent.getDialog().setOnConfirm(this::validateIdentifier);
 	}
 
-	private void validateIdentifier() {
+	/**
+	 * Validate the identifier entered in the new-auth-config popup.
+	 * @return {@code true} when the identifier is valid (the popup closes and the empty
+	 * form is shown), {@code false} to keep the popup open with the error message
+	 */
+	private boolean validateIdentifier() {
 		String name = newAuthConfigComponent.getNewNameField().getValue();
 		if (name == null || name.isEmpty()) {
 			newAuthConfigComponent.getNewNameField().setInvalid(true);
 			newAuthConfigComponent.getNewNameField().setErrorMessage("Identifier is required");
+			return false;
 		}
 		else if (authConfigLogic.contains(name)) {
 			newAuthConfigComponent.getNewNameField().setInvalid(true);
 			newAuthConfigComponent.getNewNameField().setErrorMessage("This identifier already exists");
+			return false;
 		}
-		else {
-			newAuthConfigComponent.getNewNameField().setInvalid(false);
-			authConfigComponent.displayEmptyForm(name);
-			newAuthConfigComponent.resetNewAuthConfigComponent();
-		}
+		newAuthConfigComponent.getNewNameField().setInvalid(false);
+		authConfigComponent.displayEmptyForm(name);
+		return true;
 	}
 
 	private void addEventSaveAuthConfig() {

@@ -1,1 +1,276 @@
-@import url('./main-layout.css');
+/* Global application styles for the Karnak UI (Aura-based). */
+
+/* ===== Semantic text colors =====
+ * Shared classes for recurring, meaning-carrying text styling, applied from Java via
+ * addClassName(...) instead of repeating inline getStyle().set("color", ...) tokens.
+ */
+.karnak-error-text {
+  color: var(--aura-red-text);
+}
+
+.karnak-secondary-text {
+  color: var(--vaadin-text-color-secondary);
+}
+
+/* ===== Form grouping helpers =====
+ * Used by the destination panels (de-identification, tag morphing) to give a
+ * readable hierarchy without Lumo tokens.
+ */
+
+/* Advisory note shown inside a form card: an informative caution, not an error. */
+.karnak-note-text {
+  display: block;
+  color: var(--vaadin-text-color-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--aura-orange);
+  background-color: color-mix(in srgb, var(--aura-orange) 8%, transparent);
+  border-radius: 4px;
+}
+
+/* Small uppercase heading that groups related fields inside a form card. */
+.karnak-section-title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: var(--aura-font-weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vaadin-text-color-secondary);
+  margin: 0.5rem 0 0.15rem;
+}
+
+/* ===== Titles =====
+ * Shared heading style built on Aura's default type scale (font-size-l +
+ * semibold weight + matching line-height) instead of the raw `large` / `bolder`
+ * CSS keywords, which sit outside Aura's token system. Compose with
+ * `karnak-error-text` for a red (warning) dialog title.
+ */
+.karnak-title,
+.karnak-dialog-title {
+  font-size: var(--aura-font-size-l);
+  font-weight: var(--aura-font-weight-semibold);
+  line-height: var(--aura-line-height-l);
+}
+
+/* A title that introduces a dialog body, with Aura's small gap below it. */
+.karnak-dialog-title {
+  padding-bottom: var(--vaadin-gap-s);
+}
+
+/* ===== Message box (see org.karnak.frontend.component.MessageBox) ===== */
+.stroked-button {
+  border: 1px solid currentColor;
+}
+
+.message-box {
+  width: 100%;
+}
+
+.message-box-layout {
+  border-style: solid;
+  border-width: 1px;
+  padding: 0;
+}
+
+.message-box-layout-with-margin {
+  margin: 0 16px;
+}
+
+.message-box-layout.info {
+  border-color: var(--aura-accent-color);
+}
+
+.message-box-layout.warn {
+  border-color: var(--aura-orange);
+}
+
+.message-box-layout.error {
+  border-color: var(--aura-red);
+}
+
+.message-box-title {
+  margin: 0 0 0 16px;
+  padding: 0.8rem;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, .2);
+}
+
+.message-box-title.info {
+  background-color: var(--aura-accent-color);
+  color: var(--aura-accent-contrast-color);
+}
+
+.message-box-title.warn {
+  background-color: var(--aura-orange);
+  color: #fff;
+}
+
+.message-box-title.error {
+  background-color: var(--aura-red);
+  color: #fff;
+}
+
+.message-box-content {
+  color: var(--vaadin-text-color);
+  background-color: var(--aura-background-color);
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+}
+
+/* ===== Layout, navigation menu and forms ===== */
+
+/* Stack login-screen vertically on narrow screen */
+@media (max-width: 800px) {
+  .login-screen {
+    flex-direction: column;
+  }
+
+  .login-information {
+    display: block;
+  }
+}
+
+label[disabled] {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.main-layout {
+  flex-direction: row;
+
+  /* Used by the menu and form overlays */
+  --overlay-box-shadow: 0 0 3px 2px color-mix(in srgb, var(--vaadin-text-color) 10%, transparent);
+}
+
+.menu-bar {
+  flex-direction: column;
+  flex-shrink: 0;
+  background: var(--aura-background-color);
+  box-shadow: var(--overlay-box-shadow);
+}
+
+.menu-header {
+  padding: 11px 16px;
+}
+
+.menu-bar vaadin-tabs {
+  align-items: flex-start;
+  transition: transform 300ms;
+}
+
+.menu-bar vaadin-tab {
+  padding: 0;
+}
+
+.menu-link {
+  margin: 0 -5%;
+  padding: 10px 37px;
+}
+
+.menu-link > span {
+  display: block;
+  white-space: nowrap;
+}
+
+.menu-button {
+  display: none;
+}
+
+.forwardnode-form {
+  height: 100%;
+  width: 300%;
+  background: var(--aura-background-color);
+}
+
+.inputsourcenode-form {
+  height: 100%;
+  width: 250%;
+  background: var(--aura-background-color);
+}
+
+/* On narrow screens, move the side bar to the top,
+ * except for the link-tabs, which are hidden but
+ * can be opened via a button.
+ */
+@media (max-width: 800px) {
+  .main-layout {
+    flex-direction: column;
+    --top-bar-height: 50px;
+    --top-bar-margin: 5vw;
+  }
+
+  .menu-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--top-bar-height);
+    margin: 0 var(--top-bar-margin);
+    background: none;
+    box-shadow: none;
+  }
+
+  .menu-bar vaadin-tabs {
+    transform: translateX(calc(-100% - var(--top-bar-margin)));
+    position: absolute;
+    top: var(--top-bar-height);
+    height: calc(100% - var(--top-bar-height));
+    z-index: 100;
+    box-shadow: var(--overlay-box-shadow);
+    background: var(--aura-background-color);
+  }
+
+  .menu-bar .show-tabs {
+    transform: translateX(calc(0% - var(--top-bar-margin)));
+  }
+
+  .menu-button {
+    display: block;
+  }
+
+  .forwardnode-form {
+    height: calc(100% - var(--top-bar-height));
+  }
+
+  .destination-form {
+    height: calc(100% - var(--top-bar-height));
+  }
+
+  .sourcenode-form {
+    height: calc(100% - var(--top-bar-height));
+  }
+
+  .inputsourcenode-form {
+    height: calc(100% - var(--top-bar-height));
+  }
+}
+
+@media (max-width: 550px) {
+  .forwardnode-form {
+    width: 100%;
+
+    /* Prevent text-fields from overflowing on narrow screens */
+    --vaadin-text-field-default-width: 6em;
+  }
+
+  .destination-form {
+    width: 100%;
+
+    /* Prevent text-fields from overflowing on narrow screens */
+    --vaadin-text-field-default-width: 6em;
+  }
+
+  .sourcenode-form {
+    width: 100%;
+
+    /* Prevent text-fields from overflowing on narrow screens */
+    --vaadin-text-field-default-width: 6em;
+  }
+
+  .inputsourcenode-form {
+    width: 100%;
+
+    /* Prevent text-fields from overflowing on narrow screens */
+    --vaadin-text-field-default-width: 6em;
+  }
+}

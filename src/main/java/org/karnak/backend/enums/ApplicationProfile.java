@@ -9,9 +9,12 @@
  */
 package org.karnak.backend.enums;
 
+import lombok.Getter;
+
 /**
  * Application profile
  */
+@Getter
 public enum ApplicationProfile {
 
 	/**
@@ -26,10 +29,6 @@ public enum ApplicationProfile {
 
 	ApplicationProfile(final String code) {
 		this.code = code;
-	}
-
-	public String getCode() {
-		return code;
 	}
 
 }

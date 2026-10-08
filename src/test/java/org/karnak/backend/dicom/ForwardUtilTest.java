@@ -34,7 +34,7 @@ class ForwardUtilTest {
 		final ApplicationEventPublisher applicationEventPublisher = mock(ApplicationEventPublisher.class);
 
 		// Build mocked service
-		forwardService = new ForwardService(applicationEventPublisher);
+		forwardService = new ForwardService(applicationEventPublisher, null);
 	}
 
 	@Test
@@ -47,12 +47,12 @@ class ForwardUtilTest {
 		Params p = new Params("iuid", "cuid", "tsuid", 0, byteArrayInputStream, null);
 
 		// Test results
-		assertEquals("iuid", p.getIuid());
-		assertEquals("cuid", p.getCuid());
-		assertEquals("tsuid", p.getTsuid());
-		assertEquals(0, p.getPriority());
-		assertEquals(byteArrayInputStream, p.getData());
-		assertNull(p.getAs());
+		assertEquals("iuid", p.iuid());
+		assertEquals("cuid", p.cuid());
+		assertEquals("tsuid", p.tsuid());
+		assertEquals(0, p.priority());
+		assertEquals(byteArrayInputStream, p.data());
+		assertNull(p.as());
 	}
 
 	@Test

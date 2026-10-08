@@ -9,9 +9,12 @@
  */
 package org.karnak.backend.enums;
 
+import lombok.Getter;
+
 /**
  * Environment variables of the system
  */
+@Getter
 public enum EnvironmentVariable {
 
 	/**
@@ -27,10 +30,6 @@ public enum EnvironmentVariable {
 
 	EnvironmentVariable(final String code) {
 		this.code = code;
-	}
-
-	public String getCode() {
-		return code;
 	}
 
 }

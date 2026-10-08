@@ -11,18 +11,23 @@ package org.karnak.backend.model.echo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Model for destination in echo controller
  */
+@Setter
+@Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DestinationEcho {
 
 	// AeTitle of the destination dicom
-	private String aet;
+	private @Nullable String aet;
 
 	// Url of the destination stow
-	private String url;
+	private @Nullable String url;
 
 	// Status
 	private int status;
@@ -39,33 +44,9 @@ public class DestinationEcho {
 	 * @param url Url
 	 * @param status Status
 	 */
-	public DestinationEcho(String aet, String url, int status) {
+	public DestinationEcho(@Nullable String aet, @Nullable String url, int status) {
 		this.aet = aet;
 		this.url = url;
-		this.status = status;
-	}
-
-	public String getAet() {
-		return aet;
-	}
-
-	public void setAet(String aet) {
-		this.aet = aet;
-	}
-
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
-	public void setStatus(int status) {
 		this.status = status;
 	}
 

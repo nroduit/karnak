@@ -9,41 +9,19 @@
  */
 package org.karnak.backend.util;
 
-import com.vaadin.flow.server.HandlerHelper;
 import com.vaadin.flow.server.VaadinServletService;
-import com.vaadin.flow.shared.ApplicationConstants;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.karnak.backend.enums.SecurityRole;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public final class SecurityUtil {
 
 	private SecurityUtil() {
-	}
-
-	/**
-	 * Determines if a request is internal to Vaadin
-	 * @param request Request
-	 * @return true if it is a internal request
-	 */
-	public static boolean isFrameworkInternalRequest(HttpServletRequest request) {
-		final String parameterValue = request.getParameter(ApplicationConstants.REQUEST_TYPE_PARAMETER);
-		return parameterValue != null && Stream.of(HandlerHelper.RequestType.values())
-			.anyMatch(r -> r.getIdentifier().equals(parameterValue));
 	}
 
 	/**
@@ -61,49 +39,24 @@ public final class SecurityUtil {
 	 * @return true if the user is logged and is an admin
 	 */
 	public static boolean isUserAdmin() {
-		return SecurityUtil.isUserLoggedIn() && SecurityContextHolder.getContext()
-			.getAuthentication()
-			.getAuthorities()
-			.stream()
-			.anyMatch(ga -> Objects.equals(ga.getAuthority(), SecurityRole.ADMIN_ROLE.getRole()));
-	}
-
-	/**
-	 * Check if the role of the user can access the view
-	 * @param securedClass Secured Class
-	 * @return true if access is granted
-	 */
-	public static boolean isAccessGranted(Class<?> securedClass) {
-		boolean isAccessGranted = false;
-
-		if (isUserLoggedIn()) {
-			// get the secured annotation
-			Secured secured = AnnotationUtils.findAnnotation(securedClass, Secured.class);
-
-			// allow if no roles are required
-			if (secured == null) {
-				isAccessGranted = true;
-			}
-			else {
-				// lookup needed role in user roles
-				List<String> allowedRoles = Arrays.asList(secured.value());
-
-				Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-				isAccessGranted = authentication != null && authentication.getAuthorities()
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return isUserLoggedIn() && authentication != null
+				&& authentication.getAuthorities()
 					.stream()
-					.map(GrantedAuthority::getAuthority)
-					.anyMatch(allowedRoles::contains);
-			}
-		}
-		return isAccessGranted;
+					.anyMatch(ga -> Objects.equals(ga.getAuthority(), SecurityRole.ADMIN_ROLE.getRole()));
 	}
 
 	/**
 	 * Sign out method
 	 */
 	public static void signOut() {
+		var request = VaadinServletService.getCurrentServletRequest();
+		if (request == null) {
+			log.warn("Cannot sign out: no current servlet request available");
+			return;
+		}
 		try {
-			VaadinServletService.getCurrentServletRequest().logout();
+			request.logout();
 		}
 		catch (ServletException e) {
 			log.error("Error during logout");

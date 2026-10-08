@@ -18,7 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.karnak.backend.data.entity.DicomSourceNodeEntity;
 import org.karnak.frontend.forwardnode.edit.component.ButtonSaveDeleteCancel;
 import org.karnak.frontend.util.UIS;
+import org.weasis.core.util.annotations.Generated;
 
+@Generated()
 public class FormSourceNode extends VerticalLayout {
 
 	private final Binder<DicomSourceNodeEntity> binder;
