@@ -9,9 +9,6 @@
  */
 package org.karnak.backend.model.profiles;
 
-import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
-import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +26,8 @@ import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.model.profilepipe.TagPath;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
+import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
+import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.weasis.dicom.param.AttributeEditorContext;
@@ -155,7 +154,7 @@ public class ReplaceApi extends AbstractProfileItem {
 				case "get" -> endpointService.get(args.authConfig(), args.url());
 				default -> throw new EndpointException("Unsupported HTTP Method : " + args.method());
 			};
-			return OBJECT_MAPPER.readTree(response).at(args.responsePath()).textValue();
+			return OBJECT_MAPPER.readTree(response).at(args.responsePath()).toString();
 		}
 		catch (JsonProcessingException e) {
 			if (args.defaultValue() == null) {

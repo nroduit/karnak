@@ -9,16 +9,13 @@
  */
 package org.karnak.profilepipe.option.datemanager;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +32,8 @@ import org.karnak.backend.service.profilepipe.Profile;
 import org.karnak.backend.util.ShiftApiDate;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
@@ -52,6 +51,8 @@ class ShiftApiDateTest {
 	private static final String AUTH_CONFIG = "endpoint";
 
 	private static final String TEST_URL = "http://sample.url.com/patient/97035674/day-shift";
+
+	private static final String TEST_URL_NOT_JSON = "http://sample.url.com/patient/97035674/day-shift";
 
 	private static final String TEST_URL_TEMPLATE = "http://sample.url.com/patient/{{getString(#Tag.PatientID)}}/day-shift";
 
@@ -87,6 +88,7 @@ class ShiftApiDateTest {
 		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/seconds")).thenReturn("{\"value\": 10, \"seconds\": 500}");
 		when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL))
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+		when(endpointService.get(AUTH_CONFIG, TEST_URL_NOT_JSON)).thenReturn("15");
 		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/missing")).thenReturn("{\"id\": 411}");
 		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/invalid")).thenReturn("{\"value\": \"not-a-number\"}");
 
@@ -112,6 +114,23 @@ class ShiftApiDateTest {
 	void shiftStudyDateByDaysFromApi() {
 		addDefaultArguments();
 		assertEquals("20180130", ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
+	}
+
+	@Test
+	void shiftStudyDateByDaysFromApi_notJson() {
+		ArgumentEntity url = new ArgumentEntity();
+		url.setArgumentKey("url");
+		url.setArgumentValue(TEST_URL_NOT_JSON);
+		ArgumentEntity daysPath = new ArgumentEntity();
+		daysPath.setArgumentKey("daysPath");
+		daysPath.setArgumentValue("");
+		ArgumentEntity authConfig = new ArgumentEntity();
+		authConfig.setArgumentKey("authConfig");
+		authConfig.setArgumentValue(AUTH_CONFIG);
+		argumentEntities.add(url);
+		argumentEntities.add(daysPath);
+		argumentEntities.add(authConfig);
+		assertEquals("20180125", ShiftApiDate.shift(dataset, dataset, Tag.StudyDate, argumentEntities));
 	}
 
 	@Test
