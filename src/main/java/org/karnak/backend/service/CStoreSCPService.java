@@ -272,7 +272,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 			rsp.setInt(Tag.Status, VR.US, Status.NotAuthorized);
 			log.error("Refused: not authorized (124H). Source node: {}. SopUID: {}", callingNode,
 					rq.getString(Tag.AffectedSOPInstanceUID));
-			forwardService.monitorRejected(fwdNode, destList, rq, rq.getString(Tag.AffectedSOPClassUID),
+			this.forwardService.monitorRejected(fwdNode, destList, rq, rq.getString(Tag.AffectedSOPClassUID),
 					"Source not authorized: " + callingNode.getAet());
 			return;
 		}
@@ -290,7 +290,7 @@ public class CStoreSCPService extends BasicCStoreSCP {
 			// Update transfer status of destinations
 			updateTransferStatus(fwdNode, activeDestinations);
 
-			forwardService.storeMultipleDestination(fwdNode, activeDestinations, p);
+			this.forwardService.storeMultipleDestination(fwdNode, activeDestinations, p);
 
 		}
 		catch (DestinationStatusException e) {
@@ -609,12 +609,12 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	 * on repository calls.
 	 */
 	private void updateTransferStatus(ForwardDicomNode fwdNode, List<ForwardDestination> destinations) {
-		if (transferStatusPending.add(fwdNode)) {
+		if (this.transferStatusPending.add(fwdNode)) {
 			// The executor is single-threaded, so the set always runs before the clear
-			executorService.execute(() -> setTransferStatus(destinations, true));
-			executorService.schedule(() -> {
+			this.executorService.execute(() -> setTransferStatus(destinations, true));
+			this.executorService.schedule(() -> {
 				setTransferStatus(destinations, false);
-				transferStatusPending.remove(fwdNode);
+				this.transferStatusPending.remove(fwdNode);
 			}, 5, TimeUnit.SECONDS);
 		}
 	}

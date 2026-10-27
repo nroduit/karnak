@@ -9,7 +9,6 @@
  */
 package org.karnak.backend.model.patient;
 
-import java.io.Serial;
 import java.io.Serializable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,9 +22,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class PseudonymImportIssue implements Serializable {
-
-	@Serial
-	private static final long serialVersionUID = 1L;
 
 	// Index of the row in the request's JSON array (0-based).
 	private int index;

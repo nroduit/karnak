@@ -245,7 +245,7 @@ public class ForwardNodeController {
 		forwardNodeService.deleteSourceNode(node, sourceNode);
 		// Without the event the instance that served the call keeps accepting this source
 		// AE Title until its next reload; see deleteDestination.
-		applicationEventPublisher.publishEvent(new NodeEvent(sourceNode, NodeEventType.REMOVE));
+		this.applicationEventPublisher.publishEvent(new NodeEvent(sourceNode, NodeEventType.REMOVE));
 		return ResponseEntity.noContent().build();
 	}
 
@@ -339,7 +339,7 @@ public class ForwardNodeController {
 		// that no longer exists, once more for each destination deleted this way. The
 		// event removes it from that instance's table and bumps the gateway version, so
 		// every other instance reloads.
-		applicationEventPublisher.publishEvent(new NodeEvent(existing, NodeEventType.REMOVE));
+		this.applicationEventPublisher.publishEvent(new NodeEvent(existing, NodeEventType.REMOVE));
 		return ResponseEntity.noContent().build();
 	}
 

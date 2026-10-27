@@ -50,4 +50,13 @@ class StoreScpForwardServiceTest {
 		assertTrue(ae.isAcceptedCallingAETitle("ANY"));
 	}
 
+	@Test
+	void every_calling_aet_is_accepted_before_the_routing_table_is_initialised() {
+		CStoreSCPService cStoreSCPService = Mockito.mock(CStoreSCPService.class);
+		StoreScpForwardService service = new StoreScpForwardService(cStoreSCPService);
+
+		// No init() yet: the live routing table is null, so no restriction is applied
+		assertTrue(service.getApplicationEntity().isAcceptedCallingAETitle("ANY"));
+	}
+
 }

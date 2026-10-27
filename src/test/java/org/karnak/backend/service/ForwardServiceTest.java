@@ -25,6 +25,8 @@ import org.dcm4che3.net.Association;
 import org.dcm4che3.net.Status;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,6 +114,115 @@ class ForwardServiceTest {
 		when(as.getTransferSyntaxesFor(CUID)).thenReturn(Set.of(UID.JPEGBaseline8Bit));
 
 		assertEquals(UID.ImplicitVRLittleEndian, ForwardService.selectTransferSyntax(as, CUID, UID.JPEGLosslessSV1));
+	}
+
+	// --- checkCStoreResponse / refusedByWebDestination (pure status mapping)
+	// --------------
+
+	@Test
+	void check_cstore_response_accepts_success() throws Exception {
+		ForwardService.checkCStoreResponse(cstoreResponse(Status.Success, null));
+	}
+
+	@Test
+	void check_cstore_response_accepts_warning_statuses() throws Exception {
+		// 0xB000-masked warning, plus the two explicitly whitelisted warnings
+		ForwardService.checkCStoreResponse(cstoreResponse(0xB000, null));
+		ForwardService.checkCStoreResponse(cstoreResponse(0xB007, null));
+		ForwardService.checkCStoreResponse(cstoreResponse(Status.AttributeListError, null));
+		ForwardService.checkCStoreResponse(cstoreResponse(Status.AttributeValueOutOfRange, null));
+	}
+
+	@Test
+	void check_cstore_response_maps_out_of_resources_to_a700() {
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> ForwardService.checkCStoreResponse(cstoreResponse(0xA702, null)));
+		assertEquals(Status.OutOfResources, e.getStatus());
+		assertTrue(e.getMessage().contains("A702H"), e.getMessage());
+	}
+
+	@Test
+	void check_cstore_response_maps_other_failures_to_processing_failure() {
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> ForwardService.checkCStoreResponse(cstoreResponse(0xC000, null)));
+		assertEquals(Status.ProcessingFailure, e.getStatus());
+		assertTrue(e.getMessage().contains("C000H"), e.getMessage());
+	}
+
+	@Test
+	void check_cstore_response_appends_the_error_comment() {
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> ForwardService.checkCStoreResponse(cstoreResponse(0xC000, "Disk full")));
+		assertTrue(e.getMessage().endsWith(": Disk full"), e.getMessage());
+	}
+
+	@Test
+	void refused_by_web_destination_maps_recoverable_http_errors_to_a700() {
+		HttpException http = new HttpException("Service Unavailable", 503, null);
+		DestinationStatusException e = ForwardService.refusedByWebDestination(http);
+		assertEquals(Status.OutOfResources, e.getStatus());
+		assertSame(http, e.getCause());
+		assertTrue(e.getMessage().contains("HTTP status 503"), e.getMessage());
+	}
+
+	@Test
+	void refused_by_web_destination_maps_non_recoverable_http_errors_to_processing_failure() {
+		HttpException http = new HttpException("Bad Request", 400, null);
+		DestinationStatusException e = ForwardService.refusedByWebDestination(http);
+		assertEquals(Status.ProcessingFailure, e.getStatus());
+		assertSame(http, e.getCause());
+	}
+
+	// --- awaitCStoreResponse (timeout and ExecutionException unwrapping)
+	// -------------------
+
+	@Test
+	void await_cstore_response_times_out_as_a700() {
+		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 0L);
+		Throwable thrown = invokeAwaitCStoreResponse(new CompletableFuture<>());
+		DestinationStatusException e = assertInstanceOf(DestinationStatusException.class, thrown);
+		assertEquals(Status.OutOfResources, e.getStatus());
+		assertTrue(e.getMessage().contains(IUID), e.getMessage());
+	}
+
+	@Test
+	void await_cstore_response_rethrows_the_io_cause_as_is() {
+		IOException cause = new IOException("association closed");
+		Throwable thrown = invokeAwaitCStoreResponse(CompletableFuture.failedFuture(cause));
+		assertSame(cause, thrown);
+	}
+
+	@Test
+	void await_cstore_response_wraps_a_non_io_cause_in_an_io_exception() {
+		RuntimeException cause = new IllegalStateException("boom");
+		Throwable thrown = invokeAwaitCStoreResponse(CompletableFuture.failedFuture(cause));
+		IOException wrapped = assertInstanceOf(IOException.class, thrown);
+		assertSame(cause, wrapped.getCause());
+	}
+
+	private Throwable invokeAwaitCStoreResponse(CompletableFuture<Attributes> response) {
+		try {
+			java.lang.reflect.Method method = ForwardService.class.getDeclaredMethod("awaitCStoreResponse",
+					CompletableFuture.class, String.class);
+			method.setAccessible(true);
+			method.invoke(forwardService, response, IUID);
+			throw new AssertionError("Expected an exception");
+		}
+		catch (java.lang.reflect.InvocationTargetException e) {
+			return e.getCause();
+		}
+		catch (ReflectiveOperationException e) {
+			throw new AssertionError(e);
+		}
+	}
+
+	private static Attributes cstoreResponse(int status, String errorComment) {
+		Attributes cmd = new Attributes();
+		cmd.setInt(Tag.Status, VR.US, status);
+		if (errorComment != null) {
+			cmd.setString(Tag.ErrorComment, VR.LO, errorComment);
+		}
+		return cmd;
 	}
 
 	// --- DICOM transferOther (works from an in-memory Attributes copy)

@@ -133,7 +133,7 @@ public class PseudonymController {
 				result.addError(index, "Row is null");
 				continue;
 			}
-			Set<ConstraintViolation<PatientModel>> violations = validator.validate(patientModel);
+			Set<ConstraintViolation<PatientModel>> violations = this.validator.validate(patientModel);
 			if (!violations.isEmpty()) {
 				String reason = violations.stream()
 					.map(violation -> violation.getPropertyPath() + " " + violation.getMessage())
@@ -162,7 +162,7 @@ public class PseudonymController {
 	 * their semantics (project lookup, key generation, conflict detection) match exactly.
 	 */
 	private CreateOutcome createOne(PatientModel patientModel) {
-		ProjectEntity project = projectService.retrieveProjectByUuid(patientModel.getProjectUUID());
+		ProjectEntity project = this.projectService.retrieveProjectByUuid(patientModel.getProjectUUID());
 		if (project == null) {
 			return new CreateOutcome(CreateStatus.PROJECT_NOT_FOUND, null, null);
 		}

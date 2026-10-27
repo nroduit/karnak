@@ -99,10 +99,10 @@ public abstract class ForwardDestination {
 	 * current configuration instead
 	 */
 	public final synchronized boolean beginTransfer() {
-		if (retired) {
+		if (this.retired) {
 			return false;
 		}
-		activeTransfers++;
+		this.activeTransfers++;
 		return true;
 	}
 
@@ -110,8 +110,8 @@ public abstract class ForwardDestination {
 	public final void endTransfer() {
 		boolean stopNow;
 		synchronized (this) {
-			activeTransfers--;
-			stopNow = retired && activeTransfers == 0;
+			this.activeTransfers--;
+			stopNow = this.retired && this.activeTransfers == 0;
 		}
 		if (stopNow) {
 			stop();
@@ -125,11 +125,11 @@ public abstract class ForwardDestination {
 	public final void retire() {
 		boolean stopNow;
 		synchronized (this) {
-			if (retired) {
+			if (this.retired) {
 				return;
 			}
-			retired = true;
-			stopNow = activeTransfers == 0;
+			this.retired = true;
+			stopNow = this.activeTransfers == 0;
 		}
 		if (stopNow) {
 			stop();
@@ -143,13 +143,13 @@ public abstract class ForwardDestination {
 	}
 
 	public String getOutputTransferSyntax(String originalTsuid) {
-		if (transcodeOnlyUncompressed && !DicomUtils.isNative(originalTsuid)
+		if (this.transcodeOnlyUncompressed && !DicomUtils.isNative(originalTsuid)
 				&& !UID.RLELossless.equals(originalTsuid)) {
 			return originalTsuid;
 		}
-		if (DicomOutputData.isSupportedSyntax(outputTransferSyntax)
+		if (DicomOutputData.isSupportedSyntax(this.outputTransferSyntax)
 				&& DicomImageReader.isSupportedSyntax(originalTsuid)) {
-			return outputTransferSyntax;
+			return this.outputTransferSyntax;
 		}
 		if (UID.RLELossless.equals(originalTsuid) || UID.ImplicitVRLittleEndian.equals(originalTsuid)
 				|| UID.ExplicitVRBigEndian.equals(originalTsuid)) {

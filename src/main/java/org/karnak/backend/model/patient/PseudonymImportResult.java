@@ -25,9 +25,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PseudonymImportResult implements Serializable {
 
-	@Serial
-	private static final long serialVersionUID = 1L;
-
 	private int created;
 
 	private int conflict;
