@@ -10,6 +10,7 @@
 package org.karnak.backend.model.profiles;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
@@ -154,7 +155,21 @@ public class ReplaceApi extends AbstractProfileItem {
 				case "get" -> endpointService.get(args.authConfig(), args.url());
 				default -> throw new EndpointException("Unsupported HTTP Method : " + args.method());
 			};
-			return OBJECT_MAPPER.readTree(response).at(args.responsePath()).toString();
+
+			if (response == null) {
+				response = "";
+			}
+
+			if (args.responsePath().isEmpty()) {
+				return response;
+			}
+
+			JsonNode node = OBJECT_MAPPER.readTree(response).at(args.responsePath());
+			if (node.isMissingNode() || node.isNull()) {
+				return null;
+			}
+			// Scalars as their raw text (no JSON quotes), objects and arrays as JSON
+			return node.isContainerNode() ? node.toString() : node.asText();
 		}
 		catch (JsonProcessingException e) {
 			if (args.defaultValue() == null) {
