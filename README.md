@@ -2,7 +2,9 @@
 
 [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=nroduit_karnak&metric=ncloc)](https://sonarcloud.io/component_measures?id=nroduit_karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=nroduit_karnak&metric=coverage)](https://sonarcloud.io/component_measures?id=nroduit_karnak&metric=coverage) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=nroduit_karnak&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=nroduit_karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=nroduit_karnak&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=nroduit_karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=nroduit_karnak&metric=security_rating)](https://sonarcloud.io/component_measures?id=nroduit_karnak) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=nroduit_karnak&metric=alert_status)](https://sonarcloud.io/dashboard?id=nroduit_karnak)
 
-**Karnak** is an open-source DICOM gateway for **de-identification**, **tag morphing** and **DICOM conformance checks**. It sits between the imaging network and the archives: it receives studies from modalities, PACS and workstations through a DICOM listener, transforms them according to configurable YAML profiles, and forwards the result to one or more destinations over DICOM (C-STORE) or DICOMweb (STOW-RS). Everything is configured and monitored from a web portal.
+**Karnak** is an open-source DICOM gateway for **de-identification**, **tag morphing** and **DICOM conformance checks**.
+It sits between the imaging network and the archives: it receives studies from modalities, PACS and workstations through a DICOM listener, transforms them according to configurable YAML profiles, and forwards the result to one or more destinations over DICOM (C-STORE) or DICOMweb (STOW-RS).
+Everything is configured and monitored from a web portal.
 
 ![Karnak DICOM gateway: DICOM data from every modality is transformed into de-identified, tag-morphed and conformant data](img/karnak-gateway.svg)
 
@@ -16,13 +18,16 @@ A typical deployment feeds a research repository that lives **outside** the hosp
 
 ![Deployment workflow: hospital network with modalities, PACS and workstations sending DICOM C-STORE to Karnak; Karnak forwards de-identified studies with DICOMweb STOW-RS over HTTPS across the network boundary to a research repository](img/karnak-workflow.svg)
 
-- **Inside the network**, the DICOM protocol is used as usual: modalities, the PACS or a workstation send studies to a Karnak *forward node* (an AE Title on the DICOM listener) with C-STORE. Karnak can authenticate the callers by AE Title and hostname.
-- **Across the network boundary**, Karnak sends the de-identified studies to the repository with **DICOMweb STOW-RS over HTTPS**. This is the recommended protocol for any destination outside the trusted network: the transfer is encrypted with TLS, authenticated with an OAuth 2 bearer token or Basic auth, and only needs one outbound HTTPS connection, so no DICOM port is ever exposed to the Internet.
+- **Inside the network**, the DICOM protocol is used as usual: modalities, the PACS or a workstation send studies to a Karnak *forward node* (an AE Title on the DICOM listener) with C-STORE.
+  Karnak can authenticate the callers by AE Title and hostname.
+- **Across the network boundary**, Karnak sends the de-identified studies to the repository with **DICOMweb STOW-RS over HTTPS**.
+  This is the recommended protocol for any destination outside the trusted network: the transfer is encrypted with TLS, authenticated with an OAuth 2 bearer token or Basic auth, and only needs one outbound HTTPS connection, so no DICOM port is ever exposed to the Internet.
 - An on-site archive (a research PACS in the same network) can still be reached with plain C-STORE, and both kinds of destinations can be combined on the same forward node.
 
 ## Processing pipeline
 
-The forward node addressed by the called AE Title checks the calling source, then routes each accepted instance to one or more destinations, where it goes through the following pipeline once per destination. Every step is configured on the [destination](https://weasis.org/karnak-documentation/en/userguide/gateway/destinations/).
+The forward node addressed by the called AE Title checks the calling source, then routes each accepted instance to one or more destinations, where it goes through the following pipeline once per destination.
+Every step is configured on the [destination](https://weasis.org/karnak-documentation/en/userguide/gateway/destinations/).
 
 The pipeline is illustrated step by step in the user guide: [How Karnak works, processing pipeline](https://weasis.org/karnak-documentation/en/overview/#processing-pipeline).
 
@@ -47,17 +52,14 @@ The pipeline is illustrated step by step in the user guide: [How Karnak works, p
 ## De-identification
 
 - Each destination can be configured with a specific de-identification profile.
-- Profiles are ordered pipelines of items: basic profile, tag actions (keep, remove,
-  replace, hash), date shifting, UID re-mapping, add/replace tags, and API-based value replacement.
+- Profiles are ordered pipelines of items: basic profile, tag actions (keep, remove, replace, hash), date shifting, UID re-mapping, add/replace tags, and API-based value replacement.
 - Pixel-data cleaning: mask burned-in annotations and deface (remove facial features from head studies).
 - Deterministic pseudonymization (HMAC-based), so the same patient always maps to the same pseudonym.
-- [Build your own de-identification profile](https://weasis.org/karnak-documentation/en/profiles),
-  edit it directly as YAML in the UI, and import/export profiles to share them with other users.
+- [Build your own de-identification profile](https://weasis.org/karnak-documentation/en/profiles), edit it directly as YAML in the UI, and import/export profiles to share them with other users.
 
 ## Pseudonym mapping (External ID)
 
-- Supply your own patient-to-pseudonym mapping instead of the generated one, entered in the UI or
-  imported from a CSV file.
+- Supply your own patient-to-pseudonym mapping instead of the generated one, entered in the UI or imported from a CSV file.
 - Mappings are held in a cache (Redis, or an in-memory cache in the portable build).
 
 ## Projects
@@ -67,18 +69,17 @@ The pipeline is illustrated step by step in the user guide: [How Karnak works, p
 
 ## Monitoring
 
-- Follow transfers in a destination, study and series tree, compare original and de-identified
-  values, and export the activity as CSV.
+- Follow transfers in a destination, study and series tree, compare original and de-identified values, and export the activity as CSV.
 - Optional email notifications per destination and per-study DICOM conformance reports.
 
 ## DICOM tools
 
-- Built-in tools to test and probe DICOM nodes and DICOMweb endpoints: C-ECHO (with a persisted
-  check history), Modality Worklist (MWL) queries and DICOMweb capability checks.
+- Built-in tools to test and probe DICOM nodes and DICOMweb endpoints: C-ECHO (with a persisted check history), Modality Worklist (MWL) queries and DICOMweb capability checks.
 
 # Getting started
 
-You don't need to build Karnak from source to use it. Pick the option that fits your needs:
+You don't need to build Karnak from source to use it.
+Pick the option that fits your needs:
 
 | I want to… | Use | Details |
 |------------|-----|---------|
@@ -99,12 +100,14 @@ The web port (`KARNAK_WEB_PORT`), the listener AE Title (`DICOM_LISTENER_AET`) a
 # Build Karnak
 
 Prerequisites:
+
 - JDK 25
 - Maven 3.3+
 
 ## Build for docker image
 
-Execute the maven command `mvn clean install -P production` in the root directory of the project. The "production" profile builds the Vaadin frontend via pnpm and produces a deployable jar.
+Execute the maven command `mvn clean install -P production` in the root directory of the project.
+The "production" profile builds the Vaadin frontend via pnpm and produces a deployable jar.
 
 ## Build for portable package
 
@@ -115,33 +118,39 @@ Note: on Windows the bash.exe must be specified: `mvn clean install -Pportable -
 # Run Karnak
 
 ## Run with docker
-To configure and run Karnak with docker compose (Karnak + Postgres + Redis), follow the [installation guide](https://weasis.org/karnak-documentation/en/installation/). This is the recommended setup for production.
+
+To configure and run Karnak with docker compose (Karnak + Postgres + Redis), follow the [installation guide](https://weasis.org/karnak-documentation/en/installation/).
+This is the recommended setup for production.
 
 ## Run portable package
-After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch `run.bat` (Windows) or `./run.sh` from a terminal (Linux or macOS). On macOS there is no double-clickable launcher: Gatekeeper refuses to open a script downloaded from the Internet, so open a Terminal in the folder and run `./run.sh`.
 
-Settings such as the web port and the DICOM listener can be adjusted in the `run.cfg` file located next to the executable. On the first launch the script proposes to download the optional OCR service used by the automatic pixel de-identification (release pinned by `OCR_VERSION` in `run.cfg`), then opens the web portal in the default browser (`KARNAK_OPEN_BROWSER=false` disables this).
+After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch `run.bat` (Windows) or `./run.sh` from a terminal (Linux or macOS).
+On macOS there is no double-clickable launcher: Gatekeeper refuses to open a script downloaded from the Internet, so open a Terminal in the folder and run `./run.sh`.
+
+Settings such as the web port and the DICOM listener can be adjusted in the `run.cfg` file located next to the executable.
+On the first launch the script proposes to download the optional OCR service used by the automatic pixel de-identification (release pinned by `OCR_VERSION` in `run.cfg`), then opens the web portal in the default browser (`KARNAK_OPEN_BROWSER=false` disables this).
 
 Then open <http://localhost:8081> and log in (see [Accessing Karnak](#accessing-karnak)).
 
-Note: this portable package runs an embedded database (H2) in file mode, and the Redis server is replaced by an in-memory cache. For intensive use, it's recommended to run Karnak with docker and a Postgres database.
+Note: this portable package runs an embedded database (H2) in file mode, and the Redis server is replaced by an in-memory cache.
+For intensive use, it's recommended to run Karnak with docker and a Postgres database.
 
 # Debug Karnak
 
 ## Debug in IntelliJ
 
 - Launch the components needed by Karnak (see below "Run locally the database and the cache with docker")
-- Run `mvn clean install` once before the first debug session. Besides building the project, this copies
-  the native OpenCV library into `target/classes/lib/<os>-<cpu>/` — it is loaded at startup by the DICOM
-  gateway, and the application fails with "Cannot register DICOM native librairies" if it is missing.
+- Run `mvn clean install` once before the first debug session.
+  Besides building the project, this copies the native OpenCV library into `target/classes/lib/<os>-<cpu>/` — it is loaded at startup by the DICOM gateway, and the application fails with "Cannot register DICOM native librairies" if it is missing.
 - Enable Spring and Spring Boot for the project
 - Create a Spring Boot launcher from the main of `KarnakApplication.java`
     - Working Directory must be the project root directory (the folder containing `pom.xml`)
     - In VM Options:
-      - Add `-Djava.library.path="/tmp/dicom-opencv"`. Note: the tmp folder must be adapted according to your system and `dicom-opencv` is mandatory as the last folder.
+      - Add `-Djava.library.path="/tmp/dicom-opencv"`.
+        Note: the tmp folder must be adapted according to your system and `dicom-opencv` is mandatory as the last folder.
       - Optional: Add `-Dvaadin.productionMode=true` to enable production mode
-    - In Environment variables, add the following values. The following values work with our default
-      configuration defined with docker used for the development (see: "Run locally the database and the cache with docker") :
+    - In Environment variables, add the following values.
+      The following values work with our default configuration defined with docker used for the development (see: "Run locally the database and the cache with docker") :
         - Mandatory:
             - `DB_ENCRYPTION_KEY=fsGuSZRIEr$HwlTDPglZg*Vl7WtJCZz6RLvqoMKWSA!`
         - Optional:
@@ -159,27 +168,23 @@ Note: this portable package runs an embedded database (H2) in file mode, and the
 
 ## Debug the portable package in IntelliJ
 
-The portable build has no external dependencies: it runs an embedded H2 database (file mode) and an
-in-memory cache instead of Postgres + Redis. To debug it in IntelliJ you don't need the docker
-components — you only need to activate the `portable` Spring profile and, optionally, configure a
-local DICOM node so received studies are written to disk.
+The portable build has no external dependencies: it runs an embedded H2 database (file mode) and an in-memory cache instead of Postgres + Redis.
+To debug it in IntelliJ you don't need the docker components — you only need to activate the `portable` Spring profile and, optionally, configure a local DICOM node so received studies are written to disk.
 
-Reuse the Spring Boot launcher from [Debug in IntelliJ](#debug-in-intellij) with the same VM options
-(`-Djava.library.path=...`), then in Environment variables:
+Reuse the Spring Boot launcher from [Debug in IntelliJ](#debug-in-intellij) with the same VM options (`-Djava.library.path=...`), then in Environment variables:
 
-- Activate the portable profile (it swaps in `application-portable.yml`). Either set it in the
-  launcher's **Active profiles** field (`portable`), or add the environment variable:
+- Activate the portable profile (it swaps in `application-portable.yml`).
+  Either set it in the launcher's **Active profiles** field (`portable`), or add the environment variable:
     - `SPRING_PROFILES_ACTIVE=portable`
-- Optional — persist incoming studies to a local folder. When `LOCAL_NODE_PORT` and
-  `LOCAL_NODE_STORAGE_PATH` are both set, Karnak starts an additional DICOM listener that stores
-  received objects on disk:
+- Optional — persist incoming studies to a local folder.
+  When `LOCAL_NODE_PORT` and `LOCAL_NODE_STORAGE_PATH` are both set, Karnak starts an additional DICOM listener that stores received objects on disk:
     - `LOCAL_NODE_STORAGE_PATH=./dicom`
     - `LOCAL_NODE_AE_TITLE=KARNAK-LOCAL`
     - `LOCAL_NODE_PORT=11115`
     - `LOCAL_NODE_FILEPATH_PATTERN={00100010}/{00080060}/{0020000E}/{00080018}.dcm`
 
-The H2 database file is created under `./data` in the working directory, so no docker services are
-required. Then open <http://localhost:8081> and log in (see [Accessing Karnak](#accessing-karnak)).
+The H2 database file is created under `./data` in the working directory, so no docker services are required.
+Then open <http://localhost:8081> and log in (see [Accessing Karnak](#accessing-karnak)).
 
 ## Run locally the database and the cache with docker
 
@@ -196,15 +201,13 @@ required. Then open <http://localhost:8081> and log in (see [Accessing Karnak](#
 
 Two formatting plugins are bound to the Maven build and run automatically during `mvn install`:
 
-- **[spring-javaformat](https://github.com/spring-io/spring-javaformat)** — applies the Spring Java
-  code style (indentation, spacing, line wrapping). It does not modify imports.
-- **[spotless](https://github.com/diffplug/spotless)** — removes unused imports, sorts them
-  (static imports first, then a blank line, then the rest) and enforces the EPL-2.0 OR Apache-2.0
-  license header on every Java file. It neither rejects nor expands wildcard imports
-  (`import x.y.*;`) — it leaves them untouched.
+- **[spring-javaformat](https://github.com/spring-io/spring-javaformat)** — applies the Spring Java code style (indentation, spacing, line wrapping).
+  It does not modify imports.
+- **[spotless](https://github.com/diffplug/spotless)** — removes unused imports, sorts them (static imports first, then a blank line, then the rest) and enforces the EPL-2.0 OR Apache-2.0 license header on every Java file.
+  It neither rejects nor expands wildcard imports (`import x.y.*;`) — it leaves them untouched.
 
-CI and Sonar flag any style violation, so make sure your changes are formatted before pushing. You
-can apply both formatters locally with:
+CI and Sonar flag any style violation, so make sure your changes are formatted before pushing.
+You can apply both formatters locally with:
 
 ```bash
 mvn spring-javaformat:apply spotless:apply
@@ -212,17 +215,16 @@ mvn spring-javaformat:apply spotless:apply
 
 ## IntelliJ setup
 
-Neither plugin **expands** an existing wildcard import into explicit single-class imports. Configure
-IntelliJ so it never produces wildcards in the first place:
+Neither plugin **expands** an existing wildcard import into explicit single-class imports.
+Configure IntelliJ so it never produces wildcards in the first place:
 
 - **Settings → Editor → Code Style → Java → Imports**:
     - *Class count to use import with '\*'*: `999`
     - *Names count to use static import with '\*'*: `999`
     - *Packages to Use Import with '\*'*: remove every entry
-- Run **Code → Optimize Imports** (⌃⌥O) to expand existing wildcards and drop unused imports. The
-  file must compile for IntelliJ to resolve the types.
-- Optional: enable **Settings → Tools → Actions on Save → Optimize imports** to keep imports clean
-  automatically, matching what spotless and spring-javaformat expect.
+- Run **Code → Optimize Imports** (⌃⌥O) to expand existing wildcards and drop unused imports.
+  The file must compile for IntelliJ to resolve the types.
+- Optional: enable **Settings → Tools → Actions on Save → Optimize imports** to keep imports clean automatically, matching what spotless and spring-javaformat expect.
 
 # Docker
 
@@ -232,14 +234,16 @@ Minimum docker version: **20.10**
 
 Go on the root folder and launch the following command:
 
-* Full independent build: `docker build -t local/karnak:latest -f Dockerfile .`
-* Build from compile package:
-    * `mvn clean install -P production`
-    * `docker build -t local/karnak:latest -f src/main/docker/Dockerfile .`
+- Full independent build: `docker build -t local/karnak:latest -f Dockerfile .`
+- Build from compile package:
+    - `mvn clean install -P production`
+    - `docker build -t local/karnak:latest -f src/main/docker/Dockerfile .`
 
 ## Run image from Docker Hub
 
-The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`). The container listens on port `8080` for the web portal (`KARNAK_WEB_PORT` changes it) and `11119` for the DICOM listener. See the [installation guide](https://weasis.org/karnak-documentation/en/installation/) for a complete docker compose setup.
+The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`).
+The container listens on port `8080` for the web portal (`KARNAK_WEB_PORT` changes it) and `11119` for the DICOM listener.
+See the [installation guide](https://weasis.org/karnak-documentation/en/installation/) for a complete docker compose setup.
 
 ## Docker environment variables
 
@@ -249,20 +253,20 @@ See the [environment variables](https://weasis.org/karnak-documentation/en/insta
 
 This project is divided in two parts:
 
-- backend: spring data (entities, repositories, converters, validators), enums, 
-        spring configurations, spring security, cache, spring services, models...
+- backend: spring data (entities, repositories, converters, validators), enums, spring configurations, spring security, cache, spring services, models...
 - frontend : Vaadin components:  logic services, graphic components, views
 
 # Identity provider
 
 An OpenID Connect identity provider can be configured by using the environment variables:
- - `IDP`:  when this environment variable has the value 'oidc', the following environment 
- variables will configure the OpenID Connect identity provider. Any other value will load the in 
- memory user configuration. 
- - `OIDC_CLIENT_ID`: client id of the identity provider 
+ - `IDP`:  when this environment variable has the value 'oidc', the following environment variables will configure the OpenID Connect identity provider.
+   Any other value will load the in memory user configuration.
+ - `OIDC_CLIENT_ID`: client id of the identity provider
  - `OIDC_CLIENT_SECRET`: client secret of the identity provider
  - `OIDC_ISSUER_URI`: issuer URI of the identity provider
- 
+
 # API / Endpoints
 
-Karnak exposes a small REST API in addition to the web interface. An OpenAPI (Swagger) description is generated by springdoc and the C-ECHO endpoint is available at `/api/echo`. For the full list of endpoints and their usage, refer to the [Karnak User Guide](https://weasis.org/karnak-documentation/).
+Karnak exposes a small REST API in addition to the web interface.
+An OpenAPI (Swagger) description is generated by springdoc and the C-ECHO endpoint is available at `/api/echo`.
+For the full list of endpoints and their usage, refer to the [Karnak User Guide](https://weasis.org/karnak-documentation/).
