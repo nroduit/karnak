@@ -67,7 +67,8 @@ public class Expression extends AbstractProfileItem {
 		if (exceptedTagsAction.get(tag, path) == null && tagsAction.get(tag, path) != null) {
 			final String expr = argumentEntities.getFirst().getArgumentValue();
 			final ExprAction exprAction = new ExprAction(tag, dcm.getVR(tag), original);
-			return (ActionItem) ExpressionResult.get(expr, exprAction, ActionItem.class);
+			Object value = ExpressionResult.get(expr, exprAction, ActionItem.class);
+			return value instanceof ActionItem action ? action : null;
 		}
 		return null;
 	}

@@ -1,0 +1,320 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- B-tree indexes on foreign-key columns that had none, so profile lookups by
+       profile_element_id / profile_id stop doing sequential scans during forwarding.
+       transfer_status was dropped in 1.9-13; transfer_series_status.destination_id,
+       transfer_series_instance.series_status_id and transfer_series_reason.series_status_id
+       are already covered by existing indexes or unique constraints (leading column).
+
+       PostgreSQL: CREATE INDEX CONCURRENTLY runs outside a transaction. If it is interrupted
+       it leaves an INVALID index behind, which both the indexExists precondition and
+       IF NOT EXISTS then skip. Repair with: REINDEX INDEX CONCURRENTLY <index name>; -->
+
+  <changeSet author="karnak" id="3.1-1-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_tag_profile_element_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_tag_profile_element_id" tableName="tag">
+      <column name="profile_element_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-1-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_tag_profile_element_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tag_profile_element_id ON tag (profile_element_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-2-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_arguments_profile_element_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_arguments_profile_element_id" tableName="arguments">
+      <column name="profile_element_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-2-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_arguments_profile_element_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_arguments_profile_element_id ON arguments (profile_element_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-3-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_profile_element_profile_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_profile_element_profile_id" tableName="profile_element">
+      <column name="profile_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-3-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_profile_element_profile_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_profile_element_profile_id ON profile_element (profile_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-4-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_masks_profile_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_masks_profile_id" tableName="masks">
+      <column name="profile_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-4-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_masks_profile_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_masks_profile_id ON masks (profile_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-5-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_sop_class_filter_destination_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_sop_class_filter_destination_id" tableName="sop_class_filter">
+      <column name="destination_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-5-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_sop_class_filter_destination_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sop_class_filter_destination_id ON sop_class_filter (destination_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-6-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_sop_class_filter_sop_class_uid_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_sop_class_filter_sop_class_uid_id" tableName="sop_class_filter">
+      <column name="sop_class_uid_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-6-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_sop_class_filter_sop_class_uid_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sop_class_filter_sop_class_uid_id ON sop_class_filter (sop_class_uid_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-7-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_kheops_albums_destination_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_kheops_albums_destination_id" tableName="kheops_albums">
+      <column name="destination_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-7-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_kheops_albums_destination_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_kheops_albums_destination_id ON kheops_albums (destination_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-8-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_destination_deidentification_project_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_destination_deidentification_project_id" tableName="destination">
+      <column name="deidentification_project_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-8-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_destination_deidentification_project_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_destination_deidentification_project_id ON destination (deidentification_project_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-9-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_destination_forward_node_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_destination_forward_node_id" tableName="destination">
+      <column name="forward_node_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-9-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_destination_forward_node_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_destination_forward_node_id ON destination (forward_node_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-10-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_destination_tag_morphing_project_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_destination_tag_morphing_project_id" tableName="destination">
+      <column name="tag_morphing_project_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-10-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_destination_tag_morphing_project_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_destination_tag_morphing_project_id ON destination (tag_morphing_project_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-11-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_dicom_source_node_forward_node_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_dicom_source_node_forward_node_id" tableName="dicom_source_node">
+      <column name="forward_node_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-11-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_dicom_source_node_forward_node_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_dicom_source_node_forward_node_id ON dicom_source_node (forward_node_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-12-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_project_profile_pipe_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_project_profile_pipe_id" tableName="project">
+      <column name="profile_pipe_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-12-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_project_profile_pipe_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_profile_pipe_id ON project (profile_pipe_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-13-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_project_project_group_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_project_project_group_id" tableName="project">
+      <column name="project_group_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-13-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_project_project_group_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_project_group_id ON project (project_group_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-14-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_profile_profile_group_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_profile_profile_group_id" tableName="profile">
+      <column name="profile_group_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-14-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_profile_profile_group_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_profile_profile_group_id ON profile (profile_group_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-15-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_forward_node_forward_node_group_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_forward_node_forward_node_group_id" tableName="forward_node">
+      <column name="forward_node_group_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-15-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_forward_node_forward_node_group_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_forward_node_forward_node_group_id ON forward_node (forward_node_group_id);</sql>
+  </changeSet>
+
+  <changeSet author="karnak" id="3.1-16-h2" dbms="h2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_secret_project_id"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="idx_secret_project_id" tableName="secret">
+      <column name="project_id"/>
+    </createIndex>
+  </changeSet>
+  <changeSet author="karnak" id="3.1-16-postgresql" dbms="postgresql" runInTransaction="false">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_secret_project_id"/>
+      </not>
+    </preConditions>
+    <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_secret_project_id ON secret (project_id);</sql>
+  </changeSet>
+
+</databaseChangeLog>

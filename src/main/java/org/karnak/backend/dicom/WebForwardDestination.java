@@ -19,6 +19,7 @@ import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.DicomProgress;
 import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.web.ContentType;
+import org.weasis.dicom.web.DicomStowConfig;
 import org.weasis.dicom.web.DicomStowRS;
 
 public class WebForwardDestination extends ForwardDestination {
@@ -29,6 +30,8 @@ public class WebForwardDestination extends ForwardDestination {
 	private final DicomState state;
 
 	private final DicomStowRS stowRS;
+
+	private final @Nullable HttpClient httpClient;
 
 	public WebForwardDestination(ForwardDicomNode fwdNode, String requestURL) {
 		this(fwdNode, requestURL, null);
@@ -62,8 +65,14 @@ public class WebForwardDestination extends ForwardDestination {
 		// and the JDK HttpClient does not retry the non-idempotent STOW POSTs, so
 		// instances
 		// beyond the 1000th are silently dropped. See KheopsApi for the same default.
-		this.stowRS = new DicomStowRS(requestURL, ContentType.APPLICATION_DICOM, null, headers,
-				httpVersion == null ? HttpClient.Version.HTTP_1_1 : httpVersion);
+		DicomStowConfig config = DicomStowConfig.builder()
+			.requestUrl(requestURL)
+			.contentType(ContentType.APPLICATION_DICOM)
+			.headers(headers)
+			.httpVersion(httpVersion == null ? HttpClient.Version.HTTP_1_1 : httpVersion)
+			.build();
+		this.httpClient = newHttpClient(config);
+		this.stowRS = new DicomStowRS(config, httpClient);
 		setOutputTransferSyntax(outputTransferSyntax);
 		setTranscodeOnlyUncompressed(transcodeOnlyUncompressed);
 	}
@@ -79,6 +88,21 @@ public class WebForwardDestination extends ForwardDestination {
 		this.callingNode = fwdNode;
 		this.state = new DicomState(progress == null ? new DicomProgress() : progress);
 		this.stowRS = uploadManager;
+		this.httpClient = null;
+	}
+
+	/**
+	 * Builds a client that never follows redirects. The JDK client resends a POST
+	 * redirected with 301, 302 or 303 as a GET without its body, so a destination
+	 * answering 200 to that GET (e.g. the login page of an SSO proxy) would confirm a
+	 * storage that never happened. Not following them makes any 3xx fail the upload.
+	 */
+	static HttpClient newHttpClient(DicomStowConfig config) {
+		return HttpClient.newBuilder()
+			.followRedirects(HttpClient.Redirect.NEVER)
+			.version(config.getHttpVersion())
+			.connectTimeout(config.getConnectTimeout())
+			.build();
 	}
 
 	@Override
@@ -97,6 +121,9 @@ public class WebForwardDestination extends ForwardDestination {
 	@Override
 	public void stop() {
 		StreamUtil.safeClose(stowRS);
+		if (httpClient != null) {
+			httpClient.shutdown();
+		}
 	}
 
 	@Override

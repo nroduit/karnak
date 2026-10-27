@@ -95,12 +95,12 @@ class MonitoringAggregationServiceTest {
 		node.setUuid(UUID.fromString("11111111-2222-3333-4444-555555555555"));
 		node.setFwdDescription("forward node");
 
-		DestinationEntity deid = DestinationEntity.ofDicom("primary", "AET-DEID", "host-a", 104, null);
+		DestinationEntity deid = DestinationEntity.ofDicom("primary", "AET-DEID", "host-a", 104);
 		deid.setDesidentification(true);
 		deid.setUuid(UUID.fromString("22222222-3333-4444-5555-666666666666"));
 		deid.setActivateTagMorphing(false);
 
-		DestinationEntity morph = DestinationEntity.ofDicom(null, "AET-MORPH", "host-b", 105, null);
+		DestinationEntity morph = DestinationEntity.ofDicom(null, "AET-MORPH", "host-b", 105);
 		morph.setDesidentification(false);
 		morph.setUuid(UUID.fromString("33333333-4444-5555-6666-777777777777"));
 		morph.setActivateTagMorphing(true);

@@ -14,18 +14,21 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-
-import jakarta.validation.constraints.NotNull;
+import java.util.stream.Collectors;
+import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.constant.ApiVersion;
+import org.karnak.backend.constant.EndPoint;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.model.patient.PatientModel;
-import org.karnak.backend.cache.PseudonymCache;
-import org.karnak.backend.constant.EndPoint;
-
+import org.karnak.backend.model.patient.PseudonymImportResult;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.util.PatientClientUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,10 +57,19 @@ public class PseudonymController {
 
 	private final ProjectService projectService;
 
+	/**
+	 * Validates each row of a bulk import on its own, so that one invalid row is reported
+	 * instead of failing the whole batch the way {@code @Valid} on the request body
+	 * would. The bean comes from {@link org.karnak.backend.config.ValidationConfig}.
+	 */
+	private final Validator validator;
+
 	@Autowired
-	public PseudonymController(final PseudonymCache pseudonymCache, final ProjectService projectService) {
+	public PseudonymController(final PseudonymCache pseudonymCache, final ProjectService projectService,
+			final Validator validator) {
 		this.pseudonymCache = pseudonymCache;
 		this.projectService = projectService;
+		this.validator = validator;
 	}
 
 	@Operation(summary = "List all pseudonyms")
@@ -95,19 +107,81 @@ public class PseudonymController {
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasAnyAuthority('collaborator','backend') AND hasAuthority('karnak_create')")
 	public ResponseEntity<PatientModel> createPatient(@Valid @RequestBody PatientModel patientModel) {
-		ProjectEntity existing = projectService.retrieveProjectByUuid(patientModel.getProjectUUID());
-		if (existing == null) {
-			return ResponseEntity.notFound().build();
+		CreateOutcome outcome = createOne(patientModel);
+		return switch (outcome.status()) {
+			case PROJECT_NOT_FOUND -> ResponseEntity.notFound().build();
+			case CONFLICT -> ResponseEntity.status(HttpStatus.CONFLICT).body(outcome.existing());
+			case CREATED -> ResponseEntity.status(HttpStatus.CREATED).body(outcome.patientModel());
+		};
+	}
+
+	@Operation(summary = "Bulk-create pseudonyms",
+			description = "Imports a JSON array of patients in one request, running each row through the same "
+					+ "logic as the single-create endpoint. A partial failure never fails the whole request: "
+					+ "invalid, unresolvable-project, or conflicting rows are reported in the response summary "
+					+ "instead of aborting the batch.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200",
+			description = "Import processed, see the summary for the per-row outcome") })
+	@PostMapping(value = "/import", consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasAuthority('karnak_create')")
+	public ResponseEntity<PseudonymImportResult> importPseudonyms(@RequestBody List<PatientModel> patientModels) {
+		PseudonymImportResult result = new PseudonymImportResult();
+		for (int index = 0; index < patientModels.size(); index++) {
+			PatientModel patientModel = patientModels.get(index);
+			if (patientModel == null) {
+				result.addError(index, "Row is null");
+				continue;
+			}
+			Set<ConstraintViolation<PatientModel>> violations = validator.validate(patientModel);
+			if (!violations.isEmpty()) {
+				String reason = violations.stream()
+					.map(violation -> violation.getPropertyPath() + " " + violation.getMessage())
+					.collect(Collectors.joining("; "));
+				result.addError(index, reason);
+				continue;
+			}
+			try {
+				CreateOutcome outcome = createOne(patientModel);
+				switch (outcome.status()) {
+					case CREATED -> result.addCreated();
+					case CONFLICT -> result.addConflict(index,
+							"A pseudonym already exists for this patient and project", outcome.existing());
+					case PROJECT_NOT_FOUND -> result.addError(index, "Project not found");
+				}
+			}
+			catch (RuntimeException e) {
+				result.addError(index, e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+			}
 		}
-		else {
-			patientModel.setProjectID(existing.getId());
+		return ResponseEntity.ok(result);
+	}
+
+	/**
+	 * Shared create path used by both the single-create endpoint and the bulk import, so
+	 * their semantics (project lookup, key generation, conflict detection) match exactly.
+	 */
+	private CreateOutcome createOne(PatientModel patientModel) {
+		ProjectEntity project = projectService.retrieveProjectByUuid(patientModel.getProjectUUID());
+		if (project == null) {
+			return new CreateOutcome(CreateStatus.PROJECT_NOT_FOUND, null, null);
 		}
+		patientModel.setProjectID(project.getId());
 		String key = PatientClientUtil.generateKey(patientModel, patientModel.getProjectID());
 		PatientModel previous = pseudonymCache.put(key, patientModel);
 		if (previous != null) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(previous);
+			return new CreateOutcome(CreateStatus.CONFLICT, previous, null);
 		}
-		return ResponseEntity.status(HttpStatus.CREATED).body(patientModel);
+		return new CreateOutcome(CreateStatus.CREATED, null, patientModel);
+	}
+
+	private enum CreateStatus {
+
+		CREATED, CONFLICT, PROJECT_NOT_FOUND
+
+	}
+
+	private record CreateOutcome(CreateStatus status, PatientModel existing, PatientModel patientModel) {
 	}
 
 	@Operation(summary = "Update a pseudonym/patient", description = "Update the patient identified by pseudonym.")

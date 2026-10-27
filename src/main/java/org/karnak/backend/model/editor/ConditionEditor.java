@@ -25,7 +25,7 @@ public class ConditionEditor implements AttributeEditor {
 	}
 
 	private static boolean validateCondition(String condition, Attributes dcm) {
-		return (Boolean) ExpressionResult.get(condition, new ExprCondition(dcm), Boolean.class);
+		return Boolean.TRUE.equals(ExpressionResult.get(condition, new ExprCondition(dcm), Boolean.class));
 	}
 
 	@Override

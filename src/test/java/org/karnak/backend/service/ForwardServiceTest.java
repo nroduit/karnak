@@ -9,33 +9,24 @@
  */
 package org.karnak.backend.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.UID;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.io.DicomOutputStream;
 import org.dcm4che3.net.Association;
+import org.dcm4che3.net.Status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -46,13 +37,25 @@ import org.karnak.backend.dicom.NullForwardDestination;
 import org.karnak.backend.dicom.Params;
 import org.karnak.backend.dicom.WebForwardDestination;
 import org.karnak.backend.exception.AbortException;
+import org.karnak.backend.exception.DestinationStatusException;
 import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.monitoring.MonitoringEntry;
 import org.karnak.backend.service.profilepipe.DeidentifyImageService;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
 import org.weasis.dicom.param.DicomNode;
@@ -121,7 +124,7 @@ class ForwardServiceTest {
 
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
-		verify(scu).cstore(eq(CUID), eq(IUID), anyInt(), any(), eq(TS));
+		verify(scu).cstoreAsync(eq(CUID), eq(IUID), anyInt(), any(), eq(TS));
 		MonitoringEntry event = captureSingleEvent();
 		assertTrue(event.sent());
 		assertFalse(event.error());
@@ -136,7 +139,7 @@ class ForwardServiceTest {
 		// FILE_EXCEPTION must not propagate (other objects keep flowing)
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
-		verify(scu, never()).cstore(anyString(), anyString(), anyInt(), any(), anyString());
+		verify(scu, never()).cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString());
 		MonitoringEntry event = captureSingleEvent();
 		assertFalse(event.sent());
 		assertFalse(event.error());
@@ -163,7 +166,7 @@ class ForwardServiceTest {
 
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
-		verify(scu, never()).cstore(anyString(), anyString(), anyInt(), any(), anyString());
+		verify(scu, never()).cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString());
 		MonitoringEntry event = captureSingleEvent();
 		assertFalse(event.sent());
 		assertTrue(event.error());
@@ -177,8 +180,76 @@ class ForwardServiceTest {
 
 		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
 
-		verify(scu).cstore(eq(CUID), eq(IUID), anyInt(), any(), eq(TS));
+		verify(scu).cstoreAsync(eq(CUID), eq(IUID), anyInt(), any(), eq(TS));
 		assertTrue(captureSingleEvent().sent());
+	}
+
+	@Test
+	void dicom_transfer_other_destination_out_of_resources_is_returned_as_a700() {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		stubCStoreResponse(scu, 0xA701);
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertTrue(event.error());
+	}
+
+	@Test
+	void dicom_transfer_other_destination_failure_is_returned_as_processing_failure() {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		stubCStoreResponse(scu, Status.CannotUnderstand);
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
+
+		assertEquals(Status.ProcessingFailure, e.getStatus());
+		assertFalse(captureSingleEvent().sent());
+	}
+
+	@Test
+	void dicom_transfer_other_destination_warning_counts_as_sent() throws Exception {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		stubCStoreResponse(scu, Status.CoercionOfDataElements);
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+
+		forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null));
+
+		assertTrue(captureSingleEvent().sent());
+	}
+
+	@Test
+	void dicom_transfer_other_without_destination_response_is_returned_as_a700() throws Exception {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		when(scu.cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(new CompletableFuture<>());
+		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 0L);
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+	}
+
+	@Test
+	void dicom_transfer_other_association_closed_before_response_records_error_and_throws() throws Exception {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		when(scu.cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(CompletableFuture.failedFuture(new IOException("closed")));
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+
+		assertThrows(IOException.class,
+				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
+
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertTrue(event.error());
 	}
 
 	// --- DICOMWeb transferOther
@@ -214,6 +285,52 @@ class ForwardServiceTest {
 		assertTrue(event.duplicate());
 		assertFalse(event.sent());
 		assertFalse(event.error());
+	}
+
+	@Test
+	void web_transfer_other_too_many_requests_is_returned_as_a700() throws Exception {
+		DicomStowRS stow = mock(DicomStowRS.class);
+		doThrow(new HttpException("busy", 429, (Throwable) null)).when(stow)
+			.uploadDicom(any(Attributes.class), anyString());
+		WebForwardDestination dest = webDestination(stow, List.of());
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, dataset(), params(null)));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertTrue(event.error());
+	}
+
+	@Test
+	void web_transfer_other_bad_request_is_returned_as_processing_failure() throws Exception {
+		DicomStowRS stow = mock(DicomStowRS.class);
+		doThrow(new HttpException("bad", 400, (Throwable) null)).when(stow)
+			.uploadDicom(any(Attributes.class), anyString());
+		WebForwardDestination dest = webDestination(stow, List.of());
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, dataset(), params(null)));
+
+		assertEquals(Status.ProcessingFailure, e.getStatus());
+	}
+
+	@Test
+	void web_transfer_service_unavailable_on_the_first_destination_is_returned_as_a700() throws Exception {
+		DicomStowRS stow = mock(DicomStowRS.class);
+		doThrow(new HttpException("unavailable", 503, (Throwable) null)).when(stow)
+			.uploadDicom(any(Attributes.class), anyString());
+		WebForwardDestination dest = webDestination(stow, List.of());
+		Params p = params(new ByteArrayInputStream(serializeRaw(dataset())));
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.storeMultipleDestination(fwdNode, List.of(dest), p));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+		MonitoringEntry event = captureSingleEvent();
+		assertFalse(event.sent());
+		assertTrue(event.error());
 	}
 
 	@Test
@@ -328,6 +445,23 @@ class ForwardServiceTest {
 	// --- fixtures & helpers
 	// -----------------------------------------------------------------
 
+	@Test
+	void store_multiple_destination_still_fans_out_when_the_first_destination_refuses() throws Exception {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		stubCStoreResponse(scu, Status.OutOfResources);
+		DicomForwardDestination dest1 = dicomDestination(scu, List.of());
+		when(dest1.acquire(null)).thenReturn(lease(scu));
+		DicomStowRS stow2 = mock(DicomStowRS.class);
+		WebForwardDestination dest2 = webDestination(stow2, List.of());
+		Params p = params(new ByteArrayInputStream(serializeRaw(dataset())));
+
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.storeMultipleDestination(fwdNode, List.of(dest1, dest2), p));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+		verify(stow2).uploadDicom(any(Attributes.class), anyString());
+	}
+
 	private static Attributes dataset() {
 		Attributes a = new Attributes();
 		a.setString(Tag.SOPClassUID, VR.UI, CUID);
@@ -357,7 +491,20 @@ class ForwardServiceTest {
 		when(scu.getRemoteDicomNode()).thenReturn(new DicomNode("DEST", "localhost", 104));
 		when(scu.getNumberOfSuboperations()).thenReturn(0);
 		when(scu.getState()).thenReturn(new DicomState(new DicomProgress()));
+		stubCStoreResponse(scu, Status.Success);
 		return scu;
+	}
+
+	private static void stubCStoreResponse(StoreFromStreamSCU scu, int status) {
+		Attributes rsp = new Attributes();
+		rsp.setInt(Tag.Status, VR.US, status);
+		try {
+			when(scu.cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString()))
+				.thenReturn(CompletableFuture.completedFuture(rsp));
+		}
+		catch (IOException | InterruptedException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	/** A lease over the given SCU, as the destination pool would hand out. */

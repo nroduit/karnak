@@ -53,10 +53,9 @@ public class GatewayService implements ApplicationListener<ContextRefreshedEvent
 
 	public void initGateway() {
 		try {
-			String[] acceptedCallingAETitles = GatewayParams
-				.getAcceptedCallingAETitles(gatewaySetUpService.getDestinations());
-			GatewayParams gparams = new GatewayParams(gatewaySetUpService.getAdvancedParams(), false, null,
-					acceptedCallingAETitles);
+			// No fixed list of calling AETs: the listener checks them against the live
+			// routing table (see StoreScpForwardService)
+			GatewayParams gparams = new GatewayParams(gatewaySetUpService.getAdvancedParams(), false);
 			gateway.init(gatewaySetUpService.getDestinations());
 			gateway.start(gatewaySetUpService.getCallingDicomNode(), gparams);
 			log.info("Karnak DICOM gateway servlet is running: {}", gatewaySetUpService);

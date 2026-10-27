@@ -23,14 +23,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
 import org.karnak.backend.dicom.Params;
+import org.karnak.backend.exception.DestinationStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -77,9 +79,10 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	@Getter
 	private volatile int status;
 
-	// Single-flight guard for the transfer-status window: the C-STORE that wins it
-	// schedules the DB writes, every other one skips straight to the transfer
-	private final AtomicBoolean transferStatusPending = new AtomicBoolean();
+	// Single-flight guard for the transfer-status window of each forward node: the
+	// C-STORE that wins it schedules the DB writes, every other one skips straight to
+	// the transfer
+	private final Set<ForwardDicomNode> transferStatusPending = ConcurrentHashMap.newKeySet();
 
 	// Runs the transfer-status DB writes off the C-STORE threads
 	private final ScheduledExecutorService executorService;
@@ -244,10 +247,11 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	}
 
 	@PreDestroy
-	void stopPermitSampler() {
+	void stopExecutors() {
 		if (permitSampler != null) {
 			permitSampler.shutdownNow();
 		}
+		executorService.shutdownNow();
 	}
 
 	@Override
@@ -276,21 +280,52 @@ public class CStoreSCPService extends BasicCStoreSCP {
 		rsp.setInt(Tag.Status, VR.US, status);
 
 		acquireTransferPermit(rq);
+		// Resolved again once the permit is held: the wait can outlast a configuration
+		// change
+		List<ForwardDestination> activeDestinations = beginTransfers(fwdNode);
 		try {
 			Params p = new Params(rq.getString(Tag.AffectedSOPInstanceUID), rq.getString(Tag.AffectedSOPClassUID),
 					pc.getTransferSyntax(), priority, data, as);
 
 			// Update transfer status of destinations
-			updateTransferStatus(destList);
+			updateTransferStatus(fwdNode, activeDestinations);
 
-			forwardService.storeMultipleDestination(fwdNode, destList, p);
+			forwardService.storeMultipleDestination(fwdNode, activeDestinations, p);
 
+		}
+		catch (DestinationStatusException e) {
+			throw new DicomServiceException(e.getStatus(), e.getMessage());
 		}
 		catch (Exception e) {
 			throw new DicomServiceException(Status.ProcessingFailure, e);
 		}
 		finally {
+			activeDestinations.forEach(ForwardDestination::endTransfer);
 			transferPermits.release();
+		}
+	}
+
+	/**
+	 * Takes a snapshot of the destinations of the forward node and registers the transfer
+	 * on each, so a configuration change cannot stop one of them under the transfer. The
+	 * live list is mutated in place by the configuration; when one of its destinations
+	 * was retired meanwhile, the replacement is already published and the list is read
+	 * again.
+	 */
+	private List<ForwardDestination> beginTransfers(ForwardDicomNode fwdNode) {
+		while (true) {
+			List<ForwardDestination> snapshot = List.copyOf(destinations.getOrDefault(fwdNode, List.of()));
+			List<ForwardDestination> begun = new ArrayList<>(snapshot.size());
+			for (ForwardDestination destination : snapshot) {
+				if (!destination.beginTransfer()) {
+					break;
+				}
+				begun.add(destination);
+			}
+			if (begun.size() == snapshot.size()) {
+				return snapshot;
+			}
+			begun.forEach(ForwardDestination::endTransfer);
 		}
 	}
 
@@ -573,13 +608,13 @@ public class CStoreSCPService extends BasicCStoreSCP {
 	 * executor: the calling C-STORE thread holds a transfer permit and must not spend it
 	 * on repository calls.
 	 */
-	private void updateTransferStatus(List<ForwardDestination> destinations) {
-		if (transferStatusPending.compareAndSet(false, true)) {
+	private void updateTransferStatus(ForwardDicomNode fwdNode, List<ForwardDestination> destinations) {
+		if (transferStatusPending.add(fwdNode)) {
 			// The executor is single-threaded, so the set always runs before the clear
 			executorService.execute(() -> setTransferStatus(destinations, true));
 			executorService.schedule(() -> {
 				setTransferStatus(destinations, false);
-				transferStatusPending.set(false);
+				transferStatusPending.remove(fwdNode);
 			}, 5, TimeUnit.SECONDS);
 		}
 	}

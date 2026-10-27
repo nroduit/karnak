@@ -9,18 +9,27 @@
  */
 package org.karnak.backend.dicom;
 
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.dcm4che3.data.Attributes;
+import org.dcm4che3.data.Tag;
+import org.dcm4che3.data.UID;
+import org.dcm4che3.data.VR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-
-import java.util.List;
-import org.dcm4che3.data.UID;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
 import org.weasis.dicom.param.AttributeEditor;
+import org.weasis.dicom.web.HttpException;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class WebForwardDestinationTest {
@@ -110,6 +119,44 @@ class WebForwardDestinationTest {
 		destination.setTranscodeOnlyUncompressed(false);
 
 		assertFalse(destination.isTranscodeOnlyUncompressed());
+	}
+
+	@Test
+	void a_redirected_upload_fails_instead_of_reporting_success() throws Exception {
+		HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+		AtomicInteger loginPageHits = new AtomicInteger();
+		server.createContext("/dicomweb/studies", exchange -> {
+			exchange.getRequestBody().readAllBytes();
+			exchange.getResponseHeaders().add("Location", "/login");
+			exchange.sendResponseHeaders(302, -1);
+			exchange.close();
+		});
+		server.createContext("/login", exchange -> {
+			loginPageHits.incrementAndGet();
+			byte[] body = "<html>login</html>".getBytes(StandardCharsets.UTF_8);
+			exchange.sendResponseHeaders(200, body.length);
+			exchange.getResponseBody().write(body);
+			exchange.close();
+		});
+		server.start();
+		String url = "http://" + server.getAddress().getHostString() + ":" + server.getAddress().getPort()
+				+ "/dicomweb/studies";
+		WebForwardDestination destination = new WebForwardDestination(new ForwardDicomNode("FWD-AET"), url);
+		try {
+			Attributes dataset = new Attributes();
+			dataset.setString(Tag.SOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage);
+			dataset.setString(Tag.SOPInstanceUID, VR.UI, "1.2.3.4.5");
+
+			HttpException e = assertThrows(HttpException.class,
+					() -> destination.getStowrsSingleFile().uploadDicom(dataset, UID.ExplicitVRLittleEndian));
+
+			assertEquals(302, e.getStatusCode());
+			assertEquals(0, loginPageHits.get());
+		}
+		finally {
+			destination.stop();
+			server.stop(0);
+		}
 	}
 
 }

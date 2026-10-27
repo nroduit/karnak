@@ -9,7 +9,9 @@
  */
 package org.karnak.backend.service.profilepipe;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
@@ -37,6 +38,8 @@ import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.dicom.Defacer;
+import static org.karnak.backend.dicom.DefacingUtil.isAxial;
+import static org.karnak.backend.dicom.DefacingUtil.isCT;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.action.ActionItem;
 import org.karnak.backend.model.action.Add;
@@ -61,9 +64,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.weasis.core.util.StringUtil;
 import org.weasis.dicom.param.AttributeEditorContext;
-
-import static org.karnak.backend.dicom.DefacingUtil.isAxial;
-import static org.karnak.backend.dicom.DefacingUtil.isCT;
 
 @Slf4j
 public class Profile {
@@ -269,8 +269,8 @@ public class Profile {
 
 	/** Whether the optional condition of a profile item holds for the current object. */
 	private static boolean conditionMatches(ProfileItem profileEntity, ExprCondition exprCondition) {
-		return profileEntity.getCondition() == null
-				|| (Boolean) ExpressionResult.get(profileEntity.getCondition(), exprCondition, Boolean.class);
+		return profileEntity.getCondition() == null || Boolean.TRUE
+			.equals(ExpressionResult.get(profileEntity.getCondition(), exprCondition, Boolean.class));
 	}
 
 	/**
@@ -297,8 +297,8 @@ public class Profile {
 					currentAction = profileEntity.getAction(dcm, original, tag, hmac, path);
 				}
 				else {
-					boolean conditionIsOk = (Boolean) ExpressionResult.get(profileEntity.getCondition(), exprCondition,
-							Boolean.class);
+					boolean conditionIsOk = Boolean.TRUE
+						.equals(ExpressionResult.get(profileEntity.getCondition(), exprCondition, Boolean.class));
 					if (conditionIsOk) {
 						currentAction = profileEntity.getAction(dcm, original, tag, hmac, path);
 					}
@@ -515,8 +515,8 @@ public class Profile {
 		if (profileItemCleanPixelData != null && profileItemCleanPixelData.getCondition() != null) {
 			// Evaluate the condition
 			ExprCondition exprCondition = new ExprCondition(original);
-			conditionCleanPixelData = (Boolean) ExpressionResult.get(profileItemCleanPixelData.getCondition(),
-					exprCondition, Boolean.class);
+			conditionCleanPixelData = Boolean.TRUE
+				.equals(ExpressionResult.get(profileItemCleanPixelData.getCondition(), exprCondition, Boolean.class));
 		}
 		return conditionCleanPixelData;
 	}
@@ -532,8 +532,8 @@ public class Profile {
 			}
 			else {
 				ExprCondition exprCondition = new ExprCondition(original);
-				boolean conditionIsOk = (Boolean) ExpressionResult.get(profileItemDefacing.getCondition(),
-						exprCondition, Boolean.class);
+				boolean conditionIsOk = Boolean.TRUE
+					.equals(ExpressionResult.get(profileItemDefacing.getCondition(), exprCondition, Boolean.class));
 				if (conditionIsOk) {
 					context.getProperties().setProperty(Defacer.APPLY_DEFACING, "true");
 				}

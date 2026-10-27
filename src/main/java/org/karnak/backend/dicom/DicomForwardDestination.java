@@ -11,7 +11,11 @@ package org.karnak.backend.dicom;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import lombok.Getter;
 import org.jspecify.annotations.NullUnmarked;
 import org.weasis.core.util.annotations.Generated;
@@ -36,17 +40,101 @@ public class DicomForwardDestination extends ForwardDestination {
 	public record ScuLease(StoreFromStreamSCU scu, DeviceOpService service, int slot, boolean exclusive) {
 	}
 
-	// One or more SCUs (each its own DICOM association) to the same destination.
-	private final List<StoreFromStreamSCU> scuPool;
+	/**
+	 * One or more SCUs (each its own DICOM association) to the same destination, all
+	 * calling with the same AE Title.
+	 */
+	private static final class ScuPool {
 
-	private final List<DeviceOpService> servicePool;
+		private final List<StoreFromStreamSCU> scus;
 
-	private final boolean[] inUse;
+		private final List<DeviceOpService> services;
 
-	private int roundRobin;
+		private final boolean[] inUse;
+
+		// Leases handed out and not yet returned, shared ones included
+		private int leases;
+
+		private int roundRobin;
+
+		private ScuPool(AdvancedParams forwardParams, DicomNode callingNode, DicomNode destinationNode,
+				DicomProgress progress, int size) throws IOException {
+			this.scus = new ArrayList<>(size);
+			this.services = new ArrayList<>(size);
+			this.inUse = new boolean[size];
+			for (int i = 0; i < size; i++) {
+				// Only the first SCU keeps the supplied progress handler; the others get
+				// their own state.
+				StoreFromStreamSCU scu = new StoreFromStreamSCU(forwardParams, callingNode, destinationNode,
+						i == 0 ? progress : null);
+				scus.add(scu);
+				services.add(new DeviceOpService(scu.getDevice()));
+			}
+		}
+
+		private ScuLease acquire() {
+			leases++;
+			for (int i = 0; i < inUse.length; i++) {
+				if (!inUse[i]) {
+					inUse[i] = true;
+					return new ScuLease(scus.get(i), services.get(i), i, true);
+				}
+			}
+			int i = roundRobin;
+			roundRobin = (roundRobin + 1) % inUse.length;
+			return new ScuLease(scus.get(i), services.get(i), i, false);
+		}
+
+		private void release(ScuLease lease) {
+			leases--;
+			if (lease.exclusive()) {
+				inUse[lease.slot()] = false;
+			}
+		}
+
+		private boolean owns(ScuLease lease) {
+			return lease.slot() < scus.size() && scus.get(lease.slot()) == lease.scu();
+		}
+
+		private boolean isIdle() {
+			return leases == 0;
+		}
+
+		private void stop() {
+			for (StoreFromStreamSCU scu : scus) {
+				scu.close(true);
+			}
+			for (DeviceOpService service : services) {
+				service.stop();
+			}
+		}
+
+	}
+
+	// Pool calling with the forward node AE Title
+	private final ScuPool defaultPool;
+
+	/**
+	 * Upper bound of the pools kept for source AE Titles. Beyond it, the least recently
+	 * used idle pool is closed when a new source shows up, so a destination fed by many
+	 * sources does not keep one set of associations per source forever.
+	 */
+	static final int MAX_SOURCE_POOLS = 32;
+
+	// Pools calling with the source AE Title, created on first use for each source, in
+	// access order for the eviction
+	private final Map<String, ScuPool> sourcePools = new LinkedHashMap<>(16, 0.75f, true);
+
+	private final AdvancedParams forwardParams;
+
+	private final int poolSize;
 
 	@Getter
-	private final boolean useDestinationAetForKeyMap;
+	private boolean useSourceAet;
+
+	// Applied to every SCU, including those of the source pools created later
+	private Consumer<StoreFromStreamSCU> scuInitializer = _ -> {
+	};
 
 	private final ForwardDicomNode callingNode;
 
@@ -64,7 +152,7 @@ public class DicomForwardDestination extends ForwardDestination {
 
 	public DicomForwardDestination(AdvancedParams forwardParams, ForwardDicomNode fwdNode, DicomNode destinationNode,
 			List<AttributeEditor> editors) throws IOException {
-		this(forwardParams, fwdNode, destinationNode, false, null, editors);
+		this(forwardParams, fwdNode, destinationNode, null, editors);
 	}
 
 	/**
@@ -72,24 +160,20 @@ public class DicomForwardDestination extends ForwardDestination {
 	 * connection and TLS)
 	 * @param fwdNode the DICOM forwarding node. Cannot be null.
 	 * @param destinationNode the DICOM destination node. Cannot be null.
-	 * @param useDestinationAetForKeyMap whether the destination AET is used as the
-	 * key-map key
 	 * @param progress optional progress handler for the transfer
 	 * @param editors optional attribute editors applied before forwarding
 	 * @throws IOException if the association with the destination cannot be set up
 	 */
 	public DicomForwardDestination(AdvancedParams forwardParams, ForwardDicomNode fwdNode, DicomNode destinationNode,
-			boolean useDestinationAetForKeyMap, DicomProgress progress, List<AttributeEditor> editors)
-			throws IOException {
-		this(null, forwardParams, fwdNode, destinationNode, useDestinationAetForKeyMap, progress, editors, null, true);
+			DicomProgress progress, List<AttributeEditor> editors) throws IOException {
+		this(null, forwardParams, fwdNode, destinationNode, progress, editors, null, true);
 	}
 
 	public DicomForwardDestination(Long id, AdvancedParams forwardParams, ForwardDicomNode fwdNode,
-			DicomNode destinationNode, boolean useDestinationAetForKeyMap, DicomProgress progress,
-			List<AttributeEditor> editors, String outputTransferSyntax, boolean transcodeOnlyUncompressed)
-			throws IOException {
-		this(id, forwardParams, fwdNode, destinationNode, useDestinationAetForKeyMap, progress, editors,
-				outputTransferSyntax, transcodeOnlyUncompressed, 1);
+			DicomNode destinationNode, DicomProgress progress, List<AttributeEditor> editors,
+			String outputTransferSyntax, boolean transcodeOnlyUncompressed) throws IOException {
+		this(id, forwardParams, fwdNode, destinationNode, progress, editors, outputTransferSyntax,
+				transcodeOnlyUncompressed, 1);
 	}
 
 	/**
@@ -99,68 +183,109 @@ public class DicomForwardDestination extends ForwardDestination {
 	 * PACS must allow that many concurrent associations from this calling AE.
 	 */
 	public DicomForwardDestination(Long id, AdvancedParams forwardParams, ForwardDicomNode fwdNode,
-			DicomNode destinationNode, boolean useDestinationAetForKeyMap, DicomProgress progress,
-			List<AttributeEditor> editors, String outputTransferSyntax, boolean transcodeOnlyUncompressed, int poolSize)
-			throws IOException {
+			DicomNode destinationNode, DicomProgress progress, List<AttributeEditor> editors,
+			String outputTransferSyntax, boolean transcodeOnlyUncompressed, int poolSize) throws IOException {
 		super(id, editors);
 		this.callingNode = fwdNode;
 		this.destinationNode = destinationNode;
-		int size = Math.max(1, poolSize);
-		this.scuPool = new ArrayList<>(size);
-		this.servicePool = new ArrayList<>(size);
-		this.inUse = new boolean[size];
-		for (int i = 0; i < size; i++) {
-			// Only the first SCU keeps the supplied progress handler; the others get
-			// their own state.
-			StoreFromStreamSCU scu = new StoreFromStreamSCU(forwardParams, fwdNode, destinationNode,
-					i == 0 ? progress : null);
-			scuPool.add(scu);
-			servicePool.add(new DeviceOpService(scu.getDevice()));
-		}
-		this.useDestinationAetForKeyMap = useDestinationAetForKeyMap;
+		this.forwardParams = forwardParams;
+		this.poolSize = Math.max(1, poolSize);
+		this.defaultPool = new ScuPool(forwardParams, fwdNode, destinationNode, progress, this.poolSize);
 		setOutputTransferSyntax(outputTransferSyntax);
 		setTranscodeOnlyUncompressed(transcodeOnlyUncompressed);
 	}
 
 	/**
-	 * Leases an SCU for one transfer. Returns a free association exclusively when one is
-	 * available; otherwise (pool exhausted) shares one round-robin so a transfer is never
-	 * blocked. Always pair with {@link #release(ScuLease)} in a finally block.
+	 * Leases an SCU calling with the forward node AE Title. Returns a free association
+	 * exclusively when one is available; otherwise (pool exhausted) shares one
+	 * round-robin so a transfer is never blocked. Always pair with
+	 * {@link #release(ScuLease)} in a finally block.
 	 */
 	public synchronized ScuLease acquire() {
-		for (int i = 0; i < inUse.length; i++) {
-			if (!inUse[i]) {
-				inUse[i] = true;
-				return new ScuLease(scuPool.get(i), servicePool.get(i), i, true);
-			}
-		}
-		int i = roundRobin;
-		roundRobin = (roundRobin + 1) % inUse.length;
-		return new ScuLease(scuPool.get(i), servicePool.get(i), i, false);
-	}
-
-	/** Returns a leased SCU to the pool. No-op for a shared (non-exclusive) lease. */
-	public synchronized void release(ScuLease lease) {
-		if (lease != null && lease.exclusive()) {
-			inUse[lease.slot()] = false;
-		}
+		return defaultPool.acquire();
 	}
 
 	/**
-	 * All SCUs of the pool (e.g. to pre-negotiate presentation contexts on every
-	 * association).
+	 * Leases an SCU for a transfer received from {@code sourceAet}. When
+	 * {@link #isUseSourceAet()} is set, the association calls the destination with the
+	 * source AE Title (each source gets its own pool of associations); otherwise, or when
+	 * the source AE Title is unknown, it behaves like {@link #acquire()}.
+	 * @throws IOException if the associations for a new source cannot be set up
 	 */
+	public synchronized ScuLease acquire(String sourceAet) throws IOException {
+		if (!useSourceAet || sourceAet == null || sourceAet.isBlank()) {
+			return defaultPool.acquire();
+		}
+		ScuPool pool = sourcePools.get(sourceAet);
+		if (pool == null) {
+			evictIdleSourcePools();
+			pool = new ScuPool(forwardParams, new DicomNode(sourceAet), destinationNode, null, poolSize);
+			pool.scus.forEach(scuInitializer);
+			sourcePools.put(sourceAet, pool);
+		}
+		return pool.acquire();
+	}
+
+	/**
+	 * Makes room for a new source pool: closes the least recently used pools that have no
+	 * lease out until the bound is respected. A pool still in use is never closed, so the
+	 * bound may be exceeded under load.
+	 */
+	private void evictIdleSourcePools() {
+		Iterator<ScuPool> pools = sourcePools.values().iterator();
+		while (sourcePools.size() >= MAX_SOURCE_POOLS && pools.hasNext()) {
+			ScuPool pool = pools.next();
+			if (pool.isIdle()) {
+				pools.remove();
+				pool.stop();
+			}
+		}
+	}
+
+	/** Returns a leased SCU to its pool. */
+	public synchronized void release(ScuLease lease) {
+		if (lease == null) {
+			return;
+		}
+		if (defaultPool.owns(lease)) {
+			defaultPool.release(lease);
+			return;
+		}
+		for (ScuPool pool : sourcePools.values()) {
+			if (pool.owns(lease)) {
+				pool.release(lease);
+				return;
+			}
+		}
+	}
+
+	public synchronized void setUseSourceAet(boolean useSourceAet) {
+		this.useSourceAet = useSourceAet;
+	}
+
+	/**
+	 * Sets an action applied to every SCU of the destination (e.g. to pre-negotiate
+	 * presentation contexts on every association): immediately to the existing ones, and
+	 * to those created later for a new source AE Title.
+	 */
+	public synchronized void setScuInitializer(Consumer<StoreFromStreamSCU> scuInitializer) {
+		this.scuInitializer = scuInitializer;
+		defaultPool.scus.forEach(scuInitializer);
+		sourcePools.values().forEach(pool -> pool.scus.forEach(scuInitializer));
+	}
+
+	/** All SCUs of the pool calling with the forward node AE Title. */
 	public List<StoreFromStreamSCU> getStreamSCUs() {
-		return scuPool;
+		return defaultPool.scus;
 	}
 
 	/** A representative SCU (the first of the pool); use {@link #acquire()} to send. */
 	public StoreFromStreamSCU getStreamSCU() {
-		return scuPool.getFirst();
+		return defaultPool.scus.getFirst();
 	}
 
 	public DeviceOpService getStreamSCUService() {
-		return servicePool.getFirst();
+		return defaultPool.services.getFirst();
 	}
 
 	@Override
@@ -169,18 +294,14 @@ public class DicomForwardDestination extends ForwardDestination {
 	}
 
 	@Override
-	public void stop() {
-		for (StoreFromStreamSCU scu : scuPool) {
-			scu.close(true);
-		}
-		for (DeviceOpService service : servicePool) {
-			service.stop();
-		}
+	public synchronized void stop() {
+		defaultPool.stop();
+		sourcePools.values().forEach(ScuPool::stop);
 	}
 
 	@Override
 	public DicomState getState() {
-		return scuPool.get(0).getState();
+		return defaultPool.scus.getFirst().getState();
 	}
 
 	@Override

@@ -67,7 +67,7 @@ public final class DestinationMapper {
 		model.setAeTitle(entity.getAeTitle());
 		model.setHostname(entity.getHostname());
 		model.setPort(entity.getPort());
-		model.setUseaetdest(entity.getUseaetdest() != null ? entity.getUseaetdest() : Boolean.FALSE);
+		model.setUseSourceAet(entity.isUseSourceAet());
 		model.setUrl(entity.getUrl());
 		model.setHeaders(entity.getHeaders());
 		model.setTransferSyntax(entity.getTransferSyntax());
@@ -120,7 +120,7 @@ public final class DestinationMapper {
 		entity.setAeTitle(defaultString(model.getAeTitle()));
 		entity.setHostname(defaultString(model.getHostname()));
 		entity.setPort(model.getPort());
-		entity.setUseaetdest(model.getUseaetdest() != null ? model.getUseaetdest() : Boolean.FALSE);
+		entity.setUseSourceAet(model.isUseSourceAet());
 		entity.setUrl(defaultString(model.getUrl()));
 		entity.setHeaders(defaultString(model.getHeaders()));
 		entity.setTransferSyntax(model.getTransferSyntax());

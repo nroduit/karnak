@@ -9,12 +9,11 @@
  */
 package org.karnak.backend.data.repo;
 
+import java.util.Optional;
+import java.util.UUID;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface SecretRepo extends JpaRepository<SecretEntity, Long> {

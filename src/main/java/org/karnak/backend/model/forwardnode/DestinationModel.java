@@ -128,7 +128,7 @@ public class DestinationModel implements Serializable {
 	@Max(groups = DestinationDicomGroup.class, value = 65535, message = "Port should be between 1 and 65535")
 	private Integer port;
 
-	private Boolean useaetdest;
+	private boolean useSourceAet;
 
 	// STOW properties
 	// the destination STOW-RS URL.

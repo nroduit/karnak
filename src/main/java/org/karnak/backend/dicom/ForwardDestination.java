@@ -10,6 +10,7 @@
 package org.karnak.backend.dicom;
 
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.dcm4che3.data.UID;
@@ -73,6 +74,14 @@ public abstract class ForwardDestination {
 
 	private String outputTransferSyntax = "";
 
+	// Transfers currently using this destination, and whether a configuration change
+	// replaced it: a retired destination is stopped by its last transfer, never under it
+	@Getter(AccessLevel.NONE)
+	private int activeTransfers;
+
+	@Getter(AccessLevel.NONE)
+	private boolean retired;
+
 	protected ForwardDestination(@Nullable Long id, @Nullable List<AttributeEditor> dicomEditors) {
 		this.dicomEditors = dicomEditors;
 		this.id = id;
@@ -80,7 +89,52 @@ public abstract class ForwardDestination {
 
 	public abstract ForwardDicomNode getForwardDicomNode();
 
+	/** Releases the resources of the destination (associations, executors). */
 	public abstract void stop();
+
+	/**
+	 * Registers a transfer about to use this destination. Pair every successful call with
+	 * {@link #endTransfer()}.
+	 * @return false when the destination has been retired: the caller must use the
+	 * current configuration instead
+	 */
+	public final synchronized boolean beginTransfer() {
+		if (retired) {
+			return false;
+		}
+		activeTransfers++;
+		return true;
+	}
+
+	/** Ends a transfer registered by {@link #beginTransfer()}. */
+	public final void endTransfer() {
+		boolean stopNow;
+		synchronized (this) {
+			activeTransfers--;
+			stopNow = retired && activeTransfers == 0;
+		}
+		if (stopNow) {
+			stop();
+		}
+	}
+
+	/**
+	 * Takes the destination out of service once a configuration change has replaced or
+	 * removed it: it is stopped now when idle, otherwise when its last transfer ends.
+	 */
+	public final void retire() {
+		boolean stopNow;
+		synchronized (this) {
+			if (retired) {
+				return;
+			}
+			retired = true;
+			stopNow = activeTransfers == 0;
+		}
+		if (stopNow) {
+			stop();
+		}
+	}
 
 	public abstract DicomState getState();
 

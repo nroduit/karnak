@@ -18,8 +18,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.model.patient.PatientModel;
 import org.weasis.core.util.annotations.Generated;
 
 /**

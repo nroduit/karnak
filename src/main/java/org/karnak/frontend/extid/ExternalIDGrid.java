@@ -30,10 +30,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.cache.PseudonymCache;
 import org.karnak.backend.config.AppConfig;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.component.WarningConfirmDialog;
 import org.weasis.core.util.annotations.Generated;
@@ -54,7 +54,7 @@ public class ExternalIDGrid extends Grid<PatientModel> {
 
 	private final PatientFilter patientFilter = new PatientFilter();
 
-	private GridListDataView<PatientModel> dataView;
+	private final GridListDataView<PatientModel> dataView;
 
 	@Getter
 	@Setter

@@ -27,6 +27,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -34,6 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
@@ -53,6 +55,7 @@ import org.dcm4che3.net.InputStreamDataWriter;
 import org.dcm4che3.net.PDVInputStream;
 import org.dcm4che3.net.PDVOutputStream;
 import org.dcm4che3.net.Status;
+import org.dcm4che3.util.TagUtils;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.dicom.Defacer;
 import org.karnak.backend.dicom.DicomForwardDestination;
@@ -62,6 +65,7 @@ import org.karnak.backend.dicom.ForwardDicomNode;
 import org.karnak.backend.dicom.Params;
 import org.karnak.backend.dicom.WebForwardDestination;
 import org.karnak.backend.exception.AbortException;
+import org.karnak.backend.exception.DestinationStatusException;
 import org.karnak.backend.model.event.ConformanceCollectEvent;
 import org.karnak.backend.model.event.TransferMonitoringEvent;
 import org.karnak.backend.model.image.PaletteColorConverter;
@@ -120,6 +124,11 @@ public class ForwardService {
 	// recursion depth
 	@Value("${conformance-report.max-sequence-depth:8}")
 	private int conformanceMaxSequenceDepth;
+
+	// How long a forwarded C-STORE waits for the destination's response before the
+	// source is answered A700 (out of resources) so it retries
+	@Value("${forward.cstore-response-timeout-seconds:60}")
+	private long cstoreResponseTimeoutSeconds = 60;
 
 	private ExecutorService fanoutExecutor;
 
@@ -190,11 +199,26 @@ public class ForwardService {
 			// The first destination consumes the incoming stream once, with bulk data
 			// spooled to temporary files; for several destinations the dataset is also
 			// buffered into "attributes" so the remaining ones can be served from it.
-			prepareAndTransfer(forwardNode, p, 0, destinations.get(0), attributes, nbDestinations, files);
+			DestinationStatusException refused = null;
+			try {
+				prepareAndTransfer(forwardNode, p, 0, destinations.get(0), attributes, nbDestinations, files);
+			}
+			catch (DestinationStatusException e) {
+				// The object was received and buffered: the other destinations still get
+				// it, the refusal is reported to the source afterwards.
+				refused = e;
+			}
 
 			if (nbDestinations > 1 && !attributes.isEmpty()) {
 				fanOutToRemainingDestinations(forwardNode, p, destinations, attributes, nbDestinations, files);
 			}
+			if (refused != null) {
+				throw refused;
+			}
+		}
+		catch (DestinationStatusException e) {
+			log.error("The final destination did not store {}: {}", p.iuid(), e.getMessage());
+			throw e;
 		}
 		catch (IOException e) {
 			log.error("Cannot connect to the final destination", e);
@@ -308,7 +332,7 @@ public class ForwardService {
 			// Lease one association from the destination's pool for the whole transfer,
 			// so the same connection is used by prepareTransfer and the sending, then
 			// return it.
-			ScuLease lease = dicomDestination.acquire();
+			ScuLease lease = dicomDestination.acquire(p.as() != null ? p.as().getCallingAET() : null);
 			try {
 				prepareTransfer(lease, dicomDestination, p);
 				if (index == 0) {
@@ -422,6 +446,9 @@ public class ForwardService {
 			monitor(sourceNode, destination, attributesOriginal, attributesToSend, false, true, errorReason(e),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			log.error(ERROR_WHEN_FORWARDING, e);
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 		finally {
 			streamSCU.triggerCloseExecutor();
@@ -441,11 +468,17 @@ public class ForwardService {
 	 * permits, the native image is released, and only a file-to-socket copy is done under
 	 * the lock. An exclusive lease has no one to contend with and writes straight to the
 	 * socket, so nothing is spooled when the pool is large enough for the load.
+	 * <p>
+	 * The call returns once the destination answered, so a refusal reaches the source
+	 * instead of a Success for an object that was never stored.
+	 * @throws DestinationStatusException if the destination refused the object or did not
+	 * answer within {@code forward.cstore-response-timeout-seconds}
 	 */
 	private void launchCStore(Params p, ScuLease lease, DataWriter dataWriter, String cuid, String iuid,
 			AdaptTransferSyntax syntax, TransformedPlanarImage transformedPlanarImage)
 			throws IOException, InterruptedException {
 		Path spool = null;
+		CompletableFuture<Attributes> response;
 		try {
 			DataWriter writer = dataWriter;
 			if (!lease.exclusive()) {
@@ -453,7 +486,9 @@ public class ForwardService {
 				releaseTransformedImage(transformedPlanarImage);
 				writer = new InputStreamDataWriter(new BufferedInputStream(Files.newInputStream(spool)));
 			}
-			lease.scu().cstore(cuid, iuid, p.priority(), writer, syntax.getSuitable());
+			// The dataset is fully written when the call returns, only the response is
+			// awaited below, after the image and the spool file are released
+			response = lease.scu().cstoreAsync(cuid, iuid, p.priority(), writer, syntax.getSuitable());
 		}
 		finally {
 			releaseTransformedImage(transformedPlanarImage);
@@ -461,6 +496,63 @@ public class ForwardService {
 				FileUtil.delete(spool);
 			}
 		}
+		checkCStoreResponse(awaitCStoreResponse(response, iuid));
+	}
+
+	private Attributes awaitCStoreResponse(CompletableFuture<Attributes> response, String iuid)
+			throws IOException, InterruptedException {
+		try {
+			return response.get(cstoreResponseTimeoutSeconds, TimeUnit.SECONDS);
+		}
+		catch (TimeoutException e) {
+			throw new DestinationStatusException(Status.OutOfResources,
+					"No C-STORE response from the destination within " + cstoreResponseTimeoutSeconds + "s for "
+							+ iuid);
+		}
+		catch (ExecutionException e) {
+			if (e.getCause() instanceof IOException io) {
+				throw io;
+			}
+			throw new IOException("C-STORE to the destination failed", e.getCause());
+		}
+	}
+
+	/**
+	 * Maps the destination's C-STORE-RSP to the outcome returned to the source. Success
+	 * and warnings mean the object was stored. Out of resources (A7xx) is passed on as
+	 * A700 so the source retries later; any other failure is returned as a processing
+	 * failure (0110), as the destination's code describes the dataset after the editors,
+	 * not the one the source sent.
+	 */
+	static void checkCStoreResponse(Attributes cmd) throws DestinationStatusException {
+		int status = cmd.getInt(Tag.Status, -1);
+		if (status == Status.Success || isWarningStatus(status)) {
+			return;
+		}
+		String message = "Destination refused the object with status " + TagUtils.shortToHexString(status) + "H";
+		String comment = cmd.getString(Tag.ErrorComment);
+		if (comment != null && !comment.isBlank()) {
+			message += ": " + comment;
+		}
+		boolean outOfResources = (status & 0xFF00) == Status.OutOfResources;
+		throw new DestinationStatusException(outOfResources ? Status.OutOfResources : Status.ProcessingFailure,
+				message);
+	}
+
+	/**
+	 * Maps a STOW-RS error (other than 409, already present) to the outcome returned to
+	 * the source: a transient HTTP error (408, 429, 5xx) is passed on as A700 so the
+	 * source retries later, any other one as a processing failure (0110).
+	 */
+	static DestinationStatusException refusedByWebDestination(HttpException e) {
+		int status = e.isRecoverable() ? Status.OutOfResources : Status.ProcessingFailure;
+		return new DestinationStatusException(status,
+				"Destination refused the object with HTTP status " + e.getStatusCode() + ": " + e.getMessage(), e);
+	}
+
+	private static boolean isWarningStatus(int status) {
+		return (status & 0xF000) == 0xB000 || status == Status.AttributeListError
+				|| status == Status.AttributeValueOutOfRange;
 	}
 
 	private static void releaseTransformedImage(TransformedPlanarImage transformedPlanarImage) {
@@ -802,6 +894,9 @@ public class ForwardService {
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, errorReason(e),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			log.error(ERROR_WHEN_FORWARDING, e);
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 		finally {
 			streamSCU.triggerCloseExecutor();
@@ -851,7 +946,7 @@ public class ForwardService {
 			}
 			catch (HttpException httpException) {
 				if (httpException.getStatusCode() != 409) {
-					throw new AbortException(Abort.FILE_EXCEPTION, httpException.getMessage());
+					throw refusedByWebDestination(httpException);
 				}
 				else {
 					log.debug("File already present in destination");
@@ -882,6 +977,9 @@ public class ForwardService {
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, errorReason(e),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			log.error(ERROR_WHEN_FORWARDING, e);
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 		finally {
 			files = cleanOrGetBulkDataFiles(in, copy == null);
@@ -949,7 +1047,7 @@ public class ForwardService {
 				progressNotify(destination, p.iuid(), p.cuid(), true, 0);
 				monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true,
 						httpException.getMessage(), attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
-				throw new AbortException(Abort.FILE_EXCEPTION, "DICOMWeb forward", httpException);
+				throw refusedByWebDestination(httpException);
 			}
 			else {
 				progressNotify(destination, p.iuid(), p.cuid(), false, 0);
@@ -979,6 +1077,9 @@ public class ForwardService {
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, errorReason(e),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			log.error(ERROR_WHEN_FORWARDING, e);
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 	}
 
@@ -1034,6 +1135,9 @@ public class ForwardService {
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, errorReason(e),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			log.error(ERROR_WHEN_FORWARDING, e);
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 		finally {
 			files = cleanOrGetBulkDataFiles(in, copy == null);
@@ -1077,6 +1181,9 @@ public class ForwardService {
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, false, true, errorReason(e),
 					attributesOriginal.getString(Tag.Modality), p.cuid(), p.tsuid());
 			log.error(ERROR_WHEN_FORWARDING, e);
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
 		}
 	}
 

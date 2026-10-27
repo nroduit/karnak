@@ -42,7 +42,7 @@ public class FormDICOM extends VerticalLayout {
 
 	private TextField concurrentConnections;
 
-	private Checkbox useAETitleCheckbox;
+	private Checkbox useSourceAETitleCheckbox;
 
 	private Checkbox activate;
 
@@ -99,7 +99,7 @@ public class FormDICOM extends VerticalLayout {
 		hostname = new TextField("Hostname");
 		port = new TextField("Port");
 		concurrentConnections = new TextField("Concurrent connections");
-		useAETitleCheckbox = new Checkbox("Use AETitle destination");
+		useSourceAETitleCheckbox = new Checkbox("Use source AETitle");
 		activate = new Checkbox("Enable destination");
 
 		// Define layout
@@ -108,19 +108,19 @@ public class FormDICOM extends VerticalLayout {
 				UIS.setWidthFull(new HorizontalLayout(hostname, port, concurrentConnections)));
 		VerticalLayout transferLayout = new VerticalLayout(
 				new HorizontalLayout(transferSyntaxComponent, transcodeOnlyUncompressedComponent));
-		VerticalLayout useaetdestLayout = new VerticalLayout(new HorizontalLayout(useAETitleCheckbox));
+		VerticalLayout useSourceAetLayout = new VerticalLayout(useSourceAETitleCheckbox);
 		VerticalLayout activateLayout = new VerticalLayout(activate);
 
 		// Set padding
 		destinationLayout.setPadding(true);
 		transferLayout.setPadding(true);
-		useaetdestLayout.setPadding(true);
+		useSourceAetLayout.setPadding(true);
 		activateLayout.setPadding(true);
 
 		// Add components
 		add(UIS.setWidthFull(new BoxShadowComponent(destinationLayout)),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(transferLayout))),
-				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(useaetdestLayout))),
+				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(useSourceAetLayout))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(notificationComponent))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(conformanceReportComponent))),
 				UIS.setWidthFull(new BoxShadowComponent(UIS.setWidthFull(tagMorphingComponent))),
@@ -154,7 +154,7 @@ public class FormDICOM extends VerticalLayout {
 		hostname.setEnabled(delivery);
 		port.setEnabled(delivery);
 		concurrentConnections.setEnabled(delivery);
-		useAETitleCheckbox.setEnabled(delivery);
+		useSourceAETitleCheckbox.setEnabled(delivery);
 		transferSyntaxComponent.setEnabled(delivery);
 		notificationComponent.setEnabled(delivery);
 		if (!delivery) {
@@ -186,8 +186,9 @@ public class FormDICOM extends VerticalLayout {
 						+ "Increase to speed up heavy multi-source forwarding, but keep it within the "
 						+ "destination PACS's concurrent-association limit.");
 
-		UIS.setTooltip(useAETitleCheckbox,
-				"if \"true\" then use the destination AETitle as the calling AETitle instead of the Forward Node AETitle");
+		UIS.setTooltip(useSourceAETitleCheckbox,
+				"if \"true\" then use the AETitle of the source that sent the images as the calling AETitle instead "
+						+ "of the Forward Node AETitle. The destination must accept the source AETitles.");
 	}
 
 	private void setBinder() {
@@ -217,7 +218,8 @@ public class FormDICOM extends VerticalLayout {
 					"Concurrent connections should be between 1 and 50")
 			.bind(DestinationEntity::getConcurrentConnections, DestinationEntity::setConcurrentConnections);
 
-		binder.forField(useAETitleCheckbox).bind(DestinationEntity::getUseaetdest, DestinationEntity::setUseaetdest);
+		binder.forField(useSourceAETitleCheckbox)
+			.bind(DestinationEntity::isUseSourceAet, DestinationEntity::setUseSourceAet);
 
 		binder.forField(activate).bind(DestinationEntity::isActivate, DestinationEntity::setActivate);
 		binder.bindInstanceFields(this);

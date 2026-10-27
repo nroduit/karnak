@@ -9,16 +9,19 @@
  */
 package org.karnak.backend.model.expression;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.jspecify.annotations.Nullable;
-import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.ReflectivePropertyAccessor;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.weasis.core.util.StringUtil;
 
@@ -55,13 +58,35 @@ public class ExpressionResult {
 	 */
 	private static final Map<String, Expression> PARSED_EXPRESSIONS = new ConcurrentHashMap<>();
 
+	/**
+	 * One property accessor shared by every evaluation.
+	 *
+	 * <p>
+	 * {@link ReflectivePropertyAccessor} remembers the field or getter it resolved for a
+	 * (type, name) pair in an <em>instance</em> cache, and a
+	 * {@link StandardEvaluationContext} creates its own accessor. A context per
+	 * evaluation therefore starts every evaluation with an empty cache, so each
+	 * {@code #Tag.PatientID} read called {@code Tag.class.getFields()} — dcm4che's
+	 * {@code Tag} has several thousand public constants, and {@code getFields()} copies
+	 * all of them on each call. The accessor is thread safe (concurrent caches), so
+	 * sharing it keeps the lookup cost to the first evaluation of each property.
+	 */
+	private static final ReflectivePropertyAccessor PROPERTY_ACCESSOR = new ReflectivePropertyAccessor();
+
 	private ExpressionResult() {
 	}
 
 	public static Object get(String condition, ExpressionItem expressionItem, Class<?> typeOfReturn) {
 		try {
 			Object result = evaluate(condition, expressionItem, typeOfReturn);
-			return result != null ? result : "";
+			if (result != null) {
+				return result;
+			}
+			// SpEL ternaries use ": null" for no-action; only String callers expect "".
+			if (typeOfReturn == String.class) {
+				return "";
+			}
+			return null;
 		}
 		catch (final Exception e) {
 			throw new IllegalStateException(
@@ -101,7 +126,8 @@ public class ExpressionResult {
 	}
 
 	private static @Nullable Object evaluate(String condition, ExpressionItem expressionItem, Class<?> typeOfReturn) {
-		final EvaluationContext context = new StandardEvaluationContext(expressionItem);
+		final StandardEvaluationContext context = new StandardEvaluationContext(expressionItem);
+		context.setPropertyAccessors(new ArrayList<PropertyAccessor>(List.of(PROPERTY_ACCESSOR)));
 		context.setVariable("VR", VR.class);
 		context.setVariable("Tag", Tag.class);
 		return parse(condition).getValue(context, typeOfReturn);

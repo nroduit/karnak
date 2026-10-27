@@ -67,7 +67,7 @@ public class SwitchingAlbum {
 
 	private static boolean validateCondition(String condition, Attributes dcm) {
 		final ExprCondition conditionKheops = new ExprCondition(dcm);
-		return (Boolean) ExpressionResult.get(condition, conditionKheops, Boolean.class);
+		return Boolean.TRUE.equals(ExpressionResult.get(condition, conditionKheops, Boolean.class));
 	}
 
 	public static boolean validateIntrospectedToken(JSONObject introspectObject, List<String> validMinScope) {

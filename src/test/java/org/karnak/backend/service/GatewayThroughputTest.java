@@ -9,10 +9,6 @@
  */
 package org.karnak.backend.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
-import static org.mockito.Mockito.mock;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -32,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
+import static org.mockito.Mockito.mock;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.weasis.dicom.param.AttributeEditor;
@@ -97,7 +96,7 @@ class GatewayThroughputTest extends GatewayItTestSupport {
 		for (int i = 0; i < destinationCount; i++) {
 			Scp scp = startScp();
 			scps.add(scp);
-			dests.add(new DicomForwardDestination(scp.port() + 0L, advancedParams(), fwdNode, scp.node(), false, null,
+			dests.add(new DicomForwardDestination(scp.port() + 0L, advancedParams(), fwdNode, scp.node(), null,
 					List.of(slowEditor), null, true, 1));
 		}
 

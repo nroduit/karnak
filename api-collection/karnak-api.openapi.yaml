@@ -919,6 +919,34 @@ paths:
               schema:
                 $ref: "#/components/schemas/PatientModel"
 
+  /api/pseudonyms/import:
+    post:
+      tags: [Pseudonym]
+      summary: Bulk-create pseudonyms
+      description: >-
+        Imports a JSON array of patients in one request, running each row
+        through the same logic as the single-create endpoint (project
+        lookup, key generation, conflict detection). A partial failure never
+        fails the whole request: invalid, unresolvable-project, or
+        conflicting rows are reported in the response summary instead of
+        aborting the batch.
+      operationId: importPseudonyms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/PatientModelInput"
+      responses:
+        "200":
+          description: Import processed (see summary for per-row outcome)
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/PseudonymImportResult"
+
   /api/pseudonyms/{pseudonym}:
     parameters:
       - name: pseudonym
@@ -1734,6 +1762,39 @@ components:
             uuid:
               type: string
               format: uuid
+
+    PseudonymImportIssue:
+      type: object
+      description: >-
+        One row of a PseudonymImportResult that did not result in a created
+        pseudonym: either it conflicted with an existing one, or it failed
+        validation / project lookup.
+      properties:
+        index:
+          type: integer
+          description: Index of the row in the request's JSON array (0-based)
+        reason:
+          type: string
+        existing:
+          description: >-
+            For a conflict, the pseudonym already stored for the same
+            (patientId + issuerOfPatientId + project); absent for an error
+            row.
+          $ref: "#/components/schemas/PatientModel"
+
+    PseudonymImportResult:
+      type: object
+      properties:
+        created:
+          type: integer
+        conflict:
+          type: integer
+        error:
+          type: integer
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PseudonymImportIssue"
 
     # ---------- Echo ----------
     DestinationEcho:

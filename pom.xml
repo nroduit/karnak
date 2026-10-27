@@ -16,7 +16,7 @@
   <groupId>org.karnak</groupId>
   <artifactId>karnak</artifactId>
   <name>${project.artifactId}</name>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>2.0.1</version>
   <description>Karnak</description>
   <packaging>jar</packaging>
 
@@ -27,17 +27,18 @@
     <enforcer.jdk-version>[${java.version},)</enforcer.jdk-version>
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
 
-    <vaadin.version>25.2.6</vaadin.version>
+    <springframework.version>4.1.1</springframework.version>
+    <springdoc.version>1.8.0</springdoc.version>
+    <vaadin.version>25.3.2</vaadin.version>
     <org.json.version>20260814</org.json.version>
-    <gson.version>2.10.1</gson.version>
     <opencsv.version>5.12.0</opencsv.version>
-    <node.version>v24.14.0</node.version>
-    <weasis-dicom-tools.version>5.35.0</weasis-dicom-tools.version>
+
+    <weasis-dicom-tools.version>5.35.2</weasis-dicom-tools.version>
     <weasis.opencv.native.version>5.0.0-dcm</weasis.opencv.native.version>
 
-    <h2.version>2.4.240</h2.version>
-    <mockito.version>5.23.0</mockito.version>
-    <swagger.version>2.2.54</swagger.version>
+    <h2.version>2.5.252</h2.version>
+    <mockito.version>5.24.0</mockito.version>
+    <swagger.version>2.2.55</swagger.version>
 
     <sonar.language>java</sonar.language>
     <sonar.java.source>${java.version}</sonar.java.source>
@@ -172,7 +173,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>3.10.4</version>
         <configuration>
           <!-- define a language-specific format -->
           <java>
@@ -453,7 +454,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.7.1-jre</version>
+      <version>33.7.2-jre</version>
     </dependency>
 
     <dependency>
@@ -715,7 +716,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <version>3.6.3</version>
+            <version>3.6.4</version>
             <executions>
               <execution>
                 <id>run-portable-package-script</id>

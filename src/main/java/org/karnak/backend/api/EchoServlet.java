@@ -86,7 +86,6 @@ public class EchoServlet extends HttpServlet {
 			for (ForwardDestination val : list) {
 				if (val instanceof DicomForwardDestination) {
 					DicomNode calledNode = ((DicomForwardDestination) val).getStreamSCU().getCalledNode();
-					// TODO isUseAetDest
 					DicomState dicomState = Echo.process(params, srcNode.get(), calledNode);
 					sb.append("<destination ");
 					sb.append("aet=");

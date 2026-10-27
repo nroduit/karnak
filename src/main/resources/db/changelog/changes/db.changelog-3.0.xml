@@ -13,4 +13,27 @@
     </update>
   </changeSet>
 
+  <!-- destination: call the DICOM destination with the source AETitle instead of the
+       Forward Node AETitle -->
+  <changeSet author="karnak" id="3.0-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="use_source_aet"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="use_source_aet" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <!-- destination: "useaetdest" was never applied when forwarding -->
+  <changeSet author="karnak" id="3.0-3">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="destination" columnName="useaetdest"/>
+    </preConditions>
+    <dropColumn tableName="destination" columnName="useaetdest"/>
+  </changeSet>
+
 </databaseChangeLog>

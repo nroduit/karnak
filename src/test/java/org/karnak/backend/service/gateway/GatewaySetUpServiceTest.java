@@ -12,6 +12,7 @@ package org.karnak.backend.service.gateway;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -27,11 +28,13 @@ import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.KheopsAlbumsEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
+import org.karnak.backend.data.entity.VersionEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ForwardNodeRepo;
 import org.karnak.backend.data.repo.VersionRepo;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDestination;
+import org.karnak.backend.dicom.ForwardDicomNode;
 import org.karnak.backend.enums.DestinationType;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
@@ -345,6 +348,108 @@ class GatewaySetUpServiceTest {
 
 		// Test results
 		assertFalse(gatewaySetUpService.getDestinationNode("aeTitleModified").isPresent());
+	}
+
+	@Test
+	void should_retire_the_destinations_replaced_or_removed_by_an_update() {
+		DestinationEntity destinationEntity = dicomDestination(1L, "aeTitle");
+		ForwardNodeEntity forwardNodeEntity = new ForwardNodeEntity();
+		forwardNodeEntity.setFwdAeTitle("fwdAeTitle");
+		forwardNodeEntity.setId(2L);
+		destinationEntity.setForwardNodeEntity(forwardNodeEntity);
+		gatewaySetUpService.update(new NodeEvent(destinationEntity, NodeEventType.ADD));
+		List<ForwardDestination> live = gatewaySetUpService.getDestinations().values().iterator().next();
+		ForwardDestination original = live.get(0);
+
+		destinationEntity.setAeTitle("aeTitleModified");
+		gatewaySetUpService.update(new NodeEvent(destinationEntity, NodeEventType.UPDATE));
+
+		// Replaced in place, and the old one taken out of service
+		assertEquals(1, live.size());
+		ForwardDestination replacement = live.get(0);
+		assertNotSame(original, replacement);
+		assertFalse(original.beginTransfer());
+
+		gatewaySetUpService.update(new NodeEvent(destinationEntity, NodeEventType.REMOVE));
+
+		assertTrue(live.isEmpty());
+		assertFalse(replacement.beginTransfer());
+	}
+
+	@Test
+	void should_rebuild_the_destinations_with_the_new_aet_of_a_renamed_forward_node() {
+		ForwardNodeEntity forwardNodeEntity = new ForwardNodeEntity();
+		forwardNodeEntity.setFwdAeTitle("fwdAeTitle");
+		forwardNodeEntity.setId(1L);
+		forwardNodeEntity.addDestination(dicomDestination(1L, "aeTitle"));
+		gatewaySetUpService.update(new NodeEvent(forwardNodeEntity, NodeEventType.ADD));
+		ForwardDestination original = gatewaySetUpService.getDestinations().values().iterator().next().get(0);
+
+		forwardNodeEntity.setFwdAeTitle("aeTitleModified");
+		gatewaySetUpService.update(new NodeEvent(forwardNodeEntity, NodeEventType.UPDATE));
+
+		ForwardDicomNode renamed = gatewaySetUpService.getDestinationNode("aeTitleModified").orElseThrow();
+		ForwardDestination rebuilt = gatewaySetUpService.getDestinations(renamed).get(0);
+		assertEquals("aeTitleModified", rebuilt.getForwardDicomNode().getForwardAETitle());
+		assertFalse(original.beginTransfer());
+	}
+
+	@Test
+	void should_retire_the_destinations_replaced_by_a_reload() {
+		ForwardNodeEntity forwardNodeEntity = new ForwardNodeEntity();
+		forwardNodeEntity.setFwdAeTitle("fwdAeTitle");
+		forwardNodeEntity.setId(1L);
+		forwardNodeEntity.addDestination(dicomDestination(1L, "aeTitle"));
+		Mockito.when(forwardNodeRepoMock.findAll()).thenReturn(List.of(forwardNodeEntity));
+		gatewaySetUpService.reloadGatewayPersistence();
+		ForwardDestination original = gatewaySetUpService.getDestinations().values().iterator().next().get(0);
+
+		gatewaySetUpService.reloadGatewayPersistence();
+
+		ForwardDestination reloaded = gatewaySetUpService.getDestinations().values().iterator().next().get(0);
+		assertNotSame(original, reloaded);
+		assertFalse(original.beginTransfer());
+		assertTrue(reloaded.beginTransfer());
+
+		// A forward node dropped from the configuration retires its destinations too
+		Mockito.when(forwardNodeRepoMock.findAll()).thenReturn(List.of());
+		gatewaySetUpService.reloadGatewayPersistence();
+
+		assertTrue(gatewaySetUpService.getDestinations().isEmpty());
+		reloaded.endTransfer();
+		assertFalse(reloaded.beginTransfer());
+	}
+
+	@Test
+	void should_reload_a_change_of_another_instance_after_a_local_change() {
+		VersionEntity version = new VersionEntity();
+		Mockito.when(versionRepoMock.findTopByOrderByIdDesc()).thenReturn(version);
+		Mockito.when(forwardNodeRepoMock.findAll()).thenReturn(List.of());
+		// Forget the reload done by the constructor
+		Mockito.clearInvocations(forwardNodeRepoMock);
+
+		// Local change while up to date: nothing to reload
+		gatewaySetUpService.refreshVersionGatewaySetUp();
+		gatewaySetUpService.checkRefreshGatewaySetUp();
+		Mockito.verify(forwardNodeRepoMock, Mockito.never()).findAll();
+
+		// Another instance changes the setup, then a local change comes before the
+		// scheduled check: the other change must still be reloaded
+		version.setGatewaySetup(version.getGatewaySetup() + 1);
+		gatewaySetUpService.refreshVersionGatewaySetUp();
+		gatewaySetUpService.checkRefreshGatewaySetUp();
+		Mockito.verify(forwardNodeRepoMock, Mockito.times(1)).findAll();
+	}
+
+	private static DestinationEntity dicomDestination(Long id, String aeTitle) {
+		DestinationEntity destinationEntity = new DestinationEntity();
+		destinationEntity.setFilterBySOPClasses(true);
+		destinationEntity.setAeTitle(aeTitle);
+		destinationEntity.setNotifyInterval(1);
+		destinationEntity.setPort(11112);
+		destinationEntity.setId(id);
+		destinationEntity.setDestinationType(DestinationType.dicom);
+		return destinationEntity;
 	}
 
 }

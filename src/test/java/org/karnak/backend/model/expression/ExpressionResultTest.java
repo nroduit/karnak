@@ -78,6 +78,17 @@ class ExpressionResultTest {
 		}
 
 		@Test
+		void null_branch_of_action_ternary_returns_null() {
+			Attributes dcm = new Attributes();
+			ExprAction action = new ExprAction(Tag.PatientName, VR.PN, dcm);
+
+			Object result = ExpressionResult.get("false ? ExcludeInstance() : null", action,
+					org.karnak.backend.model.action.ActionItem.class);
+
+			assertNull(result);
+		}
+
+		@Test
 		void throws_illegal_state_on_an_invalid_expression() {
 			assertThrows(IllegalStateException.class,
 					() -> ExpressionResult.get("this is ((( not valid", conditionWithPatientName(), Boolean.class));

@@ -52,7 +52,7 @@ class ShiftApiDateTest {
 
 	private static final String TEST_URL = "http://sample.url.com/patient/97035674/day-shift";
 
-	private static final String TEST_URL_NOT_JSON = "http://sample.url.com/patient/97035674/day-shift";
+	private static final String TEST_URL_NOT_JSON = TEST_URL + "/not-json";
 
 	private static final String TEST_URL_TEMPLATE = "http://sample.url.com/patient/{{getString(#Tag.PatientID)}}/day-shift";
 

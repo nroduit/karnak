@@ -35,7 +35,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -209,11 +208,10 @@ public class DestinationEntity implements Serializable {
 	@Max(groups = DestinationDicomGroup.class, value = 65535, message = "Port should be between 1 and 65535")
 	private Integer port;
 
-	// false by default; if "true" then use the destination AETitle as the calling
-	// AETitle at the gateway side. Otherwise with "false" the calling AETitle is
-	// the AETitle defined in the property "listener.aet" of the file
-	// gateway.properties.
-	private Boolean useaetdest;
+	// false by default; if "true" then the destination is called with the AETitle of
+	// the source that sent the object instead of the Forward Node AETitle.
+	@Column(name = "use_source_aet")
+	private boolean useSourceAet;
 
 	// STOW properties
 	// the destination STOW-RS URL.
@@ -283,7 +281,6 @@ public class DestinationEntity implements Serializable {
 		this.aeTitle = "";
 		this.hostname = "";
 		this.port = 0;
-		this.useaetdest = Boolean.FALSE;
 		this.url = "";
 		this.headers = "";
 
@@ -295,14 +292,12 @@ public class DestinationEntity implements Serializable {
 		return new DestinationEntity(DestinationType.dicom);
 	}
 
-	public static DestinationEntity ofDicom(String description, String aeTitle, String hostname, int port,
-			Boolean useaetdest) {
+	public static DestinationEntity ofDicom(String description, String aeTitle, String hostname, int port) {
 		DestinationEntity destinationEntity = new DestinationEntity(DestinationType.dicom);
 		destinationEntity.setDescription(description);
 		destinationEntity.setAeTitle(aeTitle);
 		destinationEntity.setHostname(hostname);
 		destinationEntity.setPort(port);
-		destinationEntity.setUseaetdest(useaetdest);
 		return destinationEntity;
 	}
 
@@ -394,7 +389,7 @@ public class DestinationEntity implements Serializable {
 							+ ", notifyObjectRejectionPrefix=" + notifyObjectRejectionPrefix + ", notifyObjectPattern="
 							+ notifyObjectPattern + ", notifyObjectValues=" + notifyObjectValues + ", notifyInterval="
 							+ notifyInterval + ", aeTitle=" + aeTitle + ", hostname=" + hostname + ", port=" + port
-							+ ", useaetdest=" + useaetdest + "]";
+							+ ", useSourceAet=" + useSourceAet + "]";
 				case stow:
 					return "Destination [id=" + id + ", description=" + description + ", type=" + destinationType
 							+ ", notify=" + notify + ", notifyObjectErrorPrefix=" + notifyObjectErrorPrefix

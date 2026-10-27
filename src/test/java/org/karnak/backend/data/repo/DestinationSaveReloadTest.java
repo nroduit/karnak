@@ -54,7 +54,7 @@ class DestinationSaveReloadTest {
 		entityManager.clear();
 
 		// Real save path: attach destination to the DETACHED parent and save the CHILD
-		DestinationEntity dest = DestinationEntity.ofDicom("description", "aeTitle", "hostname", 123, null);
+		DestinationEntity dest = DestinationEntity.ofDicom("description", "aeTitle", "hostname", 123);
 		detached.addDestination(dest);
 		destinationRepo.saveAndFlush(dest);
 

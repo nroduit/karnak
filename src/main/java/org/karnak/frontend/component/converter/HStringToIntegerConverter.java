@@ -9,9 +9,9 @@
  */
 package org.karnak.frontend.component.converter;
 
-import com.vaadin.flow.data.converter.StringToIntegerConverter;
 import com.vaadin.flow.data.binder.Result;
 import com.vaadin.flow.data.binder.ValueContext;
+import com.vaadin.flow.data.converter.StringToIntegerConverter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;

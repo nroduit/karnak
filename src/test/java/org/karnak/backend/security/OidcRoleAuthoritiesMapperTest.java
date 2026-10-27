@@ -9,13 +9,12 @@
  */
 package org.karnak.backend.security;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
@@ -68,7 +67,7 @@ class OidcRoleAuthoritiesMapperTest {
 	}
 
 	@Test
-	void should_map_realm_and_karnak_client_roles_ignoring_other_clients() {
+	void should_only_map_karnak_client_roles_ignoring_realm_and_other_clients() {
 		// Init data
 		Jwt accessToken = jwtWithClaims(Map.of("realm_access", Map.of("roles", List.of("admin")), "resource_access", Map
 			.of("karnak", Map.of("roles", List.of("user")), "other-client", Map.of("roles", List.of("investigator")))));

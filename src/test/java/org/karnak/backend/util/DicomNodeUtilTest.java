@@ -99,7 +99,7 @@ class DicomNodeUtilTest {
 		var stowDuplicate = DestinationEntity.ofStow("Duplicate", "https://pacs/dicom-web", "");
 		var stowNoDescription = DestinationEntity.ofStow("", "https://other/dicom-web", "");
 		var stowNoUrl = DestinationEntity.ofStow("No URL", "", "");
-		var dicom = DestinationEntity.ofDicom("A PACS", "PACS_AE", "pacs.host", 104, false);
+		var dicom = DestinationEntity.ofDicom("A PACS", "PACS_AE", "pacs.host", 104);
 		when(destinationRepo.findAll()).thenReturn(List.of(stow, stowDuplicate, stowNoDescription, stowNoUrl, dicom));
 
 		var result = dicomNodeUtil.getGatewayStowDestinations();
@@ -113,7 +113,7 @@ class DicomNodeUtilTest {
 	@Test
 	void gateway_stow_destinations_is_empty_without_stow_destinations() {
 		when(destinationRepo.findAll())
-			.thenReturn(List.of(DestinationEntity.ofDicom("A PACS", "PACS_AE", "pacs.host", 104, false)));
+			.thenReturn(List.of(DestinationEntity.ofDicom("A PACS", "PACS_AE", "pacs.host", 104)));
 
 		assertEquals(List.of(), dicomNodeUtil.getGatewayStowDestinations());
 	}

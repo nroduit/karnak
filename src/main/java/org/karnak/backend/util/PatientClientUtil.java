@@ -11,8 +11,8 @@ package org.karnak.backend.util;
 
 import java.util.Objects;
 import org.jspecify.annotations.NullUnmarked;
-import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.cache.PseudonymCache;
+import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.model.profilepipe.PatientMetadata;
 
 @NullUnmarked

@@ -225,6 +225,17 @@ public class GatewaySetUpService {
 
 	private void addDestinationNode(List<ForwardDestination> dstList, ForwardDicomNode fwdSrcNode,
 			DestinationEntity dstNode) {
+		ForwardDestination destination = buildDestination(fwdSrcNode, dstNode);
+		if (destination != null) {
+			dstList.add(destination);
+		}
+	}
+
+	/**
+	 * Builds the forward destination of an entity.
+	 * @return the destination, or null when it is deactivated or cannot be built
+	 */
+	private @Nullable ForwardDestination buildDestination(ForwardDicomNode fwdSrcNode, DestinationEntity dstNode) {
 		try {
 			final List<KheopsAlbumsEntity> kheopsAlbumEntities = dstNode.getKheopsAlbumEntities();
 
@@ -250,7 +261,7 @@ public class GatewaySetUpService {
 					fwd.setDeepSequenceValidation(dstNode.isDeepSequenceValidation());
 					fwd.setDeidentified(dstNode.isDesidentification());
 					fwd.setImageIdentityCheck(dstNode.isImageIdentityCheck());
-					dstList.add(fwd);
+					return fwd;
 				}
 				else if (dstNode.getDestinationType() == DestinationType.stow) {
 					WebForwardDestination fwd = new WebForwardDestination(dstNode.getId(), fwdSrcNode, dstNode.getUrl(),
@@ -270,29 +281,31 @@ public class GatewaySetUpService {
 								.forEach(kheopsAlbums -> switchingAlbum.applyAfterTransfer(kheopsAlbums, dcm));
 						});
 					}
-					dstList.add(fwd);
+					return fwd;
 				}
 				else {
 					DicomNode destinationNode = new DicomNode(dstNode.getAeTitle(), dstNode.getHostname(),
 							dstNode.getPort());
 					DicomForwardDestination dest = new DicomForwardDestination(dstNode.getId(),
-							getDestinationAdvancedParameters(), fwdSrcNode, destinationNode, dstNode.getUseaetdest(),
-							progress, editors, dstNode.getTransferSyntax(), dstNode.isTranscodeOnlyUncompressed(),
+							getDestinationAdvancedParameters(), fwdSrcNode, destinationNode, progress, editors,
+							dstNode.getTransferSyntax(), dstNode.isTranscodeOnlyUncompressed(),
 							resolvePoolSize(dstNode));
 					dest.setBuildConformanceReport(dstNode.isBuildConformanceReport());
 					dest.setCheckValueConformity(dstNode.isCheckValueConformity());
 					dest.setDeepSequenceValidation(dstNode.isDeepSequenceValidation());
 					dest.setDeidentified(dstNode.isDesidentification());
 					dest.setImageIdentityCheck(dstNode.isImageIdentityCheck());
+					dest.setUseSourceAet(dstNode.isUseSourceAet());
 
 					preNegotiateCommonSopClasses(dest);
-					dstList.add(dest);
+					return dest;
 				}
 			}
 		}
 		catch (IOException e) {
 			log.error("Cannot build ForwardDestination", e);
 		}
+		return null;
 	}
 
 	/**
@@ -311,7 +324,7 @@ public class GatewaySetUpService {
 			return;
 		}
 		// Every association in the pool must negotiate the same presentation contexts.
-		dest.getStreamSCUs().forEach(scu -> {
+		dest.setScuInitializer(scu -> {
 			for (String sopClassUid : CommonStorageSopClasses.UIDS) {
 				// addData adds the SOP Class with Explicit + Implicit VR Little Endian
 				scu.addData(sopClassUid, UID.ExplicitVRLittleEndian);
@@ -401,7 +414,7 @@ public class GatewaySetUpService {
 		}
 	}
 
-	public void reloadGatewayPersistence() {
+	public synchronized void reloadGatewayPersistence() {
 		// Build the whole new routing table aside first: constructing the
 		// destinations opens SCU devices and takes time, and C-STORE threads keep
 		// resolving their forward node against destMap meanwhile.
@@ -418,14 +431,27 @@ public class GatewaySetUpService {
 		// ForwardDicomNode equality is AET-based and the accepted source nodes live
 		// in the key object, so a plain put would keep the stale key - and its
 		// stale authorization list - when an equal one is already present.
-		destMap.keySet().retainAll(fresh.keySet());
-		fresh.forEach((node, dstList) -> {
-			destMap.remove(node);
-			destMap.put(node, dstList);
+		List<ForwardDestination> replaced = new ArrayList<>();
+		destMap.entrySet().removeIf(entry -> {
+			if (fresh.containsKey(entry.getKey())) {
+				return false;
+			}
+			replaced.addAll(entry.getValue());
+			return true;
 		});
+		fresh.forEach((node, dstList) -> {
+			List<ForwardDestination> previous = destMap.remove(node);
+			destMap.put(node, dstList);
+			if (previous != null) {
+				replaced.addAll(previous);
+			}
+		});
+		// Only once their replacements are published: a transfer that finds a retired
+		// destination reads the table again
+		replaced.forEach(ForwardDestination::retire);
 	}
 
-	public void update(NodeEvent event) {
+	public synchronized void update(NodeEvent event) {
 		NodeEventType type = event.getEventType();
 		Object src = event.getSource();
 		Long id = event.getForwardNode().getId();
@@ -449,32 +475,66 @@ public class GatewaySetUpService {
 				}
 			}
 			case DestinationEntity dstNode -> {
+				List<ForwardDestination> dstList = destMap.get(fwdNode);
 				if (type == NodeEventType.ADD) {
-					addDestinationNode(destMap.get(fwdNode), fwdNode, dstNode);
+					addDestinationNode(dstList, fwdNode, dstNode);
 				}
 				else if (type == NodeEventType.REMOVE) {
-					destMap.get(fwdNode).removeIf(d -> dstNode.getId().equals(d.getId()));
+					replaceDestination(dstList, dstNode.getId(), null);
 				}
 				else if (type == NodeEventType.UPDATE) {
-					destMap.get(fwdNode).removeIf(d -> dstNode.getId().equals(d.getId()));
-					addDestinationNode(destMap.get(fwdNode), fwdNode, dstNode);
+					replaceDestination(dstList, dstNode.getId(), buildDestination(fwdNode, dstNode));
 				}
 			}
 			case ForwardNodeEntity fw -> {
 				if (type == NodeEventType.ADD) {
 					addAcceptedSourceNodes(fwdNode, fw);
-					destMap.put(fwdNode, addDestinationNodes(fwdNode, fw));
+					retireAll(destMap.put(fwdNode, addDestinationNodes(fwdNode, fw)));
 				}
 				else if (type == NodeEventType.REMOVE) {
-					destMap.remove(fwdNode);
+					retireAll(destMap.remove(fwdNode));
 				}
 				else if (type == NodeEventType.UPDATE && !aet.equals(fwdNode.getAet())) {
+					// Destinations call with the forward AET: rebuild them
 					ForwardDicomNode newFwdNode = new ForwardDicomNode(aet, null, id);
 					newFwdNode.getAcceptedSourceNodes().addAll(fwdNode.getAcceptedSourceNodes());
-					destMap.put(newFwdNode, destMap.remove(fwdNode));
+					List<ForwardDestination> previous = destMap.remove(fwdNode);
+					destMap.put(newFwdNode, addDestinationNodes(newFwdNode, fw));
+					retireAll(previous);
 				}
 			}
 			case null, default -> reloadGatewayPersistence();
+		}
+	}
+
+	/**
+	 * Replaces in place, or removes when {@code replacement} is null, the destination
+	 * with the given id. An in-place set keeps the destination in the live list at every
+	 * moment, where a remove-then-add would let a concurrent transfer skip it. The
+	 * replaced destination is retired.
+	 */
+	private static void replaceDestination(List<ForwardDestination> dstList, Long destinationId,
+			@Nullable ForwardDestination replacement) {
+		int index = -1;
+		for (int i = 0; i < dstList.size(); i++) {
+			if (destinationId.equals(dstList.get(i).getId())) {
+				index = i;
+				break;
+			}
+		}
+		if (index < 0) {
+			if (replacement != null) {
+				dstList.add(replacement);
+			}
+			return;
+		}
+		ForwardDestination previous = replacement == null ? dstList.remove(index) : dstList.set(index, replacement);
+		previous.retire();
+	}
+
+	private static void retireAll(@Nullable List<ForwardDestination> destinations) {
+		if (destinations != null) {
+			destinations.forEach(ForwardDestination::retire);
 		}
 	}
 
@@ -508,26 +568,32 @@ public class GatewaySetUpService {
 	 * When an event on the gateway setup occurs, increment the version in order for other
 	 * instance to be notified that a refresh of the configuration should be done
 	 */
-	public void refreshVersionGatewaySetUp() {
+	public synchronized void refreshVersionGatewaySetUp() {
 		// Retrieve the last version to increment
 		VersionEntity lastVersion = versionRepo.findTopByOrderByIdDesc();
 		if (lastVersion == null) {
 			// Case nothing in DB
 			lastVersion = new VersionEntity();
 		}
+		// This instance only applied its own change: when it was already behind
+		// (another instance changed the setup since its last reload), keeping the
+		// old version lets the scheduled check reload what it missed
+		boolean upToDate = gatewaySetUpVersion >= lastVersion.getGatewaySetup();
 		// Increment and save the version
 		lastVersion.setGatewaySetup(lastVersion.getGatewaySetup() + 1);
 		versionRepo.save(lastVersion);
 
 		// Update the current instance version
-		gatewaySetUpVersion = lastVersion.getGatewaySetup();
+		if (upToDate) {
+			gatewaySetUpVersion = lastVersion.getGatewaySetup();
+		}
 	}
 
 	/**
 	 * Check if a refresh of the configuration should be done
 	 */
 	@Scheduled(fixedRate = 5000)
-	public void checkRefreshGatewaySetUp() {
+	public synchronized void checkRefreshGatewaySetUp() {
 		// Retrieve the last gateway version
 		VersionEntity lastVersion = versionRepo.findTopByOrderByIdDesc();
 

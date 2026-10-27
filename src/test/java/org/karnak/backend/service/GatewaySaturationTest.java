@@ -9,9 +9,6 @@
  */
 package org.karnak.backend.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -28,6 +26,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.dicom.DicomForwardDestination;
 import org.karnak.backend.dicom.ForwardDicomNode;
+import static org.mockito.Mockito.mock;
 import org.springframework.context.ApplicationEventPublisher;
 import org.weasis.dicom.param.AttributeEditor;
 
@@ -93,7 +92,7 @@ class GatewaySaturationTest extends GatewayItTestSupport {
 
 		Scp scp = startScp();
 		DicomForwardDestination dest = new DicomForwardDestination(scp.port() + 0L, advancedParams(), fwdNode,
-				scp.node(), false, null, List.of(slowEditor), null, true, poolSize);
+				scp.node(), null, List.of(slowEditor), null, true, poolSize);
 		LoadStats stats = runLoad(dest, instances, concurrency, "slow-destination");
 
 		assertEquals(instances, receivedSopInstanceUids(scp.storageDir()).size(),

@@ -9,16 +9,12 @@
  */
 package org.karnak.backend.data.entity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Nested;
@@ -43,13 +39,12 @@ class DestinationEntityTest {
 
 		@Test
 		void of_dicom_sets_the_connection_fields() {
-			DestinationEntity entity = DestinationEntity.ofDicom("desc", "AET", "host", 104, Boolean.TRUE);
+			DestinationEntity entity = DestinationEntity.ofDicom("desc", "AET", "host", 104);
 
 			assertEquals("desc", entity.getDescription());
 			assertEquals("AET", entity.getAeTitle());
 			assertEquals("host", entity.getHostname());
 			assertEquals(104, entity.getPort());
-			assertTrue(entity.getUseaetdest());
 		}
 
 		@Test
@@ -108,7 +103,7 @@ class DestinationEntityTest {
 		entity.setAeTitle("AET");
 		entity.setHostname("host");
 		entity.setPort(104);
-		entity.setUseaetdest(Boolean.TRUE);
+		entity.setUseSourceAet(true);
 		entity.setUrl("http://stow");
 		entity.setHeaders("h");
 		entity.setTransferSyntax("1.2.840.10008.1.2.1");
@@ -147,7 +142,7 @@ class DestinationEntityTest {
 		assertEquals("AET", entity.getAeTitle());
 		assertEquals("host", entity.getHostname());
 		assertEquals(104, entity.getPort());
-		assertTrue(entity.getUseaetdest());
+		assertTrue(entity.isUseSourceAet());
 		assertEquals("http://stow", entity.getUrl());
 		assertEquals("h", entity.getHeaders());
 		assertEquals("1.2.840.10008.1.2.1", entity.getTransferSyntax());
@@ -179,7 +174,7 @@ class DestinationEntityTest {
 
 	@Test
 	void matches_filter_on_text_and_port() {
-		DestinationEntity entity = DestinationEntity.ofDicom("scanner", "AET", "10.0.0.1", 104, Boolean.FALSE);
+		DestinationEntity entity = DestinationEntity.ofDicom("scanner", "AET", "10.0.0.1", 104);
 
 		assertTrue(entity.matchesFilter("scan"));
 		assertTrue(entity.matchesFilter("AET"));
@@ -193,7 +188,7 @@ class DestinationEntityTest {
 
 		@Test
 		void to_string_for_a_dicom_destination_mentions_the_aetitle() {
-			DestinationEntity entity = DestinationEntity.ofDicom("d", "AET", "host", 104, Boolean.FALSE);
+			DestinationEntity entity = DestinationEntity.ofDicom("d", "AET", "host", 104);
 
 			assertTrue(entity.toString().contains("aeTitle=AET"));
 		}
@@ -214,8 +209,7 @@ class DestinationEntityTest {
 
 		@Test
 		void retrieve_string_reference_depends_on_the_type() {
-			assertEquals("AET",
-					DestinationEntity.ofDicom("d", "AET", "host", 104, Boolean.FALSE).retrieveStringReference());
+			assertEquals("AET", DestinationEntity.ofDicom("d", "AET", "host", 104).retrieveStringReference());
 			DestinationEntity stow = DestinationEntity.ofStow("d", "http://stow", "h");
 			assertTrue(stow.retrieveStringReference().startsWith("http://stow:"));
 			assertEquals("Type of destination is unknown", new DestinationEntity().retrieveStringReference());
@@ -223,7 +217,7 @@ class DestinationEntityTest {
 
 		@Test
 		void dicom_notification_string_lists_host_aet_and_port() {
-			DestinationEntity entity = DestinationEntity.ofDicom("d", "AET", "host", 104, Boolean.FALSE);
+			DestinationEntity entity = DestinationEntity.ofDicom("d", "AET", "host", 104);
 
 			assertEquals("Host=host AET=AET Port=104", entity.toStringDicomNotificationDestination());
 		}

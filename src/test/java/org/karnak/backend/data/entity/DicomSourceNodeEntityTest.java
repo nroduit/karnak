@@ -19,8 +19,6 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
-
 @DisplayNameGeneration(ReplaceUnderscores.class)
 class DicomSourceNodeEntityTest {
 
