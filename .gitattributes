@@ -1,0 +1,37 @@
+# Normalize line endings: LF in the repository and in the working tree
+* text=auto eol=lf
+
+# Windows scripts keep CRLF
+*.[bB][aA][tT] text eol=crlf
+*.[cC][mM][dD] text eol=crlf
+
+# Text with a language-aware diff
+*.java text diff=java
+*.md   text diff=markdown
+*.html text diff=html
+*.css  text diff=css
+
+# Binary files are left untouched
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.tif  binary
+*.tiff binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.xz   binary
+*.7z   binary
+*.jar  binary
+*.so   binary
+*.dll  binary
+*.dylib binary
+*.dcm  binary
+*.j2k  binary
+*.jp2  binary
+*.jls  binary
+*.raw  binary
+*.mp4  binary
+*.mpg  binary
