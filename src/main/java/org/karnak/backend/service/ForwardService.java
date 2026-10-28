@@ -89,6 +89,7 @@ import org.weasis.core.util.StreamUtil;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
+import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.util.ServiceUtil;
 import org.weasis.dicom.util.ServiceUtil.ProgressStatus;
 import org.weasis.dicom.util.StoreFromStreamSCU;
@@ -1189,18 +1190,23 @@ public class ForwardService {
 
 	private static void progressNotify(ForwardDestination destination, String iuid, String cuid, boolean failed,
 			StoreFromStreamSCU streamSCU) {
-		streamSCU.removeIUIDProcessed(iuid);
 		// Use the leased SCU's own state (each pooled association has its own progress).
-		ServiceUtil.notifyProgression(streamSCU.getState(), iuid, cuid,
-				failed ? Status.ProcessingFailure : Status.Success,
-				failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED, streamSCU.getNumberOfSuboperations());
+		DicomState state = streamSCU.getState();
+		// DicomState wraps a non thread-safe dcm4che Attributes: serialize updates.
+		synchronized (state) {
+			streamSCU.removeIUIDProcessed(iuid);
+			ServiceUtil.notifyProgression(state, iuid, cuid, failed ? Status.ProcessingFailure : Status.Success,
+					failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED, streamSCU.getNumberOfSuboperations());
+		}
 	}
 
-	private static void progressNotify(ForwardDestination destination, String iuid, String cuid, boolean failed,
+	static void progressNotify(ForwardDestination destination, String iuid, String cuid, boolean failed,
 			int subOperations) {
-		ServiceUtil.notifyProgression(destination.getState(), iuid, cuid,
-				failed ? Status.ProcessingFailure : Status.Success,
-				failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED, subOperations);
+		DicomState state = destination.getState();
+		synchronized (state) {
+			ServiceUtil.notifyProgression(state, iuid, cuid, failed ? Status.ProcessingFailure : Status.Success,
+					failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED, subOperations);
+		}
 	}
 
 	/**
