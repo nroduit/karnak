@@ -9,18 +9,19 @@
  */
 package org.karnak.backend.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.karnak.backend.dicom.ForwardDestination;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,27 +50,21 @@ class ForwardServiceProgressConcurrencyTest {
 		when(destination.getState()).thenReturn(state);
 
 		CountDownLatch start = new CountDownLatch(1);
-		List<Future<?>> futures = new ArrayList<>();
+		List<Future<?>> futures;
 		try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			for (int t = 0; t < THREADS; t++) {
-				final int thread = t;
-				futures.add(executor.submit(() -> {
-					start.await();
-					for (int i = 0; i < ITERATIONS; i++) {
-						String iuid = "1.2.3." + thread + "." + i;
-						ForwardService.progressNotify(destination, iuid, CUID, i % 2 == 0, 0);
-					}
-					return null;
-				}));
-			}
+			futures = IntStream.range(0, THREADS).<Future<?>>mapToObj(thread -> executor.submit(() -> {
+				start.await();
+				IntStream.range(0, ITERATIONS)
+					.forEach(i -> ForwardService.progressNotify(destination, "1.2.3." + thread + "." + i, CUID,
+							i % 2 == 0, 0));
+				return null;
+			})).toList();
 			start.countDown();
 			executor.shutdown();
 			assertTrue(executor.awaitTermination(60, TimeUnit.SECONDS));
 		}
 
-		for (Future<?> future : futures) {
-			assertDoesNotThrow(() -> future.get());
-		}
+		futures.forEach(future -> assertDoesNotThrow((Executable) future::get));
 	}
 
 }
