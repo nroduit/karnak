@@ -1,6 +1,6 @@
 @Library('dsi-pipeline@master') _
 import ch.hcuge.dsi.jenkins.BuildImage;
-springBootMavenPipeline(mavenImage: BuildImage.MVN_39_JDK25, CheckstyleFailOnError: false, QGFailOnError: false)
+springBootMavenPipeline(mavenImage: BuildImage.MVN_39_JDK25, useSemanticVersion: true, CheckstyleFailOnError: false, QGFailOnError: false)
 
 // @Library('dsi-pipeline@v2') _
 // import ch.hcuge.dsi.jenkins.BuildImage;
