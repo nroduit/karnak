@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.UID;
+import org.dcm4che3.data.VR;
 import org.dcm4che3.img.op.MaskArea;
 import org.dcm4che3.img.stream.BytesWithImageDescriptor;
 import org.dcm4che3.img.stream.ImageAdapter;
@@ -89,6 +90,8 @@ import org.weasis.core.util.StreamUtil;
 import org.weasis.dicom.param.AttributeEditor;
 import org.weasis.dicom.param.AttributeEditorContext;
 import org.weasis.dicom.param.AttributeEditorContext.Abort;
+import org.weasis.dicom.param.DicomProgress;
+import org.weasis.dicom.param.DicomState;
 import org.weasis.dicom.util.ServiceUtil;
 import org.weasis.dicom.util.ServiceUtil.ProgressStatus;
 import org.weasis.dicom.util.StoreFromStreamSCU;
@@ -1191,16 +1194,41 @@ public class ForwardService {
 			StoreFromStreamSCU streamSCU) {
 		streamSCU.removeIUIDProcessed(iuid);
 		// Use the leased SCU's own state (each pooled association has its own progress).
-		ServiceUtil.notifyProgression(streamSCU.getState(), iuid, cuid,
-				failed ? Status.ProcessingFailure : Status.Success,
-				failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED, streamSCU.getNumberOfSuboperations());
+		notifyProgression(streamSCU.getState(), iuid, cuid, failed, streamSCU.getNumberOfSuboperations());
 	}
 
-	private static void progressNotify(ForwardDestination destination, String iuid, String cuid, boolean failed,
+	static void progressNotify(ForwardDestination destination, String iuid, String cuid, boolean failed,
 			int subOperations) {
-		ServiceUtil.notifyProgression(destination.getState(), iuid, cuid,
-				failed ? Status.ProcessingFailure : Status.Success,
-				failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED, subOperations);
+		notifyProgression(destination.getState(), iuid, cuid, failed, subOperations);
+	}
+
+	/**
+	 * Copy-on-write counterpart of
+	 * {@link ServiceUtil#notifyProgression(DicomState, String, String, int, ProgressStatus, int)}.
+	 * The progress attributes of a {@link DicomState} are shared: when the association
+	 * pool is exhausted several transfers send on the same leased SCU, and the dcm4che
+	 * reader thread reads them for every C-STORE-RSP. dcm4che {@link Attributes} are not
+	 * thread-safe, so the published object is never modified here: the update is applied
+	 * to a copy, which is then published. The reader thread cannot take a lock, hence
+	 * copying rather than synchronizing.
+	 */
+	private static void notifyProgression(DicomState state, String iuid, String cuid, boolean failed,
+			int subOperations) {
+		int status = failed ? Status.ProcessingFailure : Status.Success;
+		DicomProgress progress = state.getProgress();
+		if (progress == null) {
+			state.setStatus(status);
+			return;
+		}
+		Attributes current = progress.getAttributes();
+		Attributes attributes = current == null ? new Attributes() : new Attributes(current);
+		attributes.setInt(Tag.Status, VR.US, status);
+		attributes.setString(Tag.AffectedSOPInstanceUID, VR.UI, iuid);
+		attributes.setString(Tag.AffectedSOPClassUID, VR.UI, cuid);
+		ServiceUtil.notifyProgression(progress, attributes, failed ? ProgressStatus.FAILED : ProgressStatus.COMPLETED,
+				subOperations);
+		progress.setAttributes(attributes);
+		state.setStatus(status);
 	}
 
 	/**
