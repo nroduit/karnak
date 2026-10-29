@@ -9,11 +9,15 @@
  */
 package org.karnak.backend.service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.jspecify.annotations.NullUnmarked;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ForwardNodeEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.ProjectGroupEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
@@ -21,10 +25,13 @@ import org.karnak.backend.data.repo.ProjectGroupRepo;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.model.event.NodeEvent;
+import org.karnak.backend.model.project.ProjectDeleteBlockerModel;
+import org.karnak.backend.model.project.ProjectDeleteBlockersModel;
 import org.karnak.frontend.util.CollatorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Project service
@@ -147,10 +154,50 @@ public class ProjectService {
 	}
 
 	/**
-	 * Remove project
-	 * @param projectEntity Project to remove
+	 * Destinations that still reference {@code projectEntity} and therefore block
+	 * deletion until the caller repoints or deactivates them.
 	 */
+	public ProjectDeleteBlockersModel collectDeleteBlockers(ProjectEntity projectEntity) {
+		// A destination using the project on both sides is listed once
+		Map<UUID, ProjectDeleteBlockerModel> blockersByDestination = new LinkedHashMap<>();
+		for (DestinationEntity destinationEntity : projectEntity.getAllDestinations()) {
+			blockersByDestination.computeIfAbsent(destinationEntity.getUuid(), uuid -> toBlocker(destinationEntity));
+		}
+		ProjectDeleteBlockersModel result = new ProjectDeleteBlockersModel();
+		result.setProjectUuid(projectEntity.getUuid());
+		result.setBlockers(new ArrayList<>(blockersByDestination.values()));
+		return result;
+	}
+
+	private static ProjectDeleteBlockerModel toBlocker(DestinationEntity destinationEntity) {
+		ProjectDeleteBlockerModel blocker = new ProjectDeleteBlockerModel();
+		blocker.setDestinationUuid(destinationEntity.getUuid());
+		ForwardNodeEntity forwardNodeEntity = destinationEntity.getForwardNodeEntity();
+		if (forwardNodeEntity != null) {
+			blocker.setForwardNodeUuid(forwardNodeEntity.getUuid());
+		}
+		ProjectEntity deIdentificationProject = destinationEntity.getDeIdentificationProjectEntity();
+		if (deIdentificationProject != null) {
+			blocker.setDeIdentificationProjectUuid(deIdentificationProject.getUuid());
+		}
+		ProjectEntity tagMorphingProject = destinationEntity.getTagMorphingProjectEntity();
+		if (tagMorphingProject != null) {
+			blocker.setTagMorphingProjectUuid(tagMorphingProject.getUuid());
+		}
+		return blocker;
+	}
+
+	/**
+	 * Remove project when no destination still references it.
+	 * @param projectEntity Project to remove
+	 * @throws ProjectDeleteBlockedException when destinations still reference the project
+	 */
+	@Transactional
 	public void remove(ProjectEntity projectEntity) {
+		ProjectDeleteBlockersModel blockers = collectDeleteBlockers(projectEntity);
+		if (blockers.hasBlockers()) {
+			throw new ProjectDeleteBlockedException(blockers);
+		}
 		projectRepo.deleteById(projectEntity.getId());
 		projectRepo.flush();
 	}

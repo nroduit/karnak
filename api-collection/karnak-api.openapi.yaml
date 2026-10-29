@@ -550,6 +550,29 @@ paths:
           description: Project deleted
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          description: Destinations still reference the project
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ProjectDeleteBlockers"
+
+  /api/projects/{projectUuid}/delete-blockers:
+    parameters:
+      - $ref: "#/components/parameters/ProjectUuid"
+    get:
+      tags: [Project]
+      summary: List destinations blocking project deletion
+      operationId: listProjectDeleteBlockers
+      responses:
+        "200":
+          description: Blockers listed (may be empty)
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ProjectDeleteBlockers"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/projects/{projectUuid}/secrets:
     parameters:
@@ -1442,6 +1465,36 @@ components:
               items:
                 type: string
                 format: uuid
+
+    ProjectDeleteBlocker:
+      type: object
+      description: >-
+        A destination that still references the project. Both of its project
+        associations are reported, so the other project involved is visible.
+      properties:
+        destinationUuid:
+          type: string
+          format: uuid
+        forwardNodeUuid:
+          type: string
+          format: uuid
+        deIdentificationProjectUuid:
+          type: string
+          format: uuid
+        tagMorphingProjectUuid:
+          type: string
+          format: uuid
+
+    ProjectDeleteBlockers:
+      type: object
+      properties:
+        projectUuid:
+          type: string
+          format: uuid
+        blockers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectDeleteBlocker"
 
     SecretModel:
       type: object
