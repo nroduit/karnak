@@ -419,7 +419,8 @@ public class ForwardService {
 			DataWriter dataWriter = buildDataWriterFromTransformedImage(syntax, context, attributes,
 					transformedPlanarImage, destination.isImageIdentityCheck());
 
-			launchCStore(p, lease, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
+			launchCStore(p, lease, dataWriter, cuid, iuid, syntax, transformedPlanarImage,
+					responseTimeoutSeconds(destination));
 
 			progressNotify(destination, p.iuid(), p.cuid(), false, streamSCU);
 			monitor(sourceNode, destination, attributesOriginal, attributesToSend, true, false, false, null,
@@ -474,11 +475,13 @@ public class ForwardService {
 	 * <p>
 	 * The call returns once the destination answered, so a refusal reaches the source
 	 * instead of a Success for an object that was never stored.
+	 * @param responseTimeoutSeconds how long to wait for the C-STORE-RSP, see
+	 * {@link #responseTimeoutSeconds(DicomForwardDestination)}
 	 * @throws DestinationStatusException if the destination refused the object or did not
-	 * answer within {@code forward.cstore-response-timeout-seconds}
+	 * answer within {@code responseTimeoutSeconds}
 	 */
 	private void launchCStore(Params p, ScuLease lease, DataWriter dataWriter, String cuid, String iuid,
-			AdaptTransferSyntax syntax, TransformedPlanarImage transformedPlanarImage)
+			AdaptTransferSyntax syntax, TransformedPlanarImage transformedPlanarImage, long responseTimeoutSeconds)
 			throws IOException, InterruptedException {
 		Path spool = null;
 		CompletableFuture<Attributes> response;
@@ -499,18 +502,26 @@ public class ForwardService {
 				FileUtil.delete(spool);
 			}
 		}
-		checkCStoreResponse(awaitCStoreResponse(response, iuid));
+		checkCStoreResponse(awaitCStoreResponse(response, iuid, responseTimeoutSeconds));
 	}
 
-	private Attributes awaitCStoreResponse(CompletableFuture<Attributes> response, String iuid)
-			throws IOException, InterruptedException {
+	/**
+	 * C-STORE response timeout for a destination: its own value when one is configured,
+	 * otherwise the global {@code forward.cstore-response-timeout-seconds}.
+	 */
+	long responseTimeoutSeconds(DicomForwardDestination destination) {
+		Integer perDestination = destination.getCstoreResponseTimeoutSeconds();
+		return perDestination != null && perDestination > 0 ? perDestination : cstoreResponseTimeoutSeconds;
+	}
+
+	private static Attributes awaitCStoreResponse(CompletableFuture<Attributes> response, String iuid,
+			long timeoutSeconds) throws IOException, InterruptedException {
 		try {
-			return response.get(cstoreResponseTimeoutSeconds, TimeUnit.SECONDS);
+			return response.get(timeoutSeconds, TimeUnit.SECONDS);
 		}
 		catch (TimeoutException e) {
 			throw new DestinationStatusException(Status.OutOfResources,
-					"No C-STORE response from the destination within " + cstoreResponseTimeoutSeconds + "s for "
-							+ iuid);
+					"No C-STORE response from the destination within " + timeoutSeconds + "s for " + iuid);
 		}
 		catch (ExecutionException e) {
 			if (e.getCause() instanceof IOException io) {
@@ -867,7 +878,8 @@ public class ForwardService {
 						destination.isImageIdentityCheck());
 			}
 
-			launchCStore(p, lease, dataWriter, cuid, iuid, syntax, transformedPlanarImage);
+			launchCStore(p, lease, dataWriter, cuid, iuid, syntax, transformedPlanarImage,
+					responseTimeoutSeconds(destination));
 
 			progressNotify(destination, p.iuid(), p.cuid(), false, streamSCU);
 			monitor(fwdNode, destination, attributesOriginal, attributesToSend, true, false, false, null,

@@ -174,7 +174,9 @@ forward:
   # source is answered only once the destination has stored the object (or
   # refused it, which is passed on). Without a response within this delay the
   # source gets A700 (out of resources) and is expected to retry; keep it below
-  # the senders' own response timeouts.
+  # the senders' own response timeouts. A destination can override it with its
+  # own "C-STORE response timeout" (e.g. archives that acknowledge each object
+  # only once it is fully processed).
   cstore-response-timeout-seconds: 60
 
 async-events:

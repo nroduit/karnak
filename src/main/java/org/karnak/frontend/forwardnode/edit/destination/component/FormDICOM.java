@@ -42,6 +42,8 @@ public class FormDICOM extends VerticalLayout {
 
 	private TextField concurrentConnections;
 
+	private TextField cstoreResponseTimeout;
+
 	private Checkbox useSourceAETitleCheckbox;
 
 	private Checkbox activate;
@@ -99,13 +101,14 @@ public class FormDICOM extends VerticalLayout {
 		hostname = new TextField("Hostname");
 		port = new TextField("Port");
 		concurrentConnections = new TextField("Concurrent connections");
+		cstoreResponseTimeout = new TextField("C-STORE response timeout (s)");
 		useSourceAETitleCheckbox = new Checkbox("Use source AETitle");
 		activate = new Checkbox("Enable destination");
 
 		// Define layout
 		VerticalLayout destinationLayout = new VerticalLayout(
 				UIS.setWidthFull(new HorizontalLayout(aeTitle, description)), destinationCondition,
-				UIS.setWidthFull(new HorizontalLayout(hostname, port, concurrentConnections)));
+				UIS.setWidthFull(new HorizontalLayout(hostname, port, concurrentConnections, cstoreResponseTimeout)));
 		VerticalLayout transferLayout = new VerticalLayout(
 				new HorizontalLayout(transferSyntaxComponent, transcodeOnlyUncompressedComponent));
 		VerticalLayout useSourceAetLayout = new VerticalLayout(useSourceAETitleCheckbox);
@@ -154,6 +157,7 @@ public class FormDICOM extends VerticalLayout {
 		hostname.setEnabled(delivery);
 		port.setEnabled(delivery);
 		concurrentConnections.setEnabled(delivery);
+		cstoreResponseTimeout.setEnabled(delivery);
 		useSourceAETitleCheckbox.setEnabled(delivery);
 		transferSyntaxComponent.setEnabled(delivery);
 		notificationComponent.setEnabled(delivery);
@@ -186,6 +190,16 @@ public class FormDICOM extends VerticalLayout {
 						+ "Increase to speed up heavy multi-source forwarding, but keep it within the "
 						+ "destination PACS's concurrent-association limit.");
 
+		cstoreResponseTimeout.setWidth("30%");
+		cstoreResponseTimeout.addThemeVariants(TextFieldVariant.ALIGN_RIGHT);
+		cstoreResponseTimeout.setPlaceholder("default");
+		UIS.setTooltip(cstoreResponseTimeout,
+				"Seconds to wait for the destination's C-STORE response before the source is answered "
+						+ "A700 (out of resources, retry later). Leave empty for the server default "
+						+ "(forward.cstore-response-timeout-seconds). Raise it for archives that acknowledge "
+						+ "each object only once it is fully processed, and keep it below the response "
+						+ "timeout of the sources.");
+
 		UIS.setTooltip(useSourceAETitleCheckbox,
 				"if \"true\" then use the AETitle of the source that sent the images as the calling AETitle instead "
 						+ "of the Forward Node AETitle. The destination must accept the source AETitles.");
@@ -217,6 +231,16 @@ public class FormDICOM extends VerticalLayout {
 			.withValidator(value -> isVirtual() || (1 <= value && value <= 50),
 					"Concurrent connections should be between 1 and 50")
 			.bind(DestinationEntity::getConcurrentConnections, DestinationEntity::setConcurrentConnections);
+
+		// Empty means "server default", stored as null (a TextField rejects a null value,
+		// hence the null representation)
+		binder.forField(cstoreResponseTimeout)
+			.withNullRepresentation("")
+			.withConverter(new HStringToIntegerConverter())
+			.withConverter(value -> value == null || value == 0 ? null : value, value -> value)
+			.withValidator(value -> isVirtual() || value == null || (1 <= value && value <= 3600),
+					"C-STORE response timeout should be between 1 and 3600 seconds")
+			.bind(DestinationEntity::getCstoreResponseTimeout, DestinationEntity::setCstoreResponseTimeout);
 
 		binder.forField(useSourceAETitleCheckbox)
 			.bind(DestinationEntity::isUseSourceAet, DestinationEntity::setUseSourceAet);

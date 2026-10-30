@@ -1,0 +1,20 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+  <!-- Per-destination C-STORE response timeout in seconds (NULL = the global
+       forward.cstore-response-timeout-seconds default) -->
+
+  <changeSet author="karnak" id="3.2-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="destination" columnName="cstore_response_timeout"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="destination">
+      <column name="cstore_response_timeout" type="INT"/>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

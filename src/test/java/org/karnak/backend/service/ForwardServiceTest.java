@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.UID;
@@ -236,6 +237,36 @@ class ForwardServiceTest {
 				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
 
 		assertEquals(Status.OutOfResources, e.getStatus());
+	}
+
+	@Test
+	void dicom_transfer_other_uses_destination_response_timeout_over_global() throws Exception {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		when(scu.cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(new CompletableFuture<>());
+		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 600L);
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+		when(dest.getCstoreResponseTimeoutSeconds()).thenReturn(1);
+
+		long start = System.nanoTime();
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+		assertTrue(e.getMessage().contains("within 1s"), e.getMessage());
+		assertTrue(System.nanoTime() - start < TimeUnit.SECONDS.toNanos(30));
+	}
+
+	@Test
+	void response_timeout_falls_back_to_global_without_destination_value() {
+		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 42L);
+		DicomForwardDestination dest = mock(DicomForwardDestination.class);
+
+		assertEquals(42L, forwardService.responseTimeoutSeconds(dest));
+		when(dest.getCstoreResponseTimeoutSeconds()).thenReturn(0);
+		assertEquals(42L, forwardService.responseTimeoutSeconds(dest));
+		when(dest.getCstoreResponseTimeoutSeconds()).thenReturn(180);
+		assertEquals(180L, forwardService.responseTimeoutSeconds(dest));
 	}
 
 	@Test
