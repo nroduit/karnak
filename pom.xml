@@ -18,9 +18,9 @@
     <enforcer.jdk-version>[${java.version},)</enforcer.jdk-version>
     <enforcer.maven-version>[3.3.0,)</enforcer.maven-version>
 
-    <springframework.version>4.1.1</springframework.version>
+    <springframework.version>4.1.2</springframework.version>
     <springdoc.version>1.8.0</springdoc.version>
-    <vaadin.version>25.3.2</vaadin.version>
+    <vaadin.version>25.3.4</vaadin.version>
     <org.json.version>20260814</org.json.version>
     <opencsv.version>5.12.0</opencsv.version>
 
@@ -29,7 +29,7 @@
 
     <h2.version>2.5.252</h2.version>
     <mockito.version>5.24.0</mockito.version>
-    <swagger.version>2.2.55</swagger.version>
+    <swagger.version>3.0.0</swagger.version>
 
     <sonar.organization>nroduit-github</sonar.organization>
     <sonar.projectKey>nroduit_karnak</sonar.projectKey>
@@ -128,7 +128,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -138,7 +138,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.6.3</version>
+          <version>3.7.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -158,7 +158,7 @@
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.15</version>
+          <version>0.8.16</version>
         </plugin>
       </plugins>
     </pluginManagement>
