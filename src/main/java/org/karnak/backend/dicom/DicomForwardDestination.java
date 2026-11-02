@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import lombok.Getter;
+import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 import org.weasis.core.util.annotations.Generated;
 import org.weasis.dicom.param.AdvancedParams;
@@ -131,6 +132,17 @@ public class DicomForwardDestination extends ForwardDestination {
 
 	@Getter
 	private boolean useSourceAet;
+
+	/**
+	 * How long a forwarded C-STORE waits for this destination's C-STORE-RSP, in seconds.
+	 * Null when the destination has no value of its own: the global
+	 * {@code forward.cstore-response-timeout-seconds} then applies. Some archives (e.g.
+	 * Carestream Vue PACS) allow a single outstanding operation per association and
+	 * answer only once the object is fully processed, which can exceed the default.
+	 */
+	@Getter
+	@Setter
+	private Integer cstoreResponseTimeoutSeconds;
 
 	// Applied to every SCU, including those of the source pools created later
 	private Consumer<StoreFromStreamSCU> scuInitializer = _ -> {

@@ -76,13 +76,15 @@ public class MonitoringLogic {
 	}
 
 	public List<SeriesActivityModel> listSeries(TransferStatusFilter filter, UUID destinationUuid, String studyUid) {
-		return monitoringAggregationService.searchSeries(
-				MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid).withStudyUid(studyUid.equals("null") ? null : studyUid));
+		return monitoringAggregationService.searchSeries(MonitoringSearchCriteria.from(filter)
+			.withDestinationUuid(destinationUuid)
+			.withStudyUid(studyUid.equals("null") ? null : studyUid));
 	}
 
 	public List<ErrorBreakdownModel> listErrors(TransferStatusFilter filter, UUID destinationUuid, String serieUid) {
-		return monitoringAggregationService.searchErrors(
-				MonitoringSearchCriteria.from(filter).withDestinationUuid(destinationUuid).withSerieUid(serieUid.equals("null") ? null : serieUid));
+		return monitoringAggregationService.searchErrors(MonitoringSearchCriteria.from(filter)
+			.withDestinationUuid(destinationUuid)
+			.withSerieUid(serieUid.equals("null") ? null : serieUid));
 	}
 
 	// --- Forward node dashboard ------------------------------------------------------

@@ -235,6 +235,13 @@ public class DestinationEntity implements Serializable {
 	@Max(groups = DestinationDicomGroup.class, value = 50, message = "Concurrent connections must be 50 or less")
 	private Integer concurrentConnections = 1;
 
+	// Seconds to wait for the destination's C-STORE-RSP before the source is answered
+	// A700. Null = the global forward.cstore-response-timeout-seconds default
+	@Column(name = "cstore_response_timeout")
+	@Min(groups = DestinationDicomGroup.class, value = 1, message = "C-STORE response timeout must be at least 1")
+	@Max(groups = DestinationDicomGroup.class, value = 3600, message = "C-STORE response timeout must be 3600 or less")
+	private Integer cstoreResponseTimeout;
+
 	// Use HTTP/2 for STOW-RS uploads. Default false (HTTP/1.1)
 	private boolean http2;
 

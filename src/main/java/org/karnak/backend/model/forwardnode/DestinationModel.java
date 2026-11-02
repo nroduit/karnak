@@ -146,6 +146,11 @@ public class DestinationModel implements Serializable {
 	@Max(groups = DestinationDicomGroup.class, value = 50, message = "Concurrent connections must be 50 or less")
 	private Integer concurrentConnections;
 
+	// Null = the global forward.cstore-response-timeout-seconds default
+	@Min(groups = DestinationDicomGroup.class, value = 1, message = "C-STORE response timeout must be at least 1")
+	@Max(groups = DestinationDicomGroup.class, value = 3600, message = "C-STORE response timeout must be 3600 or less")
+	private Integer cstoreResponseTimeout;
+
 	private boolean http2;
 
 	private boolean transferInProgress;

@@ -73,6 +73,7 @@ public final class DestinationMapper {
 		model.setTransferSyntax(entity.getTransferSyntax());
 		model.setTranscodeOnlyUncompressed(entity.isTranscodeOnlyUncompressed());
 		model.setConcurrentConnections(entity.getConcurrentConnections());
+		model.setCstoreResponseTimeout(entity.getCstoreResponseTimeout());
 		model.setHttp2(entity.isHttp2());
 		model.setTransferInProgress(entity.isTransferInProgress());
 		model.setLastTransfer(entity.getLastTransfer());
@@ -127,6 +128,7 @@ public final class DestinationMapper {
 		entity.setTranscodeOnlyUncompressed(model.isTranscodeOnlyUncompressed());
 		entity
 			.setConcurrentConnections(model.getConcurrentConnections() != null ? model.getConcurrentConnections() : 1);
+		entity.setCstoreResponseTimeout(model.getCstoreResponseTimeout());
 		entity.setHttp2(model.isHttp2());
 		entity.setTransferInProgress(model.isTransferInProgress());
 		entity.setLastTransfer(model.getLastTransfer());

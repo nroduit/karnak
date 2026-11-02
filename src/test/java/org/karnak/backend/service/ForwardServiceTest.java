@@ -349,6 +349,36 @@ class ForwardServiceTest {
 	}
 
 	@Test
+	void dicom_transfer_other_uses_destination_response_timeout_over_global() throws Exception {
+		StoreFromStreamSCU scu = readyStreamSCU();
+		when(scu.cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(new CompletableFuture<>());
+		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 600L);
+		DicomForwardDestination dest = dicomDestination(scu, List.of());
+		when(dest.getCstoreResponseTimeoutSeconds()).thenReturn(1);
+
+		long start = System.nanoTime();
+		DestinationStatusException e = assertThrows(DestinationStatusException.class,
+				() -> forwardService.transferOther(fwdNode, dest, lease(scu), dataset(), params(null)));
+
+		assertEquals(Status.OutOfResources, e.getStatus());
+		assertTrue(e.getMessage().contains("within 1s"), e.getMessage());
+		assertTrue(System.nanoTime() - start < TimeUnit.SECONDS.toNanos(30));
+	}
+
+	@Test
+	void response_timeout_falls_back_to_global_without_destination_value() {
+		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 42L);
+		DicomForwardDestination dest = mock(DicomForwardDestination.class);
+
+		assertEquals(42L, forwardService.responseTimeoutSeconds(dest));
+		when(dest.getCstoreResponseTimeoutSeconds()).thenReturn(0);
+		assertEquals(42L, forwardService.responseTimeoutSeconds(dest));
+		when(dest.getCstoreResponseTimeoutSeconds()).thenReturn(180);
+		assertEquals(180L, forwardService.responseTimeoutSeconds(dest));
+	}
+
+	@Test
 	void dicom_transfer_other_association_closed_before_response_records_error_and_throws() throws Exception {
 		StoreFromStreamSCU scu = readyStreamSCU();
 		when(scu.cstoreAsync(anyString(), anyString(), anyInt(), any(), anyString()))

@@ -296,6 +296,7 @@ public class GatewaySetUpService {
 					dest.setDeidentified(dstNode.isDesidentification());
 					dest.setImageIdentityCheck(dstNode.isImageIdentityCheck());
 					dest.setUseSourceAet(dstNode.isUseSourceAet());
+					dest.setCstoreResponseTimeoutSeconds(dstNode.getCstoreResponseTimeout());
 
 					preNegotiateCommonSopClasses(dest);
 					return dest;
