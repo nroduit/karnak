@@ -124,7 +124,11 @@ public class MonitoringAggregationService {
 	public List<StudyActivityModel> searchStudies(MonitoringSearchCriteria criteria) {
 		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(destinationScopedFilter(criteria));
 		Map<String, List<TransferSeriesStatusEntity>> byStudy = rows.stream()
-			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getStudyUidOriginal));
+			.collect(Collectors.toMap(row -> row.getStudyUidOriginal() != null ? row.getStudyUidOriginal() : "null",
+					row -> new ArrayList<>(List.of(row)), (a, b) -> {
+						a.addAll(b);
+						return a;
+					}));
 
 		return byStudy.entrySet().stream().map(entry -> {
 			String studyUid = entry.getKey();
@@ -160,7 +164,11 @@ public class MonitoringAggregationService {
 	public List<SeriesActivityModel> searchSeries(MonitoringSearchCriteria criteria) {
 		List<TransferSeriesStatusEntity> rows = seriesStatusRepo.findAll(studyScopedFilter(criteria));
 		Map<String, List<TransferSeriesStatusEntity>> bySeries = rows.stream()
-			.collect(Collectors.groupingBy(TransferSeriesStatusEntity::getSerieUidOriginal));
+			.collect(Collectors.toMap(row -> row.getSerieUidOriginal() != null ? row.getSerieUidOriginal() : "null",
+					row -> new ArrayList<>(List.of(row)), (a, b) -> {
+						a.addAll(b);
+						return a;
+					}));
 
 		return bySeries.entrySet().stream().map(entry -> {
 			String serieUid = entry.getKey();
@@ -203,7 +211,11 @@ public class MonitoringAggregationService {
 
 		Map<String, List<TransferSeriesReasonEntity>> byReason = seriesReasonRepo.findBySeriesStatusIdIn(seriesIds)
 			.stream()
-			.collect(Collectors.groupingBy(TransferSeriesReasonEntity::getReason));
+			.collect(Collectors.toMap(row -> row.getReason() != null ? row.getReason() : "null",
+					row -> new ArrayList<>(List.of(row)), (a, b) -> {
+						a.addAll(b);
+						return a;
+					}));
 
 		return byReason.entrySet().stream().map(entry -> {
 			String reason = entry.getKey();
