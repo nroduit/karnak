@@ -68,44 +68,44 @@ public class DicomForwardDestination extends ForwardDestination {
 				// their own state.
 				StoreFromStreamSCU scu = new StoreFromStreamSCU(forwardParams, callingNode, destinationNode,
 						i == 0 ? progress : null);
-				scus.add(scu);
-				services.add(new DeviceOpService(scu.getDevice()));
+				this.scus.add(scu);
+				this.services.add(new DeviceOpService(scu.getDevice()));
 			}
 		}
 
 		private ScuLease acquire() {
-			leases++;
-			for (int i = 0; i < inUse.length; i++) {
-				if (!inUse[i]) {
-					inUse[i] = true;
-					return new ScuLease(scus.get(i), services.get(i), i, true);
+			this.leases++;
+			for (int i = 0; i < this.inUse.length; i++) {
+				if (!this.inUse[i]) {
+					this.inUse[i] = true;
+					return new ScuLease(this.scus.get(i), this.services.get(i), i, true);
 				}
 			}
-			int i = roundRobin;
-			roundRobin = (roundRobin + 1) % inUse.length;
-			return new ScuLease(scus.get(i), services.get(i), i, false);
+			int i = this.roundRobin;
+			this.roundRobin = (this.roundRobin + 1) % this.inUse.length;
+			return new ScuLease(this.scus.get(i), this.services.get(i), i, false);
 		}
 
 		private void release(ScuLease lease) {
-			leases--;
+			this.leases--;
 			if (lease.exclusive()) {
-				inUse[lease.slot()] = false;
+				this.inUse[lease.slot()] = false;
 			}
 		}
 
 		private boolean owns(ScuLease lease) {
-			return lease.slot() < scus.size() && scus.get(lease.slot()) == lease.scu();
+			return lease.slot() < this.scus.size() && this.scus.get(lease.slot()) == lease.scu();
 		}
 
 		private boolean isIdle() {
-			return leases == 0;
+			return this.leases == 0;
 		}
 
 		private void stop() {
-			for (StoreFromStreamSCU scu : scus) {
+			for (StoreFromStreamSCU scu : this.scus) {
 				scu.close(true);
 			}
-			for (DeviceOpService service : services) {
+			for (DeviceOpService service : this.services) {
 				service.stop();
 			}
 		}
@@ -214,7 +214,7 @@ public class DicomForwardDestination extends ForwardDestination {
 	 * {@link #release(ScuLease)} in a finally block.
 	 */
 	public synchronized ScuLease acquire() {
-		return defaultPool.acquire();
+		return this.defaultPool.acquire();
 	}
 
 	/**
@@ -225,15 +225,15 @@ public class DicomForwardDestination extends ForwardDestination {
 	 * @throws IOException if the associations for a new source cannot be set up
 	 */
 	public synchronized ScuLease acquire(String sourceAet) throws IOException {
-		if (!useSourceAet || sourceAet == null || sourceAet.isBlank()) {
-			return defaultPool.acquire();
+		if (!this.useSourceAet || sourceAet == null || sourceAet.isBlank()) {
+			return this.defaultPool.acquire();
 		}
-		ScuPool pool = sourcePools.get(sourceAet);
+		ScuPool pool = this.sourcePools.get(sourceAet);
 		if (pool == null) {
 			evictIdleSourcePools();
-			pool = new ScuPool(forwardParams, new DicomNode(sourceAet), destinationNode, null, poolSize);
-			pool.scus.forEach(scuInitializer);
-			sourcePools.put(sourceAet, pool);
+			pool = new ScuPool(this.forwardParams, new DicomNode(sourceAet), this.destinationNode, null, this.poolSize);
+			pool.scus.forEach(this.scuInitializer);
+			this.sourcePools.put(sourceAet, pool);
 		}
 		return pool.acquire();
 	}
@@ -244,8 +244,8 @@ public class DicomForwardDestination extends ForwardDestination {
 	 * bound may be exceeded under load.
 	 */
 	private void evictIdleSourcePools() {
-		Iterator<ScuPool> pools = sourcePools.values().iterator();
-		while (sourcePools.size() >= MAX_SOURCE_POOLS && pools.hasNext()) {
+		Iterator<ScuPool> pools = this.sourcePools.values().iterator();
+		while (this.sourcePools.size() >= MAX_SOURCE_POOLS && pools.hasNext()) {
 			ScuPool pool = pools.next();
 			if (pool.isIdle()) {
 				pools.remove();
@@ -259,11 +259,11 @@ public class DicomForwardDestination extends ForwardDestination {
 		if (lease == null) {
 			return;
 		}
-		if (defaultPool.owns(lease)) {
-			defaultPool.release(lease);
+		if (this.defaultPool.owns(lease)) {
+			this.defaultPool.release(lease);
 			return;
 		}
-		for (ScuPool pool : sourcePools.values()) {
+		for (ScuPool pool : this.sourcePools.values()) {
 			if (pool.owns(lease)) {
 				pool.release(lease);
 				return;
@@ -282,43 +282,43 @@ public class DicomForwardDestination extends ForwardDestination {
 	 */
 	public synchronized void setScuInitializer(Consumer<StoreFromStreamSCU> scuInitializer) {
 		this.scuInitializer = scuInitializer;
-		defaultPool.scus.forEach(scuInitializer);
-		sourcePools.values().forEach(pool -> pool.scus.forEach(scuInitializer));
+		this.defaultPool.scus.forEach(scuInitializer);
+		this.sourcePools.values().forEach(pool -> pool.scus.forEach(scuInitializer));
 	}
 
 	/** All SCUs of the pool calling with the forward node AE Title. */
 	public List<StoreFromStreamSCU> getStreamSCUs() {
-		return defaultPool.scus;
+		return this.defaultPool.scus;
 	}
 
 	/** A representative SCU (the first of the pool); use {@link #acquire()} to send. */
 	public StoreFromStreamSCU getStreamSCU() {
-		return defaultPool.scus.getFirst();
+		return this.defaultPool.scus.getFirst();
 	}
 
 	public DeviceOpService getStreamSCUService() {
-		return defaultPool.services.getFirst();
+		return this.defaultPool.services.getFirst();
 	}
 
 	@Override
 	public ForwardDicomNode getForwardDicomNode() {
-		return callingNode;
+		return this.callingNode;
 	}
 
 	@Override
 	public synchronized void stop() {
-		defaultPool.stop();
-		sourcePools.values().forEach(ScuPool::stop);
+		this.defaultPool.stop();
+		this.sourcePools.values().forEach(ScuPool::stop);
 	}
 
 	@Override
 	public DicomState getState() {
-		return defaultPool.scus.getFirst().getState();
+		return this.defaultPool.scus.getFirst().getState();
 	}
 
 	@Override
 	public String toString() {
-		return destinationNode.toString();
+		return this.destinationNode.toString();
 	}
 
 }

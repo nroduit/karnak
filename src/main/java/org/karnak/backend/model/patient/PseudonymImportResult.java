@@ -9,7 +9,6 @@
  */
 package org.karnak.backend.model.patient;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +23,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PseudonymImportResult implements Serializable {
-
-	@Serial
-	private static final long serialVersionUID = 1L;
 
 	private int created;
 

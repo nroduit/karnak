@@ -72,7 +72,7 @@ public class WebForwardDestination extends ForwardDestination {
 			.httpVersion(httpVersion == null ? HttpClient.Version.HTTP_1_1 : httpVersion)
 			.build();
 		this.httpClient = newHttpClient(config);
-		this.stowRS = new DicomStowRS(config, httpClient);
+		this.stowRS = new DicomStowRS(config, this.httpClient);
 		setOutputTransferSyntax(outputTransferSyntax);
 		setTranscodeOnlyUncompressed(transcodeOnlyUncompressed);
 	}
@@ -107,28 +107,28 @@ public class WebForwardDestination extends ForwardDestination {
 
 	@Override
 	public ForwardDicomNode getForwardDicomNode() {
-		return callingNode;
+		return this.callingNode;
 	}
 
 	public String getRequestURL() {
-		return stowRS.getRequestURL();
+		return this.stowRS.getRequestURL();
 	}
 
 	public DicomStowRS getStowrsSingleFile() {
-		return stowRS;
+		return this.stowRS;
 	}
 
 	@Override
 	public void stop() {
-		StreamUtil.safeClose(stowRS);
-		if (httpClient != null) {
-			httpClient.shutdown();
+		StreamUtil.safeClose(this.stowRS);
+		if (this.httpClient != null) {
+			this.httpClient.shutdown();
 		}
 	}
 
 	@Override
 	public String toString() {
-		return stowRS.getRequestURL();
+		return this.stowRS.getRequestURL();
 	}
 
 }

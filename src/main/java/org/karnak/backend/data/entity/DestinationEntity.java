@@ -331,7 +331,7 @@ public class DestinationEntity implements Serializable {
 
 	@JsonGetter("kheopsAlbums")
 	public List<KheopsAlbumsEntity> getKheopsAlbumEntities() {
-		return kheopsAlbumEntities;
+		return this.kheopsAlbumEntities;
 	}
 
 	@JsonSetter("kheopsAlbums")
@@ -341,7 +341,7 @@ public class DestinationEntity implements Serializable {
 
 	@JsonGetter("deIdentificationProject")
 	public ProjectEntity getDeIdentificationProjectEntity() {
-		return deIdentificationProjectEntity;
+		return this.deIdentificationProjectEntity;
 	}
 
 	@JsonSetter("deIdentificationProject")
@@ -351,7 +351,7 @@ public class DestinationEntity implements Serializable {
 
 	@JsonGetter("tagMorphingProject")
 	public ProjectEntity getTagMorphingProjectEntity() {
-		return tagMorphingProjectEntity;
+		return this.tagMorphingProjectEntity;
 	}
 
 	@JsonSetter("tagMorphingProject")

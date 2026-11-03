@@ -9,11 +9,9 @@
  */
 package org.karnak.backend.service.dicom;
 
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
 import org.junit.jupiter.api.Test;
@@ -22,6 +20,7 @@ import org.karnak.backend.data.entity.DestinationEntity;
 import org.karnak.backend.data.repo.DestinationRepo;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.weasis.dicom.param.DicomNode;
 

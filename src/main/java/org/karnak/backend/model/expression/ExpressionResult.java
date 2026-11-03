@@ -19,7 +19,6 @@ import org.dcm4che3.data.VR;
 import org.jspecify.annotations.Nullable;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.ReflectivePropertyAccessor;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -127,7 +126,7 @@ public class ExpressionResult {
 
 	private static @Nullable Object evaluate(String condition, ExpressionItem expressionItem, Class<?> typeOfReturn) {
 		final StandardEvaluationContext context = new StandardEvaluationContext(expressionItem);
-		context.setPropertyAccessors(new ArrayList<PropertyAccessor>(List.of(PROPERTY_ACCESSOR)));
+		context.setPropertyAccessors(new ArrayList<>(List.of(PROPERTY_ACCESSOR)));
 		context.setVariable("VR", VR.class);
 		context.setVariable("Tag", Tag.class);
 		return parse(condition).getValue(context, typeOfReturn);

@@ -9,9 +9,6 @@
  */
 package org.karnak.backend.model.profiles;
 
-import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
-import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +27,8 @@ import org.karnak.backend.model.profilepipe.TagActionMap;
 import org.karnak.backend.model.profilepipe.TagPath;
 import org.karnak.backend.service.ApplicationContextProvider;
 import org.karnak.backend.service.EndpointService;
+import static org.karnak.backend.service.EndpointService.evaluateStringWithExpression;
+import static org.karnak.backend.service.EndpointService.validateStringWithExpression;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.weasis.dicom.param.AttributeEditorContext;
