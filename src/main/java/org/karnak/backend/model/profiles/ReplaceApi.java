@@ -155,6 +155,15 @@ public class ReplaceApi extends AbstractProfileItem {
 				case "get" -> endpointService.get(args.authConfig(), args.url());
 				default -> throw new EndpointException("Unsupported HTTP Method : " + args.method());
 			};
+
+			if (response == null) {
+				response = "";
+			}
+
+			if (args.responsePath().isEmpty()) {
+				return response;
+			}
+
 			JsonNode node = OBJECT_MAPPER.readTree(response).at(args.responsePath());
 			if (node.isMissingNode() || node.isNull()) {
 				return null;

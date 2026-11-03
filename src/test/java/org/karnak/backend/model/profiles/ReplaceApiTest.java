@@ -84,6 +84,8 @@ public class ReplaceApiTest {
 		when(endpointService.get(AUTH_CONFIG, TEST_UNKNOWN_URL))
 			.thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/not-json")).thenReturn("12345");
+		when(endpointService.get(AUTH_CONFIG, TEST_URL + "/object")).thenReturn(
+				"{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727674\", \"elements\": [{\"one\": \"stuffone\", \"two\": \"stufftwo\"}]}");
 
 		acp.when(() -> ApplicationContextProvider.bean(EndpointService.class)).thenReturn(endpointService);
 	}
@@ -435,8 +437,34 @@ public class ReplaceApiTest {
 		Profile profile = new Profile(profileEntity);
 		profile.applyAction(dataset1, dataset1, null, null, null, null);
 
-		assertEquals("{\"id\":411,\"type\":\"ZAWIN\",\"value\":\"78727671\"}",
+		assertEquals("{\"id\": 411,\"type\": \"ZAWIN\",\"value\": \"78727671\"}",
 				dataset1.getString(Tag.StudyDescription));
+	}
+
+	@Test
+	public void replaceValueWithAuthConfig_responseJsonObject() {
+		final Attributes dataset1 = new Attributes();
+
+		dataset1.setString(Tag.PatientName, VR.PN, "TEST-get-from-api");
+		dataset1.setString(Tag.StudyInstanceUID, VR.UI, "12345");
+		dataset1.setString(Tag.PatientID, VR.LO, "97035674");
+		dataset1.setString(Tag.StudyDescription, VR.LO, "taratata");
+
+		ProfileEntity profileEntity = new ProfileEntity("TEST", "0.9.1", "0.9.1", "DPA");
+		ProfileElementEntity profileElementEntity = new ProfileElementEntity("Expr", "action.replace.api", null, null,
+				null, 0, profileEntity);
+		profileElementEntity.addArgument(new ArgumentEntity("url", TEST_URL + "/object", profileElementEntity));
+		// An empty path is the JSON Pointer of the whole document (RFC 6901)
+		profileElementEntity.addArgument(new ArgumentEntity("responsePath", "elements", profileElementEntity));
+		profileElementEntity.addArgument(new ArgumentEntity("authConfig", AUTH_CONFIG, profileElementEntity));
+		profileElementEntity.addIncludedTag(new IncludedTagEntity("(0008,1030)", profileElementEntity));
+		profileElementEntity.setProfileEntity(profileEntity);
+
+		profileEntity.addProfilePipe(profileElementEntity);
+		Profile profile = new Profile(profileEntity);
+		profile.applyAction(dataset1, dataset1, null, null, null, null);
+
+		assertEquals("[{\"one\":\"stuffone\",\"two\":\"stufftwo\"}]", dataset1.getString(Tag.StudyDescription));
 	}
 
 }

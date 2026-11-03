@@ -10,10 +10,12 @@
 package org.karnak.backend.controller;
 
 import jakarta.validation.Validation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -132,6 +134,65 @@ class PseudonymControllerTest {
 		assertEquals(0, result.getCreated());
 		assertEquals(1, result.getConflict());
 		assertEquals(existing, result.getIssues().get(0).getExisting());
+	}
+
+	@Test
+	void importPseudonyms_on_an_empty_list_returns_an_empty_summary() {
+		ResponseEntity<PseudonymImportResult> response = pseudonymController.importPseudonyms(List.of());
+
+		PseudonymImportResult result = response.getBody();
+		assertNotNull(result);
+		assertEquals(0, result.getCreated());
+		assertEquals(0, result.getConflict());
+		assertEquals(0, result.getError());
+		assertEquals(0, result.getIssues().size());
+		Mockito.verifyNoInteractions(pseudonymCacheMock);
+	}
+
+	@Test
+	void importPseudonyms_reports_a_null_row_as_an_error() {
+		List<PatientModel> rows = new ArrayList<>();
+		rows.add(null);
+
+		ResponseEntity<PseudonymImportResult> response = pseudonymController.importPseudonyms(rows);
+
+		PseudonymImportResult result = response.getBody();
+		assertNotNull(result);
+		assertEquals(1, result.getError());
+		assertEquals(0, result.getIssues().get(0).getIndex());
+		assertEquals("Row is null", result.getIssues().get(0).getReason());
+		Mockito.verifyNoInteractions(pseudonymCacheMock);
+	}
+
+	@Test
+	void importPseudonyms_reports_validation_failures_with_the_property_path_and_message() {
+		// Missing pseudonym, patientId and projectUUID: three constraint violations
+		ResponseEntity<PseudonymImportResult> response = pseudonymController
+			.importPseudonyms(List.of(new PatientModel()));
+
+		PseudonymImportResult result = response.getBody();
+		assertNotNull(result);
+		assertEquals(1, result.getError());
+		String reason = result.getIssues().get(0).getReason();
+		// Reason joins each violation as "propertyPath message", separated by "; "
+		assertTrue(reason.contains("pseudonym Pseudonym is mandatory"), reason);
+		assertTrue(reason.contains("patientId Patient id is mandatory"), reason);
+		assertTrue(reason.contains("; "), reason);
+		// The invalid row never reaches the cache
+		Mockito.verifyNoInteractions(pseudonymCacheMock);
+	}
+
+	@Test
+	void importPseudonyms_reports_an_unexpected_runtime_failure_by_its_class_name_when_it_has_no_message() {
+		Mockito.when(pseudonymCacheMock.put(Mockito.anyString(), Mockito.any())).thenThrow(new RuntimeException());
+
+		ResponseEntity<PseudonymImportResult> response = pseudonymController
+			.importPseudonyms(List.of(patient("PSY_1", "PAT_1")));
+
+		PseudonymImportResult result = response.getBody();
+		assertNotNull(result);
+		assertEquals(1, result.getError());
+		assertEquals("RuntimeException", result.getIssues().get(0).getReason());
 	}
 
 }
