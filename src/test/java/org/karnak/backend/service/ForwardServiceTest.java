@@ -179,34 +179,34 @@ class ForwardServiceTest {
 
 	@Test
 	void await_cstore_response_times_out_as_a700() {
-		ReflectionTestUtils.setField(forwardService, "cstoreResponseTimeoutSeconds", 0L);
-		Throwable thrown = invokeAwaitCStoreResponse(new CompletableFuture<>());
+		Throwable thrown = invokeAwaitCStoreResponse(new CompletableFuture<>(), 0L);
 		DestinationStatusException e = assertInstanceOf(DestinationStatusException.class, thrown);
 		assertEquals(Status.OutOfResources, e.getStatus());
 		assertTrue(e.getMessage().contains(IUID), e.getMessage());
+		assertTrue(e.getMessage().contains("within 0s"), e.getMessage());
 	}
 
 	@Test
 	void await_cstore_response_rethrows_the_io_cause_as_is() {
 		IOException cause = new IOException("association closed");
-		Throwable thrown = invokeAwaitCStoreResponse(CompletableFuture.failedFuture(cause));
+		Throwable thrown = invokeAwaitCStoreResponse(CompletableFuture.failedFuture(cause), 5L);
 		assertSame(cause, thrown);
 	}
 
 	@Test
 	void await_cstore_response_wraps_a_non_io_cause_in_an_io_exception() {
 		RuntimeException cause = new IllegalStateException("boom");
-		Throwable thrown = invokeAwaitCStoreResponse(CompletableFuture.failedFuture(cause));
+		Throwable thrown = invokeAwaitCStoreResponse(CompletableFuture.failedFuture(cause), 5L);
 		IOException wrapped = assertInstanceOf(IOException.class, thrown);
 		assertSame(cause, wrapped.getCause());
 	}
 
-	private Throwable invokeAwaitCStoreResponse(CompletableFuture<Attributes> response) {
+	private Throwable invokeAwaitCStoreResponse(CompletableFuture<Attributes> response, long timeoutSeconds) {
 		try {
 			java.lang.reflect.Method method = ForwardService.class.getDeclaredMethod("awaitCStoreResponse",
-					CompletableFuture.class, String.class);
+					CompletableFuture.class, String.class, long.class);
 			method.setAccessible(true);
-			method.invoke(forwardService, response, IUID);
+			method.invoke(null, response, IUID, timeoutSeconds);
 			throw new AssertionError("Expected an exception");
 		}
 		catch (java.lang.reflect.InvocationTargetException e) {
