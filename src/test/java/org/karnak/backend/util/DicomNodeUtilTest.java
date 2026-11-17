@@ -9,12 +9,15 @@
  */
 package org.karnak.backend.util;
 
-import java.util.ArrayList;
-import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator.ReplaceUnderscores;
@@ -27,8 +30,6 @@ import org.karnak.backend.model.dicom.DicomNodeList;
 import org.karnak.backend.model.dicom.WebDestinationNode;
 import org.karnak.backend.service.DicomNodeConfigService;
 import org.mockito.Mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.weasis.dicom.param.DicomNode;
 import org.weasis.dicom.param.DicomNodeSource;
