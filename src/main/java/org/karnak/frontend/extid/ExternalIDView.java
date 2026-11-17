@@ -23,13 +23,17 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.UploadHandler;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.List;
 import org.jspecify.annotations.NullUnmarked;
+import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.model.patient.PatientModel;
 import org.karnak.backend.util.PatientClientUtil;
 import org.karnak.frontend.MainLayout;
@@ -46,11 +50,14 @@ import org.weasis.core.util.annotations.Generated;
 @RolesAllowed({ "user", "admin" })
 @Generated()
 @NullUnmarked
-public class ExternalIDView extends HorizontalLayout {
+public class ExternalIDView extends HorizontalLayout implements BeforeEnterObserver {
 
 	public static final String VIEW_NAME = "External pseudonym";
 
 	public static final String ROUTE = "extid";
+
+	// Query parameter preselecting a project, e.g. /extid?projectUuid=<uuid>
+	public static final String PROJECT_UUID_PARAM = "projectUuid";
 
 	private static final String LABEL_CHOOSE_PROJECT = "Choose a project:";
 
@@ -58,6 +65,8 @@ public class ExternalIDView extends HorizontalLayout {
 			+ " temporally for a short period of time. If the application restarts, the data will be deleted.";
 
 	private final ProjectDropDown projectDropDown;
+
+	private final List<ProjectEntity> projects;
 
 	private final ExternalIDGrid externalIDGrid;
 
@@ -102,7 +111,8 @@ public class ExternalIDView extends HorizontalLayout {
 		setUploadCSVElement();
 		projectDropDown = new ProjectDropDown();
 		projectDropDown.setWidth("50%");
-		projectDropDown.setItems(externalIDLogic.retrieveProject());
+		projects = externalIDLogic.retrieveProject();
+		projectDropDown.setItems(projects);
 		externalIDGrid = new ExternalIDGrid();
 		externalIDForm = new ExternalIDForm();
 		addPatientButton = ButtonFactory.createAddButton("Add patient");
@@ -183,6 +193,19 @@ public class ExternalIDView extends HorizontalLayout {
 		add(verticalLayout);
 
 		addAttachListener(event -> this.ui = event.getUI());
+	}
+
+	/**
+	 * Preselects the project given by the {@value #PROJECT_UUID_PARAM} query parameter.
+	 * An unknown or malformed uuid is ignored.
+	 */
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		event.getLocation()
+			.getQueryParameters()
+			.getSingleParameter(PROJECT_UUID_PARAM)
+			.flatMap(uuid -> ExternalIDLogic.findProjectByUuid(projects, uuid))
+			.ifPresent(projectDropDown::setValue);
 	}
 
 	public void setUploadCSVElement() {
