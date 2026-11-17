@@ -12,6 +12,7 @@ package org.karnak.backend.model.validation;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -173,9 +174,11 @@ public class DicomConformanceValidator {
 		List<ConformanceFinding> findings = new ArrayList<>();
 
 		Map<Module, Map<String, ModuleAttribute>> modules = null;
+		Set<Module> presentModules = Set.of();
 		try {
 			modules = standard.getModulesBySOP(sopClassUid);
-			checkModuleRequirements(attrs, bulkPresentTags, modules, findings);
+			presentModules = presentModules(attrs, modules);
+			checkModuleRequirements(attrs, bulkPresentTags, modules, presentModules, findings);
 			checkFunctionalGroupMacros(attrs, standard.getIdCIOD(sopClassUid),
 					standard.getFunctionalGroupMacrosBySOP(sopClassUid), findings);
 		}
@@ -224,7 +227,7 @@ public class DicomConformanceValidator {
 		}
 
 		if (modules != null) {
-			assignModules(attrs, modules, findings);
+			assignModules(modules, presentModules, findings);
 		}
 		return new InstanceValidationResult(sopClassUid, sopInstanceUid, List.copyOf(findings));
 	}
@@ -235,7 +238,7 @@ public class DicomConformanceValidator {
 	 * the report can locate every attribute in the standard. Modules present in the
 	 * instance are preferred when the attribute belongs to several modules of the IOD.
 	 */
-	private void assignModules(Attributes attrs, Map<Module, Map<String, ModuleAttribute>> modules,
+	private void assignModules(Map<Module, Map<String, ModuleAttribute>> modules, Set<Module> presentModules,
 			List<ConformanceFinding> findings) {
 		Map<String, String> moduleIdByPath = new HashMap<>();
 		findings.replaceAll(finding -> {
@@ -243,7 +246,7 @@ public class DicomConformanceValidator {
 				return finding;
 			}
 			String moduleId = moduleIdByPath.computeIfAbsent(finding.tagPath(),
-					tagPath -> findModuleId(attrs, modules, tagPath));
+					tagPath -> findModuleId(modules, presentModules, tagPath));
 			return moduleId.isEmpty() ? finding : new ConformanceFinding(finding.tagPath(), finding.attributeName(),
 					moduleId, finding.severity(), finding.kind(), finding.expected(), finding.found());
 		});
@@ -254,7 +257,7 @@ public class DicomConformanceValidator {
 	 * or {@code (0040,0275) > (0008,0050)}
 	 * @return the comma-separated module ids defining the attribute, empty when none
 	 */
-	private String findModuleId(Attributes attrs, Map<Module, Map<String, ModuleAttribute>> modules,
+	private String findModuleId(Map<Module, Map<String, ModuleAttribute>> modules, Set<Module> presentModules,
 			String displayPath) {
 		List<String> segments = TAG_IN_PATH.matcher(displayPath)
 			.results()
@@ -275,7 +278,7 @@ public class DicomConformanceValidator {
 				continue;
 			}
 			List<Map.Entry<Module, Map<String, ModuleAttribute>>> present = defining.stream()
-				.filter(entry -> isModulePresent(attrs, entry.getValue()))
+				.filter(entry -> presentModules.contains(entry.getKey()))
 				.toList();
 			return (present.isEmpty() ? defining : present).stream()
 				.map(entry -> entry.getKey().id())
@@ -291,7 +294,8 @@ public class DicomConformanceValidator {
 	 * module that applies.
 	 */
 	private void checkModuleRequirements(Attributes attrs, Set<Integer> bulkPresentTags,
-			Map<Module, Map<String, ModuleAttribute>> modules, List<ConformanceFinding> findings) {
+			Map<Module, Map<String, ModuleAttribute>> modules, Set<Module> presentModules,
+			List<ConformanceFinding> findings) {
 		// Same attribute may belong to several applicable modules: gather them and
 		// resolve the effective (stricter) type afterwards
 		Map<String, List<ModuleAttribute>> requirements = new HashMap<>();
@@ -301,7 +305,7 @@ public class DicomConformanceValidator {
 			if (moduleAttributes == null || moduleAttributes.isEmpty()) {
 				continue;
 			}
-			if (isModulePresent(attrs, moduleAttributes)) {
+			if (presentModules.contains(module)) {
 				moduleAttributes.values()
 					.forEach(attribute -> requirements
 						.computeIfAbsent(attribute.getTagPath(), tagPath -> new ArrayList<>())
@@ -324,13 +328,46 @@ public class DicomConformanceValidator {
 				moduleAttributes, findings));
 	}
 
-	/** A module is considered present when any of its top-level attributes exists. */
-	private boolean isModulePresent(Attributes attrs, Map<String, ModuleAttribute> moduleAttributes) {
-		return moduleAttributes.keySet()
+	/**
+	 * Determines the IOD modules present in the instance.
+	 * <ul>
+	 * <li>A mandatory module is present when any of its top-level attributes exists.</li>
+	 * <li>An optional or conditional (usage U/C) module needs an attribute of its own: an
+	 * attribute shared with another module of the IOD (e.g. Pixel Spacing, in both X-Ray
+	 * Acquisition and DX Detector) does not prove that the module is used, and would
+	 * otherwise impose the requirements of an absent module (e.g. Imager Pixel Spacing,
+	 * Type 1 in DX Detector). A Number of Frames of 1 does not make a single-frame image
+	 * carry the Multi-frame module either.</li>
+	 * </ul>
+	 */
+	private static Set<Module> presentModules(Attributes attrs, Map<Module, Map<String, ModuleAttribute>> modules) {
+		Map<String, Integer> moduleCountByTag = new HashMap<>();
+		modules.values()
 			.stream()
+			.filter(moduleAttributes -> moduleAttributes != null)
+			.flatMap(moduleAttributes -> moduleAttributes.keySet().stream())
 			.filter(tagPath -> !tagPath.contains(":"))
-			.map(DicomConformanceValidator::parseTag)
-			.anyMatch(tag -> tag != null && attrs.contains(tag));
+			.forEach(tagPath -> moduleCountByTag.merge(tagPath, 1, Integer::sum));
+		boolean singleFrame = attrs.getInt(Tag.NumberOfFrames, 1) <= 1;
+
+		Set<Module> present = new HashSet<>();
+		modules.forEach((module, moduleAttributes) -> {
+			if (moduleAttributes == null) {
+				return;
+			}
+			boolean mandatory = Module.moduleIsMandatory(module);
+			boolean found = moduleAttributes.keySet()
+				.stream()
+				.filter(tagPath -> !tagPath.contains(":"))
+				.filter(tagPath -> mandatory || moduleCountByTag.getOrDefault(tagPath, 0) == 1)
+				.map(DicomConformanceValidator::parseTag)
+				.anyMatch(tag -> tag != null && attrs.contains(tag)
+						&& (mandatory || !singleFrame || tag != Tag.NumberOfFrames));
+			if (found) {
+				present.add(module);
+			}
+		});
+		return present;
 	}
 
 	private String summarizeRequiredAttributes(Map<String, ModuleAttribute> moduleAttributes) {
@@ -363,8 +400,11 @@ public class DicomConformanceValidator {
 		// this
 		// instance: promote it to the equivalent unconditional Type so the checks below
 		// fire
+		// Only the module(s) imposing the stricter type explain a finding
+		String strictestType = type;
 		type = effectiveConditionalType(attrs, type, moduleAttributes);
 		String moduleId = moduleAttributes.stream()
+			.filter(attribute -> strictestType.equals(attribute.getType()))
 			.map(ModuleAttribute::getModuleId)
 			.distinct()
 			.sorted()

@@ -208,7 +208,12 @@ orchestration in `org.karnak.backend.service`, the event in
 
 1. **Module requirements** (`checkModuleRequirements`)
    - Resolve the applicable modules for the SOP Class (`StandardDICOM.getModulesBySOP`).
-   - A module is *present* if any of its top-level attributes exists.
+   - A **mandatory** module is *present* if any of its top-level attributes exists.
+     A **usage U/C** module needs one of its *own* top-level attributes: an
+     attribute shared with another module of the IOD does not count (e.g. Pixel
+     Spacing must not activate the optional DX Detector module of an XRF image and
+     its Type 1 Imager Pixel Spacing), nor does a Number of Frames of 1 (a
+     single-frame image does not carry the Multi-frame module).
    - A **mandatory (usage M)** module that is absent **and** has at least one
      Type 1/2 attribute → `MODULE_MISSING` (ERROR).
    - For present modules, gather each attribute's requirement; the **stricter

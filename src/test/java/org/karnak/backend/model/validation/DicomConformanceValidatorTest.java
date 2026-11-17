@@ -498,4 +498,63 @@ class DicomConformanceValidatorTest {
 		assertEquals(Severity.INFO, findings.get(0).severity());
 	}
 
+	/**
+	 * A single-frame X-Ray Radiofluoroscopic image with Pixel Spacing (shared by the
+	 * mandatory X-Ray Acquisition module and the optional DX Detector module) and a
+	 * Number of Frames of 1.
+	 */
+	private static Attributes singleFrameXrf() {
+		var dcm = conformantCt();
+		dcm.setString(Tag.SOPClassUID, VR.UI, UID.XRayRadiofluoroscopicImageStorage);
+		dcm.setString(Tag.Modality, VR.CS, "RF");
+		dcm.setInt(Tag.NumberOfFrames, VR.IS, 1);
+		return dcm;
+	}
+
+	private static List<String> tagPathsOf(InstanceValidationResult result) {
+		return result.findings().stream().map(ConformanceFinding::tagPath).toList();
+	}
+
+	@Test
+	void attribute_shared_with_an_optional_module_does_not_make_it_present() {
+		var result = validate(singleFrameXrf());
+
+		// Imager Pixel Spacing is Type 1 and Detector Type Type 2 only in the DX Detector
+		// module (usage U), which the shared Pixel Spacing must not activate
+		assertTrue(!tagPathsOf(result).contains("(0018,1164)"), result.findings().toString());
+		assertTrue(!tagPathsOf(result).contains("(0018,7004)"), result.findings().toString());
+	}
+
+	@Test
+	void own_attribute_of_an_optional_module_makes_it_present() {
+		var dcm = singleFrameXrf();
+		dcm.setString(Tag.DetectorID, VR.SH, "DET-1");
+
+		var result = validate(dcm);
+
+		List<ConformanceFinding> findings = findingsOf(result, CheckKind.TYPE1_MISSING).stream()
+			.filter(finding -> "(0018,1164)".equals(finding.tagPath()))
+			.toList();
+		assertEquals(1, findings.size());
+		assertEquals("dx-detector", findings.get(0).moduleId());
+	}
+
+	@Test
+	void single_frame_image_does_not_carry_the_multi_frame_module() {
+		var result = validate(singleFrameXrf());
+
+		assertTrue(!tagPathsOf(result).contains("(0028,0009)"), result.findings().toString());
+	}
+
+	@Test
+	void multi_frame_image_requires_the_frame_increment_pointer() {
+		var dcm = singleFrameXrf();
+		dcm.setInt(Tag.NumberOfFrames, VR.IS, 3);
+
+		var result = validate(dcm);
+
+		assertTrue(findingsOf(result, CheckKind.TYPE1_MISSING).stream()
+			.anyMatch(finding -> "(0028,0009)".equals(finding.tagPath())), result.findings().toString());
+	}
+
 }
