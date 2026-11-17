@@ -9,7 +9,12 @@
  */
 package org.karnak.frontend.extid;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.ProjectEntity;
@@ -36,6 +41,38 @@ class ExternalIDLogicTest {
 
 		// Test result
 		Mockito.verify(projectServiceMock, Mockito.times(1)).retrieveAllProjects();
+	}
+
+	@Test
+	void should_find_project_by_uuid() {
+		ProjectEntity first = new ProjectEntity();
+		ProjectEntity second = new ProjectEntity();
+
+		Optional<ProjectEntity> found = ExternalIDLogic.findProjectByUuid(List.of(first, second),
+				second.getUuid().toString());
+
+		assertTrue(found.isPresent());
+		assertSame(second, found.get());
+	}
+
+	@Test
+	void should_not_find_project_when_uuid_is_unknown() {
+		List<ProjectEntity> projects = List.of(new ProjectEntity());
+
+		assertTrue(ExternalIDLogic.findProjectByUuid(projects, UUID.randomUUID().toString()).isEmpty());
+	}
+
+	@Test
+	void should_not_find_project_when_uuid_is_malformed_or_null() {
+		List<ProjectEntity> projects = List.of(new ProjectEntity());
+
+		assertTrue(ExternalIDLogic.findProjectByUuid(projects, "not-a-uuid").isEmpty());
+		assertTrue(ExternalIDLogic.findProjectByUuid(projects, null).isEmpty());
+	}
+
+	@Test
+	void should_not_find_project_in_empty_list() {
+		assertTrue(ExternalIDLogic.findProjectByUuid(List.of(), UUID.randomUUID().toString()).isEmpty());
 	}
 
 }
