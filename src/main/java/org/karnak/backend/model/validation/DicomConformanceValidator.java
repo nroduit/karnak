@@ -104,6 +104,9 @@ public class DicomConformanceValidator {
 	private static final String FUNCTIONAL_GROUPS_DISPLAY = TagUtils.toString(Tag.SharedFunctionalGroupsSequence)
 			+ " / " + TagUtils.toString(Tag.PerFrameFunctionalGroupsSequence);
 
+	/** A {@code (gggg,eeee)} tag in a finding display path. */
+	private static final Pattern TAG_IN_PATH = Pattern.compile("\\(([0-9A-Fa-f]{4}),([0-9A-Fa-f]{4})\\)");
+
 	private static final Set<Integer> ALWAYS_ALLOWED_TAGS = Set.of(Tag.SpecificCharacterSet, Tag.TimezoneOffsetFromUTC);
 
 	/**
@@ -220,7 +223,67 @@ public class DicomConformanceValidator {
 			checkFunctionalGroupExclusivity(attrs, findings);
 		}
 
+		if (modules != null) {
+			assignModules(attrs, modules, findings);
+		}
 		return new InstanceValidationResult(sopClassUid, sopInstanceUid, List.copyOf(findings));
+	}
+
+	/**
+	 * Fills the module of the findings raised outside the module requirement checks (VR,
+	 * VM, values, semantic checks...) with the IOD module(s) defining the attribute, so
+	 * the report can locate every attribute in the standard. Modules present in the
+	 * instance are preferred when the attribute belongs to several modules of the IOD.
+	 */
+	private void assignModules(Attributes attrs, Map<Module, Map<String, ModuleAttribute>> modules,
+			List<ConformanceFinding> findings) {
+		Map<String, String> moduleIdByPath = new HashMap<>();
+		findings.replaceAll(finding -> {
+			if (finding.moduleId() != null || finding.tagPath() == null) {
+				return finding;
+			}
+			String moduleId = moduleIdByPath.computeIfAbsent(finding.tagPath(),
+					tagPath -> findModuleId(attrs, modules, tagPath));
+			return moduleId.isEmpty() ? finding : new ConformanceFinding(finding.tagPath(), finding.attributeName(),
+					moduleId, finding.severity(), finding.kind(), finding.expected(), finding.found());
+		});
+	}
+
+	/**
+	 * @param displayPath display form of the attribute location, e.g. {@code (0028,0030)}
+	 * or {@code (0040,0275) > (0008,0050)}
+	 * @return the comma-separated module ids defining the attribute, empty when none
+	 */
+	private String findModuleId(Attributes attrs, Map<Module, Map<String, ModuleAttribute>> modules,
+			String displayPath) {
+		List<String> segments = TAG_IN_PATH.matcher(displayPath)
+			.results()
+			.map(match -> (match.group(1) + match.group(2)).toLowerCase(Locale.ROOT))
+			.toList();
+		if (segments.isEmpty()) {
+			return "";
+		}
+		// The full path when the standard defines it, otherwise the top-level attribute
+		List<String> candidates = segments.size() == 2
+				? List.of(segments.get(0) + ":" + segments.get(1), segments.get(0)) : List.of(segments.get(0));
+		for (String tagPath : candidates) {
+			List<Map.Entry<Module, Map<String, ModuleAttribute>>> defining = modules.entrySet()
+				.stream()
+				.filter(entry -> entry.getValue() != null && entry.getValue().containsKey(tagPath))
+				.toList();
+			if (defining.isEmpty()) {
+				continue;
+			}
+			List<Map.Entry<Module, Map<String, ModuleAttribute>>> present = defining.stream()
+				.filter(entry -> isModulePresent(attrs, entry.getValue()))
+				.toList();
+			return (present.isEmpty() ? defining : present).stream()
+				.map(entry -> entry.getKey().id())
+				.distinct()
+				.sorted()
+				.collect(Collectors.joining(", "));
+		}
+		return "";
 	}
 
 	/**

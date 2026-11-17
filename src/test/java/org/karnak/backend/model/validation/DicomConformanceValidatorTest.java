@@ -173,6 +173,9 @@ class DicomConformanceValidatorTest {
 		assertEquals(1, findings.size());
 		assertEquals("(0020,0032)", findings.get(0).tagPath());
 		assertTrue(findings.get(0).expected().contains("3"));
+		// The sweep findings are located in the IOD module defining the attribute
+		assertEquals("image-plane", findings.get(0).moduleId());
+		assertEquals("Image Plane", findings.get(0).moduleName());
 	}
 
 	@Test
@@ -190,6 +193,16 @@ class DicomConformanceValidatorTest {
 		assertEquals("(0010,0040)", findings.get(0).tagPath());
 		assertEquals("X", findings.get(0).found());
 		assertEquals(Severity.ERROR, findings.get(0).severity());
+		assertEquals("patient", findings.get(0).moduleId());
+	}
+
+	@Test
+	void module_ids_are_displayed_as_readable_names() {
+		assertEquals("CT Image", ConformanceFinding.toModuleName("ct-image"));
+		assertEquals("Enhanced MR Image, Multi-frame Functional Groups",
+				ConformanceFinding.toModuleName("enhanced-mr-image, multi-frame-functional-groups"));
+		assertEquals("X-Ray Acquisition", ConformanceFinding.toModuleName("x-ray-acquisition"));
+		assertEquals("Frame of Reference", ConformanceFinding.toModuleName("frame-of-reference"));
 	}
 
 	@Test

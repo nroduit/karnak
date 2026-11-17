@@ -164,7 +164,7 @@ count. Each row has:
 | **Severity** | `ERROR`, `WARNING` or `INFO` (see legend below). |
 | **Issue** | The category of check (e.g. *Type 1 missing*, *VR mismatch*, *Invalid value*). |
 | **Tag** | The attribute location, e.g. `(0010,0010)`, or `(0040,0275) > (0008,0050)` for an attribute inside a sequence. |
-| **Attribute / Module** | The attribute or IOD module name. |
+| **Attribute / Module** | The attribute name, with below it the IOD module(s) defining it for this SOP Class (e.g. *Image Plane*), or the module name alone for a *Module missing* finding. When the attribute belongs to several modules, only those present in the instance are listed; no module is shown for attributes outside the IOD (private, non-standard). |
 | **Expected** | What the standard requires (the Type, VR, VM, or the allowed values). |
 | **Found** | What was actually present. |
 | **Instances** | How many instances of that SOP Class had this finding. |

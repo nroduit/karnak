@@ -165,7 +165,7 @@
                   <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Severity</th>
                   <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Issue</th>
                   <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Tag</th>
-                  <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Attribute / Module</th>
+                  <th width="22%" style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4; width: 22%; min-width: 180px;">Attribute / Module</th>
                   <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Expected</th>
                   <th style="padding: 6px 8px; text-align: left; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Found</th>
                   <th style="padding: 6px 8px; text-align: right; background-color: #eceff1; border-bottom: 2px solid #d8dee4;">Instances</th>
@@ -181,7 +181,15 @@
                                 ${summary.finding().kind().getLabel()}, ${summary.finding().kind().getColor()}, false, 11, '9px')}"></th:block>
                   </td>
                   <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; font-family: Consolas, monospace; font-size: 11px; white-space: nowrap;" th:text="${summary.finding().tagPath()}"></td>
-                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${summary.finding().attributeName()}"></td>
+                  <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;"
+                      th:with="moduleOnly=${summary.finding().moduleId() != null and summary.finding().moduleId() == summary.finding().attributeName()}">
+                    <th:block th:if="${moduleOnly}"><b th:text="${summary.finding().moduleName()}"></b> <span style="color: #7f8c8d; font-size: 11px;">(module)</span></th:block>
+                    <th:block th:unless="${moduleOnly}">
+                      <span th:text="${summary.finding().attributeName()}"></span>
+                      <div th:if="${summary.finding().moduleId() != null}" style="color: #7f8c8d; font-size: 11px;"
+                           th:text="${summary.finding().moduleName()}"></div>
+                    </th:block>
+                  </td>
                   <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; color: #57606f;" th:text="${summary.finding().expected()}"></td>
                   <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1;" th:text="${summary.finding().found()}"></td>
                   <td style="padding: 4px 8px; border-bottom: 1px solid #eceff1; text-align: right;" th:text="${summary.count()}"></td>
