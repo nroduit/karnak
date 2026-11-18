@@ -165,8 +165,10 @@ class ProjectServiceTest {
 		bothSidesDestination.setDeIdentificationProjectEntity(projectEntity);
 		bothSidesDestination.setTagMorphingProjectEntity(projectEntity);
 
-		projectEntity.setDeidentificationDestinationEntities(List.of(deidentifyDestination, bothSidesDestination));
-		projectEntity.setTagMorphingDestinationEntities(List.of(bothSidesDestination));
+		Mockito.when(destinationRepositoryMock.findByDeIdentificationProjectEntity(projectEntity))
+			.thenReturn(List.of(deidentifyDestination, bothSidesDestination));
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(projectEntity))
+			.thenReturn(List.of(bothSidesDestination));
 
 		// Call service
 		ProjectDeleteBlockersModel blockers = projectService.collectDeleteBlockers(projectEntity);
@@ -194,7 +196,8 @@ class ProjectServiceTest {
 		DestinationEntity tagMorphingDestination = new DestinationEntity();
 		tagMorphingDestination.setUuid(UUID.randomUUID());
 		tagMorphingDestination.setTagMorphingProjectEntity(projectEntity);
-		projectEntity.setTagMorphingDestinationEntities(List.of(tagMorphingDestination));
+		Mockito.when(destinationRepositoryMock.findByTagMorphingProjectEntity(projectEntity))
+			.thenReturn(List.of(tagMorphingDestination));
 
 		// Call service
 		ProjectDeleteBlockedException exception = assertThrows(ProjectDeleteBlockedException.class,
@@ -204,6 +207,22 @@ class ProjectServiceTest {
 		assertEquals(tagMorphingDestination.getUuid(),
 				exception.getBlockers().getBlockers().get(0).getDestinationUuid());
 		Mockito.verify(projectRepositoryMock, Mockito.never()).deleteById(Mockito.anyLong());
+	}
+
+	@Test
+	void should_check_delete_blockers_against_database_not_stale_collections() {
+		// Init data: the in-memory entity still lists a destination that was repointed
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+		DestinationEntity staleDestination = new DestinationEntity();
+		staleDestination.setUuid(UUID.randomUUID());
+		projectEntity.setDeidentificationDestinationEntities(List.of(staleDestination));
+
+		// Call service
+		projectService.remove(projectEntity);
+
+		// Test results
+		Mockito.verify(projectRepositoryMock, Mockito.times(1)).deleteById(1L);
 	}
 
 	@Test

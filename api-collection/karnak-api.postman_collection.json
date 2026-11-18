@@ -297,6 +297,20 @@
 					}
 				},
 				{
+					"name": "List projects blocking profile deletion",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/profiles/{{profileUuid}}/delete-blockers",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "profiles", "{{profileUuid}}", "delete-blockers" ]
+						}
+					}
+				},
+				{
 					"name": "Delete a profile",
 					"request": {
 						"method": "DELETE",
@@ -482,6 +496,20 @@
 							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}",
 							"host": [ "{{baseUrl}}" ],
 							"path": [ "api", "projects", "{{projectUuid}}" ]
+						}
+					}
+				},
+				{
+					"name": "List destinations blocking project deletion",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json;version=1" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/projects/{{projectUuid}}/delete-blockers",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "projects", "{{projectUuid}}", "delete-blockers" ]
 						}
 					}
 				},

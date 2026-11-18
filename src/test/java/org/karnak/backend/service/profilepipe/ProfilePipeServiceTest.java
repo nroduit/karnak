@@ -152,6 +152,30 @@ class ProfilePipeServiceTest {
 	}
 
 	@Test
+	void should_reject_delete_when_projects_still_use_profile() {
+		// Init data
+		ProfileEntity profileEntity = new ProfileEntity();
+		profileEntity.setId(1L);
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setName("Study A");
+		Mockito.when(projectRepositoryMock.findByProfileEntityUuid(profileEntity.getUuid()))
+			.thenReturn(List.of(projectEntity));
+
+		// Call service
+		ProfilePipeService.DeleteProfileResult result = profilePipeService.deleteProfile(profileEntity);
+
+		// Test results
+		assertFalse(result.success());
+		assertTrue(result.isBlocked());
+		assertEquals(profileEntity.getUuid(), result.blockers().getProfileUuid());
+		assertEquals(1, result.blockers().getBlockers().size());
+		assertEquals(projectEntity.getUuid(), result.blockers().getBlockers().get(0).getProjectUuid());
+		assertEquals("Study A", result.blockers().getBlockers().get(0).getProjectName());
+		assertEquals("Cannot delete profile: it is used by project(s): Study A", result.errorMessage());
+		Mockito.verify(profileRepositoryMock, Mockito.never()).deleteById(Mockito.anyLong());
+	}
+
+	@Test
 	void should_assign_profile_to_group() {
 		// Init data
 		ProfileEntity profileEntity = new ProfileEntity();

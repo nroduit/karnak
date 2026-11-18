@@ -30,6 +30,15 @@ public interface DestinationRepo extends JpaRepository<DestinationEntity, Long> 
 	 */
 	List<DestinationEntity> findByTagMorphingProjectEntity(ProjectEntity tagMorphingProjectEntity);
 
+	/**
+	 * Destinations that reference the given project as their <b>de-identification</b>
+	 * project, read from the database rather than from a possibly stale inverse
+	 * collection.
+	 * @param deIdentificationProjectEntity the de-identification project
+	 * @return the destinations using it for de-identification
+	 */
+	List<DestinationEntity> findByDeIdentificationProjectEntity(ProjectEntity deIdentificationProjectEntity);
+
 	/** Destinations matching any of the given stable UUIDs (monitoring lookups). */
 	List<DestinationEntity> findByUuidIn(Collection<UUID> uuids);
 
