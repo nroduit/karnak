@@ -38,6 +38,7 @@ import org.karnak.frontend.component.ButtonFactory;
 import org.karnak.frontend.component.ConfirmDialog;
 import org.karnak.frontend.component.NewItemDialog;
 import org.karnak.frontend.profile.ProfileLogic;
+import org.karnak.frontend.util.DocumentationLinks;
 
 @NullUnmarked
 public class ProfileElementMainView extends VerticalLayout {
@@ -201,8 +202,7 @@ public class ProfileElementMainView extends VerticalLayout {
 	}
 
 	private Div orderInfoMessage() {
-		Anchor documentation = new Anchor("https://weasis.org/karnak-documentation/en/profiles/",
-				"See the documentation");
+		Anchor documentation = new Anchor(DocumentationLinks.url("en/profiles/"), "See the documentation");
 		documentation.setTarget("_blank");
 		Div message = new Div(
 				new Span("The order of the profile elements matters: they are applied from top to bottom. "),

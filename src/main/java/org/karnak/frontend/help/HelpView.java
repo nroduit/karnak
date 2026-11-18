@@ -20,6 +20,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import org.karnak.frontend.MainLayout;
+import org.karnak.frontend.util.DocumentationLinks;
 import org.springframework.beans.factory.annotation.Value;
 import org.weasis.core.util.annotations.Generated;
 
@@ -41,14 +42,14 @@ public class HelpView extends VerticalLayout {
 		setSizeFull();
 		H1 heading = new H1("Help");
 
-		Anchor generalDoc = new Anchor("https://weasis.org/karnak-documentation/", "General documentation");
+		Anchor generalDoc = new Anchor(DocumentationLinks.url(null), "General documentation");
 		generalDoc.setTarget("_blank");
 
-		Anchor installation = new Anchor("https://weasis.org/karnak-documentation/en/userguide/",
+		Anchor installation = new Anchor(DocumentationLinks.url("en/userguide/"),
 				"User guide: configuration and administration");
 		installation.setTarget("_blank");
 
-		Anchor profile = new Anchor("https://weasis.org/karnak-documentation/en/profiles/",
+		Anchor profile = new Anchor(DocumentationLinks.url("en/profiles/"),
 				"Build your own profile for de-identification or for tag morphing");
 		profile.setTarget("_blank");
 

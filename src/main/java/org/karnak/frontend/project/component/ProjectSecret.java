@@ -22,6 +22,7 @@ import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
 import org.karnak.backend.model.profilepipe.HMAC;
 import org.karnak.frontend.component.WarningConfirmDialog;
+import org.karnak.frontend.util.DocumentationLinks;
 import org.weasis.core.util.annotations.Generated;
 
 @Generated()
@@ -33,7 +34,7 @@ public class ProjectSecret extends Div {
 	private static final String REFER_LINK_TEXT = "For more details on the use of the project secret, please refer to the following link";
 
 	private static final Anchor REFER_LINK = new Anchor(
-			"https://weasis.org/karnak-documentation/en/userguide/projects/index.html#5-project-secret",
+			DocumentationLinks.url("en/userguide/projects/index.html#5-project-secret"),
 			"Project Secret Documentation");
 
 	private final Div messageWarningLayout = new Div();

@@ -114,6 +114,14 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.5.1</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <!-- Implementation-Version feeds spring.application.version and the documentation links -->
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+            </archive>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
