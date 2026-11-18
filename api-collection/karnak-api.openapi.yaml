@@ -335,6 +335,29 @@ paths:
           description: Profile deleted
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          description: Projects still use the profile
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ProfileDeleteBlockers"
+
+  /api/profiles/{profileUuid}/delete-blockers:
+    parameters:
+      - $ref: "#/components/parameters/ProfileUuid"
+    get:
+      tags: [Profile]
+      summary: List projects blocking profile deletion
+      operationId: listProfileDeleteBlockers
+      responses:
+        "200":
+          description: Blockers listed (may be empty)
+          content:
+            application/json;version=1:
+              schema:
+                $ref: "#/components/schemas/ProfileDeleteBlockers"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/profiles/import:
     post:
@@ -1465,6 +1488,27 @@ components:
               items:
                 type: string
                 format: uuid
+
+    ProfileDeleteBlocker:
+      type: object
+      description: A project that still uses the profile.
+      properties:
+        projectUuid:
+          type: string
+          format: uuid
+        projectName:
+          type: string
+
+    ProfileDeleteBlockers:
+      type: object
+      properties:
+        profileUuid:
+          type: string
+          format: uuid
+        blockers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileDeleteBlocker"
 
     ProjectDeleteBlocker:
       type: object

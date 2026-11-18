@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 import org.karnak.backend.data.entity.ArgumentEntity;
@@ -33,12 +34,15 @@ import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.enums.NodeEventType;
 import org.karnak.backend.enums.ProfileItemType;
 import org.karnak.backend.model.event.NodeEvent;
+import org.karnak.backend.model.profile.ProfileDeleteBlockerModel;
+import org.karnak.backend.model.profile.ProfileDeleteBlockersModel;
 import org.karnak.backend.model.profilebody.ProfilePipeBody;
 import org.karnak.frontend.profile.component.errorprofile.ProfileError;
 import org.karnak.frontend.util.CollatorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.weasis.core.util.annotations.Generated;
 
 @Service
@@ -407,27 +411,67 @@ public class ProfilePipeService {
 		return saved;
 	}
 
-	public record DeleteProfileResult(boolean success, @Nullable String errorMessage) {
-	}
+	/**
+	 * Outcome of {@link #deleteProfile}.
+	 *
+	 * @param success whether the profile was deleted
+	 * @param errorMessage human readable reason when it was not
+	 * @param blockers projects still using the profile, when that is the reason
+	 */
+	public record DeleteProfileResult(boolean success, @Nullable String errorMessage,
+			@Nullable ProfileDeleteBlockersModel blockers) {
 
-	public DeleteProfileResult deleteProfile(ProfileEntity profileEntity) {
-		if (profileEntity == null || profileEntity.getId() == null) {
-			return new DeleteProfileResult(false, "Profile not found");
+		public boolean isBlocked() {
+			return blockers != null && blockers.hasBlockers();
 		}
 
-		// Check if the profile is used by any project
-		List<ProjectEntity> projectsUsingProfile = projectRepo.findByProfileEntityUuid(profileEntity.getUuid());
-		if (!projectsUsingProfile.isEmpty()) {
-			String projectNames = projectsUsingProfile.stream()
-				.map(ProjectEntity::getName)
-				.reduce((a, b) -> a + ", " + b)
-				.orElse("");
-			return new DeleteProfileResult(false, "Cannot delete profile: it is used by project(s): " + projectNames);
+	}
+
+	/**
+	 * Projects that still use {@code profileEntity} and therefore block its deletion
+	 * until the caller assigns them another profile or deletes them. The references are
+	 * read from the database, not from the entity's collections, which may be stale when
+	 * the entity comes from the UI.
+	 */
+	public ProfileDeleteBlockersModel collectDeleteBlockers(ProfileEntity profileEntity) {
+		ProfileDeleteBlockersModel result = new ProfileDeleteBlockersModel();
+		result.setProfileUuid(profileEntity.getUuid());
+		if (profileEntity.getUuid() != null) {
+			for (ProjectEntity projectEntity : projectRepo.findByProfileEntityUuid(profileEntity.getUuid())) {
+				ProfileDeleteBlockerModel blocker = new ProfileDeleteBlockerModel();
+				blocker.setProjectUuid(projectEntity.getUuid());
+				blocker.setProjectName(projectEntity.getName());
+				result.getBlockers().add(blocker);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Remove a profile when no project still uses it.
+	 * @param profileEntity Profile to remove
+	 * @return the outcome; when projects still use the profile it is not deleted and the
+	 * result carries them as blockers
+	 */
+	@Transactional
+	public DeleteProfileResult deleteProfile(ProfileEntity profileEntity) {
+		if (profileEntity == null || profileEntity.getId() == null) {
+			return new DeleteProfileResult(false, "Profile not found", null);
+		}
+
+		ProfileDeleteBlockersModel blockers = collectDeleteBlockers(profileEntity);
+		if (blockers.hasBlockers()) {
+			String projectNames = blockers.getBlockers()
+				.stream()
+				.map(ProfileDeleteBlockerModel::getProjectName)
+				.collect(Collectors.joining(", "));
+			return new DeleteProfileResult(false, "Cannot delete profile: it is used by project(s): " + projectNames,
+					blockers);
 		}
 
 		profileRepo.deleteById(profileEntity.getId());
 		profileRepo.flush();
-		return new DeleteProfileResult(true, null);
+		return new DeleteProfileResult(true, null, null);
 	}
 
 	/**

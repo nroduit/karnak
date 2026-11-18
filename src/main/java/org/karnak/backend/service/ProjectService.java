@@ -155,13 +155,21 @@ public class ProjectService {
 
 	/**
 	 * Destinations that still reference {@code projectEntity} and therefore block
-	 * deletion until the caller repoints or deactivates them.
+	 * deletion until the caller repoints or deactivates them. The references are read
+	 * from the database, not from the entity's collections, which may be stale when the
+	 * entity comes from the UI.
 	 */
 	public ProjectDeleteBlockersModel collectDeleteBlockers(ProjectEntity projectEntity) {
 		// A destination using the project on both sides is listed once
 		Map<UUID, ProjectDeleteBlockerModel> blockersByDestination = new LinkedHashMap<>();
-		for (DestinationEntity destinationEntity : projectEntity.getAllDestinations()) {
-			blockersByDestination.computeIfAbsent(destinationEntity.getUuid(), uuid -> toBlocker(destinationEntity));
+		if (projectEntity.getId() != null) {
+			List<DestinationEntity> referencing = new ArrayList<>(
+					destinationRepo.findByDeIdentificationProjectEntity(projectEntity));
+			referencing.addAll(destinationRepo.findByTagMorphingProjectEntity(projectEntity));
+			for (DestinationEntity destinationEntity : referencing) {
+				blockersByDestination.computeIfAbsent(destinationEntity.getUuid(),
+						uuid -> toBlocker(destinationEntity));
+			}
 		}
 		ProjectDeleteBlockersModel result = new ProjectDeleteBlockersModel();
 		result.setProjectUuid(projectEntity.getUuid());

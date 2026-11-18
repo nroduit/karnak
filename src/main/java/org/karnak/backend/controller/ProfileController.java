@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,7 @@ import org.karnak.backend.constant.ApiVersion;
 import org.karnak.backend.constant.EndPoint;
 import org.karnak.backend.data.entity.ProfileElementEntity;
 import org.karnak.backend.data.entity.ProfileEntity;
+import org.karnak.backend.model.profile.ProfileDeleteBlockersModel;
 import org.karnak.backend.model.profile.ProfileElementMapper;
 import org.karnak.backend.model.profile.ProfileElementModel;
 import org.karnak.backend.model.profile.ProfileMapper;
@@ -165,11 +167,28 @@ public class ProfileController {
 		return ResponseEntity.ok(ProfileMapper.toModel(profilePipeService.updateProfile(existing)));
 	}
 
+	@Operation(summary = "List projects blocking profile deletion",
+			description = "Returns projects that still use this profile. The caller must assign them "
+					+ "another profile or delete them before DELETE succeeds.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Blockers listed"),
+			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
+	@GetMapping(value = "/{profileUuid}/delete-blockers", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasAuthority('karnak_read')")
+	public ResponseEntity<ProfileDeleteBlockersModel> listDeleteBlockers(
+			@PathVariable("profileUuid") UUID profileUuid) {
+		ProfileEntity existing = profilePipeService.retrieveProfileByUuid(profileUuid);
+		if (existing == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(profilePipeService.collectDeleteBlockers(existing));
+	}
+
 	@Operation(summary = "Delete a profile")
 	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Profile deleted"),
-			@ApiResponse(responseCode = "400", description = "Profile is used by one or more projects",
-					content = @Content),
-			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content) })
+			@ApiResponse(responseCode = "404", description = "Profile not found", content = @Content),
+			@ApiResponse(responseCode = "409", description = "Projects still use the profile",
+					content = @Content(mediaType = ApiVersion.V1_APPLICATION_JSON_VALUE,
+							schema = @Schema(implementation = ProfileDeleteBlockersModel.class))) })
 	@DeleteMapping(value = "/{profileUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasAuthority('karnak_delete')")
 	public ResponseEntity<?> deleteProfile(@PathVariable("profileUuid") UUID profileUuid) {
@@ -178,6 +197,9 @@ public class ProfileController {
 			return ResponseEntity.notFound().build();
 		}
 		ProfilePipeService.DeleteProfileResult result = profilePipeService.deleteProfile(existing);
+		if (result.isBlocked()) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(result.blockers());
+		}
 		if (!result.success()) {
 			return ResponseEntity.badRequest().body(List.of(result.errorMessage()));
 		}

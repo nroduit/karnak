@@ -19,6 +19,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
+import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.enums.DestinationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -29,6 +30,42 @@ class DestinationRepoTest {
 
 	@Autowired
 	private DestinationRepo repository;
+
+	@Autowired
+	private ProjectRepo projectRepo;
+
+	/**
+	 * Test the finders used to block a project delete: each side is matched only on its
+	 * own column.
+	 */
+	@Test
+	void shouldFindDestinationsByEachProjectSide() {
+		ProjectEntity deidentify = new ProjectEntity();
+		deidentify.setName("deidentify");
+		deidentify = projectRepo.saveAndFlush(deidentify);
+		ProjectEntity tagMorphing = new ProjectEntity();
+		tagMorphing.setName("tagMorphing");
+		tagMorphing = projectRepo.saveAndFlush(tagMorphing);
+
+		DestinationEntity entity = new DestinationEntity();
+		entity.setAeTitle("Name");
+		entity.setDestinationType(DestinationType.dicom);
+		entity.setHostname("hostName");
+		entity.setPort(1);
+		entity.setDeIdentificationProjectEntity(deidentify);
+		entity.setTagMorphingProjectEntity(tagMorphing);
+		entity = repository.saveAndFlush(entity);
+
+		assertEquals(List.of(entity.getId()),
+				repository.findByDeIdentificationProjectEntity(deidentify)
+					.stream()
+					.map(DestinationEntity::getId)
+					.toList());
+		assertTrue(repository.findByDeIdentificationProjectEntity(tagMorphing).isEmpty());
+		assertEquals(List.of(entity.getId()),
+				repository.findByTagMorphingProjectEntity(tagMorphing).stream().map(DestinationEntity::getId).toList());
+		assertTrue(repository.findByTagMorphingProjectEntity(deidentify).isEmpty());
+	}
 
 	/**
 	 * Test save and find record.
