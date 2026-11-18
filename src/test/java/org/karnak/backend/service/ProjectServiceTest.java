@@ -12,11 +12,13 @@ package org.karnak.backend.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.karnak.backend.data.entity.DestinationEntity;
@@ -27,6 +29,8 @@ import org.karnak.backend.data.repo.DestinationRepo;
 import org.karnak.backend.data.repo.ProjectGroupRepo;
 import org.karnak.backend.data.repo.ProjectRepo;
 import org.karnak.backend.model.event.NodeEvent;
+import org.karnak.backend.model.project.ProjectDeleteBlockerModel;
+import org.karnak.backend.model.project.ProjectDeleteBlockersModel;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -134,6 +138,72 @@ class ProjectServiceTest {
 
 		// Test results
 		Mockito.verify(projectRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyLong());
+	}
+
+	@Test
+	void should_report_destinations_blocking_project_delete() {
+		// Init data
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+		projectEntity.setUuid(UUID.randomUUID());
+		ProjectEntity otherProject = new ProjectEntity();
+		otherProject.setId(2L);
+		otherProject.setUuid(UUID.randomUUID());
+
+		// De-identification side only: its tag morphing project is another project
+		DestinationEntity deidentifyDestination = new DestinationEntity();
+		deidentifyDestination.setUuid(UUID.randomUUID());
+		deidentifyDestination.setDeIdentificationProjectEntity(projectEntity);
+		deidentifyDestination.setTagMorphingProjectEntity(otherProject);
+		ForwardNodeEntity forwardNode = new ForwardNodeEntity();
+		forwardNode.setUuid(UUID.randomUUID());
+		deidentifyDestination.setForwardNodeEntity(forwardNode);
+
+		// Both sides: must be reported once
+		DestinationEntity bothSidesDestination = new DestinationEntity();
+		bothSidesDestination.setUuid(UUID.randomUUID());
+		bothSidesDestination.setDeIdentificationProjectEntity(projectEntity);
+		bothSidesDestination.setTagMorphingProjectEntity(projectEntity);
+
+		projectEntity.setDeidentificationDestinationEntities(List.of(deidentifyDestination, bothSidesDestination));
+		projectEntity.setTagMorphingDestinationEntities(List.of(bothSidesDestination));
+
+		// Call service
+		ProjectDeleteBlockersModel blockers = projectService.collectDeleteBlockers(projectEntity);
+
+		// Test results
+		assertEquals(projectEntity.getUuid(), blockers.getProjectUuid());
+		assertEquals(2, blockers.getBlockers().size());
+		ProjectDeleteBlockerModel first = blockers.getBlockers().get(0);
+		assertEquals(deidentifyDestination.getUuid(), first.getDestinationUuid());
+		assertEquals(forwardNode.getUuid(), first.getForwardNodeUuid());
+		assertEquals(projectEntity.getUuid(), first.getDeIdentificationProjectUuid());
+		assertEquals(otherProject.getUuid(), first.getTagMorphingProjectUuid());
+		ProjectDeleteBlockerModel second = blockers.getBlockers().get(1);
+		assertEquals(bothSidesDestination.getUuid(), second.getDestinationUuid());
+		assertNull(second.getForwardNodeUuid());
+		assertEquals(projectEntity.getUuid(), second.getDeIdentificationProjectUuid());
+		assertEquals(projectEntity.getUuid(), second.getTagMorphingProjectUuid());
+	}
+
+	@Test
+	void should_reject_delete_when_destinations_still_reference_project() {
+		// Init data
+		ProjectEntity projectEntity = new ProjectEntity();
+		projectEntity.setId(1L);
+		DestinationEntity tagMorphingDestination = new DestinationEntity();
+		tagMorphingDestination.setUuid(UUID.randomUUID());
+		tagMorphingDestination.setTagMorphingProjectEntity(projectEntity);
+		projectEntity.setTagMorphingDestinationEntities(List.of(tagMorphingDestination));
+
+		// Call service
+		ProjectDeleteBlockedException exception = assertThrows(ProjectDeleteBlockedException.class,
+				() -> projectService.remove(projectEntity));
+
+		// Test results
+		assertEquals(tagMorphingDestination.getUuid(),
+				exception.getBlockers().getBlockers().get(0).getDestinationUuid());
+		Mockito.verify(projectRepositoryMock, Mockito.never()).deleteById(Mockito.anyLong());
 	}
 
 	@Test

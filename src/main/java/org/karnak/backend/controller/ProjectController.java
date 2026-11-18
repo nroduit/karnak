@@ -11,6 +11,7 @@ package org.karnak.backend.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,10 +25,12 @@ import org.karnak.backend.constant.EndPoint;
 import org.karnak.backend.data.entity.ProfileEntity;
 import org.karnak.backend.data.entity.ProjectEntity;
 import org.karnak.backend.data.entity.SecretEntity;
+import org.karnak.backend.model.project.ProjectDeleteBlockersModel;
 import org.karnak.backend.model.project.ProjectMapper;
 import org.karnak.backend.model.project.ProjectModel;
 import org.karnak.backend.model.project.SecretMapper;
 import org.karnak.backend.model.project.SecretModel;
+import org.karnak.backend.service.ProjectDeleteBlockedException;
 import org.karnak.backend.service.ProjectService;
 import org.karnak.backend.service.SecretService;
 import org.karnak.backend.service.profilepipe.ProfilePipeService;
@@ -147,17 +150,42 @@ public class ProjectController {
 		return ResponseEntity.ok(ProjectMapper.toModel(existing));
 	}
 
-	@Operation(summary = "Delete a project")
-	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Project deleted"),
+	@Operation(summary = "List destinations blocking project deletion",
+			description = "Returns destinations that still reference this project as their "
+					+ "de-identification or tag-morphing project. The caller must repoint or "
+					+ "deactivate them before DELETE succeeds.")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Blockers listed"),
 			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content) })
-	@DeleteMapping(value = "/{projectUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAuthority('karnak_delete')")
-	public ResponseEntity<Void> deleteProject(@PathVariable("projectUuid") UUID projectUuid) {
+	@GetMapping(value = "/{projectUuid}/delete-blockers", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasAuthority('karnak_read')")
+	public ResponseEntity<ProjectDeleteBlockersModel> listDeleteBlockers(
+			@PathVariable("projectUuid") UUID projectUuid) {
 		ProjectEntity existing = projectService.retrieveProjectByUuid(projectUuid);
 		if (existing == null) {
 			return ResponseEntity.notFound().build();
 		}
-		projectService.remove(existing);
+		return ResponseEntity.ok(projectService.collectDeleteBlockers(existing));
+	}
+
+	@Operation(summary = "Delete a project")
+	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Project deleted"),
+			@ApiResponse(responseCode = "404", description = "Project not found", content = @Content),
+			@ApiResponse(responseCode = "409", description = "Destinations still reference the project",
+					content = @Content(mediaType = ApiVersion.V1_APPLICATION_JSON_VALUE,
+							schema = @Schema(implementation = ProjectDeleteBlockersModel.class))) })
+	@DeleteMapping(value = "/{projectUuid}", produces = ApiVersion.V1_APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasAuthority('karnak_delete')")
+	public ResponseEntity<?> deleteProject(@PathVariable("projectUuid") UUID projectUuid) {
+		ProjectEntity existing = projectService.retrieveProjectByUuid(projectUuid);
+		if (existing == null) {
+			return ResponseEntity.notFound().build();
+		}
+		try {
+			projectService.remove(existing);
+		}
+		catch (ProjectDeleteBlockedException blocked) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(blocked.getBlockers());
+		}
 		return ResponseEntity.noContent().build();
 	}
 
