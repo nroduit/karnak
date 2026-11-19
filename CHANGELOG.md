@@ -2,12 +2,20 @@
 
 ## [v2.0.1](https://github.com/nroduit/karnak/tree/v2.0.1) (2026-11-19)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/2.0.1...v2.0.1)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v2.0.0...v2.0.1)
 
 **Implemented enhancements:**
 
+- Use SourceAET for forwarding [\#312](https://github.com/nroduit/karnak/issues/312)
 - feat: Preselect the project in the External pseudonym view from a query parameter [\#328](https://github.com/nroduit/karnak/issues/328)
 - feat: Preselect the project in the External pseudonym view from a que… [\#329](https://github.com/nroduit/karnak/pull/329) ([jdcshug](https://github.com/jdcshug))
+
+**Fixed bugs:**
+
+- Forwarding fails with arraycopy / null VR errors: race on shared DicomState progress attributes [\#325](https://github.com/nroduit/karnak/issues/325)
+- Forwarding reports Success \(0x0000\) when the destination actually rejected the study [\#323](https://github.com/nroduit/karnak/issues/323)
+- Conformance report: false Type 1/2 findings for Functional Group Macros in enhanced multi-frame IODs [\#315](https://github.com/nroduit/karnak/issues/315)
+- fix: security configuration [\#311](https://github.com/nroduit/karnak/issues/311)
 
 **Merged pull requests:**
 
@@ -23,26 +31,14 @@
 - perf\(expression\): share one ReflectivePropertyAccessor across SpEL evaluations [\#316](https://github.com/nroduit/karnak/pull/316) ([jbardet](https://github.com/jbardet))
 - ci: bump the actions group with 3 updates [\#314](https://github.com/nroduit/karnak/pull/314) ([dependabot[bot]](https://github.com/apps/dependabot))
 
-## [2.0.1](https://github.com/nroduit/karnak/tree/2.0.1) (2026-11-03)
+## [v2.0.0](https://github.com/nroduit/karnak/tree/v2.0.0) (2026-09-09)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/2.0.0...2.0.1)
-
-**Implemented enhancements:**
-
-- Use SourceAET for forwarding [\#312](https://github.com/nroduit/karnak/issues/312)
-
-**Fixed bugs:**
-
-- Forwarding fails with arraycopy / null VR errors: race on shared DicomState progress attributes [\#325](https://github.com/nroduit/karnak/issues/325)
-- Forwarding reports Success \(0x0000\) when the destination actually rejected the study [\#323](https://github.com/nroduit/karnak/issues/323)
-- Conformance report: false Type 1/2 findings for Functional Group Macros in enhanced multi-frame IODs [\#315](https://github.com/nroduit/karnak/issues/315)
-
-## [2.0.0](https://github.com/nroduit/karnak/tree/2.0.0) (2026-09-09)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/v2.0.0...2.0.0)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v1.1.1-beta...v2.0.0)
 
 **Implemented enhancements:**
 
+- Api endpoints implementation [\#306](https://github.com/nroduit/karnak/issues/306)
+- Modify roles retrieval [\#289](https://github.com/nroduit/karnak/issues/289)
 - Redesign the Profile Builder UI [\#279](https://github.com/nroduit/karnak/issues/279)
 - Improve the monitoring view [\#278](https://github.com/nroduit/karnak/issues/278)
 - Add optional one-level grouping to Profile, Project and Forward Node lists [\#274](https://github.com/nroduit/karnak/issues/274)
@@ -51,30 +47,13 @@
 - Improve login, authorization and role handling defects [\#270](https://github.com/nroduit/karnak/issues/270)
 - Improve role-based view security and stateful logic & inconsistent Spring scopes [\#269](https://github.com/nroduit/karnak/issues/269)
 - Conformance Report feature [\#266](https://github.com/nroduit/karnak/issues/266)
+- Pseudonym: skip issuer of patient id [\#265](https://github.com/nroduit/karnak/issues/265)
+- Improve transfers logs [\#264](https://github.com/nroduit/karnak/issues/264)
+- Monitoring: automatic deletion after a certain number of days [\#263](https://github.com/nroduit/karnak/issues/263)
+- Monitoring: add button delete all [\#262](https://github.com/nroduit/karnak/issues/262)
 - Update to Springboot 4, Vaadin 25 and Java 25 [\#260](https://github.com/nroduit/karnak/issues/260)
 - External pseudonyms: only Patient ID and External Pseudonym are mandatory [\#255](https://github.com/nroduit/karnak/issues/255)
 - Portable distribution for personnal use [\#253](https://github.com/nroduit/karnak/issues/253)
-- New Replace Action with secured call from REST API [\#246](https://github.com/nroduit/karnak/issues/246)
-
-**Fixed bugs:**
-
-- fix: security configuration [\#311](https://github.com/nroduit/karnak/issues/311)
-- Destination not visible in UI [\#268](https://github.com/nroduit/karnak/issues/268)
-- Issue when saving a Destination [\#267](https://github.com/nroduit/karnak/issues/267)
-- Bug: expression.on.tags: expr argument silently fails to save when longer than 255 characters [\#258](https://github.com/nroduit/karnak/issues/258)
-- Bug: transfer\_status.reason column truncates long exception messages \(varchar 255\) [\#257](https://github.com/nroduit/karnak/issues/257)
-- Improve refreshing loading icon status [\#254](https://github.com/nroduit/karnak/issues/254)
-- Sort the profile list [\#252](https://github.com/nroduit/karnak/issues/252)
-- When deleting a destination or forward node the monitoring throws an Entity Not Found Exception [\#248](https://github.com/nroduit/karnak/issues/248)
-
-## [v2.0.0](https://github.com/nroduit/karnak/tree/v2.0.0) (2026-09-09)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20260729204014_b4f5c485...v2.0.0)
-
-**Implemented enhancements:**
-
-- Api endpoints implementation [\#306](https://github.com/nroduit/karnak/issues/306)
-- Modify roles retrieval [\#289](https://github.com/nroduit/karnak/issues/289)
 - Api [\#305](https://github.com/nroduit/karnak/pull/305) ([jdcshug](https://github.com/jdcshug))
 - feat: missing jspecify-nullaway checks [\#293](https://github.com/nroduit/karnak/pull/293) ([jdcshug](https://github.com/jdcshug))
 - feat: Get roles from access token instead of id token [\#288](https://github.com/nroduit/karnak/pull/288) ([jdcshug](https://github.com/jdcshug))
@@ -82,6 +61,10 @@
 
 **Fixed bugs:**
 
+- Destination not visible in UI [\#268](https://github.com/nroduit/karnak/issues/268)
+- Issue when saving a Destination [\#267](https://github.com/nroduit/karnak/issues/267)
+- Bug: expression.on.tags: expr argument silently fails to save when longer than 255 characters [\#258](https://github.com/nroduit/karnak/issues/258)
+- Bug: transfer\_status.reason column truncates long exception messages \(varchar 255\) [\#257](https://github.com/nroduit/karnak/issues/257)
 - fix: security [\#310](https://github.com/nroduit/karnak/pull/310) ([jdcshug](https://github.com/jdcshug))
 
 **Closed issues:**
@@ -118,53 +101,51 @@
 - Springboot 4, Vaadin 25 and Java 25. [\#259](https://github.com/nroduit/karnak/pull/259) ([nroduit](https://github.com/nroduit))
 - Apply the theme custom-theme and migrate the custom-theme for vaadin 24 [\#256](https://github.com/nroduit/karnak/pull/256) ([mhenx](https://github.com/mhenx))
 
-## [20260729204014_b4f5c485](https://github.com/nroduit/karnak/tree/20260729204014_b4f5c485) (2026-06-16)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20260413111019_ddc7e456...20260729204014_b4f5c485)
-
-**Implemented enhancements:**
-
-- Pseudonym: skip issuer of patient id [\#265](https://github.com/nroduit/karnak/issues/265)
-- Improve transfers logs [\#264](https://github.com/nroduit/karnak/issues/264)
-- Monitoring: automatic deletion after a certain number of days [\#263](https://github.com/nroduit/karnak/issues/263)
-- Monitoring: add button delete all [\#262](https://github.com/nroduit/karnak/issues/262)
-
-## [20260413111019_ddc7e456](https://github.com/nroduit/karnak/tree/20260413111019_ddc7e456) (2026-03-16)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20260112091631_ff43ba02...20260413111019_ddc7e456)
-
-## [20260112091631_ff43ba02](https://github.com/nroduit/karnak/tree/20260112091631_ff43ba02) (2026-01-07)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/v1.1.1-beta...20260112091631_ff43ba02)
-
 ## [v1.1.1-beta](https://github.com/nroduit/karnak/tree/v1.1.1-beta) (2025-11-27)
 
 [Full Changelog](https://github.com/nroduit/karnak/compare/v1.1.0...v1.1.1-beta)
 
+**Fixed bugs:**
+
+- Improve refreshing loading icon status [\#254](https://github.com/nroduit/karnak/issues/254)
+
 ## [v1.1.0](https://github.com/nroduit/karnak/tree/v1.1.0) (2025-11-24)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250227142010_d2685990...v1.1.0)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v1.0.3...v1.1.0)
 
 **Implemented enhancements:**
 
+- New Replace Action with secured call from REST API [\#246](https://github.com/nroduit/karnak/issues/246)
 - Email notifications fix: do not display rejected instances as errors [\#240](https://github.com/nroduit/karnak/issues/240)
 - Improvements of profile element Add Action [\#237](https://github.com/nroduit/karnak/issues/237)
 - New profile action : add tag [\#228](https://github.com/nroduit/karnak/issues/228)
+- Develop a helper to generate the authorization header in the Destination STOW Form [\#227](https://github.com/nroduit/karnak/issues/227)
 - Update DICOM's JSON reference files [\#221](https://github.com/nroduit/karnak/issues/221)
+- New Profile Expression : ComputePatientAge\(\) [\#220](https://github.com/nroduit/karnak/issues/220)
+- External Pseudonym tab : add delete all patients [\#213](https://github.com/nroduit/karnak/issues/213)
+- New expression: call to an API endpoint  [\#209](https://github.com/nroduit/karnak/issues/209)
+- Upgrade various dependencies [\#208](https://github.com/nroduit/karnak/issues/208)
+- Upgrade Vaadin to version 24 [\#207](https://github.com/nroduit/karnak/issues/207)
+- Springboot 3 migration [\#206](https://github.com/nroduit/karnak/issues/206)
 - Clean pixel data profile: mask position issue when the same equipement produces different images sizes [\#179](https://github.com/nroduit/karnak/issues/179)
 - Clean pixel data limitation [\#175](https://github.com/nroduit/karnak/issues/175)
 - Add description to the switching different KHEOPS album [\#147](https://github.com/nroduit/karnak/issues/147)
 - Profile min SOP [\#96](https://github.com/nroduit/karnak/issues/96)
+- \[Clean Pixel\] Define exclusion rules in the UI [\#37](https://github.com/nroduit/karnak/issues/37)
 - Temporary destination in case of error [\#15](https://github.com/nroduit/karnak/issues/15)
 - Upgrade dependencies \(SpringBoot 3, Vaadin 24, ...\)+ new expression to call an API endpoint [\#210](https://github.com/nroduit/karnak/pull/210) ([jdcshug](https://github.com/jdcshug))
 
 **Fixed bugs:**
 
+- Sort the profile list [\#252](https://github.com/nroduit/karnak/issues/252)
+- When deleting a destination or forward node the monitoring throws an Entity Not Found Exception [\#248](https://github.com/nroduit/karnak/issues/248)
 - HTTP 405 error when accessing to the static images \(logo and spinner gif\) [\#243](https://github.com/nroduit/karnak/issues/243)
+- Fix NPE loading spinner [\#224](https://github.com/nroduit/karnak/issues/224)
 
 **Closed issues:**
 
 - New Profile Expression Action : ExcludeInstance\(\) [\#235](https://github.com/nroduit/karnak/issues/235)
+- Expression do not handle multiple string values of a DICOM tag [\#211](https://github.com/nroduit/karnak/issues/211)
 - Add documentation on how expressions work [\#75](https://github.com/nroduit/karnak/issues/75)
 
 **Merged pull requests:**
@@ -172,135 +153,9 @@
 - build\(deps\): bump org.json:json from 20230227 to 20231013 [\#212](https://github.com/nroduit/karnak/pull/212) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Feat/shift by date [\#204](https://github.com/nroduit/karnak/pull/204) ([redwork321](https://github.com/redwork321))
 
-## [20250227142010_d2685990](https://github.com/nroduit/karnak/tree/20250227142010_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20260112091424_d2685990...20250227142010_d2685990)
-
-## [20260112091424_d2685990](https://github.com/nroduit/karnak/tree/20260112091424_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20251125101024_d2685990...20260112091424_d2685990)
-
-## [20251125101024_d2685990](https://github.com/nroduit/karnak/tree/20251125101024_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20251125100342_d2685990...20251125101024_d2685990)
-
-## [20251125100342_d2685990](https://github.com/nroduit/karnak/tree/20251125100342_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250909172312_d2685990...20251125100342_d2685990)
-
-## [20250909172312_d2685990](https://github.com/nroduit/karnak/tree/20250909172312_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250303150810_d2685990...20250909172312_d2685990)
-
-## [20250303150810_d2685990](https://github.com/nroduit/karnak/tree/20250303150810_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250303150455_d2685990...20250303150810_d2685990)
-
-## [20250303150455_d2685990](https://github.com/nroduit/karnak/tree/20250303150455_d2685990) (2025-02-27)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250219090024_09fd56f6...20250303150455_d2685990)
-
-**Implemented enhancements:**
-
-- Develop a helper to generate the authorization header in the Destination STOW Form [\#227](https://github.com/nroduit/karnak/issues/227)
-- New Profile Expression : ComputePatientAge\(\) [\#220](https://github.com/nroduit/karnak/issues/220)
-- External Pseudonym tab : add delete all patients [\#213](https://github.com/nroduit/karnak/issues/213)
-- \[Clean Pixel\] Define exclusion rules in the UI [\#37](https://github.com/nroduit/karnak/issues/37)
-
-**Fixed bugs:**
-
-- Fix NPE loading spinner [\#224](https://github.com/nroduit/karnak/issues/224)
-
-**Closed issues:**
-
-- Expression do not handle multiple string values of a DICOM tag [\#211](https://github.com/nroduit/karnak/issues/211)
-
-## [20250219090024_09fd56f6](https://github.com/nroduit/karnak/tree/20250219090024_09fd56f6) (2025-02-18)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250218152100_d4f3827f...20250219090024_09fd56f6)
-
-## [20250218152100_d4f3827f](https://github.com/nroduit/karnak/tree/20250218152100_d4f3827f) (2025-02-18)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250120085213_c971bd78...20250218152100_d4f3827f)
-
-## [20250120085213_c971bd78](https://github.com/nroduit/karnak/tree/20250120085213_c971bd78) (2024-12-04)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20250120085054_b2d15d89...20250120085213_c971bd78)
-
-## [20250120085054_b2d15d89](https://github.com/nroduit/karnak/tree/20250120085054_b2d15d89) (2024-10-21)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20241022091208_b2d15d89...20250120085054_b2d15d89)
-
-## [20241022091208_b2d15d89](https://github.com/nroduit/karnak/tree/20241022091208_b2d15d89) (2024-10-21)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20240711094832_6c44ba80...20241022091208_b2d15d89)
-
-## [20240711094832_6c44ba80](https://github.com/nroduit/karnak/tree/20240711094832_6c44ba80) (2024-02-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20240226085505_6c44ba80...20240711094832_6c44ba80)
-
-## [20240226085505_6c44ba80](https://github.com/nroduit/karnak/tree/20240226085505_6c44ba80) (2024-02-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20241015105058_6c44ba80...20240226085505_6c44ba80)
-
-## [20241015105058_6c44ba80](https://github.com/nroduit/karnak/tree/20241015105058_6c44ba80) (2024-02-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20241022091022_6c44ba80...20241015105058_6c44ba80)
-
-## [20241022091022_6c44ba80](https://github.com/nroduit/karnak/tree/20241022091022_6c44ba80) (2024-02-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20240226085321_5b759557...20241022091022_6c44ba80)
-
-**Implemented enhancements:**
-
-- New expression: call to an API endpoint  [\#209](https://github.com/nroduit/karnak/issues/209)
-- Upgrade various dependencies [\#208](https://github.com/nroduit/karnak/issues/208)
-- Upgrade Vaadin to version 24 [\#207](https://github.com/nroduit/karnak/issues/207)
-- Springboot 3 migration [\#206](https://github.com/nroduit/karnak/issues/206)
-
-## [20240226085321_5b759557](https://github.com/nroduit/karnak/tree/20240226085321_5b759557) (2023-11-24)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20231127105204_5b759557...20240226085321_5b759557)
-
-## [20231127105204_5b759557](https://github.com/nroduit/karnak/tree/20231127105204_5b759557) (2023-11-24)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20231009091645_cb017e07...20231127105204_5b759557)
-
-## [20231009091645_cb017e07](https://github.com/nroduit/karnak/tree/20231009091645_cb017e07) (2023-09-25)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20230821110308_20420d1d...20231009091645_cb017e07)
-
-## [20230821110308_20420d1d](https://github.com/nroduit/karnak/tree/20230821110308_20420d1d) (2023-08-21)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20230419114507_c37fbeb2...20230821110308_20420d1d)
-
-## [20230419114507_c37fbeb2](https://github.com/nroduit/karnak/tree/20230419114507_c37fbeb2) (2023-04-19)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20230818101530_c37fbeb2...20230419114507_c37fbeb2)
-
-## [20230818101530_c37fbeb2](https://github.com/nroduit/karnak/tree/20230818101530_c37fbeb2) (2023-04-19)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/v1.0.3...20230818101530_c37fbeb2)
-
 ## [v1.0.3](https://github.com/nroduit/karnak/tree/v1.0.3) (2023-03-31)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/20230329164927_3ce51fb2...v1.0.3)
-
-**Fixed bugs:**
-
-- Concurrency issue: association error for some instances with DICOM \(dimse\) destination [\#202](https://github.com/nroduit/karnak/issues/202)
-
-**Merged pull requests:**
-
-- Mail sender, fix transfers dicom, modality + sop class uid in monitoring/notification \#198 \#199 \#200 [\#201](https://github.com/nroduit/karnak/pull/201) ([jdcshug](https://github.com/jdcshug))
-
-## [20230329164927_3ce51fb2](https://github.com/nroduit/karnak/tree/20230329164927_3ce51fb2) (2023-03-29)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/20230315151822_5e8683a5...20230329164927_3ce51fb2)
-
-## [20230315151822_5e8683a5](https://github.com/nroduit/karnak/tree/20230315151822_5e8683a5) (2023-03-15)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/v1.0.2...20230315151822_5e8683a5)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v1.0.2...v1.0.3)
 
 **Implemented enhancements:**
 
@@ -308,9 +163,17 @@
 - Fix: dynamic new sop class uid in dicom transfers  [\#199](https://github.com/nroduit/karnak/issues/199)
 - Mail sender in parameter [\#198](https://github.com/nroduit/karnak/issues/198)
 
+**Fixed bugs:**
+
+- Concurrency issue: association error for some instances with DICOM \(dimse\) destination [\#202](https://github.com/nroduit/karnak/issues/202)
+
 **Closed issues:**
 
 - Check behaviour hazelcast multi instance [\#176](https://github.com/nroduit/karnak/issues/176)
+
+**Merged pull requests:**
+
+- Mail sender, fix transfers dicom, modality + sop class uid in monitoring/notification \#198 \#199 \#200 [\#201](https://github.com/nroduit/karnak/pull/201) ([jdcshug](https://github.com/jdcshug))
 
 ## [v1.0.2](https://github.com/nroduit/karnak/tree/v1.0.2) (2022-11-05)
 
@@ -326,16 +189,7 @@
 
 ## [v1.0.0](https://github.com/nroduit/karnak/tree/v1.0.0) (2022-03-05)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.16...v1.0.0)
-
-**Merged pull requests:**
-
-- fix: switching album issue [\#195](https://github.com/nroduit/karnak/pull/195) ([jdcshug](https://github.com/jdcshug))
-- monitoring + notification + export + secret history + pseudonym mapping [\#184](https://github.com/nroduit/karnak/pull/184) ([jdcshug](https://github.com/jdcshug))
-
-## [1.0.16](https://github.com/nroduit/karnak/tree/1.0.16) (2022-02-28)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.14...1.0.16)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v0.9.9...v1.0.0)
 
 **Implemented enhancements:**
 
@@ -346,6 +200,7 @@
 - Notification improvement [\#187](https://github.com/nroduit/karnak/issues/187)
 - Create pseudonym mapping view [\#186](https://github.com/nroduit/karnak/issues/186)
 - Create monitoring view [\#185](https://github.com/nroduit/karnak/issues/185)
+- Vulnerability CVE-2021-42550 \(aka LOGBACK-1591\) [\#180](https://github.com/nroduit/karnak/issues/180)
 
 **Fixed bugs:**
 
@@ -353,17 +208,14 @@
 - Handle 409 http exception in order to not rethrow exception = means file is already in the destination [\#193](https://github.com/nroduit/karnak/issues/193)
 - Upgrade version weasis-dicom-tools in order to fix "Go Away" exceptions [\#191](https://github.com/nroduit/karnak/issues/191)
 
-## [1.0.14](https://github.com/nroduit/karnak/tree/1.0.14) (2022-02-21)
+**Merged pull requests:**
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/v0.9.9...1.0.14)
-
-**Implemented enhancements:**
-
-- Vulnerability CVE-2021-42550 \(aka LOGBACK-1591\) [\#180](https://github.com/nroduit/karnak/issues/180)
+- fix: switching album issue [\#195](https://github.com/nroduit/karnak/pull/195) ([jdcshug](https://github.com/jdcshug))
+- monitoring + notification + export + secret history + pseudonym mapping [\#184](https://github.com/nroduit/karnak/pull/184) ([jdcshug](https://github.com/jdcshug))
 
 ## [v0.9.9](https://github.com/nroduit/karnak/tree/v0.9.9) (2021-12-20)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.12...v0.9.9)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v0.9.8...v0.9.9)
 
 **Implemented enhancements:**
 
@@ -376,21 +228,9 @@
 - Feat/deidentification activ deactiv front refactoring [\#173](https://github.com/nroduit/karnak/pull/173) ([jdcshug](https://github.com/jdcshug))
 - feat: default values notification [\#171](https://github.com/nroduit/karnak/pull/171) ([jdcshug](https://github.com/jdcshug))
 
-## [1.0.12](https://github.com/nroduit/karnak/tree/1.0.12) (2021-10-04)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.11...1.0.12)
-
-## [1.0.11](https://github.com/nroduit/karnak/tree/1.0.11) (2021-09-08)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.10...1.0.11)
-
-## [1.0.10](https://github.com/nroduit/karnak/tree/1.0.10) (2021-09-06)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/v0.9.8...1.0.10)
-
 ## [v0.9.8](https://github.com/nroduit/karnak/tree/v0.9.8) (2021-08-26)
 
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.9...v0.9.8)
+[Full Changelog](https://github.com/nroduit/karnak/compare/v0.9.7...v0.9.8)
 
 **Implemented enhancements:**
 
@@ -399,6 +239,11 @@
 - Springboot/junit/liquibase versions upgrade  [\#165](https://github.com/nroduit/karnak/issues/165)
 - Enable/disable destination buttons \(save/delete\) when transfer is in progress  [\#163](https://github.com/nroduit/karnak/issues/163)
 - Destinations: loading spinner transfer activity [\#161](https://github.com/nroduit/karnak/issues/161)
+- Switching in the KHEOPS album cannot be applied with the KEEP action on the study UID and / or the serial UID [\#156](https://github.com/nroduit/karnak/issues/156)
+- Image transcoding with a specific transfer syntax [\#139](https://github.com/nroduit/karnak/issues/139)
+- Inject an external id provider [\#88](https://github.com/nroduit/karnak/issues/88)
+- Check that the expression does not corrupt the DICOM [\#74](https://github.com/nroduit/karnak/issues/74)
+- Improve the notification module UI [\#42](https://github.com/nroduit/karnak/issues/42)
 - Adjust clickable zone checkbox [\#168](https://github.com/nroduit/karnak/pull/168) ([jdcshug](https://github.com/jdcshug))
 - feat: add profile version [\#166](https://github.com/nroduit/karnak/pull/166) ([jdcshug](https://github.com/jdcshug))
 - Upgrade versions springboot/junit/liquibase [\#164](https://github.com/nroduit/karnak/pull/164) ([jdcshug](https://github.com/jdcshug))
@@ -410,53 +255,6 @@
 - Bump vaadin-bom from 19.0.6 to 19.0.9 [\#158](https://github.com/nroduit/karnak/pull/158) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Fix hash uidkeep [\#157](https://github.com/nroduit/karnak/pull/157) ([nicolasvandooren](https://github.com/nicolasvandooren))
 - feat: add condition clean pixel data [\#155](https://github.com/nroduit/karnak/pull/155) ([jdcshug](https://github.com/jdcshug))
-
-## [1.0.9](https://github.com/nroduit/karnak/tree/1.0.9) (2021-08-24)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.8...1.0.9)
-
-## [1.0.8](https://github.com/nroduit/karnak/tree/1.0.8) (2021-08-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.7...1.0.8)
-
-## [1.0.7](https://github.com/nroduit/karnak/tree/1.0.7) (2021-08-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.6...1.0.7)
-
-## [1.0.6](https://github.com/nroduit/karnak/tree/1.0.6) (2021-08-20)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.5...1.0.6)
-
-## [1.0.5](https://github.com/nroduit/karnak/tree/1.0.5) (2021-08-18)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.4...1.0.5)
-
-**Implemented enhancements:**
-
-- Improve the notification module UI [\#42](https://github.com/nroduit/karnak/issues/42)
-
-## [1.0.4](https://github.com/nroduit/karnak/tree/1.0.4) (2021-07-23)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.3...1.0.4)
-
-## [1.0.3](https://github.com/nroduit/karnak/tree/1.0.3) (2021-07-20)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.2...1.0.3)
-
-## [1.0.2](https://github.com/nroduit/karnak/tree/1.0.2) (2021-07-20)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/1.0.1...1.0.2)
-
-## [1.0.1](https://github.com/nroduit/karnak/tree/1.0.1) (2021-07-20)
-
-[Full Changelog](https://github.com/nroduit/karnak/compare/v0.9.7...1.0.1)
-
-**Implemented enhancements:**
-
-- Switching in the KHEOPS album cannot be applied with the KEEP action on the study UID and / or the serial UID [\#156](https://github.com/nroduit/karnak/issues/156)
-- Image transcoding with a specific transfer syntax [\#139](https://github.com/nroduit/karnak/issues/139)
-- Inject an external id provider [\#88](https://github.com/nroduit/karnak/issues/88)
-- Check that the expression does not corrupt the DICOM [\#74](https://github.com/nroduit/karnak/issues/74)
 
 ## [v0.9.7](https://github.com/nroduit/karnak/tree/v0.9.7) (2021-06-11)
 
