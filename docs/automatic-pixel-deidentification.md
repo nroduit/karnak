@@ -98,7 +98,7 @@ profileElements:
 ```
 
 A complete example is documented in the
-[Karnak documentation](https://weasis.org/karnak-documentation/en/profiles/masks/#automatic-pixel-data-de-identification).
+[Karnak documentation](https://karnak.weasis.org/en/profiles/masks/#automatic-pixel-data-de-identification).
 
 ---
 

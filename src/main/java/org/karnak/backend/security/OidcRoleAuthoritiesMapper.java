@@ -68,10 +68,9 @@ public class OidcRoleAuthoritiesMapper {
 			.filter(roleName -> SecurityRole.fromType(roleName) == null)
 			.collect(Collectors.toSet());
 		if (!unknownRoleNames.isEmpty()) {
-			log.warn(
-					"OIDC (access token): role(s) {} on the \"{}\" client do not match any known Karnak role "
-							+ "(expected one of: admin, investigator, user) and are ignored.",
-					unknownRoleNames, KARNAK_CLIENT);
+			log.warn("OIDC (access token): role(s) {} on the \"{}\" client do not match any known Karnak role "
+					+ "(expected one of: admin, investigator, user, karnak_read, karnak_search, karnak_create, "
+					+ "karnak_update, karnak_delete) and are ignored.", unknownRoleNames, KARNAK_CLIENT);
 		}
 		return mappedAuthorities;
 	}

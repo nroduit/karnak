@@ -27,7 +27,7 @@ import org.karnak.KarnakApplication;
 @NullMarked
 public final class DocumentationLinks {
 
-	public static final String BASE_URL = "https://weasis.org/karnak-documentation/";
+	public static final String BASE_URL = "https://karnak.weasis.org/";
 
 	/** Version taken from the jar manifest; absent when running from the IDE. */
 	private static final @Nullable String VERSION = KarnakApplication.class.getPackage().getImplementationVersion();

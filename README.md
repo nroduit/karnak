@@ -6,7 +6,7 @@
 
 ![Karnak DICOM gateway: DICOM data from every modality is transformed into de-identified, tag-morphed and conformant data](img/karnak-gateway.svg)
 
-For detailed usage instructions, refer to the [Karnak User Guide](https://weasis.org/karnak-documentation/).
+For detailed usage instructions, refer to the [Karnak User Guide](https://karnak.weasis.org/).
 
 # How it works
 
@@ -22,16 +22,16 @@ A typical deployment feeds a research repository that lives **outside** the hosp
 
 ## Processing pipeline
 
-The forward node addressed by the called AE Title checks the calling source, then routes each accepted instance to one or more destinations, where it goes through the following pipeline once per destination. Every step is configured on the [destination](https://weasis.org/karnak-documentation/en/userguide/gateway/destinations/).
+The forward node addressed by the called AE Title checks the calling source, then routes each accepted instance to one or more destinations, where it goes through the following pipeline once per destination. Every step is configured on the [destination](https://karnak.weasis.org/en/userguide/gateway/destinations/).
 
-The pipeline is illustrated step by step in the user guide: [How Karnak works, processing pipeline](https://weasis.org/karnak-documentation/en/overview/#processing-pipeline).
+The pipeline is illustrated step by step in the user guide: [How Karnak works, processing pipeline](https://karnak.weasis.org/en/overview/#processing-pipeline).
 
-1. **Source check**: if the forward node declares [sources](https://weasis.org/karnak-documentation/en/userguide/gateway/sources/), only those AE Titles (and optionally hostnames) are accepted; any other caller gets the DICOM status *Not authorized* and nothing is forwarded.
-2. **Filtering**: a destination can restrict the forwarded SOP Classes and evaluate an [expression on the DICOM attributes](https://weasis.org/karnak-documentation/en/profiles/conditions/); instances that do not match are skipped for that destination only.
-3. **Profile**: the destination applies either a [de-identification profile](https://weasis.org/karnak-documentation/en/profiles/) (DICOM PS3.15 basic profile, tag actions, date shifting, UID re-mapping, pseudonymization driven by the project secret) or a tag-morphing profile that normalizes attributes without de-identifying.
-4. **Pixel cleaning**: burned-in annotations are masked with hand-defined areas or automatically with the [OCR service](https://weasis.org/karnak-documentation/en/profiles/masks/), and head CT studies can be defaced.
+1. **Source check**: if the forward node declares [sources](https://karnak.weasis.org/en/userguide/gateway/sources/), only those AE Titles (and optionally hostnames) are accepted; any other caller gets the DICOM status *Not authorized* and nothing is forwarded.
+2. **Filtering**: a destination can restrict the forwarded SOP Classes and evaluate an [expression on the DICOM attributes](https://karnak.weasis.org/en/profiles/conditions/); instances that do not match are skipped for that destination only.
+3. **Profile**: the destination applies either a [de-identification profile](https://karnak.weasis.org/en/profiles/) (DICOM PS3.15 basic profile, tag actions, date shifting, UID re-mapping, pseudonymization driven by the project secret) or a tag-morphing profile that normalizes attributes without de-identifying.
+4. **Pixel cleaning**: burned-in annotations are masked with hand-defined areas or automatically with the [OCR service](https://karnak.weasis.org/en/profiles/masks/), and head CT studies can be defaced.
 5. **Transfer syntax**: the image is transcoded when the destination requires another transfer syntax.
-6. **Send and report**: the instance is sent with C-STORE or STOW-RS; the transfer is tracked in [Monitoring](https://weasis.org/karnak-documentation/en/userguide/monitoring/), summarized in email notifications and optionally validated in a [DICOM conformance report](https://weasis.org/karnak-documentation/en/userguide/conformancereport/).
+6. **Send and report**: the instance is sent with C-STORE or STOW-RS; the transfer is tracked in [Monitoring](https://karnak.weasis.org/en/userguide/monitoring/), summarized in email notifications and optionally validated in a [DICOM conformance report](https://karnak.weasis.org/en/userguide/conformancereport/).
 
 # Features
 
@@ -51,7 +51,7 @@ The pipeline is illustrated step by step in the user guide: [How Karnak works, p
   replace, hash), date shifting, UID re-mapping, add/replace tags, and API-based value replacement.
 - Pixel-data cleaning: mask burned-in annotations and deface (remove facial features from head studies).
 - Deterministic pseudonymization (HMAC-based), so the same patient always maps to the same pseudonym.
-- [Build your own de-identification profile](https://weasis.org/karnak-documentation/en/profiles),
+- [Build your own de-identification profile](https://karnak.weasis.org/en/profiles),
   edit it directly as YAML in the UI, and import/export profiles to share them with other users.
 
 ## Pseudonym mapping (External ID)
@@ -82,7 +82,7 @@ You don't need to build Karnak from source to use it. Pick the option that fits 
 
 | I want to… | Use | Details |
 |------------|-----|---------|
-| Run Karnak in production | **Docker** | [Installation guide](https://weasis.org/karnak-documentation/en/installation/) — Docker Compose with Postgres + Redis, the recommended setup |
+| Run Karnak in production | **Docker** | [Installation guide](https://karnak.weasis.org/en/installation/) — Docker Compose with Postgres + Redis, the recommended setup |
 | Try Karnak quickly on a single machine | **Portable package** | Self-contained, embedded database, no external services — see [Run portable package](#run-portable-package) |
 | Contribute to / develop Karnak | **Build from source** | See [Build Karnak](#build-karnak) and [Debug Karnak](#debug-karnak) |
 
@@ -94,7 +94,7 @@ Once Karnak is running, with the default configuration:
 - **Default credentials**: user `admin`, password `karnak` (change these in production: `KARNAK_LOGIN_ADMIN` / `KARNAK_LOGIN_PASSWORD_FILE` with docker, `KARNAK_ADMIN` / `KARNAK_PASSWORD` otherwise)
 - **DICOM listener**: AE Title `KARNAK-GATEWAY`, port `11119` (the portable package uses `11112`) — point your modality or PACS here to send studies to Karnak
 
-The web port (`KARNAK_WEB_PORT`), the listener AE Title (`DICOM_LISTENER_AET`) and port (`DICOM_LISTENER_PORT`), as well as the sources and destinations, are all configurable; see the [Karnak User Guide](https://weasis.org/karnak-documentation/).
+The web port (`KARNAK_WEB_PORT`), the listener AE Title (`DICOM_LISTENER_AET`) and port (`DICOM_LISTENER_PORT`), as well as the sources and destinations, are all configurable; see the [Karnak User Guide](https://karnak.weasis.org/).
 
 # Build Karnak
 
@@ -115,7 +115,7 @@ Note: on Windows the bash.exe must be specified: `mvn clean install -Pportable -
 # Run Karnak
 
 ## Run with docker
-To configure and run Karnak with docker compose (Karnak + Postgres + Redis), follow the [installation guide](https://weasis.org/karnak-documentation/en/installation/). This is the recommended setup for production.
+To configure and run Karnak with docker compose (Karnak + Postgres + Redis), follow the [installation guide](https://karnak.weasis.org/en/installation/). This is the recommended setup for production.
 
 ## Run portable package
 After building the portable package (see [Build for portable package](#build-for-portable-package)), go into the generated folder `build-portable/target/karnak-<os>-jdk<version>-<karnak-version>` (for example `karnak-linux-x86-64-jdk25-...`) and launch `run.bat` (Windows) or `./run.sh` from a terminal (Linux or macOS). On macOS there is no double-clickable launcher: Gatekeeper refuses to open a script downloaded from the Internet, so open a Terminal in the folder and run `./run.sh`.
@@ -239,11 +239,11 @@ Go on the root folder and launch the following command:
 
 ## Run image from Docker Hub
 
-The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`). The container listens on port `8080` for the web portal (`KARNAK_WEB_PORT` changes it) and `11119` for the DICOM listener. See the [installation guide](https://weasis.org/karnak-documentation/en/installation/) for a complete docker compose setup.
+The image is published as [`nroduit/karnak`](https://hub.docker.com/r/nroduit/karnak) (`linux/amd64` and `linux/arm64`). The container listens on port `8080` for the web portal (`KARNAK_WEB_PORT` changes it) and `11119` for the DICOM listener. See the [installation guide](https://karnak.weasis.org/en/installation/) for a complete docker compose setup.
 
 ## Docker environment variables
 
-See the [environment variables](https://weasis.org/karnak-documentation/en/installation/#environment-variables) section of the installation guide.
+See the [environment variables](https://karnak.weasis.org/en/installation/#environment-variables) section of the installation guide.
 
 # Architecture
 
@@ -265,4 +265,4 @@ An OpenID Connect identity provider can be configured by using the environment v
  
 # API / Endpoints
 
-Karnak exposes a small REST API in addition to the web interface. An OpenAPI (Swagger) description is generated by springdoc and the C-ECHO endpoint is available at `/api/echo`. For the full list of endpoints and their usage, refer to the [Karnak User Guide](https://weasis.org/karnak-documentation/).
+Karnak exposes a REST API under `/api` to manage forward nodes, destinations, profiles, projects, pseudonyms and monitoring data from other systems. Its OpenAPI description is [`api-collection/karnak-api.openapi.yaml`](api-collection/karnak-api.openapi.yaml), with a matching [Postman collection](api-collection/karnak-api.postman_collection.json). Authentication, roles and usage are described in the [REST API guide](https://karnak.weasis.org/en/installation/api/).

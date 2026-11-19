@@ -7,7 +7,7 @@ Karnak is a DICOM gateway that de-identifies and forwards medical-imaging data. 
 publish in this repository is public, so the first rule overrides all others: **never post real
 patient data** (see [Handling medical data](#handling-medical-data)).
 
-For usage questions, start with the [Karnak User Guide](https://weasis.org/karnak-documentation/).
+For usage questions, start with the [Karnak User Guide](https://karnak.weasis.org/).
 
 By participating in this project you agree to abide by our
 [Code of Conduct](.github/CODE_OF_CONDUCT.md). Security issues must be reported privately, following
@@ -28,7 +28,7 @@ the [Security Policy](.github/SECURITY.md) — never in a public issue or pull r
 Before opening an issue:
 
 1. **Search first** — check [existing issues](https://github.com/nroduit/karnak/issues), the
-   [Karnak User Guide](https://weasis.org/karnak-documentation/). Duplicates will be closed.
+   [Karnak User Guide](https://karnak.weasis.org/). Duplicates will be closed.
 2. **Give the context needed to reproduce.** A useful bug report includes:
    - the Karnak version and how it is deployed (the `nroduit/karnak` docker image, the portable
      package, or built from source) and the host OS,

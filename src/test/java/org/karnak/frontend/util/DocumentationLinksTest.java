@@ -17,8 +17,8 @@ class DocumentationLinksTest {
 
 	@Test
 	void appendsVersionAsQueryParameter() {
-		assertEquals("https://weasis.org/karnak-documentation/en/profiles/?v=2.0.1",
-				DocumentationLinks.withVersion("https://weasis.org/karnak-documentation/en/profiles/", "2.0.1"));
+		assertEquals("https://karnak.weasis.org/en/profiles/?v=2.0.1",
+				DocumentationLinks.withVersion("https://karnak.weasis.org/en/profiles/", "2.0.1"));
 	}
 
 	@Test
