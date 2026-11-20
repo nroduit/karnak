@@ -15,19 +15,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.BulkData;
 import org.dcm4che3.data.Fragments;
 import org.dcm4che3.data.Tag;
+import org.dcm4che3.data.UID;
 import org.dcm4che3.data.VR;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -759,6 +766,46 @@ class DeidentifyImageServiceTest {
 		assertThat(sopInstanceUidPart).isNotNull();
 		String retrievedSopInstanceUid = (String) sopInstanceUidPart.getBody();
 		assertThat(retrievedSopInstanceUid).isEqualTo(sopInstanceUid);
+	}
+
+	@Test
+	@Timeout(10)
+	void callDeidentifyImageApi_slow_api_should_fail_on_read_timeout() throws IOException {
+		CountDownLatch release = new CountDownLatch(1);
+		HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+		server.createContext("/deidentify-image", exchange -> {
+			try {
+				// Never answers within the read timeout
+				release.await(30, TimeUnit.SECONDS);
+			}
+			catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+			exchange.close();
+		});
+		server.start();
+		try {
+			DeidentifyImageService service = new DeidentifyImageService(
+					"http://localhost:" + server.getAddress().getPort(), 1_000, 300);
+			Attributes attributes = new Attributes();
+			attributes.setString(Tag.SOPInstanceUID, VR.UI, "1.2.3");
+			attributes.setInt(Tag.Rows, VR.US, 2);
+			attributes.setInt(Tag.Columns, VR.US, 2);
+			attributes.setInt(Tag.BitsAllocated, VR.US, 8);
+			attributes.setInt(Tag.SamplesPerPixel, VR.US, 1);
+			attributes.setString(Tag.PhotometricInterpretation, VR.CS, "MONOCHROME2");
+			attributes.setBytes(Tag.PixelData, VR.OB, new byte[] { 1, 2, 3, 4 });
+
+			long start = System.nanoTime();
+			assertThatThrownBy(() -> service.callDeidentifyImageApi(attributes, Map.of(), UID.ExplicitVRLittleEndian))
+				.isInstanceOf(DeidentifyImageException.class)
+				.hasMessageContaining("Cannot reach");
+			assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)).isLessThan(5_000);
+		}
+		finally {
+			release.countDown();
+			server.stop(0);
+		}
 	}
 
 }

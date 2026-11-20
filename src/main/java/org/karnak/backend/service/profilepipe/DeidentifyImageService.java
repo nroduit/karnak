@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import org.jspecify.annotations.Nullable;
 import org.karnak.backend.model.profilebody.MaskBody;
 import org.karnak.backend.model.profilepipe.DeidentifyImageResponse;
 import org.karnak.backend.model.profilepipe.ReportingResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -109,18 +111,43 @@ public class DeidentifyImageService {
 			Map.entry("1.2.840.10008.1.2.4.201", JPHC), Map.entry("1.2.840.10008.1.2.4.202", JPHC),
 			Map.entry("1.2.840.10008.1.2.4.203", JPHC));
 
+	/** Default time allowed to open the connection to the API (milliseconds). */
+	static final long DEFAULT_CONNECT_TIMEOUT_MS = 7_000;
+
+	/** Default time allowed for the API to answer one request (milliseconds). */
+	static final long DEFAULT_READ_TIMEOUT_MS = 120_000;
+
 	/**
+	 * Creates the service with the default timeouts.
 	 * @param apiBaseUrl the base URL of the de-identification image API
 	 */
-	public DeidentifyImageService(@Value("${ocr.url:http://localhost:8000}") String apiBaseUrl) {
+	public DeidentifyImageService(String apiBaseUrl) {
+		this(apiBaseUrl, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_READ_TIMEOUT_MS);
+	}
+
+	/**
+	 * A request exceeding a timeout fails with a {@link DeidentifyImageException}, so
+	 * the instance is not forwarded (fail-closed) instead of blocking the forwarding
+	 * thread indefinitely.
+	 * @param apiBaseUrl the base URL of the de-identification image API
+	 * @param connectTimeoutMs the time allowed to open the connection (milliseconds)
+	 * @param readTimeoutMs the time allowed for the API to answer one request
+	 * (milliseconds)
+	 */
+	@Autowired
+	public DeidentifyImageService(@Value("${ocr.url:http://localhost:8000}") String apiBaseUrl,
+			@Value("${ocr.connect-timeout-ms:" + DEFAULT_CONNECT_TIMEOUT_MS + "}") long connectTimeoutMs,
+			@Value("${ocr.read-timeout-ms:" + DEFAULT_READ_TIMEOUT_MS + "}") long readTimeoutMs) {
 		this.apiBaseUrl = apiBaseUrl;
 		this.objectMapper = new ObjectMapper();
 
-		HttpClient jdkClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
-		this.restClient = RestClient.builder()
-			.baseUrl(apiBaseUrl)
-			.requestFactory(new JdkClientHttpRequestFactory(jdkClient))
+		HttpClient jdkClient = HttpClient.newBuilder()
+			.version(HttpClient.Version.HTTP_1_1)
+			.connectTimeout(Duration.ofMillis(connectTimeoutMs))
 			.build();
+		JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(jdkClient);
+		requestFactory.setReadTimeout(Duration.ofMillis(readTimeoutMs));
+		this.restClient = RestClient.builder().baseUrl(apiBaseUrl).requestFactory(requestFactory).build();
 	}
 
 	/**

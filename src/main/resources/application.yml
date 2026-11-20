@@ -221,3 +221,7 @@ dicom-tools:
 # This API checks if sensitive patient data is burned into DICOM pixel data.
 ocr:
   url: ${OCR_URL:http://localhost:8000}
+  # Time allowed to open the connection to the API (milliseconds)
+  connect-timeout-ms: ${OCR_CONNECT_TIMEOUT_MS:7000}
+  # Time allowed for the API to answer one image; when exceeded the instance is not forwarded
+  read-timeout-ms: ${OCR_READ_TIMEOUT_MS:120000}

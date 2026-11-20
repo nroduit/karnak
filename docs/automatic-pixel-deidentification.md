@@ -112,11 +112,15 @@ in `application.yml`:
 ```yaml
 ocr:
   url: ${OCR_URL:http://localhost:8000}
+  connect-timeout-ms: ${OCR_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${OCR_READ_TIMEOUT_MS:60000}
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OCR_URL` | `http://localhost:8000` | Base URL of the de-identification image API. |
+| `OCR_CONNECT_TIMEOUT_MS` | `5000` | Time allowed to open the connection to the API, in milliseconds. |
+| `OCR_READ_TIMEOUT_MS` | `60000` | Time allowed for the API to answer one image, in milliseconds. When exceeded, the call fails like an unreachable service: the instance is not forwarded. Raise it if the API runs on a slow CPU-only host. |
 
 The API contract is documented in
 [`src/main/resources/deidentification-api.yaml`](../src/main/resources/deidentification-api.yaml).
